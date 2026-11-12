@@ -3,7 +3,7 @@ import { dc, isDarkMode } from './data';
 import { CATS, questions as rawQuestions, examQuestions } from './questions';
 import { SHOP_PRODUCTS } from './shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 157;
+const APP_VERSION: number = 158;
 // Versionsnummern der anderen Dateien – fehlt eine, ist die Datei veraltet (dann 0)
 const GAMES_VERSION: number = Number((GamesModule as any).GAMES_VERSION) || 0;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
