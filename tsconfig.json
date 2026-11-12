@@ -1,0 +1,13 @@
+{
+    "include": ["./src/**/*"],
+    "compilerOptions": {
+      "strict": true,
+      "esModuleInterop": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "skipLibCheck": true,
+      "lib": ["dom", "dom.iterable", "es2016", "es2017", "es2020", "es2021"],
+      "jsx": "react-jsx"
+    }
+  }
+  

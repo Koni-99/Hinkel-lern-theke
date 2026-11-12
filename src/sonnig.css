@@ -1,0 +1,227 @@
+/* ═══ Sonnige Theke: heller, goldener Look mit 3D-Effekten ═══
+   Gilt nur im hellen Modus (.lt-dark bleibt unverändert). Gold-Farben nur ohne gekaufte Sorte (lt-th-…). */
+
+/* Seite: warmer Sonnenschein von oben */
+.lt-root:not(.lt-dark) {
+  background: linear-gradient(180deg, #fff6dd 0, #fffbf2 420px) !important;
+}
+
+/* Markise bleibt glatt; nur weicher Schatten unter dem Wellenrand */
+.lt-root:not(.lt-dark) .lt-awning-edge {
+  filter: drop-shadow(0 5px 0 rgba(201, 151, 28, 0.28))
+    drop-shadow(0 10px 10px rgba(75, 42, 20, 0.12)) !important;
+}
+
+/* Logo: plastisch, wie aus der Markise herausgestellt */
+.lt-root:not(.lt-dark) .lt-logo {
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.85))
+    drop-shadow(0 2px 0 rgba(75, 42, 20, 0.35))
+    drop-shadow(0 4px 0 rgba(75, 42, 20, 0.18))
+    drop-shadow(0 12px 14px rgba(75, 42, 20, 0.25)) !important;
+}
+
+/* Kopfleiste: Punkte und Münzen als erhabene Tasten */
+.lt-root:not(.lt-dark) .lt-kasse {
+  border: 2px solid #ffc72c !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 3px 0 #c9971c,
+    0 0 12px -2px rgba(255, 199, 44, 0.55) !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.lt-root:not(.lt-dark) .lt-kasse:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 0 0 #c9971c !important;
+}
+.lt-root:not(.lt-dark) .lt-headbtns button:not(.lt-kasse) {
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.lt-root:not(.lt-dark) .lt-headbtns button:not(.lt-kasse):active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Begrüßung mit 3D-Schrift */
+.lt-root:not(.lt-dark) .lt-h1 {
+  text-shadow: 0 2px 0 #f7e6be, 0 4px 0 #ebcf95,
+    0 8px 14px rgba(75, 42, 20, 0.15);
+}
+
+/* Heute-dran-Karte: golden, mit Kante und Neige-Effekt */
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-hero-cta {
+  background: radial-gradient(
+        circle at 1px 1px,
+        rgba(75, 42, 20, 0.08) 1px,
+        transparent 1.5px
+      )
+      0 0/14px 14px,
+    linear-gradient(150deg, #ffe27a 0%, #ffc72c 55%, #f2b21c 100%) !important;
+  color: #2b170a !important;
+  box-shadow: 0 7px 0 #c9971c, 0 24px 34px -16px rgba(201, 151, 28, 0.85),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55) !important;
+}
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-hero-cta * {
+  color: #2b170a !important;
+}
+.lt-root:not(.lt-dark):not([class*="lt-th-"])
+  .lt-hero-cta
+  span[style*="rgba(255"] {
+  background: rgba(75, 42, 20, 0.18) !important;
+}
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-cta-btn {
+  background: linear-gradient(180deg, #5e361a, #4b2a14) !important;
+  box-shadow: 0 6px 0 #2b170a, inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-cta-btn,
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-cta-btn * {
+  color: #fff6e0 !important;
+}
+.lt-root:not(.lt-dark) .lt-hero-cta {
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s !important;
+  will-change: transform;
+}
+.lt-root:not(.lt-dark) .lt-hero-cta:active {
+  box-shadow: 0 2px 0 #c9971c, 0 10px 20px -12px rgba(201, 151, 28, 0.85) !important;
+}
+.lt-root:not(.lt-dark) .lt-cta-btn {
+  transform: translateZ(30px);
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.lt-root:not(.lt-dark) .lt-hero-cta:active .lt-cta-btn {
+  transform: translateZ(30px) translateY(4px);
+  box-shadow: 0 2px 0 #2b170a !important;
+}
+
+/* Küken: winkt und wirft einen Schatten */
+.lt-root:not(.lt-dark) .lt-hero-kueken {
+  animation: ltSunWave 2.6s ease-in-out infinite;
+  transform-origin: 50% 90%;
+  filter: drop-shadow(0 6px 4px rgba(75, 42, 20, 0.3));
+}
+@keyframes ltSunWave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-10deg);
+  }
+  40% {
+    transform: rotate(8deg);
+  }
+  60% {
+    transform: rotate(-4deg);
+  }
+}
+
+/* Punkte-Karte: goldenes Band oben, Kante unten */
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-herocard {
+  border: 0 !important;
+  border-top: 8px solid #ffc72c !important;
+}
+.lt-root:not(.lt-dark) .lt-herocard {
+  box-shadow: 0 4px 0 #f1e3c8, 0 20px 30px -18px rgba(75, 42, 20, 0.35) !important;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+.lt-root:not(.lt-dark) .lt-herocard button[style*="rgb(75, 42, 20)"] {
+  background: #fff0c2 !important;
+  color: #4b2a14 !important;
+  border: 2px solid #ffc72c !important;
+  box-shadow: 0 4px 0 #e3b23c !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.lt-root:not(.lt-dark) .lt-herocard button[style*="rgb(75, 42, 20)"]:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #e3b23c !important;
+}
+
+/* Tageskarte wie eine Speisekarte, Symbole als 3D-Knöpfe */
+.lt-root:not(.lt-dark) .lt-menu {
+  background: #fffdf6 !important;
+  border: 2px dashed #e9cf9c !important;
+  box-shadow: 0 4px 0 #f1e3c8, 0 16px 26px -18px rgba(75, 42, 20, 0.35) !important;
+}
+.lt-root:not(.lt-dark) .lt-rc-mono {
+  color: #c9971c !important;
+  font-weight: 700 !important;
+}
+.lt-root:not(.lt-dark) .lt-menu-row {
+  border-radius: 14px;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 0.2s !important;
+}
+.lt-root:not(.lt-dark) .lt-menu-row:hover {
+  background: #fff6e0 !important;
+  transform: scale(1.02);
+}
+.lt-root:not(.lt-dark) .lt-menu-row > span:first-child {
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.1), 0 3px 0 rgba(75, 42, 20, 0.18),
+    0 6px 10px -4px rgba(75, 42, 20, 0.3) !important;
+  transition: transform 0.15s !important;
+}
+.lt-root:not(.lt-dark) .lt-menu-row:active > span:first-child {
+  transform: translateY(3px) scale(0.96);
+}
+
+/* Tafel mit hellem Holzrahmen und Tiefe */
+.lt-root:not(.lt-dark) .lt-chalk {
+  box-shadow: 0 0 0 7px #c98c4e, 0 0 0 9px #9c6532,
+    inset 0 4px 12px rgba(0, 0, 0, 0.45), 0 16px 26px -12px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Aufklapp-Karten und Karten mit Kante */
+.lt-root:not(.lt-dark) .lt-fold {
+  border: 2px solid #f7e6be !important;
+  box-shadow: 0 4px 0 #f1e3c8 !important;
+}
+.lt-root:not(.lt-dark) .lt-card {
+  box-shadow: 0 4px 0 rgba(201, 151, 28, 0.25),
+    0 12px 20px -14px rgba(75, 42, 20, 0.35) !important;
+}
+.lt-root:not(.lt-dark) .lt-card:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 1px 0 rgba(201, 151, 28, 0.25) !important;
+}
+
+/* Untere Leiste: aktiver Reiter als goldene Taste */
+.lt-root:not(.lt-dark):not([class*="lt-th-"]) .lt-nav-pop {
+  background: linear-gradient(180deg, #ffd65c, #ffc72c) !important;
+}
+.lt-root:not(.lt-dark) .lt-nav-pop {
+  border-radius: 18px !important;
+  box-shadow: 0 4px 0 #c9971c, inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+.lt-root:not(.lt-dark) nav.lt-bottomnav button {
+  transition: transform 0.12s !important;
+}
+.lt-root:not(.lt-dark) nav.lt-bottomnav button:active {
+  transform: translateY(3px);
+}
+
+/* Glanzlicht, das beim Neigen über Karten wandert (sonnig3d.ts) */
+.lt-root:not(.lt-dark) .lt-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 0%),
+    rgba(255, 255, 255, 0.45),
+    transparent 55%
+  );
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 3;
+}
+.lt-root:not(.lt-dark) .lt-tilting > .lt-glare {
+  opacity: 1;
+}
+html.lt-noanim .lt-glare {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lt-hero-kueken {
+    animation: none !important;
+  }
+}

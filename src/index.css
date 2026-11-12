@@ -1,0 +1,22 @@
+/* Basis-Styles der Hinkel-Lern-App (alles Weitere steckt als Inline-Style in den Komponenten) */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #faf6f0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Größere Touch-Flächen auf Handys und Tablets */
+@media (hover: none) and (pointer: coarse) {
+  button {
+    min-height: 40px;
+  }
+}
