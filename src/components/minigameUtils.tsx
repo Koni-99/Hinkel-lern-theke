@@ -1,7 +1,6 @@
 // src/components/minigameUtils.tsx
 import { useState, useRef, useEffect, CSSProperties, ReactNode } from 'react';
 import { dc, SORTIMENT_SUBFILTERS } from '../data';
-import { SHOP_PRODUCTS } from '../shopProducts';
 
 /** Versionsnummer dieser Datei – wird unten in der App geprüft */
 export const UTILS_VERSION: number = 88;
@@ -234,23 +233,6 @@ export const ConfettiOverlay = ({ active }: { active: boolean }) => {
       `}</style>
     </div>
   );
-};
-
-// Stil-Generator für die Feedback-Container
-export const getFeedbackBorderStyle = (feedback: FeedbackType) => {
-  switch (feedback) {
-    case 'correct': return `3px solid ${TH.green}`;
-    case 'wrong': return `3px solid ${TH.red}`;
-    default: return `2px solid ${TH.line}`;
-  }
-};
-
-export const getFeedbackBgStyle = (feedback: FeedbackType) => {
-  switch (feedback) {
-    case 'correct': return TH.tintSage;
-    case 'wrong': return TH.tintPeach;
-    default: return TH.white;
-  }
 };
 
 // ───────────────────────── Produktfotos ─────────────────────────
@@ -518,7 +500,6 @@ export function comboTake(roundScore: number): number {
   return Math.max(0, Math.round(extra));
 }
 export function comboReset() { try { document.body.classList.remove('lt-hot'); } catch { /* egal */ } comboRun = 0; comboMultSum = 0; comboHits = 0; comboExact = 0; comboExactHits = 0; }
-export const comboNow = () => comboRun;
 
 export function AnswerFx({ fx, streakIcon = '🔥' }: { fx: AnswerFxState; streakIcon?: string; pos?: 'top' | 'bottom' }) {
   const fxKey = fx ? `${fx.k}|${fx.ok}` : null;
@@ -532,162 +513,6 @@ export function AnswerFx({ fx, streakIcon = '🔥' }: { fx: AnswerFxState; strea
         <span style={{ padding: '8px 16px', borderRadius: '999px', backgroundColor: dc('#FCE1D2'), color: dc('#C2410C'), fontWeight: 700, fontSize: '18px', animationDelay: '.15s', opacity: 0, animationFillMode: 'forwards', boxShadow: '0 8px 18px -8px rgba(0,0,0,.3)' }}>{streakIcon} {fx.streak} in Folge!</span>
       )}
     </div>
-  );
-}
-
-
-// ───────────────────────── Deko je nach Jahreszeit, Saison und Feiertag ─────────────────────────
-
-export type DecoTheme = {
-  id: string;
-  label: string;
-  /** Was herunterfällt / aufsteigt */
-  particles: string[];
-  color?: string;
-  motion: 'fall' | 'rise' | 'flutter' | 'burst';
-  /** Was unten mit der Zeit wächst */
-  pile: 'snowman' | 'leaves' | 'flowers' | 'eggs' | 'confetti' | 'pumpkins' | 'sunflowers' | 'none';
-};
-
-function easterOf(y: number) {
-  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(y, month - 1, day);
-}
-
-/** Welche Deko gilt heute? Feiertage gehen vor Saison, Saison vor Jahreszeit */
-export function decoThemeFor(now: Date): DecoTheme {
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  const t = new Date(y, m, d).getTime();
-  const e = easterOf(y);
-  const fromEaster = (n: number) => { const x = new Date(e); x.setDate(x.getDate() + n); return x.getTime(); };
-  if ((m === 11 && d === 31) || (m === 0 && d === 1)) return { id: 'silvester', label: 'Silvester', particles: ['🎆', '✨', '🎇', '✨'], motion: 'burst', pile: 'confetti' };
-  if (m === 11 && d >= 24 && d <= 26) return { id: 'weihnachten', label: 'Weihnachten', particles: ['❄', '⭐', '❄', '❅'], color: dc('#9EC3EA'), motion: 'fall', pile: 'snowman' };
-  if (m === 11) return { id: 'advent', label: 'Advent', particles: ['❄', '❅', '❆', '⭐'], color: dc('#9EC3EA'), motion: 'fall', pile: 'snowman' };
-  if ((m === 10 && d === 11) || (t >= fromEaster(-52) && t <= fromEaster(-47))) return { id: 'karneval', label: 'Karneval', particles: ['🎉', '🎊', '●', '■', '▲'], motion: 'fall', pile: 'confetti' };
-  if (m === 1 && d === 14) return { id: 'valentin', label: 'Valentinstag', particles: ['❤', '💕', '❤'], color: dc('#E57373'), motion: 'rise', pile: 'flowers' };
-  if (t >= fromEaster(-14) && t <= fromEaster(1)) return { id: 'ostern', label: 'Ostern', particles: ['🌸', '🌼', '🌸'], motion: 'flutter', pile: 'eggs' };
-  if (m === 9 && d === 31) return { id: 'halloween', label: 'Halloween', particles: ['🦇', '🍂', '🦇', '🍁'], motion: 'flutter', pile: 'pumpkins' };
-  if (m === 10 && d >= 12) return { id: 'vorweihnacht', label: 'Vorweihnachts', particles: ['🍪', '⭐', '✨', '🌟', '🍪'], color: dc('#E0A458'), motion: 'fall', pile: 'none' };
-  if (m === 10 && d <= 10) return { id: 'martin', label: 'St. Martin', particles: ['🏮', '🍂', '🍁', '🍂'], motion: 'fall', pile: 'leaves' };
-  if (m === 11 || m <= 1) return { id: 'winter', label: 'Winter', particles: ['❄', '❅', '❆'], color: dc('#9EC3EA'), motion: 'fall', pile: 'snowman' };
-  if (m <= 4) return { id: 'fruehling', label: 'Frühling', particles: ['🌸', '🌸', '🍃'], motion: 'flutter', pile: 'flowers' };
-  if (m <= 7) return { id: 'sommer', label: 'Sommer', particles: ['🦋', '☀', '🐝'], color: dc('#F2B705'), motion: 'flutter', pile: 'sunflowers' };
-  return { id: 'herbst', label: 'Herbst', particles: ['🍂', '🍁', '🍂', '🍃'], motion: 'fall', pile: 'leaves' };
-}
-
-const DECO_CSS = `
-.lt-deco{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
-.lt-deco-p{position:absolute;top:-8vh;will-change:transform,opacity}
-.lt-deco-p>span{display:inline-block}
-@keyframes decoFall{0%{transform:translateY(0);opacity:0}8%{opacity:.4}40%{opacity:.3}65%{opacity:0}100%{transform:translateY(112vh);opacity:0}}
-@keyframes decoRise{0%{transform:translateY(118vh);opacity:0}10%{opacity:.4}40%{opacity:.3}65%{opacity:0}100%{transform:translateY(0);opacity:0}}
-@keyframes decoSway{0%,100%{transform:translateX(-22px) rotate(-18deg)}50%{transform:translateX(22px) rotate(18deg)}}
-@keyframes decoFlutter{0%,100%{transform:translate(-30px,0) rotate(-10deg)}25%{transform:translate(10px,-18px) rotate(8deg)}50%{transform:translate(32px,6px) rotate(-6deg)}75%{transform:translate(-6px,16px) rotate(10deg)}}
-@keyframes decoBurst{0%{transform:scale(.2);opacity:0}25%{transform:scale(1.2);opacity:.5}55%{opacity:.25}80%{transform:scale(1.5);opacity:0}100%{opacity:0}}
-@keyframes decoGrow{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
-.lt-deco-grow{animation:decoGrow .8s cubic-bezier(.2,.8,.2,1) both;transform-origin:50% 100%}
-.lt-deco-pile{position:fixed;left:10px;bottom:10px;z-index:3;pointer-events:none;width:150px;height:130px;transform:scale(.85);transform-origin:0 100%}
-@media (max-width:700px){.lt-deco-pile{bottom:96px;left:4px;transform:scale(.62)}}
-@media (prefers-reduced-motion:reduce){.lt-deco{display:none}}
-`;
-
-/** Zufall, der pro Teilchen gleich bleibt */
-const rnd01 = (i: number, salt: number) => { const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453; return x - Math.floor(x); };
-
-function Pile({ kind, stage }: { kind: DecoTheme['pile']; stage: number }) {
-  if (kind === 'none' || stage <= 0) return null;
-  if (kind === 'snowman') {
-    return (
-      <svg viewBox="0 0 150 130" width="150" height="130" aria-hidden="true">
-        {stage >= 1 && <ellipse className="lt-deco-grow" cx="75" cy="124" rx={40 + Math.min(stage, 6) * 4} ry="10" fill={dc('#FFFFFF')} stroke={dc('#D6E4F2')} strokeWidth="2" />}
-        {stage >= 2 && <circle className="lt-deco-grow" cx="75" cy="98" r="26" fill={dc('#FFFFFF')} stroke={dc('#C9DAEC')} strokeWidth="2" />}
-        {stage >= 3 && <circle className="lt-deco-grow" cx="75" cy="62" r="19" fill={dc('#FFFFFF')} stroke={dc('#C9DAEC')} strokeWidth="2" />}
-        {stage >= 3 && <g className="lt-deco-grow"><circle cx="75" cy="56" r="2.2" fill={dc('#2B170A')} /><circle cx="75" cy="64" r="2.2" fill={dc('#2B170A')} /><circle cx="75" cy="72" r="2.2" fill={dc('#2B170A')} /></g>}
-        {stage >= 4 && <circle className="lt-deco-grow" cx="75" cy="32" r="14" fill={dc('#FFFFFF')} stroke={dc('#C9DAEC')} strokeWidth="2" />}
-        {stage >= 4 && <g className="lt-deco-grow"><circle cx="70" cy="29" r="1.8" fill={dc('#2B170A')} /><circle cx="80" cy="29" r="1.8" fill={dc('#2B170A')} /><path d="M69 37 Q75 41 81 37" stroke={dc('#2B170A')} strokeWidth="1.6" fill="none" /></g>}
-        {stage >= 5 && <g className="lt-deco-grow"><path d="M75 32 L92 35 L75 36 Z" fill={dc('#E8762B')} /><path d="M56 60 L36 46" stroke={dc('#7A4A2B')} strokeWidth="3" strokeLinecap="round" /><path d="M94 60 L114 46" stroke={dc('#7A4A2B')} strokeWidth="3" strokeLinecap="round" /></g>}
-        {stage >= 6 && <g className="lt-deco-grow"><rect x="62" y="12" width="26" height="6" rx="2" fill={dc('#2B170A')} /><rect x="66" y="0" width="18" height="14" rx="2" fill={dc('#2B170A')} /><rect x="66" y="10" width="18" height="3" fill={dc('#C0392B')} /><path d="M60 46 Q75 52 90 46 L90 50 Q75 56 60 50 Z" fill={dc('#C0392B')} /><path d="M84 50 L88 64 L82 64 Z" fill={dc('#C0392B')} /></g>}
-      </svg>
-    );
-  }
-  const items: Record<string, string[]> = {
-    leaves: ['🍂', '🍁', '🍂', '🍃', '🍁'],
-    flowers: ['🌷', '🌼', '🌸', '🌷', '🌻'],
-    eggs: ['🥚', '🐣', '🥚', '🐰', '🥚'],
-    confetti: ['🎊', '🎉', '🎈', '🎊', '🥳'],
-    pumpkins: ['🎃', '🍂', '🎃', '🍁', '🎃'],
-    sunflowers: ['🌻', '🌻', '🌼', '🌻', '🦋'],
-  };
-  const list = items[kind] || [];
-  const growing = kind === 'flowers' || kind === 'sunflowers';
-  const count = Math.min(growing ? 7 : 26, stage * (growing ? 1 : 4));
-  return (
-    <div style={{ position: 'relative', width: '150px', height: '130px' }} aria-hidden="true">
-      {Array.from({ length: count }, (_, i) => {
-        // kleiner Hügel: unten breit, nach oben schmaler
-        const row = growing ? 0 : Math.floor(i / 7);
-        const inRow = growing ? i : i % 7;
-        const width = growing ? 140 : 130 - row * 26;
-        const x = 8 + row * 13 + (inRow / 6) * width + (rnd01(i, 3) - 0.5) * 10;
-        const size = growing ? 30 + rnd01(i, 5) * 10 : 22 + rnd01(i, 7) * 8;
-        return (
-          <span key={i} className="lt-deco-grow" style={{ position: 'absolute', left: `${Math.max(0, Math.min(124, x))}px`, bottom: `${row * 15 + (growing ? 0 : rnd01(i, 9) * 4)}px`, fontSize: `${size}px`, lineHeight: 1, transform: `rotate(${(rnd01(i, 11) - 0.5) * 50}deg)`, animationDelay: `${(i % 4) * 0.1}s` }}>
-            {list[i % list.length]}
-          </span>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Fallende/schwebende Deko über der ganzen Seite. Unten wächst mit der Zeit etwas (Schneemann, Blätterhaufen …) */
-export function DecoLayer({ theme, stepSeconds = 60 }: { theme: DecoTheme; stepSeconds?: number }) {
-  const storeKey = `hinkel_deco_time_${theme.id}`;
-  const [seconds, setSeconds] = useState<number>(() => { try { return Number(sessionStorage.getItem(storeKey)) || 0; } catch { return 0; } });
-  const [visible, setVisible] = useState<boolean>(() => typeof document === 'undefined' ? true : !document.hidden);
-  useEffect(() => {
-    const onVis = () => setVisible(!document.hidden);
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, []);
-  useEffect(() => {
-    if (!visible) return;
-    const id = window.setInterval(() => setSeconds(s => { const n = s + 5; try { sessionStorage.setItem(storeKey, String(n)); } catch {} return n; }), 5000);
-    return () => window.clearInterval(id);
-  }, [visible, storeKey]);
-  const stage = Math.min(6, Math.floor(seconds / stepSeconds));
-  const count = theme.motion === 'burst' ? 6 : 14;
-  return (
-    <>
-      <style>{DECO_CSS}</style>
-      <div className="lt-deco" aria-hidden="true">
-        {Array.from({ length: count }, (_, i) => {
-          // nur am linken und rechten Rand, damit nichts den Inhalt verdeckt
-          const left = i % 2 === 0 ? rnd01(i, 1) * 9 : 89 + rnd01(i, 1) * 8;
-          const dur = 9 + rnd01(i, 2) * 9;
-          const delay = -rnd01(i, 4) * dur;
-          const size = 14 + rnd01(i, 6) * 14;
-          const ch = theme.particles[i % theme.particles.length];
-          const isShape = ['●', '■', '▲'].includes(ch);
-          const confettiColors = [dc('#E74C3C'), dc('#F1C40F'), dc('#2ECC71'), dc('#3498DB'), dc('#9B59B6')];
-          if (theme.motion === 'burst') {
-            return (
-              <span key={i} className="lt-deco-p" style={{ top: `${8 + rnd01(i, 8) * 55}vh`, left: `${left}%`, fontSize: `${size + 14}px`, animation: `decoBurst ${2.4 + rnd01(i, 2) * 2}s ease-out ${-rnd01(i, 4) * 3}s infinite` }}>{ch}</span>
-            );
-          }
-          const main = theme.motion === 'rise' ? 'decoRise' : 'decoFall';
-          const inner = theme.motion === 'flutter' ? 'decoFlutter' : 'decoSway';
-          return (
-            <span key={i} className="lt-deco-p" style={{ left: `${left}%`, top: theme.motion === 'rise' ? '-10vh' : '-8vh', animation: `${main} ${theme.motion === 'flutter' ? dur * 1.4 : dur}s linear ${delay}s infinite` }}>
-              <span style={{ fontSize: `${isShape ? size * 0.55 : size}px`, color: isShape ? confettiColors[i % confettiColors.length] : theme.color, textShadow: theme.color ? '0 1px 2px rgba(43,23,10,.15)' : undefined, animation: `${inner} ${2.6 + rnd01(i, 5) * 2.4}s ease-in-out ${-rnd01(i, 3) * 3}s infinite` }}>{ch}</span>
-            </span>
-          );
-        })}
-      </div>
-      <div className="lt-deco-pile" aria-hidden="true"><Pile kind={theme.pile} stage={stage} /></div>
-    </>
   );
 }
 
@@ -808,56 +633,6 @@ export function ReportList({ items, title = 'Alle Aufgaben dieser Runde ansehen 
         ))}
       </div>
     </details>
-  );
-}
-
-// ───────────────────────── Brotkorb: füllt sich mit dem Lernfortschritt ─────────────────────────
-/** Positionen für den wachsenden Brot-Haufen: unten breit, oben schmal */
-const PILE: { e: string; x: number; y: number; r: number }[] = (() => {
-  const em = ['🍞', '🥨', '🥐', '🥖', '🥯', '🧁', '🍪', '🥐', '🥨', '🍞'];
-  const out: { e: string; x: number; y: number; r: number }[] = [];
-  let k = 0;
-  for (let row = 0; row < 11; row++) {
-    const cnt = 12 - row; const w = 96 - row * 8.5; const y = 66 - row * 6.2;
-    const order = Array.from({ length: cnt }, (_, i) => i).sort((p, q) => Math.abs(p - (cnt - 1) / 2) - Math.abs(q - (cnt - 1) / 2));
-    for (const i of order) {
-      const x = 64 - w / 2 + (cnt === 1 ? w / 2 : (i * w) / (cnt - 1)) + ((k * 7) % 5) - 2;
-      out.push({ e: em[(k * 3 + row) % em.length], x, y: y + ((k * 11) % 3) - 1, r: ((k * 37) % 50) - 25 });
-      k++;
-    }
-  }
-  // von unten nach oben, innerhalb einer Reihe von der Mitte nach außen
-  return out;
-})();
-/** Brotkorb: pro 10 gemeisterte Fragen liegt ein Gebäck mehr im Korb */
-export function BreadBasket({ pct, mastered, size = 128, label = true }: { pct: number; mastered?: number; size?: number; label?: boolean }) {
-  const p = Math.max(0, Math.min(100, Math.round(pct || 0)));
-  const m = typeof mastered === 'number' ? mastered : Math.round(p * 8);
-  const n = Math.min(PILE.length, Math.floor(m / 10));
-  const prev = 0;
-  const h = Math.round(size * 0.78);
-  const rest = 10 - (m % 10);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-      <svg width={size} height={h} viewBox="0 0 128 100" role="img" aria-label={`Brotkorb: ${n} Gebäck, ${m} Fragen gemeistert`} style={{ flex: '0 0 auto', overflow: 'visible' }}>
-        <g transform="translate(0 8)">
-          {PILE.slice(0, n).map((it, i) => (
-            <g key={i} className={i >= prev ? 'lt-basket-drop' : undefined} style={i >= prev ? { animationDelay: `${0.2 + Math.min(i, 40) * (n > 20 ? 0.04 : 0.09)}s` } : undefined}><text x={it.x} y={it.y} fontSize="14" textAnchor="middle" transform={`rotate(${it.r} ${it.x} ${it.y - 5})`}>{it.e}</text></g>
-          ))}
-          {/* Korb */}
-          <path d="M10 58 Q64 70 118 58 L108 88 Q64 96 20 88 Z" fill={dc('#C8873E')} stroke={dc('#7A4A1E')} strokeWidth="2.5" strokeLinejoin="round" />
-          <path d="M14 66 Q64 78 114 66 M17 75 Q64 87 111 75" fill="none" stroke={dc('#9A5F28')} strokeWidth="2" />
-          {[28, 46, 64, 82, 100].map(x => <path key={x} d={`M${x} ${62 + (x === 64 ? 4 : 2)} L${x + (x < 64 ? 2 : x > 64 ? -2 : 0)} 90`} stroke={dc('#9A5F28')} strokeWidth="2" />)}
-          <path d="M10 58 Q64 70 118 58" fill="none" stroke={dc('#7A4A1E')} strokeWidth="5" strokeLinecap="round" />
-        </g>
-      </svg>
-      {label && (
-        <div>
-          <div style={{ fontWeight: 700, fontSize: '16px' }}>Dein Brotkorb</div>
-          <div style={{ fontSize: '14px', color: TH.muted }}>{n >= PILE.length ? 'Randvoll, du bist ein Profi!' : n === 0 ? `Noch leer. Nach ${rest} gemeisterten ${rest === 1 ? 'Frage' : 'Fragen'} kommt das erste Gebäck rein.` : `${n} Gebäck im Korb · noch ${rest} ${rest === 1 ? 'Frage' : 'Fragen'} bis zum nächsten`}</div>
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -1166,51 +941,6 @@ export function LernpfadView({ felder, done, avatar, onPlay, lastResult }: { fel
         })}
       </div>
       <div style={{ fontSize: '15px', color: TH.muted, textAlign: 'center' }}>📚 Fachwissen · 🥖 Sortiment · 🤝 Service · 🧼 Hygiene. Ab Feld 9 wird es gemischt, ab Feld 17 schwer.</div>
-    </div>
-  );
-}
-
-// ───────────────────────── Sammelalbum ─────────────────────────
-export function AlbumView({ owned, images }: { owned: Set<string>; images: ProductImages }) {
-  const list = SHOP_PRODUCTS.filter(p => !['Sonstiges', 'Backmischung'].includes(p.group));
-  const groups = Array.from(new Set(list.map(p => p.group)));
-  const n = list.filter(p => owned.has(p.name)).length;
-  const [open, setOpen] = useState<string | null>(null);
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <PageHead title="Sammelalbum" subtitle="Für jedes Produkt, das du im Bilderquiz erkennst oder zu dem du zwei Fragen gemeistert hast, klebt ein Sticker im Album." />
-      <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px', backgroundColor: TH.tintYellow }}>
-        <span className="lt-emo-bob" style={{ fontSize: '40px' }} aria-hidden="true">📒</span>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>{n} von {list.length} Stickern</div>
-          <div style={{ height: '10px', borderRadius: '999px', backgroundColor: TH.white, overflow: 'hidden', marginTop: '8px' }}><div className="lt-fill" style={{ width: `${Math.round(n / list.length * 100)}%`, height: '100%', backgroundColor: TH.brown, borderRadius: '999px' }} /></div>
-        </div>
-      </div>
-      {groups.map(g => {
-        const its = list.filter(p => p.group === g); const got = its.filter(p => owned.has(p.name)).length;
-        return (
-          <section key={g} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
-              <div style={{ fontFamily: TH.serif, fontSize: '26px' }}>{g}</div>
-              <div style={{ fontWeight: 700, color: got === its.length ? TH.green : TH.muted }}>{got === its.length ? '✓ komplett' : `${got} / ${its.length}`}</div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(104px, 1fr))', gap: '10px' }}>
-              {its.map(p => {
-                const has = owned.has(p.name); const img = images[productImageKey(p.name)];
-                return (
-                  <button key={p.name} onClick={() => has && setOpen(open === p.name ? null : p.name)} className={has ? 'lt-tilt lt-sticker' : undefined} style={{ padding: '8px', borderRadius: '16px', border: has ? `3px solid ${TH.white}` : `2px dashed ${TH.line}`, backgroundColor: has ? TH.white : TH.cream, boxShadow: has ? '0 6px 14px -6px rgba(75,42,20,.35)' : 'none', transform: has ? `rotate(${((p.name.length * 7) % 9) - 4}deg)` : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: has ? 'pointer' : 'default', color: TH.ink }}>
-                    <span style={{ width: '100%', aspectRatio: '1 / 1', borderRadius: '12px', overflow: 'hidden', backgroundColor: has ? TH.tintYellow : dc('#EFE6D8'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '34px' }}>
-                      {has ? (img ? <img src={img} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '🥖') : <span style={{ color: TH.muted, fontWeight: 800 }}>?</span>}
-                    </span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: 1.2, textAlign: 'center' }}>{has ? p.name : '???'}</span>
-                    {open === p.name && <span style={{ fontSize: '12px', color: TH.muted, textAlign: 'center' }}>{p.shortIngredients}</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
     </div>
   );
 }
@@ -1950,14 +1680,3 @@ export function StarRating({ n }: { n: number }) {
   );
 }
 export const starsFor = (ratio: number) => ratio >= 1 ? 3 : ratio >= 0.75 ? 2 : ratio >= 0.4 ? 1 : 0;
-
-/** Freundlicher leerer Zustand mit großem Symbol statt nur grauem Text */
-export function EmptyState({ icon, title, text }: { icon: string; title: string; text?: string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', padding: '26px 16px', textAlign: 'center', borderRadius: '20px', border: `2px dashed ${TH.line}`, backgroundColor: 'rgba(255,255,255,.6)' }}>
-      <span className="lt-emo-bob" style={{ fontSize: '52px', lineHeight: 1 }}>{icon}</span>
-      <strong style={{ fontSize: '19px' }}>{title}</strong>
-      {text && <span style={{ fontSize: '16px', color: TH.muted, lineHeight: 1.45, maxWidth: '360px' }}>{text}</span>}
-    </div>
-  );
-}

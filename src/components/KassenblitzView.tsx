@@ -2711,31 +2711,6 @@ export function productOfTheDay(images: ProductImages, date = new Date()): ShopP
   return order[dayNo % order.length];
 }
 
-export function ProductOfDayCard({ images, onOpen }: { images: ProductImages; onOpen?: () => void }) {
-  const p = productOfTheDay(images);
-  if (!p) return null;
-  const img = imgOf(images, p);
-  const price = parseCents(p.price) > 0 ? centsText(parseCents(p.price)) : p.price;
-  return (
-    <section className="lt-pop-in" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', padding: '20px', borderRadius: '26px', backgroundColor: dc('#FFFFFF'), border: `2px solid ${TH.line}` }}>
-      {img
-        ? <img src={img} alt={p.name} style={{ flex: '0 0 150px', width: '150px', height: '150px', objectFit: 'cover', borderRadius: '20px' }} />
-        : <div style={{ flex: '0 0 150px', height: '150px', borderRadius: '20px', backgroundColor: TH.tintYellow, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '60px' }}>🥖</div>}
-      <div style={{ flex: '1 1 260px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1.5px' }}>⭐ Produkt des Tages</div>
-        <div style={{ fontFamily: TH.serif, fontSize: '32px', lineHeight: 1.05 }}>{p.name}</div>
-        <div style={{ fontSize: '16px', color: TH.muted }}>{[p.group, p.weight, price].filter(Boolean).join(' · ')}</div>
-        <div style={{ fontSize: '17px', lineHeight: 1.45, color: TH.brown }}>{firstSentence(p.description)}</div>
-        <div style={{ fontSize: '16px', lineHeight: 1.4, padding: '8px 12px', borderRadius: '12px', backgroundColor: TH.tintYellow }}><strong>Im Verkauf sagen:</strong> {p.shortIngredients}</div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '15px', color: TH.muted }}>Allergene: {p.allergens.length ? p.allergens.join(', ') : 'keine angegeben'}</span>
-          {onOpen && <button onClick={onOpen} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Alle Steckbriefe ›</button>}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 // ═════════════════════════ Adventskalender ═════════════════════════
 
 export type AdventDone = Record<string, { ok: boolean; d?: string; qid?: number }>;
