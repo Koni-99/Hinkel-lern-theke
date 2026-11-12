@@ -3,7 +3,7 @@ import { dc, isDarkMode } from './data';
 import { CATS, questions as rawQuestions, examQuestions } from './questions';
 import { SHOP_PRODUCTS } from './shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 154;
+const APP_VERSION: number = 155;
 // Versionsnummern der anderen Dateien – fehlt eine, ist die Datei veraltet (dann 0)
 const GAMES_VERSION: number = Number((GamesModule as any).GAMES_VERSION) || 0;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -17,19 +17,23 @@ const UTILS_VERSION: number = Number((UtilsModule as any).UTILS_VERSION) || 0;
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, topWeak, WEAK_MAX } from './focus';
-import { SORTIMENT_SUBFILTERS, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './data';
-import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, getExamEvaluation, shuffleQuestionOptions, shuffleArray, todayLocal, sanitizeUsername, getRightAnswerText, isLeaderboardExcludedCategory, hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT, settleBattle, awardBattlePoints, applyProductFixes, patchProductQuestion, registerNewProducts, battleWinnerSide } from './utils';
+import { BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './data';
+import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleQuestionOptions, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory, hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT, settleBattle, awardBattlePoints, applyProductFixes, patchProductQuestion, registerNewProducts, battleWinnerSide } from './utils';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
 import { KassenblitzView, ThekenSimulatorView, BilderQuizView, AllergenTrainerView, buildPhotoBattleQuestions, PreisDuellView, SchneideProfiView, AdventView, ThekenAnsturmView, buildBilderPool, adventPoints, AdventDone, LEARN_PATTERNS, LearnItem, LearnKind, KnownMap, SpeakButton } from './components/KassenblitzView';
 import * as GamesModule from './components/KassenblitzView';
 import * as UtilsModule from './components/minigameUtils';
-import { StarRating, starsFor, ReceiptHead, ReceiptFoot, PrizeBag, ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './components/minigameUtils';
-import { productImageKey, AusbildungView, LernpfadView, GluecksradCard, buildPfad, WHEEL, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, onboardingStatus, computeBadges, ihkGrade, correctIdSet, ConfettiOverlay, AnswerFx, GameProgress, ReportContext, FloatingReportButton, ONBOARDING_DAYS, APP_WEEK_DAYS, appWeekStatus, ROLE_INFO, StaffRole, setGameReporter, reportKeyOf, GameReport, ReportLink, StatistikView, comboTake, comboReset, IntroTour, HilfeView, LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './components/minigameUtils';
-import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON, CAT_STYLE, wxKindOf, WxIcon, ShopIcon3D, idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat, TAB_ORDER, nameClassOf, PT_SHOP, TipShop, PinSetupForm } from './appBasis';
+import { PrizeBag, ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './components/minigameUtils';
+import { productImageKey, AusbildungView, LernpfadView, GluecksradCard, buildPfad, WHEEL, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, onboardingStatus, computeBadges, correctIdSet, ConfettiOverlay, FloatingReportButton, ONBOARDING_DAYS, APP_WEEK_DAYS, appWeekStatus, ROLE_INFO, StaffRole, setGameReporter, reportKeyOf, GameReport, StatistikView, comboTake, comboReset, IntroTour, HilfeView, LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './components/minigameUtils';
+import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON, wxKindOf, WxIcon, ShopIcon3D, idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat, TAB_ORDER, nameClassOf, PT_SHOP, TipShop, PinSetupForm } from './appBasis';
 import type { ShopItem, PtItem } from './appBasis';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
+import { QuizResult } from './screens/quiz/QuizResult';
+import { QuizQuestion } from './screens/quiz/QuizQuestion';
+import { QuizLevels } from './screens/quiz/QuizLevels';
+import { QuizCategories } from './screens/quiz/QuizCategories';
 
 
 
@@ -2414,435 +2418,16 @@ export default function App() {
         )}
 
         {/* ═════════ LERNEN-ÜBERSICHT ═════════ */}
-        {activeTab === 'quiz' && currentQuizCategory === null && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
-            <PageHead title="Lernen" subtitle="Such dir einen Bereich aus und leg los. Nach jeder Antwort siehst du die Erklärung." />
-
-            <section style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px' }}>
-                <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '32px' }}>Hier lernst du</h2>
-                <span style={{ fontSize: '17px', color: LT.muted }}>{questions.length} Fragen</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-                {['Alle', ...CATS].map((cat, ci) => {
-                  const prog = getCategoryProgress(cat);
-                  const pct = prog.total > 0 ? Math.round((prog.totalAnswered / prog.total) * 100) : 0;
-                  return (
-                    <button key={cat} onClick={() => { setCurrentQuizCategory(cat); setSelectedSubfilter('all'); setSelectedLevel(null); }} className="lt-card" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left', cursor: 'pointer', color: LT.ink, padding: '20px', backgroundColor: dc('#FFFFFF'), borderColor: cat === 'Alle' ? '#FFC72C' : LT.line, borderWidth: cat === 'Alle' ? '2px' : '1px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ flex: '0 0 auto', width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={(CAT_STYLE[cat] || CAT_STYLE.Alle).icon} size={22} width={1.9} /></span><span style={{ fontWeight: 700, fontSize: '19px' }}>{cat === 'Alle' ? 'Alle Bereiche mischen' : cat}</span></span>
-                      <div style={{ height: '10px', backgroundColor: dc('#F4EADB'), borderRadius: '999px', overflow: 'hidden' }}>
-                        <div className="lt-fill" style={{ width: `${pct}%`, height: '100%', backgroundColor: LT.brown, borderRadius: '999px', animationDelay: `${0.15 + ci * 0.08}s` }} />
-                      </div>
-                      <span style={{ fontSize: '16px', color: LT.muted }}>{prog.totalAnswered} von {prog.total} gemeistert · {pct} %</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-
-            <h2 style={{ margin: '4px 0 -10px', fontFamily: LT.serif, fontWeight: 400, fontSize: '30px' }}>Mehr zum Üben</h2>
-            <div className="lt-uebung" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-              <button disabled={isDailyDone} onClick={launchDailyChallenge} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: isDailyDone ? 'default' : 'pointer', opacity: isDailyDone ? 0.7 : 1 }}>
-                <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.bolt} size={22} width={1.9} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Tages-Challenge</span>
-                <span style={{ fontSize: '17px' }}>{isDailyDone ? 'Heute erledigt, bis morgen!' : '5 Fragen, Extra-Punkte'}</span>
-              </button>
-              <button onClick={launchPersonalWeaknessQuiz} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.repeat} size={24} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Fehler-Stapel</span>
-                <span style={{ fontSize: '17px' }}>{myWrongCount === 0 ? 'Leer, prima!' : fehlerDue > 0 ? `${fehlerDue} heute fällig · ${myWrongCount} im Stapel` : `${myWrongCount} im Stapel · heute nichts fällig`}</span>
-              </button>
-              {showErsteWoche && (
-                <button onClick={() => setActiveTab('einarbeitung')} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                  <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.checklist} size={24} /></span>
-                  <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Erste Woche bei Hinkel</span>
-                  <span style={{ fontSize: '17px' }}>{onboarding.done} von {onboarding.total} erledigt</span>
-                </button>
-              )}
-              {showAppWeek && (
-                <button onClick={() => setActiveTab('appwoche')} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                  <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.phone} size={24} /></span>
-                  <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Erste Woche mit der App</span>
-                  <span style={{ fontSize: '17px' }}>{appWeek.done} von {appWeek.total} erledigt</span>
-                </button>
-              )}
-              {(() => {
-                const open = overallPercent >= EXPERT_MIN;
-                const doneToday = localStorage.getItem(`hinkel_expert_${username.toLowerCase()}`) === todayLocal();
-                return (
-                  <button onClick={launchExpertQuiz} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: open ? LT.ink : LT.muted, textAlign: 'left', cursor: 'pointer', opacity: doneToday ? 0.6 : 1 }}>
-                    <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={open ? ICON.medal : ICON.lock} size={24} /></span>
-                    <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Experten-Ecke</span>
-                    <span style={{ fontSize: '17px' }}>{!open ? `Beantworte Fragen richtig: ab ${EXPERT_MIN} % gemeistert geht sie auf (du hast ${overallPercent} %)` : doneToday ? 'Heute geschafft, morgen geht es weiter' : '10 knifflige Fragen, doppelte Punkte'}</span>
-                  </button>
-                );
-              })()}
-              {!isAdmin && (overallPercent >= 90) && (
-                <button onClick={launchMeisterRunde} disabled={!isMeister} className={isMeister ? 'lt-card lt-meister-card' : 'lt-card'} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: isMeister ? dc('#FFF4C7') : dc('#EFE6D8'), color: isMeister ? LT.ink : LT.muted, textAlign: 'left', cursor: isMeister ? 'pointer' : 'default' }}>
-                  <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={isMeister ? ICON.medal : ICON.lock} size={24} /></span>
-                  <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Meister-Runde</span>
-                  <span style={{ fontSize: '17px' }}>{isMeister ? '15 schwere Fragen, dreifache Punkte, so oft du willst' : `Für alle mit 100 % gemeistert, noch ${meisterLeft} ${meisterLeft === 1 ? 'Frage' : 'Fragen'}`}</span>
-                </button>
-              )}
-              {!isAdmin && (
-                <button onClick={() => { setPfadMsg(''); setActiveTab('pfad'); }} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                  <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.dice} size={24} /></span>
-                  <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Lernpfad</span>
-                  <span style={{ fontSize: '17px' }}>{(Number(myProg._pfad) || 0) >= 24 ? 'Ziel erreicht, Brotmeister!' : `Feld ${(Number(myProg._pfad) || 0) + 1} von 24 · Feld für Feld zum Brotmeister`}</span>
-                </button>
-              )}
-              <button onClick={launchSonderverkaufTrainer} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.swap} size={24} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Alternativen-Trainer</span>
-                <span style={{ fontSize: '17px' }}>Sonderverkauf & Kundenberatung</span>
-              </button>
-            </div>
-
-            {/* Spielen zählt fürs Lernen */}
-            <section style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '20px 22px', borderRadius: '22px', backgroundColor: '#F6EFE2' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <span aria-hidden="true" style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: '#1F140C', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.game} size={24} width={1.9} /></span>
-                <div style={{ flex: '1 1 260px' }}>
-                  <div style={{ fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.1 }}>Keine Lust auf Quiz? Spielen zählt auch!</div>
-                  <div style={{ fontSize: '17px', color: LT.brown, marginTop: '4px' }}>{learnableCount} Fragen kannst du auch nebenbei in Spielen abhaken, richtig beantwortet ist richtig beantwortet.</div>
-                </div>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
-                {[
-                  { t: 'Theken-Simulator', d: 'Zutaten, Preise, Mehl und Schnitt im Kundengespräch', tab: 'theke' },
-                  { t: 'Schneide-Profi', d: 'Alle Fragen zur Schnittstärke', tab: 'schneiden' },
-                  { t: 'Alternativen-Jäger', d: 'Fragen „ausverkauft, welche Alternative?“', tab: 'alternativen' },
-                  { t: 'Welches Brot ist das?', d: 'Beschreibung und Warengruppe der erkannten Produkte', tab: 'bilderquiz' },
-                  { t: 'Allergene-Training', d: 'Allergen-Fragen zu den richtig beratenen Produkten', tab: 'allergene' },
-                  { t: 'Teurer oder billiger?', d: 'Preis-Fragen zu den aufgedeckten Produkten', tab: 'preisduell' },
-                  { t: 'Quiz Battle', d: 'Jede Battle-Frage zählt wie im Quiz', tab: 'battle' },
-                  ...(nowMonth === 11 ? [{ t: 'Adventskalender', d: 'Jedes Türchen ist eine Quizfrage', tab: 'advent' }] : []),
-                ].map(g => (
-                  <button key={g.t} onClick={() => { if (g.tab === 'battle') { setBattleState('menu'); fetchCloudData(); } setActiveTab(g.tab); }} style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '12px 14px', borderRadius: '14px', border: 'none', backgroundColor: dc('#FFFFFF'), color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                    <span style={{ fontWeight: 700, fontSize: '17px' }}>{g.t} ›</span>
-                    <span style={{ fontSize: '15px', color: LT.muted }}>{g.d}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <details className="lt-fold" style={{ ...cardStyle, padding: 0 }}>
-              <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '14px', padding: '18px 22px', minHeight: '60px' }}>
-                <span aria-hidden="true" style={{ width: '46px', height: '46px', borderRadius: '14px', backgroundColor: '#1F140C', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.cap} size={24} width={1.9} /></span>
-                <span style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.1 }}>Prüfungen</span>
-                  <span style={{ display: 'block', fontSize: '15px', color: LT.muted }}>Für Azubis und alle, die es genau wissen wollen</span>
-                </span>
-                <span className="lt-fold-arrow" aria-hidden="true" style={{ fontSize: '20px' }}>▾</span>
-              </summary>
-              <div style={{ padding: '0 12px 12px' }}>{examSection}</div>
-            </details>
-          </div>
-        )}
+        {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }} />}
 
         {/* ═════════ SCHWIERIGKEIT WÄHLEN ═════════ */}
-        {activeTab === 'quiz' && currentQuizCategory !== null && selectedLevel === null && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-            <PageHead title={currentQuizCategory === 'Alle' ? 'Alle Bereiche' : currentQuizCategory} subtitle="Wie schwer soll es sein?" onBack={() => setCurrentQuizCategory(null)} backLabel="Zurück zu Lernen" />
-            {currentQuizCategory === 'Sortiment & Warenkunde' && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {SORTIMENT_SUBFILTERS.map(sub => {
-                  const active = selectedSubfilter === sub.id;
-                  const subQs = questions.filter((q: any) => q.category === 'Sortiment & Warenkunde' && (sub.id === 'all' || matchesSortimentSubfilter(q, sub.id)));
-                  const subOk = correctIdSet(myProg); const subDone = subQs.filter((q: any) => subOk.has(q.id)).length;
-                  return (
-                    <button key={sub.id} onClick={() => setSelectedSubfilter(sub.id)} style={{ minHeight: '48px', padding: '0 16px', borderRadius: '999px', border: active ? 'none' : `2px solid ${LT.line}`, backgroundColor: active ? LT.brown : dc('#FFFFFF'), color: active ? dc('#FFF6E0') : LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>{sub.label} <span style={{ fontWeight: 400, opacity: 0.8 }}>{subDone}/{subQs.length}</span></button>
-                  );
-                })}
-              </div>
-            )}
-            <button onClick={toggleOnlyNew} role="switch" aria-checked={onlyNew} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', borderRadius: '18px', border: `2px solid ${onlyNew ? LT.brown : LT.line}`, backgroundColor: onlyNew ? TH.tintYellow : dc('#FFFFFF'), color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-              <span aria-hidden="true" style={{ flex: '0 0 54px', height: '30px', borderRadius: '999px', backgroundColor: onlyNew ? LT.brown : dc('#D9CBB5'), position: 'relative', transition: 'background-color .2s ease' }}>
-                <span style={{ position: 'absolute', top: '3px', left: onlyNew ? '27px' : '3px', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), transition: 'left .2s ease' }} />
-              </span>
-              <span style={{ flex: 1 }}>
-                <span style={{ display: 'block', fontSize: '18px', fontWeight: 700 }}>Nur neue Fragen</span>
-                <span style={{ display: 'block', fontSize: '16px', color: LT.muted }}>{onlyNew ? 'Fragen, die du schon richtig hattest, werden übersprungen.' : 'Alle Fragen kommen dran, auch die, die du schon kannst.'}</span>
-              </span>
-            </button>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-              {[
-                { level: 'easy', title: 'Einfach', text: 'zum Einstieg', bg: TH.tintSage },
-                { level: 'hard', title: 'Schwer', text: 'zum Knobeln', bg: TH.tintPeach },
-                { level: 'mixed', title: 'Gemischt', text: 'bunt gemischt', bg: TH.tintYellow }
-              ].map(l => {
-                const left = quizPool(l.level, onlyNew).length;
-                const done = onlyNew && left === 0;
-                return (
-                  <button key={l.level} onClick={() => launchQuizWithLevel(l.level)} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: done ? dc('#F4EADB') : l.bg, color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                    <span style={{ fontFamily: LT.serif, fontSize: '30px' }}>{l.title}</span>
-                    <span style={{ fontSize: '17px', color: LT.brown }}>{done ? 'Alles gemeistert ✓' : `${Math.min(8, left)} Fragen ${l.text}`}</span>
-                    {onlyNew && !done && <span style={{ fontSize: '15px', color: LT.muted }}>noch {left} neue</span>}
-                  </button>
-                );
-              })}
-            </div>
-            {(isAdmin || overallPercent >= 50) && <button onClick={() => launchQuizWithLevel('all_at_once')} style={{ ...btnSecondary, alignSelf: 'stretch' }}>{onlyNew ? `Alle neuen Fragen am Stück (${quizPool('all_at_once', true).length})` : 'Alle Fragen dieses Bereichs am Stück'}</button>}
-          </div>
-        )}
+        {activeTab === 'quiz' && currentQuizCategory !== null && selectedLevel === null && <QuizLevels {...{ questions, isAdmin, currentQuizCategory, setCurrentQuizCategory, selectedSubfilter, setSelectedSubfilter, onlyNew, toggleOnlyNew, quizPool, launchQuizWithLevel, overallPercent, myProg }} />}
 
         {/* ═════════ FRAGE ═════════ */}
-        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && (() => {
-          const currentQ = quizList[currentIndex];
-          const requiredIndices: number[] = currentQ.correctMulti || [currentQ.correct];
-          const isMulti = requiredIndices.length > 1;
-          const jokerKey = `${currentQuizCategory}|${currentIndex}|${currentQ.id}`;
-          const hiddenOpts: number[] = jokerHide && jokerHide.key === jokerKey ? jokerHide.idx : [];
-          const myJokers = Number(myProg._jokers) || 0;
-          const canJoker = !isAnswered && !isExamMode && !examSim && !isMulti && !isAdmin && myJokers > 0 && hiddenOpts.length === 0 && currentQ.options.length >= 3;
-          const mins = Math.floor(examSecondsLeft / 60);
-          const secs = examSecondsLeft % 60;
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <div id="lt-quiz-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', scrollMarginTop: '12px' }}>
-                <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', minHeight: '44px', padding: '0 14px 0 10px', borderRadius: '999px', border: '1px solid #E8DCC6', backgroundColor: dc('#FFFFFF'), color: LT.brown, fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={['M6 6l12 12', 'M18 6 6 18']} size={16} width={2.6} />Abbrechen</button>
-                <span style={{ fontSize: '17px', fontWeight: 700, color: LT.muted }}>{currentQuizCategory}</span>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  {isExamMode && (examTimerEnabled || examSim) && (
-                    <span style={{ padding: '8px 14px', borderRadius: '12px', backgroundColor: examSecondsLeft <= 60 ? TH.tintPeach : TH.tintYellow, color: examSecondsLeft <= 60 ? TH.red : LT.ink, fontSize: '17px', fontWeight: 700 }}>{mins}:{secs < 10 ? `0${secs}` : secs}</span>
-                  )}
-                </div>
-              </div>
-              <GameProgress label="Frage" index={currentIndex} answered={isAnswered} total={quizList.length} />
-
-              <div key={currentIndex} className={`lt-qcard ${isAnswered && !examSim ? ((lastDelta !== null ? lastDelta > 0 : wrongQuestions.every(w => w.id !== currentQ.id)) ? 'lt-ans-ok' : 'lt-ans-bad') : 'lt-pop-in'}`} style={{ ...cardStyle, padding: '26px 22px 22px', display: 'flex', flexDirection: 'column', gap: '18px', position: 'relative' }}>
-                {isAnswered && !examSim && (() => {
-                  const ok = (lastDelta !== null ? lastDelta > 0 : wrongQuestions.every(w => w.id !== currentQ.id));
-                  const text = lastDelta !== null ? `${lastDelta > 0 ? '+' : ''}${lastDelta} Punkte` : ok ? '✓ richtig' : '✗ falsch';
-                  return <AnswerFx fx={{ k: currentIndex + 1, ok, text, streak: quizRun, pts: lastDelta !== null && lastDelta > 0 ? lastDelta : ok ? 0 : undefined }} />;
-                })()}
-                {isMulti && (
-                  <div style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: '12px', backgroundColor: TH.tintBlue, fontSize: '16px', fontWeight: 700 }}>Mehrere Antworten richtig, alle antippen, dann „Antwort prüfen“</div>
-                )}
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                  <h2 style={{ margin: 0, flex: '1 1 240px', minWidth: 0, fontFamily: LT.serif, fontSize: '25px', lineHeight: 1.22, color: LT.ink, overflowWrap: 'break-word', textWrap: 'balance' as any }}>{currentQ.question}</h2>
-                  <SpeakButton small text={isAnswered && !examSim ? `Richtig ist: ${getRightAnswerText(currentQ)}. ${currentQ.explanation || ''}` : `${currentQ.question} ${currentQ.options.map((o: string, i: number) => `${String.fromCharCode(65 + i)}: ${o}`).join('. ')}`} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {currentIndex === 0 && !isAnswered && !isExamMode && !examSim && !isAdmin && !doubleOn && (Number(myProg._jokersDouble) || 0) > 0 && (
-                    <button onClick={() => { setDoubleOn(true); spendJoker('_jokersDouble'); setToast('✖️ Doppel-Joker aktiv: Punkte für dieses Quiz zählen doppelt!'); }} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintPeach, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>✖️ Doppel-Joker einsetzen ({Number(myProg._jokersDouble) || 0} übrig)</button>
-                  )}
-                  {doubleOn && !isAnswered && <span className="lt-deal" style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '999px', backgroundColor: TH.tintPeach, fontWeight: 800, fontSize: '15px' }}>✖️ Doppelte Punkte aktiv</span>}
-                  {!isAnswered && !isExamMode && !examSim && !isAdmin && (Number(myProg._jokersSwap) || 0) > 0 && (
-                    <button onClick={applySwapJoker} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintBlue, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>🔄 Frage tauschen ({Number(myProg._jokersSwap) || 0} übrig)</button>
-                  )}
-                  {canJoker && (
-                    <button onClick={() => applyJoker(jokerKey, currentQ.options.map((_: string, i: number) => i).filter((i: number) => !requiredIndices.includes(i)))} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintYellow, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>🃏 50:50-Joker einsetzen ({myJokers} übrig)</button>
-                  )}
-                  {currentQ.options.map((opt: string, idx: number) => {
-                    if (hiddenOpts.includes(idx) && !isAnswered) return null;
-                    const isCorrectOption = requiredIndices.includes(idx);
-                    const isSelected = isMulti ? selectedMulti.includes(idx) : selectedAnswer === idx;
-                    let bg = isSelected ? '#FFF3CF' : '#FFFDF6';
-                    let border = isSelected ? '#1F140C' : '#EADCC3';
-                    let badgeBg = isSelected ? '#1F140C' : dc('#FFFFFF');
-                    let badgeColor = isSelected ? '#FFD86B' : LT.ink;
-                    let dim = false;
-                    if (isAnswered) {
-                      if (isCorrectOption) { bg = '#E3F2E1'; border = '#2F7A3E'; badgeBg = '#2F7A3E'; badgeColor = dc('#FFFFFF'); }
-                      else if (isSelected) { bg = '#FCE4DE'; border = '#D92D20'; badgeBg = '#D92D20'; badgeColor = dc('#FFFFFF'); }
-                      else { bg = dc('#FFFFFF'); border = '#EADCC3'; badgeBg = dc('#FFFFFF'); badgeColor = LT.muted; dim = true; }
-                    }
-                    return (
-                      <button key={idx} className={`lt-qopt${dim ? ' lt-qopt-dim' : ''}${isAnswered ? (isCorrectOption ? (isSelected ? ' lt-correct lt-glow' : ' lt-correct') : isSelected ? ' lt-wrong' : '') : ''}`} onClick={() => handleOptionClick(idx)} disabled={isAnswered} style={{ display: 'flex', alignItems: 'center', gap: '14px', minHeight: '62px', padding: '10px 14px', borderRadius: '16px', border: `2px solid ${border}`, boxShadow: `0 3px 0 ${border}`, backgroundColor: bg, color: LT.ink, textAlign: 'left', fontSize: '18px', lineHeight: 1.35, cursor: isAnswered ? 'default' : 'pointer' }}>
-                        <span style={{ flex: '0 0 36px', height: '36px', borderRadius: isMulti ? '10px' : '50%', backgroundColor: badgeBg, color: badgeColor, border: `2px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '17px', boxSizing: 'border-box' }}>
-                          {isMulti ? (isSelected ? '✓' : '') : String.fromCharCode(65 + idx)}
-                        </span>
-                        <span style={{ flex: 1 }}>{opt}</span>
-                        {isAnswered && isCorrectOption && <span style={{ fontWeight: 700, fontSize: '14px', color: '#2F7A3E', whiteSpace: 'nowrap' }}>richtig</span>}
-                        {isAnswered && !isCorrectOption && isSelected && <span style={{ fontWeight: 700, fontSize: '14px', color: '#D92D20', whiteSpace: 'nowrap' }}>deine Antwort</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-                {examSim && (
-                  <>
-                    <div style={{ fontSize: '16px', color: LT.muted }}>Prüfungssimulation: Die Lösungen siehst du erst am Ende.</div>
-                    <button onClick={examSimNext} className="lt-sticky-next" style={btnPrimary}>
-                      {(isMulti ? selectedMulti.length === 0 : selectedAnswer === null) ? 'Überspringen' : currentIndex + 1 < quizList.length ? 'Weiter →' : 'Prüfung abgeben'}
-                    </button>
-                  </>
-                )}
-                {typeof currentQ.id === 'number' && <ReportContext report={{ game: examSim ? 'Prüfung' : 'Quiz', qid: currentQ.id, product: currentQ.product, text: currentQ.question }} />}
-                {isMulti && !isAnswered && !examSim && (
-                  <button onClick={submitMultiAnswer} disabled={selectedMulti.length === 0} style={{ ...btnPrimary, opacity: selectedMulti.length === 0 ? 0.45 : 1 }}>Antwort prüfen ({selectedMulti.length} gewählt)</button>
-                )}
-                {isAnswered && (
-                  <>
-                    {(() => { const okNow = lastDelta !== null ? lastDelta > 0 : wrongQuestions.every(w => w.id !== currentQ.id); return (
-                    <div className="lt-expl lt-qnote" style={{ marginTop: '14px' }}>
-                      <img src={HINKEL_KUEKEN} alt="" aria-hidden="true" className={`lt-loaded lt-qnote-kueken${okNow ? ' lt-happy' : ''}`} />
-                      <span className="lt-qnote-lbl">{okNow ? 'Richtig! Gut zu wissen' : 'Nicht ganz. Merk dir das'}</span>
-                      {currentQ.explanation}
-                    </div>); })()}
-                    <button onClick={() => {
-                      if (currentIndex + 1 < quizList.length) { setCurrentIndex(currentIndex + 1); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); }
-                      else { setQuizFinished(true); if (!isAdmin && username && quizList.length >= 5) { const allOk = correctCount === quizList.length; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); pr._perfRun = allOk ? (Number(pr._perfRun) || 0) + 1 : 0; if (pr._perfRun >= 5) pr._secret = { ...(pr._secret || {}), perfekt: 1 }; return curr; }); } const isPfad = String(currentQuizCategory || '').startsWith('Lernpfad'); saveScoreToLeaderboard(Math.max(0, doubleOn ? score * 2 : score), isPfad ? 'Lernpfad' : undefined, true); if (doubleOn && score > 0) { setDoubleOn(false); setToast(`✖️ Doppel-Joker: ${score * 2} statt ${score} Punkte!`); } if (isPfad) finishPfad(correctCount); }
-                    }} className="lt-sticky-next" style={BTN_YELLOW}>
-                      {currentIndex + 1 < quizList.length ? 'Nächste Frage' : 'Kassenbon zeigen'}<LtIcon paths={['M5 12h14', 'm13 6 6 6-6 6']} size={22} width={2.6} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-        })()}
+        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg }} />}
 
         {/* ═════════ AUSWERTUNG ═════════ */}
-        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && (() => {
-          const evalInfo = getExamEvaluation(correctCount, quizList.length);
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-              <div className="lt-receipt" style={{ ...cardStyle, padding: '26px 24px 44px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                <ConfettiOverlay active={quizList.length > 0 && correctCount / quizList.length >= 0.75} />
-                <ReceiptHead />
-                <div style={{ fontSize: '16px', fontWeight: 700, color: LT.muted, textTransform: 'uppercase', letterSpacing: '2px' }}>{currentQuizCategory} {correctCount === 0 ? 'beendet' : correctCount === quizList.length ? 'perfekt geschafft' : 'geschafft'}</div>
-                <StarRating n={starsFor(quizList.length ? correctCount / quizList.length : 0)} />
-                <div className="lt-count" style={{ fontFamily: LT.serif, fontSize: '66px', lineHeight: 1 }}>{correctCount} / {quizList.length}</div>
-                <div style={{ fontSize: '19px', color: LT.brown }}>Fragen richtig</div>
-                {(() => {
-                  const n = quizList.length; const pct = n ? Math.round((correctCount / n) * 100) : 0;
-                  const combo = !isExamMode && !isAdmin && score > 0 ? lastComboExtra : 0;
-                  const summe = !isExamMode && !isAdmin && score > 0 ? Math.round((score + combo) * streakMult) : Math.max(0, score);
-                  const serie = Math.max(0, summe - Math.max(0, score) - combo);
-                  const stamp = correctCount === n && n > 0 ? 'PERFEKT' : pct >= 75 ? 'SPITZE' : pct >= 50 ? 'GESCHAFFT' : 'WEITER ÜBEN';
-                  return (
-                    <>
-                      <span className={`lt-rc-stamp${pct >= 50 ? ' ok' : ''}`} aria-hidden="true">{stamp}</span>
-                      <div className="lt-rc-mono lt-rc-lines">
-                        <div><span>Bereich</span><span style={{ textAlign: 'right' }}>{String(currentQuizCategory).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim()}</span></div>
-                        <div><span>Richtig</span><span>{correctCount}</span></div>
-                        <div><span>Falsch</span><span>{n - correctCount}</span></div>
-                        <div><span>Trefferquote</span><span>{pct} %</span></div>
-                        {quizRun > 1 && <div><span>Serie im Quiz</span><span>{quizRun}</span></div>}
-                        {!isExamMode && <div><span>Punkte</span><span>{score > 0 ? `+${score}` : '0'}</span></div>}
-                        {combo > 0 && <div><span>Combo-Bonus</span><span>+{combo}</span></div>}
-                        {serie > 0 && <div><span>Serien-Bonus</span><span>+{serie}</span></div>}
-                        {!isExamMode && <div className="lt-rc-sum"><span>SUMME</span><span>{summe.toLocaleString('de-DE')} PKT</span></div>}
-                      </div>
-                    </>
-                  );
-                })()}
-                {!isExamMode && score <= 0 && (
-                  <div style={{ marginTop: '6px', padding: '10px 18px', borderRadius: '14px', backgroundColor: score > 0 ? TH.tintSage : TH.tintPeach, color: score > 0 ? TH.green : LT.brown, fontSize: '19px', fontWeight: 700 }}>
-                    {score > 0 ? `+${score} Punkte für die Bestenliste` : 'Diesmal 0 Punkte. Schau dir die Erklärungen an, beim nächsten Mal klappt es!'}
-                  </div>
-                )}
-                {!isExamMode && !isAdmin && score > 0 && lastComboExtra > 0 && (
-                  <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', background: 'linear-gradient(90deg,#C9971C,#FFE27A,#C9971C)', fontSize: '16px', fontWeight: 800 }}>⚡ Combo-Bonus: +{lastComboExtra} Punkte</div>
-                )}
-                {!isExamMode && !isAdmin && score > 0 && streakMult > 1 && (
-                  <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', backgroundColor: dc('#FFE0B2'), fontSize: '16px', fontWeight: 800 }}>🔥 Serien-Bonus ×{streakMult.toFixed(1).replace('.', ',')}: +{Math.round(score * streakMult) - score} Punkte extra</div>
-                )}
-                {!isExamMode && !isAdmin && isNewcomer && (
-                  <div style={{ fontSize: '15px', color: LT.muted }}>🌱 In deiner ersten Woche gibt es für falsche Antworten keine Minuspunkte.</div>
-                )}
-                {!isExamMode && !isAdmin && masteryStart && (() => {
-                  const now = masteredState();
-                  const plus = Math.max(0, now.ids.size - masteryStart.ids);
-                  const prodPlus = Math.max(0, now.products.size - masteryStart.products);
-                  return (
-                    <div className="lt-levelup" style={{ marginTop: '6px', width: '100%', maxWidth: '520px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.tintBlue }}>
-                        <div style={{ fontSize: '26px' }} aria-hidden="true">📈</div>
-                        <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1 }}>{plus > 0 ? `+${plus}` : '±0'}</div>
-                        <div style={{ fontSize: '14px', color: LT.brown }}>Fragen neu gemeistert · jetzt {now.ids.size} von {questions.length}</div>
-                      </div>
-                      <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.tintSage }}>
-                        <div style={{ fontSize: '26px' }} aria-hidden="true">🥖</div>
-                        <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1 }}>{now.products.size} <span style={{ fontSize: '18px' }}>von {productTotal}</span></div>
-                        <div style={{ fontSize: '14px', color: LT.brown }}>Produkten kennst du schon{prodPlus > 0 ? ` (+${prodPlus} neu)` : ''}</div>
-                        {(() => { const miss = Array.from(albumNames).filter(n => !now.products.has(n)); return miss.length > 0 && miss.length <= 8 ? <>
-                          <div style={{ fontSize: '13px', color: LT.brown, marginTop: '6px' }}>Noch offen: {miss.join(', ')}</div>
-                          <button onClick={() => launchProductQuiz(miss)} style={{ marginTop: '8px', minHeight: '40px', padding: '0 12px', borderRadius: '10px', border: 'none', backgroundColor: dc('#2F5D3A'), color: dc('#FFFFFF'), fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Diese Produkte üben</button>
-                        </> : null; })()}
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {examSim && (() => {
-                  const pct = quizList.length ? Math.round((correctCount / quizList.length) * 100) : 0;
-                  const g = ihkGrade(pct);
-                  return (
-                    <div style={{ marginTop: '6px', padding: '16px 22px', borderRadius: '18px', backgroundColor: g.passed ? TH.tintSage : TH.tintPeach, maxWidth: '520px' }}>
-                      <div style={{ fontFamily: LT.serif, fontSize: '40px', lineHeight: 1.05, color: g.passed ? TH.green : TH.red }}>Note {g.note}, {g.text}</div>
-                      <div style={{ fontSize: '18px', marginTop: '6px', color: LT.brown }}>{pct} % richtig · {g.passed ? 'bestanden' : 'leider nicht bestanden (ab 50 %)'}</div>
-                      {examPrev.last !== null && (() => { const d = pct - (examPrev.last as number); return (
-                        <div style={{ marginTop: '10px', fontSize: '17px', fontWeight: 700, color: d > 0 ? TH.green : d < 0 ? TH.red : LT.brown }}>
-                          {d > 0 ? `📈 ${d} % besser als beim letzten Mal (${examPrev.last} %)` : d < 0 ? `📉 ${-d} % weniger als beim letzten Mal (${examPrev.last} %)` : `Genauso gut wie beim letzten Mal (${examPrev.last} %)`}
-                          {examPrev.best !== null && pct > (examPrev.best as number) ? ' · 🏆 Neuer Bestwert!' : examPrev.best !== null ? ` · Bestwert ${examPrev.best} %` : ''}
-                        </div>); })()}
-                      {examPrev.hist.length > 1 && (
-                        <div aria-label="Deine letzten Versuche" style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '70px', marginTop: '12px' }}>
-                          {examPrev.hist.map((h, i) => (
-                            <div key={i} title={`${h} %`} style={{ flex: '1 1 0', maxWidth: '36px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                              <span style={{ fontSize: '11px', color: LT.brown }}>{h}</span>
-                              <span style={{ width: '100%', height: `${Math.max(4, h * 0.5)}px`, borderRadius: '6px 6px 2px 2px', backgroundColor: i === examPrev.hist.length - 1 ? (g.passed ? TH.green : TH.red) : dc('#D9C9AE') }} />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-                {isExamMode && !examSim && (
-                  <div style={{ marginTop: '6px', padding: '14px 18px', borderRadius: '16px', backgroundColor: TH.tintYellow, maxWidth: '520px' }}>
-                    <div style={{ fontWeight: 700, fontSize: '19px' }}>{evalInfo.title}</div>
-                    <div style={{ fontSize: '17px', marginTop: '4px', color: LT.brown }}>{evalInfo.desc}</div>
-                  </div>
-                )}
-                <ReceiptFoot />
-              </div>
-
-              {quizList.length > 0 && (() => {
-                const isWrong = (q: any) => wrongQuestions.some(w => w.id === q.id);
-                const firstWrong = quizList.findIndex(isWrong);
-                const open = resOpen !== null && resOpen < quizList.length ? resOpen : firstWrong;
-                const oq: any = open >= 0 ? quizList[open] : null;
-                return (
-                  <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '28px' }}>Deine Antworten</h2>
-                    <div style={{ fontSize: '15px', color: LT.muted }}>Tippe auf eine Frage, um sie dir anzusehen.{firstWrong >= 0 ? ' Rot sind die falschen.' : ''}</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                      {quizList.map((q: any, k: number) => { const bad = isWrong(q); return (
-                        <button key={k} onClick={() => setResOpen(k)} aria-label={`Frage ${k + 1}, ${bad ? 'falsch' : 'richtig'}`} className="lt-res-chip lt-pop-in" style={{ animationDelay: `${Math.min(k, 20) * 0.04}s`, animationFillMode: 'both', backgroundColor: bad ? TH.tintPeach : TH.tintSage, color: bad ? TH.red : TH.green, borderColor: k === open ? LT.brown : 'transparent' }}>{bad ? '✗' : '✓'}<span style={{ fontSize: '13px', color: LT.brown }}>{k + 1}</span></button>
-                      ); })}
-                    </div>
-                    {oq && (
-                      <div key={open} className="lt-pop-in" style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: LT.cream, border: `2px solid ${isWrong(oq) ? TH.red : TH.green}`, fontSize: '17px', lineHeight: 1.45 }}>
-                        <div style={{ fontSize: '13px', fontWeight: 700, color: isWrong(oq) ? TH.red : TH.green, textTransform: 'uppercase', letterSpacing: '1px' }}>Frage {open + 1} · {isWrong(oq) ? 'falsch' : 'richtig'}</div>
-                        <div style={{ fontWeight: 700, marginTop: '4px' }}>{oq.question}</div>
-                        <div style={{ color: TH.green, marginTop: '6px' }}>Richtig: <strong>{getRightAnswerText(oq)}</strong></div>
-                        {oq.explanation && <div style={{ color: LT.muted, marginTop: '4px', fontSize: '16px' }}>{oq.explanation}</div>}
-                        {typeof oq.id === 'number' && <ReportLink report={{ game: isExamMode ? 'Prüfung' : 'Quiz', qid: oq.id, product: oq.product, text: `${oq.question}\nRichtig laut App: ${getRightAnswerText(oq)}` }} />}
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {wrongQuestions.length > 0 && (
-                  <button onClick={retryWrongQuestions} style={{ ...btnPrimary, backgroundColor: TH.red, color: dc('#FFFFFF'), boxShadow: '0 5px 0 #6E2410' }}>Falsche Fragen direkt üben ({wrongQuestions.length})</button>
-                )}
-                {String(currentQuizCategory || '').startsWith('Lernpfad') ? (
-                  <>
-                    {pfadMsg && <div className="lt-levelup" style={{ padding: '14px 18px', borderRadius: '16px', backgroundColor: correctCount >= 4 ? TH.tintSage : TH.tintPeach, color: correctCount >= 4 ? TH.green : TH.red, fontSize: '18px', fontWeight: 800, textAlign: 'center' }}>{pfadMsg}</div>}
-                    <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); setActiveTab('pfad'); }} style={btnPrimary}>🎲 Zurück zum Lernpfad</button>
-                  </>
-                ) : <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); }} style={BTN_YELLOW}>Zurück zu Lernen</button>}
-                <button onClick={() => { setActiveTab('scoreboard'); fetchCloudData(); }} style={btnSecondary}>Zur Bestenliste</button>
-              </div>
-            </div>
-          );
-        })()}
+        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
 
         {activeTab === 'bilderquiz' && <BilderQuizView images={productImages} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
         {activeTab === 'allergene' && <AllergenTrainerView images={productImages} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
