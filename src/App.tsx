@@ -1571,7 +1571,15 @@ export default function App() {
     // Ausbilder-Modus nur mit gültiger Firebase-Anmeldung, ein gespeicherter Name „admin“ reicht nicht
     return u.toLowerCase() === 'admin' && !hasAdminSession() ? '' : u;
   });
-  const [tempUsername, setTempUsername] = useState('');
+  // Umzug vom alten CodeSandbox-Link: der alte Link schickt den Namen mit (…?name=Anna), dann nur noch PIN eingeben
+  const [tempUsername, setTempUsername] = useState(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const n = sanitizeUsername(sp.get('name') || '');
+      if (sp.has('name')) window.history.replaceState(null, '', window.location.pathname);
+      return n.toLowerCase() === 'admin' ? 'admin' : n;
+    } catch { return ''; }
+  });
   const [adminPinInput, setAdminPinInput] = useState('');
   const [adminEmail, setAdminEmail] = useState(() => { try { return localStorage.getItem('hinkel_admin_email') || ''; } catch { return ''; } });
   const [adminLoginMsg, setAdminLoginMsg] = useState('');
@@ -3145,10 +3153,11 @@ export default function App() {
           setTag('meta[name="mobile-web-app-capable"]', meta('mobile-web-app-capable'), el => { el.content = 'yes'; });
           setTag('meta[name="apple-mobile-web-app-title"]', meta('apple-mobile-web-app-title'), el => { el.content = 'Lern-Theke'; });
           setTag('meta[name="apple-mobile-web-app-status-bar-style"]', meta('apple-mobile-web-app-status-bar-style'), el => { el.content = 'default'; });
-          const origin = window.location.origin;
+          // auf GitHub Pages liegt die App im Unterordner /Hinkel-lern-theke/
+          const origin = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
           const manifest = {
             name: 'Hinkel Lern-Theke', short_name: 'Lern-Theke', description: 'Lernen, spielen und Wissen auffrischen, für alle Brotfreunde.',
-            start_url: origin + '/', scope: origin + '/', display: 'standalone', orientation: 'any',
+            start_url: origin, scope: origin, display: 'standalone', orientation: 'any',
             background_color: LT.cream, theme_color: LT.brown,
             icons: [
               { src: i192, sizes: '192x192', type: 'image/png' },

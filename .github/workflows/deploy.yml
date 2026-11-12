@@ -1,0 +1,47 @@
+# Baut die App bei jeder Änderung und stellt sie auf GitHub Pages online:
+# https://koni-99.github.io/Hinkel-lern-theke/
+name: App online stellen
+
+on:
+  push:
+    branches: [claude/app-github-development-hn3cz2, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: App bauen
+        run: npx react-scripts build
+        env:
+          PUBLIC_URL: /Hinkel-lern-theke
+          CI: 'false'
+          DISABLE_ESLINT_PLUGIN: 'true'
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
