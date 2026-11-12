@@ -140,6 +140,8 @@ export function AdminView({
   const [tempCloudUrl, setTempCloudUrl] = useState(cloudUrl);
   const [adminTab, setAdminTab] = useState<'team' | 'reports' | 'message' | 'content' | 'stats' | 'settings'>('team');
   const [openUser, setOpenUser] = useState<string | null>(null);
+  const [teamOpen, setTeamOpen] = useState(false);
+  const [teamCat, setTeamCat] = useState<string>('');
   const [editingQId, setEditingQId] = useState<number | null>(null);
   const [editingPId, setEditingPId] = useState<string | null>(null);
   // Neues Produkt im Sortiment (mit automatischen Quizfragen)
@@ -769,6 +771,78 @@ export function AdminView({
           <div style={cardStyle}><p style={{ margin: 0, fontSize: '18px', color: TH.muted }}>Noch keine Mitarbeiter angemeldet.</p></div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {/* ── Ganzes Team: offene Stolpersteine aller Mitarbeiter zusammen (Version 151) ── */}
+            {(() => {
+              const open: Record<number, { users: string[]; w: number }> = {};
+              allKnownUserKeys.forEach(u => {
+                const ws = (cloudProgress[u] || {}).wrongStats || {};
+                Object.keys(ws).forEach(idStr => {
+                  const id = Number(idStr); const c = cleanStatNumber(ws[idStr]);
+                  if (isNaN(id) || c <= 0) return;
+                  const e = open[id] || (open[id] = { users: [], w: 0 });
+                  e.users.push(u); e.w += c;
+                });
+              });
+              const cardById = new Map<number, any>();
+              allFlashcards.forEach((q: any) => { if (q && q.id !== undefined) cardById.set(Number(q.id), q); });
+              const catOf = (q: any): string => q.category || (q.examGroup === 'ZP' ? 'Zwischenprüfungen' : q.examGroup === 'AP' ? 'Abschlussprüfungen' : 'Sonstiges');
+              const items = Object.keys(open).map(Number)
+                .map(id => ({ id, q: cardById.get(id) || allQById.get(id), ...open[id] }))
+                .filter(x => x.q && !hiddenMap[String(x.id)]);
+              const people = new Set(items.flatMap(x => x.users)).size;
+              const catCount: Record<string, number> = {};
+              items.forEach(x => { const c = catOf(x.q); catCount[c] = (catCount[c] || 0) + 1; });
+              const cats = Object.keys(catCount).sort((a, b) => catCount[b] - catCount[a]);
+              const cat = cats.includes(teamCat) ? teamCat : '';
+              const shown = items.filter(x => !cat || catOf(x.q) === cat).sort((a, b) => b.users.length - a.users.length || b.w - a.w);
+              const shared = items.filter(x => x.users.length > 1).length;
+              const copyTeam = async () => {
+                const lines = [`Offene Fehler im Team${cat ? ` (${cat})` : ''}: ${shown.length} Fragen`, ''];
+                shown.slice(0, 20).forEach((x, i) => lines.push(`${i + 1}. ${x.q.question}\n   Richtig: ${getRightAnswerText(x.q)}\n   Offen bei: ${x.users.map(nameOf).join(', ')}`));
+                const txt = lines.join('\n');
+                try { await navigator.clipboard.writeText(txt); alert('Liste kopiert, z. B. für die Teambesprechung oder WhatsApp.'); } catch { window.prompt('Liste zum Kopieren:', txt); }
+              };
+              return (
+                <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', border: `2px solid ${TH.yellow}` }}>
+                  <button onClick={() => setTeamOpen(!teamOpen)} aria-expanded={teamOpen} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', padding: '16px 20px', border: 'none', background: 'transparent', color: TH.ink, textAlign: 'left', cursor: 'pointer' }}>
+                    <span style={{ flex: '0 0 52px', height: '52px', borderRadius: '50%', backgroundColor: TH.yellow, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>👥</span>
+                    <span style={{ flex: '1 1 200px' }}>
+                      <span style={{ display: 'block', fontSize: '20px', fontWeight: 700 }}>Ganzes Team</span>
+                      <span style={{ display: 'block', fontSize: '16px', color: TH.muted }}>{items.length === 0 ? 'Keine offenen Fehler, top!' : `${items.length} offene ${items.length === 1 ? 'Frage' : 'Fragen'} bei ${people} ${people === 1 ? 'Person' : 'Personen'} · ${shared} bei mehreren`}</span>
+                    </span>
+                    <span style={{ fontSize: '16px', color: TH.muted, whiteSpace: 'nowrap' }}>{teamOpen ? 'Schließen ▲' : 'Details ▼'}</span>
+                  </button>
+                  {teamOpen && (
+                    <div style={{ padding: '4px 20px 20px', display: 'flex', flexDirection: 'column', gap: '14px', borderTop: `2px solid ${TH.line}` }}>
+                      <span style={{ marginTop: '12px', fontSize: '15px', color: TH.muted }}>Fragen, die gerade im Fehler-Stapel der Mitarbeiter liegen. Oben stehen die, die bei den meisten Leuten offen sind, da lohnt sich eine kurze Erklärung für alle.</span>
+                      {items.length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          {['', ...cats].map(c => (
+                            <button key={c || 'alle'} type="button" onClick={() => setTeamCat(c)} style={{ minHeight: '42px', padding: '0 14px', borderRadius: '999px', border: cat === c ? 'none' : `2px solid ${TH.line}`, backgroundColor: cat === c ? TH.brown : TH.white, color: cat === c ? dc('#FFF6E0') : TH.ink, fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>{c ? `${c} (${catCount[c]})` : `Alle (${items.length})`}</button>
+                          ))}
+                          <button type="button" onClick={copyTeam} style={{ ...smallBtn(), marginLeft: 'auto' }}>Liste kopieren</button>
+                        </div>
+                      )}
+                      {shown.length === 0 ? <div style={{ fontSize: '16px', color: TH.green, fontWeight: 700 }}>Keine offenen Fehler, top!</div> : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '520px', overflowY: 'auto' }}>
+                          {shown.map(x => (
+                            <div key={x.id} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: x.users.length > 1 ? TH.tintPeach : TH.cream, fontSize: '16px', lineHeight: 1.4, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+                                <strong style={{ flex: '1 1 240px' }}>{x.q.question}</strong>
+                                <span style={{ fontWeight: 700, whiteSpace: 'nowrap', color: x.users.length > 1 ? TH.red : TH.ink }}>{x.users.length} {x.users.length === 1 ? 'Person' : 'Personen'} · {x.w}× falsch</span>
+                              </div>
+                              <div style={{ fontSize: '14px', color: TH.muted }}>{catOf(x.q)}{x.q.product ? ` · ${x.q.product}` : ''}</div>
+                              <div style={{ color: TH.green }}>Richtig: <strong>{getRightAnswerText(x.q)}</strong></div>
+                              <div style={{ fontSize: '15px' }}>Offen bei: {x.users.map(nameOf).join(', ')}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             {allKnownUserKeys.map(userKey => {
               const seenInfo = cloudLastSeen[userKey];
               const userProgObj = cloudProgress[userKey] || {};
