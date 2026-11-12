@@ -3,7 +3,7 @@ import { dc, isDarkMode } from './data';
 import { CATS, questions as rawQuestions, examQuestions } from './questions';
 import { SHOP_PRODUCTS } from './shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 150;
+const APP_VERSION: number = 152;
 // Versionsnummern der anderen Dateien – fehlt eine, ist die Datei veraltet (dann 0)
 const GAMES_VERSION: number = Number((GamesModule as any).GAMES_VERSION) || 0;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -15,13 +15,13 @@ const TuetenBlitzView = lazy(() => import('./components/TuetenBlitzView').then((
 const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => { ALT_VERSION = Number((m as any).ALT_VERSION) || 0; return { default: m.AlternativenJaegerView }; }));
 const UTILS_VERSION: number = Number((UtilsModule as any).UTILS_VERSION) || 0;
 import { CloudPayload, PinEntry } from './types';
+import { useCloud } from './cloud/useCloud';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, topWeak, WEAK_MAX } from './focus';
 import { SORTIMENT_SUBFILTERS, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './data';
 import {
   getRankByPercentage,
   formatEndpointUrl,
   matchesSortimentSubfilter,
-  mergePayloads,
   getExamEvaluation,
   shuffleQuestionOptions,
   shuffleArray,
@@ -29,10 +29,7 @@ import {
   sanitizeUsername,
   getRightAnswerText,
   isLeaderboardExcludedCategory,
-  applyTombstones,
   makePinEntry,
-  scoreKey,
-  dedupeScores,
   checkPin,
   pinFormatError,
   PIN_MAX,
@@ -40,7 +37,6 @@ import {
   adminSignIn,
   adminSignOut,
   withAdminAuth,
-  stripAdminOnly,
   ADMIN_EXPIRED_EVENT,
   settleBattle,
   awardBattlePoints,
@@ -1589,19 +1585,9 @@ export default function App() {
 
   const [cloudUrl, setCloudUrl] = useState(() => localStorage.getItem('hinkel_cloud_url') || DEFAULT_CLOUD_URL);
 
-  const [cloudData, setCloudData] = useState<CloudPayload>(() => {
-    try {
-      const cached = localStorage.getItem('hinkel_cloud_backup');
-      return cached ? { ...emptyCloud, ...JSON.parse(cached) } : emptyCloud;
-    } catch { return emptyCloud; }
-  });
-
-  const cloudDataRef = useRef<CloudPayload>(cloudData);
-  useEffect(() => { cloudDataRef.current = cloudData; }, [cloudData]);
-
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [cloudConnected, setCloudConnected] = useState(false);
-  const syncQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+  // Laden, Speichern und Live-Updates liegen in src/cloud/ (siehe useCloud.ts)
+  const { cloudData, cloudDataRef, isSyncing, cloudConnected, setCloudConnected, unsyncedRef, fetchCloudData, mutateCloudData } =
+    useCloud(cloudUrl, emptyCloud, () => activeTabRef.current === 'battle');
 
   const todayDayNum = new Date().getDay();
   const [selectedBakeDay, setSelectedBakeDay] = useState<number>(todayDayNum >= 1 && todayDayNum <= 6 ? todayDayNum : 1);
@@ -1609,172 +1595,6 @@ export default function App() {
   const [openSeasons, setOpenSeasons] = useState<Record<string, boolean>>({
     'Frühling': false, 'Sommer': false, 'Herbst': false, 'Winter': false
   });
-
-  // Alle Cloud-Zugriffe laufen nacheinander. So überholen sich Abrufen und Speichern nicht.
-  function enqueueSync<T>(task: () => Promise<T>): Promise<T> {
-    const run = syncQueueRef.current.then(task, task);
-    syncQueueRef.current = run.catch(() => undefined);
-    return run;
-  }
-
-  // Zähler für Änderungen, die noch nicht in der Cloud sind, und Merker für fehlgeschlagenes Speichern (offline)
-  const pendingWritesRef = useRef(0);
-  const unsyncedRef = useRef<boolean>((() => { try { return localStorage.getItem('hinkel_unsynced') === '1'; } catch { return false; } })());
-  const setUnsynced = (v: boolean) => {
-    unsyncedRef.current = v;
-    try { if (v) localStorage.setItem('hinkel_unsynced', '1'); else localStorage.removeItem('hinkel_unsynced'); } catch {}
-  };
-
-  const persistLocally = (payload: CloudPayload) => {
-    cloudDataRef.current = payload;
-    setCloudData(payload);
-    try { localStorage.setItem('hinkel_cloud_backup', JSON.stringify(payload)); } catch {}
-  };
-
-  // Bringt die Rohdaten aus der Cloud in eine saubere Form (leere Datenbank → leere Struktur)
-  const normalizePayload = (data: any): CloudPayload => applyTombstones({
-    scores: dedupeScores(Array.isArray(data?.scores) ? data.scores.filter(Boolean) : []),
-    progress: data?.progress || {},
-    lastSeen: data?.lastSeen || {},
-    battles: data?.battles || {},
-    wrongStats: data?.wrongStats || {},
-    pinboard: data?.pinboard || null,
-    customProducts: Array.isArray(data?.customProducts) ? data.customProducts.filter(Boolean) : [],
-    customQuestions: Array.isArray(data?.customQuestions) ? data.customQuestions.filter(Boolean) : [],
-    tombstones: data?.tombstones || {},
-    questionEdits: data?.questionEdits || {},
-    productFixes: data?.productFixes || {},
-    pins: data?.pins || {},
-    ...(Number(data?.compactedUntil) > 0 ? { compactedUntil: Number(data.compactedUntil) } : {})
-  });
-
-  const cloneData = (d: CloudPayload): CloudPayload => JSON.parse(JSON.stringify(d));
-
-  const getRemote = async (targetUrl: string): Promise<CloudPayload | null> => {
-    const sep = targetUrl.includes('?') ? '&' : '?';
-    const res = await fetch(await withAdminAuth(`${targetUrl}${sep}t=${Date.now()}`), { method: 'GET', headers: { 'Accept': 'application/json' } });
-    if (!res.ok) return null;
-    return normalizePayload(await res.json());
-  };
-
-  const putRemote = async (targetUrl: string, payload: CloudPayload): Promise<boolean> => {
-    const usePut = targetUrl.includes('firebase') || targetUrl.endsWith('.json');
-    const res = await fetch(await withAdminAuth(targetUrl), { method: usePut ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    return res.ok;
-  };
-
-  // Nur die geänderten Stellen schreiben. Vorher wurde immer die ganze Datenbank überschrieben:
-  // Wenn zwei Kollegen gleichzeitig speicherten, war die Änderung des einen weg.
-  // Pro Person (progress/anna, lastSeen/anna …) wird jetzt einzeln geschrieben.
-  const PER_KEY = ['progress', 'lastSeen', 'battles', 'wrongStats', 'tombstones', 'questionEdits', 'productFixes', 'pins'];
-  const buildPatch = (base: any, next: any): Record<string, any> => {
-    const out: Record<string, any> = {};
-    const same = (a: any, b: any) => JSON.stringify(a === undefined ? null : a) === JSON.stringify(b === undefined ? null : b);
-    const isObj = (v: any) => !!v && typeof v === 'object' && !Array.isArray(v);
-    const keys = new Set([...Object.keys(base || {}), ...Object.keys(next || {})]);
-    keys.forEach(k => {
-      const a = base ? base[k] : undefined, b = next ? next[k] : undefined;
-      if (same(a, b)) return;
-      if (PER_KEY.includes(k) && isObj(a) && isObj(b)) {
-        new Set([...Object.keys(a), ...Object.keys(b)]).forEach(ck => { if (!same(a[ck], b[ck])) out[`${k}/${ck}`] = b[ck] === undefined ? null : b[ck]; });
-      } else out[k] = b === undefined ? null : b;
-    });
-    return out;
-  };
-  const patchRemote = async (targetUrl: string, base: CloudPayload, next: CloudPayload): Promise<boolean> => {
-    const fullPatch = buildPatch(base, next);
-    // Mitarbeiter schreiben keine Ausbilder-Bereiche (die Datenbankregeln würden sonst die ganze Änderung ablehnen)
-    const patch = hasAdminSession() ? fullPatch : stripAdminOnly(fullPatch);
-    if (Object.keys(patch).length === 0) return true;
-    if (targetUrl.includes('firebase')) {
-      try {
-        const res = await fetch(await withAdminAuth(targetUrl), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
-        if (res.ok) {
-          // Bestenliste ist eine Liste: speichern zwei Leute im selben Moment, kann ein neuer Eintrag überschrieben werden.
-          // Darum kurz nachsehen, ob die eigenen neuen Einträge angekommen sind, sonst noch einmal anhängen.
-          const added = (next.scores || []).slice((base.scores || []).length);
-          const onlyAppended = 'scores' in patch && added.length > 0 && JSON.stringify((next.scores || []).slice(0, (base.scores || []).length)) === JSON.stringify(base.scores || []);
-          for (let tries = 0; onlyAppended && tries < 6; tries++) {
-            // kurz und zufällig warten, damit zwei Geräte nicht wieder genau gleichzeitig schreiben
-            await new Promise(r => window.setTimeout(r, 250 + Math.random() * 650));
-            const fresh = await getRemote(targetUrl);
-            if (!fresh) break;
-            // Vergleich über die Eintrags-ID: Firebase liefert die Felder alphabetisch sortiert zurück,
-            // ein Vergleich des ganzen Textes hätte jeden Eintrag fälschlich als „fehlt“ erkannt.
-            const have = new Set((fresh.scores || []).map(x => scoreKey(x)));
-            const missing = added.filter(x => !have.has(scoreKey(x)));
-            if (missing.length === 0) break;
-            const fix = await fetch(await withAdminAuth(targetUrl), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scores: [...(fresh.scores || []), ...missing] }) });
-            if (!fix.ok) break;
-          }
-          return true;
-        }
-      } catch { /* unten mit PUT versuchen */ }
-    }
-    return putRemote(targetUrl, next);
-  };
-
-  // Abrufen: Die Cloud ist die Wahrheit. So kommen gelöschte Einträge (Nutzer, Bestenliste, Artikel …) nicht wieder zurück.
-  // Nur wenn vorher offline gespeichert wurde, wird der lokale Stand einmal zusammengeführt und hochgeladen.
-  const fetchCloudData = (customUrl?: string): Promise<CloudPayload | null> => {
-    const targetUrl = formatEndpointUrl(customUrl !== undefined ? customUrl : cloudUrl);
-    if (!targetUrl) { setCloudConnected(false); return Promise.resolve(null); }
-    return enqueueSync(async () => {
-      if (pendingWritesRef.current > 0) return cloudDataRef.current; // gleich wird sowieso gespeichert
-      try {
-        const remote = await getRemote(targetUrl);
-        if (!remote) throw new Error('Nicht erreichbar');
-        let next = remote;
-        if (unsyncedRef.current) {
-          next = mergePayloads(cloudDataRef.current, remote);
-          if (await patchRemote(targetUrl, remote, next)) setUnsynced(false);
-        }
-        persistLocally(next);
-        setCloudConnected(true);
-        return next;
-      } catch {
-        setCloudConnected(false);
-        return null;
-      }
-    });
-  };
-
-  // Speichern: Die Änderung wird sofort lokal angezeigt und danach auf den frischen Cloud-Stand angewendet.
-  // So gehen weder Änderungen von Kollegen verloren noch kommen Löschungen zurück.
-  const mutateCloudData = (updater: (current: CloudPayload) => CloudPayload) => {
-    persistLocally(updater(cloneData(cloudDataRef.current)));
-    const targetUrl = formatEndpointUrl(cloudUrl);
-    if (!targetUrl) return;
-    pendingWritesRef.current += 1;
-    enqueueSync(async () => {
-      setIsSyncing(true);
-      try {
-        let finalPayload = cloudDataRef.current;
-        let gotRemote = false;
-        let baseRemote: CloudPayload | null = null;
-        try {
-          const remote = await getRemote(targetUrl);
-          if (remote) {
-            baseRemote = cloneData(remote);
-            finalPayload = applyTombstones(unsyncedRef.current
-              ? updater(mergePayloads(cloudDataRef.current, remote))
-              : updater(remote));
-            gotRemote = true;
-          }
-        } catch {}
-        const ok = gotRemote && !!baseRemote && await patchRemote(targetUrl, baseRemote, finalPayload);
-        if (ok) { setUnsynced(false); persistLocally(finalPayload); }
-        else setUnsynced(true);
-        setCloudConnected(ok);
-      } catch {
-        setUnsynced(true);
-        setCloudConnected(false);
-      } finally {
-        pendingWritesRef.current = Math.max(0, pendingWritesRef.current - 1);
-        setIsSyncing(false);
-      }
-    });
-  };
 
   // Erledigt-Merker (Tages-Challenge, Experten-Ecke, Produkt der Woche, Heute dran) liegen in der Cloud,
   // damit sie auf Handy und Tablet gleich sind. Der alte Merker im Gerät zählt weiter mit.
@@ -1871,33 +1691,6 @@ export default function App() {
     cacheImages(version, imgs);
     return `${count} Produktfotos importiert, alle Mitarbeiter sehen sie ab jetzt.`;
   };
-
-  useEffect(() => {
-    if (!cloudUrl) return;
-    fetchCloudData();
-    // Nur abfragen, solange die App sichtbar ist (spart Datenvolumen und Akku)
-    // Alle 4 Sekunden die ganze Datenbank zu laden war zu viel (Datenvolumen, Akku, Firebase-Kontingent).
-    // Jetzt alle 20 Sekunden, im Quiz Battle alle 5 Sekunden, und sofort beim Zurückkehren in die App.
-    let lastPoll = 0;
-    const interval = window.setInterval(() => {
-      if (document.hidden) return;
-      const fast = activeTabRef.current === 'battle';
-      if (Date.now() - lastPoll < (fast ? 5000 : 20000)) return;
-      lastPoll = Date.now(); fetchCloudData();
-    }, 2500);
-    const onVisible = () => { if (!document.hidden) { lastPoll = Date.now(); fetchCloudData(); } };
-    document.addEventListener('visibilitychange', onVisible);
-    window.addEventListener('focus', onVisible);
-    // Sobald das Gerät wieder Netz hat: sofort abgleichen, offline Gespeichertes wird dabei nachgeschickt
-    const onOnline = () => fetchCloudData();
-    window.addEventListener('online', onOnline);
-    return () => {
-      window.clearInterval(interval);
-      document.removeEventListener('visibilitychange', onVisible);
-      window.removeEventListener('focus', onVisible);
-      window.removeEventListener('online', onOnline);
-    };
-  }, [cloudUrl]);
 
   // Offline-Modus: Hinweis anzeigen, wenn keine Verbindung besteht, und melden, wenn alles nachgeschickt wurde
   const [offlineSince, setOfflineSince] = useState<number>(0);

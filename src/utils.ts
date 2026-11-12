@@ -989,8 +989,17 @@ async function getAnonToken(): Promise<string | null> {
 }
 
 /** Hängt den Anmelde-Schlüssel an eine Firebase-Datenbank-Adresse an (Ausbilder oder unsichtbare Anmeldung) */
+/** Firebase meldet „Anmeldung abgelaufen“: beim nächsten Zugriff einen frischen Anmelde-Schlüssel holen */
+export function forceTokenRefresh() {
+  const a = readAdminSession(); if (a) writeAdminSession({ ...a, exp: 0 });
+  const b = readAnon(); if (b) writeAnon({ ...b, exp: 0 });
+}
+/** Firebase-Datenbank-Adresse? Auch der lokale Firebase-Emulator (…?ns=projekt) für Tests zählt dazu. */
+export function isFirebaseUrl(url: string): boolean {
+  return /firebaseio\.com|firebasedatabase\.app/.test(url) || /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/[^?]*\?(.*&)?ns=/.test(url);
+}
 export async function withAuth(url: string): Promise<string> {
-  if (!/firebaseio\.com|firebasedatabase\.app/.test(url)) return url;
+  if (!isFirebaseUrl(url)) return url;
   const t = hasAdminSession() ? await getAdminToken() : await getAnonToken();
   return t ? `${url}${url.includes('?') ? '&' : '?'}auth=${encodeURIComponent(t)}` : url;
 }
