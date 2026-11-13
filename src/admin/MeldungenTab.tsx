@@ -3,7 +3,7 @@
 import { CSSProperties } from 'react';
 import { TH, cardStyle } from '../ui/basis';
 import type { ReportItem } from './adminHelfer';
-import { getRightAnswerText } from '../utils';
+import { getRightAnswerText } from '../hilfen/allgemein';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import type { ProductFix } from '../types';
 

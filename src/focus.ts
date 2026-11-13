@@ -3,7 +3,7 @@
 // oft danebenliegt, kommen in den Spielen öfter dran (höchstens etwa 4 von 10 Runden), bis sie sitzen.
 // Dazu zählen auch falsch beantwortete Quizfragen zu einem Produkt (aus dem Fehler-Stapel).
 
-import { shuffleArray } from './utils';
+import { shuffleArray } from './hilfen/allgemein';
 
 /** Schwäche pro Produktname: 0 = sicher, bis 6 = oft falsch */
 export type WeakMap = Record<string, number>;

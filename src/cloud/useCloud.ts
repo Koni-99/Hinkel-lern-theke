@@ -4,7 +4,9 @@
 // Klappt die Live-Verbindung nicht (z. B. Firmen-WLAN blockiert sie), wird wie bisher regelmäßig abgefragt.
 import { useState, useEffect, useRef } from 'react';
 import { CloudPayload } from '../types';
-import { applyTombstones, mergePayloads, formatEndpointUrl, isFirebaseUrl, hasAdminSession, stripAdminOnly, forceTokenRefresh } from '../utils';
+import { applyTombstones, mergePayloads } from '../hilfen/zusammenfuehren';
+import { formatEndpointUrl } from '../hilfen/allgemein';
+import { isFirebaseUrl, hasAdminSession, stripAdminOnly, forceTokenRefresh } from '../hilfen/anmeldung';
 import { normalizePayload, cloneData, getRemote, patchRemote, buildPatch } from './remote';
 import { openLive, LiveHandle, LiveFail } from './live';
 

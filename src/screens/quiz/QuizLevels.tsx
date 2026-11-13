@@ -2,10 +2,10 @@
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
 import { dc, SORTIMENT_SUBFILTERS } from '../../daten/data';
-import { matchesSortimentSubfilter } from '../../utils';
+import { matchesSortimentSubfilter } from '../../hilfen/allgemein';
 import { TH, btnSecondary, PageHead } from '../../ui/basis';
 import { correctIdSet } from '../../ui/lernstand';
-import { LT } from '../../appBasis';
+import { LT } from '../../basis/marke';
 import type { Question } from '../../daten/questions';
 
 export type QuizLevelsProps = {

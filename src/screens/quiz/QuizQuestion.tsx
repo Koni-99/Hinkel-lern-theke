@@ -3,12 +3,13 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
-import { getRightAnswerText } from '../../utils';
+import { getRightAnswerText } from '../../hilfen/allgemein';
 import { SpeakButton } from '../../games/spielBasis';
 import { TH, cardStyle, btnPrimary } from '../../ui/basis';
 import { AnswerFx, GameProgress } from '../../ui/antwortFx';
 import { ReportContext } from '../../ui/melden';
-import { HINKEL_KUEKEN, LT, BTN_YELLOW, LtIcon } from '../../appBasis';
+import { HINKEL_KUEKEN, LT, BTN_YELLOW } from '../../basis/marke';
+import { LtIcon } from '../../basis/symbole';
 
 export type QuizQuestionProps = {
   username: string;

@@ -4,17 +4,21 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { PinboardMessage, ScoreEntry } from '../types';
 import type { Question } from '../daten/questions';
-import type { Season } from '../appBasis';
+import type { Season } from '../basis/serie';
 import { dc } from '../daten/data';
 import { CloudPayload } from '../types';
-import { getRightAnswerText } from '../utils';
+import { getRightAnswerText } from '../hilfen/allgemein';
 import { productOfTheDay } from '../games/produktDesTages';
 import { SpeakButton } from '../games/spielBasis';
 import { BadgeAlbumView } from '../ui/belohnungen';
 import { productImageKey, TH, cardStyle, ProductImages } from '../ui/basis';
 import { ONBOARDING_DAYS, APP_WEEK_DAYS } from '../ui/lernstand';
 import { OSTER_TABS, monthLabel } from '../ui/kalender';
-import { LT, LtIcon, ICON, MENU_ICON, KuekenFact, BonLine, TEAM_REWARD, weekIdNow, dayKey, streakMultFor, mondayOf, parseBonDate, BON_DIVIDER, nameClassOf } from '../appBasis';
+import { LT } from '../basis/marke';
+import { LtIcon, ICON, MENU_ICON } from '../basis/symbole';
+import { KuekenFact } from '../basis/fakten';
+import { BonLine, TEAM_REWARD, weekIdNow, dayKey, streakMultFor, mondayOf, parseBonDate, BON_DIVIDER } from '../basis/serie';
+import { nameClassOf } from '../basis/laden';
 
 export type HomeScreenProps = {
   username: string;

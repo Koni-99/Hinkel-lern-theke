@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 159;
+const APP_VERSION: number = 160;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -13,7 +13,11 @@ const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaege
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, topWeak, WEAK_MAX } from './focus';
-import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleQuestionOptions, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory, hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT, settleBattle, awardBattlePoints, applyProductFixes, patchProductQuestion, registerNewProducts, battleWinnerSide } from './utils';
+import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
+import { shuffleQuestionOptions } from './hilfen/pruefung';
+import { hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT } from './hilfen/anmeldung';
+import { settleBattle, awardBattlePoints, battleWinnerSide } from './hilfen/battle';
+import { applyProductFixes, patchProductQuestion, registerNewProducts } from './hilfen/produkte';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
 import { KassenblitzView } from './games/Kassenblitz';
@@ -35,8 +39,13 @@ import { StatistikView } from './ui/statistik';
 import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
-import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON, wxKindOf, WxIcon, ShopIcon3D, idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat, TAB_ORDER, nameClassOf, PT_SHOP, TipShop, PinSetupForm } from './appBasis';
-import type { ShopItem, PtItem } from './appBasis';
+import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
+import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
+import { DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON } from './basis/symbole';
+import { wxKindOf, WxIcon } from './basis/fakten';
+import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
+import { PinSetupForm } from './basis/pinForm';
+import type { ShopItem, PtItem } from './basis/laden';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { QuizResult } from './screens/quiz/QuizResult';

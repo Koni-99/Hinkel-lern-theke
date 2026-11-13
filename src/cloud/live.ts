@@ -2,7 +2,7 @@
 // Firebase kann Änderungen über eine offene Verbindung schicken (REST-Streaming, „EventSource“).
 // Beim Verbinden kommt einmal der ganze Stand („put“ auf „/“), danach nur noch die geänderten Stellen.
 // Kein zusätzliches npm-Paket nötig, der Browser kann das von sich aus.
-import { withAuth } from '../utils';
+import { withAuth } from '../hilfen/anmeldung';
 
 export type LiveFail = 'error' | 'cancel' | 'auth';
 export type LiveHandle = { close: () => void };

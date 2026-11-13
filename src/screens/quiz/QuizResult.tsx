@@ -3,11 +3,12 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
-import { getExamEvaluation, getRightAnswerText } from '../../utils';
+import { getExamEvaluation } from '../../hilfen/pruefung';
+import { getRightAnswerText } from '../../hilfen/allgemein';
 import { StarRating, starsFor, ReceiptHead, ReceiptFoot, TH, cardStyle, btnPrimary, btnSecondary, ConfettiOverlay } from '../../ui/basis';
 import { ihkGrade } from '../../ui/lernstand';
 import { ReportLink } from '../../ui/melden';
-import { LT, BTN_YELLOW } from '../../appBasis';
+import { LT, BTN_YELLOW } from '../../basis/marke';
 import type { Question } from '../../daten/questions';
 
 export type QuizResultProps = {

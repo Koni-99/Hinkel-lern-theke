@@ -7,7 +7,9 @@ import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/admin
 import type { ReportItem } from '../admin/adminHelfer';
 
 import { CloudPayload } from '../types';
-import { cleanStatNumber, getRightAnswerText, scoreKey, originalProductData } from '../utils';
+import { cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
+import { scoreKey } from '../hilfen/zusammenfuehren';
+import { originalProductData } from '../hilfen/produkte';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { CATS, questions as BUILTIN_QUESTIONS, examQuestions as BUILTIN_EXAMS } from '../daten/questions';
 import type { Question } from '../daten/questions';

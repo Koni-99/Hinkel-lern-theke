@@ -4,9 +4,10 @@ import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { CATS } from '../../daten/questions';
 import { CloudPayload } from '../../types';
-import { todayLocal } from '../../utils';
+import { todayLocal } from '../../hilfen/allgemein';
 import { cardStyle, PageHead } from '../../ui/basis';
-import { LT, LtIcon, ICON, CAT_STYLE } from '../../appBasis';
+import { LT } from '../../basis/marke';
+import { LtIcon, ICON, CAT_STYLE } from '../../basis/symbole';
 import type { OnboardingItem } from '../../ui/lernstand';
 import type { Question } from '../../daten/questions';
 

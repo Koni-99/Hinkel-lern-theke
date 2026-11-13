@@ -5,7 +5,7 @@ import { CSSProperties } from 'react';
 import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary } from '../ui/basis';
 import { CloudPayload } from '../types';
-import { compactScores, compactCutoff } from '../utils';
+import { compactScores, compactCutoff } from '../hilfen/bestenliste';
 import type { Tombstones } from '../types';
 
 export type EinstellungenTabProps = {

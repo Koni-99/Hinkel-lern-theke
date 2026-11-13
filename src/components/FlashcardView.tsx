@@ -3,7 +3,7 @@ import { dc, BAKERY_DICTIONARY, DICTIONARY_EXTRA } from '../daten/data';
 import { CATS } from "../daten/questions";
 import { SHOP_PRODUCTS, ShopProduct } from "../daten/shopProducts";
 import { CustomProductItem } from "../types";
-import { getRightAnswerText } from "../utils";
+import { getRightAnswerText } from '../hilfen/allgemein';
 import { TH, cardStyle, productImageKey, ProductImages } from '../ui/basis';
 import { ReportContext } from '../ui/melden';
 import { SpeakButton } from '../games/spielBasis';

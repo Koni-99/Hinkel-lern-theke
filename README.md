@@ -17,7 +17,7 @@ Die Versionsnummer steht in `src/App.tsx` (`APP_VERSION`) und unten in der App.
 | Ordner / Datei | Inhalt |
 |---|---|
 | `App.tsx` | Zustand der App, Abläufe, Navigation |
-| `appBasis.tsx` | Gemeinsame Bausteine: Farben (`LT`), Symbole, Laden, Lern-Serie, PIN-Formular |
+| `basis/` | Gemeinsame Bausteine: Marke und Farben (`LT`), Symbole, Laden, Fakten/Wetter, Lern-Serie, PIN-Formular |
 | `theke-design.ts` | Das Design (CSS) als Text, wird als `<style>` eingefügt |
 | `cloud/` | Laden, Speichern und Live-Updates mit Firebase |
 | `screens/` | Anmeldung, Startseite, `quiz/` (Bereich, Stufe, Frage, Auswertung) |
@@ -26,7 +26,8 @@ Die Versionsnummer steht in `src/App.tsx` (`APP_VERSION`) und unten in der App.
 | `admin/` | Ausbilder-Bereich, ein Reiter pro Datei |
 | `components/` | Größere Ansichten: Ausbilder-Bereich, Karteikarten, Bestenliste, Battle, Tüten-Blitz, Alternativen-Jäger |
 | `daten/` | Produkte, Fragen, Sortiment |
-| `utils.ts`, `types.ts`, `focus.ts` | Hilfsfunktionen, Datentypen, Lernschwerpunkte |
+| `hilfen/` | Hilfsfunktionen: Allgemeines, Battle, Daten zusammenführen, PIN, Produkte, Prüfung, Anmeldung, Bestenliste |
+| `types.ts`, `focus.ts` | Datentypen, Lernschwerpunkte |
 
 ## Lokal bauen
 

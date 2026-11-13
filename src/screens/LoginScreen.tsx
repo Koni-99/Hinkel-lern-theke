@@ -3,8 +3,11 @@
 import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
 import { dc } from '../daten/data';
 import { CloudPayload, PinEntry } from '../types';
-import { formatEndpointUrl, sanitizeUsername, checkPin, PIN_MAX, adminSignIn } from '../utils';
-import { HINKEL_LOGO, LT, LT_CSS, PinSetupForm } from '../appBasis';
+import { formatEndpointUrl, sanitizeUsername } from '../hilfen/allgemein';
+import { checkPin, PIN_MAX } from '../hilfen/pin';
+import { adminSignIn } from '../hilfen/anmeldung';
+import { HINKEL_LOGO, LT, LT_CSS } from '../basis/marke';
+import { PinSetupForm } from '../basis/pinForm';
 
 export type LoginScreenProps = {
   tempUsername: string;

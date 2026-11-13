@@ -2,7 +2,7 @@
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { CSSProperties } from 'react';
 import { TH, cardStyle } from '../ui/basis';
-import { getRightAnswerText } from '../utils';
+import { getRightAnswerText } from '../hilfen/allgemein';
 
 export type AuswertungUeberblickProps = {
   allKnownUserKeys: string[];

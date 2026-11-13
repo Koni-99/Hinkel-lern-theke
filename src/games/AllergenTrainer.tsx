@@ -2,7 +2,7 @@
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
 import { dc } from '../daten/data';
-import { shuffleArray } from '../utils';
+import { shuffleArray } from '../hilfen/allgemein';
 import { focusShuffle, noteResult } from '../focus';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';

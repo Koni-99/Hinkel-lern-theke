@@ -1,6 +1,6 @@
 // ═══ Theken-Simulator: Gespräch zusammenbauen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
-import { shuffleArray } from '../../utils';
+import { shuffleArray } from '../../hilfen/allgemein';
 import { euro } from '../Kassenblitz';
 import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, SWEETS, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, Core, opts } from './basis';
 import { scPrice } from './szenarienVerkauf';

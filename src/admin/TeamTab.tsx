@@ -7,7 +7,7 @@ import { TH, cardStyle } from '../ui/basis';
 import { ROLE_INFO, StaffRole } from '../ui/lernstand';
 import { streakOf } from './adminHelfer';
 import { CloudPayload } from '../types';
-import { getRankByPercentage, cleanStatNumber, getRightAnswerText } from '../utils';
+import { getRankByPercentage, cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
 import { CATS } from '../daten/questions';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { ScoreEntry } from '../types';

@@ -1,7 +1,7 @@
 // ═══ Spiel: Theken-Ansturm ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
-import { shuffleArray } from '../utils';
+import { shuffleArray } from '../hilfen/allgemein';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, productImageKey, ProductImages, ConfettiOverlay } from '../ui/basis';
 import { scrollToPlay } from '../ui/belohnungen';

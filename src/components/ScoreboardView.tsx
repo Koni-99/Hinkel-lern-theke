@@ -2,12 +2,8 @@ import { useState } from "react";
 import { dc } from '../daten/data';
 import { monthChampions, monthTotals, monthKeyOf, prevMonthKey, monthLabel } from '../ui/kalender';
 import { ScoreEntry, Tombstones } from "../types";
-import {
-  getRankByPercentage,
-  battleOutcomeSinceReset,
-  battleTime,
-  isLeaderboardExcludedCategory,
-} from "../utils";
+import { getRankByPercentage, isLeaderboardExcludedCategory } from '../hilfen/allgemein';
+import { battleOutcomeSinceReset, battleTime } from '../hilfen/battle';
 
 // ───────────────────────── Bestenliste als „Bon der Besten“ ─────────────────────────
 

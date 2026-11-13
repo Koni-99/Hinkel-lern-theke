@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { getRankByPercentage, battleOutcomeSinceReset, BATTLE_POINTS, battleTimeOf, formatBattleTime } from "../utils";
+import { getRankByPercentage, BATTLE_POINTS } from '../hilfen/allgemein';
+import { battleOutcomeSinceReset, battleTimeOf, formatBattleTime } from '../hilfen/battle';
 import { dc } from '../daten/data';
 import { Tombstones } from "../types";
 import { GameProgress, AnswerFx } from '../ui/antwortFx';

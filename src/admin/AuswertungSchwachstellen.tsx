@@ -3,7 +3,7 @@
 import { CSSProperties } from 'react';
 import { TH, cardStyle } from '../ui/basis';
 import { CloudPayload } from '../types';
-import { getRightAnswerText } from '../utils';
+import { getRightAnswerText } from '../hilfen/allgemein';
 
 export type AuswertungSchwachstellenProps = {
   overwriteCloudDataDirectly: (updater: (curr: CloudPayload) => CloudPayload) => void;

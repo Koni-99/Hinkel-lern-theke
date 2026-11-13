@@ -7,7 +7,7 @@ import { ReportContext } from '../ui/melden';
 import { scrollToPlay } from '../ui/belohnungen';
 import { LearnHint, OnLearn, OnlyNewToggle, KnownMap, OnKnown, SpeakButton } from '../games/spielBasis';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
-import { fixedAltProducts } from '../utils';
+import { fixedAltProducts } from '../hilfen/produkte';
 
 
 interface ScenarioOption {

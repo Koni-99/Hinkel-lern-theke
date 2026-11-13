@@ -1,7 +1,8 @@
 // ───────────── Cloud: Laden und Speichern (Firebase-REST) ─────────────
 // Reine Funktionen ohne React. Vorher lag dieser Teil mitten in App.tsx.
 import { CloudPayload } from '../types';
-import { applyTombstones, dedupeScores, scoreKey, hasAdminSession, stripAdminOnly, withAdminAuth, isFirebaseUrl } from '../utils';
+import { applyTombstones, dedupeScores, scoreKey } from '../hilfen/zusammenfuehren';
+import { hasAdminSession, stripAdminOnly, withAdminAuth, isFirebaseUrl } from '../hilfen/anmeldung';
 
 /** Firebase speichert Listen als Objekt mit Zahlen-Schlüsseln, wenn Lücken entstehen. Beides wird zur Liste. */
 const toList = (v: any): any[] => {
