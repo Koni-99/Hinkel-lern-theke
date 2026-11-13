@@ -1,5 +1,6 @@
-# Baut die App bei jeder Änderung und stellt sie auf GitHub Pages online:
-# https://koni-99.github.io/Hinkel-lern-theke/
+# Baut die App bei jeder Änderung, prüft sie automatisch und stellt sie erst dann
+# auf GitHub Pages online: https://koni-99.github.io/Hinkel-lern-theke/
+# Schlägt die Prüfung fehl, bleibt die bisherige Version online.
 name: App online stellen
 
 on:
@@ -32,6 +33,21 @@ jobs:
           PUBLIC_URL: /Hinkel-lern-theke
           CI: 'false'
           DISABLE_ESLINT_PLUGIN: 'true'
+
+      # ── Automatische Prüfung (tests/app-test.js) ──
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Browser für die Prüfung installieren
+        run: npx playwright install --with-deps chromium
+      - name: App prüfen (Seiten, Quiz, Spiele, Ausbilder, Anmeldung, Live-Updates)
+        run: |
+          node tests/serve.js build 5055 /Hinkel-lern-theke &
+          cd tests
+          npx -y firebase-tools@15.36.0 emulators:exec --only database --project demo-hinkel \
+            "EMU=http://127.0.0.1:9000 node app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/"
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build

@@ -12,6 +12,20 @@ Jede Änderung auf dem Branch wird von GitHub Actions automatisch gebaut und auf
 veröffentlicht (`.github/workflows/deploy.yml`). Nach 1 bis 2 Minuten ist sie online.
 Die Versionsnummer steht in `src/App.tsx` (`APP_VERSION`) und unten in der App.
 
+## Automatische Prüfung
+
+Vor dem Online-Stellen prüft GitHub die fertige App in einem echten Browser (`tests/app-test.js`):
+Anmeldeseite, alle Hauptseiten (Handy und PC, Mitarbeiter und Ausbilder), eine ganze Quizrunde,
+alle Spiele, Nachschlagen/Karteikarten, alle Ausbilder-Reiter und mit dem Firebase-Emulator
+Anmeldung mit PIN sowie Live-Updates. Jeder Fehler im Browser zählt. Schlägt etwas fehl,
+bleibt die bisherige Version online. Das Ergebnis steht unter „Actions“ im Repository.
+
+Von Hand (nach dem Bauen mit `PUBLIC_URL=/Hinkel-lern-theke`):
+```
+node tests/serve.js build 5055 /Hinkel-lern-theke &
+node tests/app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/
+```
+
 ## Aufbau von `src/`
 
 | Ordner / Datei | Inhalt |
