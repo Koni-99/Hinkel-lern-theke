@@ -8,7 +8,9 @@ Mehr zum Aufbau: `README.md`.
 - **Immer Deutsch.** Kurz und einfach, keine Fachwörter ohne Erklärung. Er programmiert nicht selbst.
 - Vor größeren Änderungen 2–3 Vorschläge machen, eine Empfehlung nennen, dann fragen.
 - Nach jeder Version sagen: was neu ist, was geprüft wurde, was er selbst testen soll.
-- Er hat **Nein** gesagt zu: Urkunden/Zertifikaten, automatischer Sicherung vor dem Löschen.
+- Er hat **Nein** gesagt zu: Urkunden/Zertifikaten, automatischer Sicherung vor dem Löschen,
+  Team-Nachhilfe aus den häufigsten Fehlern, Auswertung als Excel, Paten für Neue, Thema der Woche,
+  Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen).
 - Der Brotkorb auf der Startseite bleibt (er zeigt auch Stufe und Meister-Fortschritt).
 
 ## Stil der App
@@ -69,6 +71,4 @@ Mehr zum Aufbau: `README.md`.
 - 167: „Gelesen“-Bestätigung für wichtige Nachrichten, Team-Umfragen (Reiter „Nachricht & Umfrage“, Karte auf der Startseite)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
-- Thema der Woche
-- Absturz-Schutz (Fehlerseite statt weißem Bildschirm), Team-Code für neue Anmeldungen, Datenschutz-Hinweis
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
