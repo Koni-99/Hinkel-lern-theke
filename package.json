@@ -1,39 +1,29 @@
 {
-  "name": "react-typescript",
+  "name": "hinkel-lern-theke",
   "version": "1.0.0",
-  "description": "React and TypeScript example starter project",
-  "keywords": [
-    "typescript",
-    "react",
-    "starter"
-  ],
-  "main": "src/index.tsx",
+  "private": true,
+  "description": "Lern-App der Bäckerei Hinkel",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test:app": "node tests/app-test.js"
+  },
   "dependencies": {
-    "loader-utils": "3.3.1",
     "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "react-scripts": "5.0.1"
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
-    "@types/react": "18.2.38",
-    "@types/react-dom": "18.2.15",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "@vitejs/plugin-react": "6.1.2",
     "eslint": "^8.57.0",
     "playwright": "1.63.0",
     "prettier": "^3.2.5",
-    "typescript": "4.4.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ]
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
+  }
 }

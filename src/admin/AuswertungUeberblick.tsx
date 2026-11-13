@@ -1,5 +1,6 @@
 // ═══ Ausbilder-Bereich: Auswertung, auf einen Blick ═══
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import type { JSX } from 'react';
 import { CSSProperties } from 'react';
 import { TH, cardStyle } from '../ui/basis';
 import { getRightAnswerText } from '../hilfen/allgemein';

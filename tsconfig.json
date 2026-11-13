@@ -1,13 +1,18 @@
 {
-    "include": ["./src/**/*"],
-    "compilerOptions": {
-      "strict": true,
-      "esModuleInterop": true,
-      "noUnusedLocals": true,
-      "noUnusedParameters": true,
-      "skipLibCheck": true,
-      "lib": ["dom", "dom.iterable", "es2016", "es2017", "es2020", "es2021"],
-      "jsx": "react-jsx"
-    }
+  "include": ["src", "vite.config.ts"],
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["vite/client"]
   }
-  
+}

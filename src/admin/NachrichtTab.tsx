@@ -1,6 +1,6 @@
 // ═══ Ausbilder-Bereich: Reiter Nachricht ═══
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
-import type { Dispatch, SetStateAction } from 'react';
+import type { JSX, Dispatch, SetStateAction } from 'react';
 import { CSSProperties } from 'react';
 import { TH, cardStyle, btnPrimary } from '../ui/basis';
 import { CloudPayload } from '../types';

@@ -1,6 +1,6 @@
 // ═══ Quiz: Bereich wählen ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
-import type { Dispatch, SetStateAction } from 'react';
+import type { JSX, Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { CATS } from '../../daten/questions';
 import { CloudPayload } from '../../types';

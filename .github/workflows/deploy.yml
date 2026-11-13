@@ -27,12 +27,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - name: App bauen
-        run: npx react-scripts build
-        env:
-          PUBLIC_URL: /Hinkel-lern-theke
-          CI: 'false'
-          DISABLE_ESLINT_PLUGIN: 'true'
+      - name: Typen prüfen (TypeScript)
+        run: npm run typecheck
+      - name: App bauen (Vite)
+        run: npx vite build --base=/Hinkel-lern-theke/
 
       # ── Automatische Prüfung (tests/app-test.js) ──
       - uses: actions/setup-java@v4

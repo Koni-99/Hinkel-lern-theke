@@ -20,7 +20,7 @@ alle Spiele, Nachschlagen/Karteikarten, alle Ausbilder-Reiter und mit dem Fireba
 Anmeldung mit PIN sowie Live-Updates. Jeder Fehler im Browser zählt. Schlägt etwas fehl,
 bleibt die bisherige Version online. Das Ergebnis steht unter „Actions“ im Repository.
 
-Von Hand (nach dem Bauen mit `PUBLIC_URL=/Hinkel-lern-theke`):
+Von Hand (nach dem Bauen mit `--base=/Hinkel-lern-theke/`):
 ```
 node tests/serve.js build 5055 /Hinkel-lern-theke &
 node tests/app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/
@@ -45,7 +45,11 @@ node tests/app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/
 
 ## Lokal bauen
 
+Gebaut wird mit [Vite](https://vite.dev) (vorher Create React App).
 ```
 npm ci
-DISABLE_ESLINT_PLUGIN=true npx react-scripts build
+npm run dev          # zum Entwickeln, mit automatischem Neuladen
+npm run typecheck    # TypeScript prüfen
+npx vite build --base=/Hinkel-lern-theke/   # fertige App in build/
 ```
+Die App wird auch für ältere Handys gebaut (Safari 14, Chrome 87 und neuer, siehe `vite.config.ts`).
