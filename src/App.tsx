@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 161;
+const APP_VERSION: number = 162;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -12,7 +12,7 @@ const TuetenBlitzView = lazy(() => import('./components/TuetenBlitzView').then((
 const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => ({ default: m.AlternativenJaegerView })));
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
-import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, topWeak, WEAK_MAX } from './focus';
+import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
 import { shuffleQuestionOptions } from './hilfen/pruefung';
 import { hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT } from './hilfen/anmeldung';
@@ -28,12 +28,12 @@ import { PreisDuellView } from './games/PreisDuell';
 import { SchneideProfiView } from './games/SchneideProfi';
 import { AdventView, adventPoints, AdventDone } from './games/Advent';
 import { ThekenAnsturmView } from './games/ThekenAnsturm';
-import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap, SpeakButton } from './games/spielBasis';
-import { PrizeBag, productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
+import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
+import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
 import { ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './ui/belohnungen';
 import { AusbildungView } from './ui/ausbildung';
 import { LernpfadView, GluecksradCard, buildPfad, WHEEL } from './ui/lernpfadRad';
-import { onboardingStatus, computeBadges, correctIdSet, ONBOARDING_DAYS, APP_WEEK_DAYS, appWeekStatus, ROLE_INFO, StaffRole } from './ui/lernstand';
+import { onboardingStatus, computeBadges, correctIdSet, appWeekStatus, StaffRole } from './ui/lernstand';
 import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
 import { StatistikView } from './ui/statistik';
 import { comboTake, comboReset } from './ui/antwortFx';
@@ -41,10 +41,9 @@ import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
 import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
-import { DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON } from './basis/symbole';
+import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
 import { wxKindOf, WxIcon } from './basis/fakten';
 import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
-import { PinSetupForm } from './basis/pinForm';
 import type { ShopItem, PtItem } from './basis/laden';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -52,6 +51,20 @@ import { QuizResult } from './screens/quiz/QuizResult';
 import { QuizQuestion } from './screens/quiz/QuizQuestion';
 import { QuizLevels } from './screens/quiz/QuizLevels';
 import { QuizCategories } from './screens/quiz/QuizCategories';
+import { AusbilderNachricht } from './screens/dialoge/AusbilderNachricht';
+import { RolleWaehlen } from './screens/dialoge/RolleWaehlen';
+import { Fuehrerschein } from './screens/dialoge/Fuehrerschein';
+import { AppWocheGeschafft } from './screens/dialoge/AppWocheGeschafft';
+import { StempelkarteVoll } from './screens/dialoge/StempelkarteVoll';
+import { NeuesAbzeichen } from './screens/dialoge/NeuesAbzeichen';
+import { PinFestlegen } from './screens/dialoge/PinFestlegen';
+import { FrageMelden } from './screens/dialoge/FrageMelden';
+import { NeueStufe } from './screens/dialoge/NeueStufe';
+import { Wochenrueckblick } from './screens/dialoge/Wochenrueckblick';
+import { InstallHilfe } from './screens/dialoge/InstallHilfe';
+import { EinarbeitungSeite } from './screens/EinarbeitungSeite';
+import { NachschlagenSeite } from './screens/NachschlagenSeite';
+import { SpielenSeite } from './screens/SpielenSeite';
 
 
 
@@ -2278,162 +2291,10 @@ export default function App() {
         {activeTab === 'home' && <HomeScreen {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
 
         {/* ═════════ SPIELE-AUSWAHL ═════════ */}
-        {activeTab === 'spielen' && (() => {
-          type G = { title: string; short: string; time: string; best?: string; learn?: boolean; duel?: number; action: () => void };
-          const games: Record<string, G> = {
-            kasse: { title: 'Kassenblitz', short: 'Rückgeld rechnen mit echten Preisen', time: '45 Sek.', action: () => setActiveTab('kassenblitz') },
-            tueten: { title: 'Tüten-Blitz', short: 'Richtig einpacken, Schweres nach unten', time: '30 Sek.', action: () => setActiveTab('tueten') },
-            ansturm: { title: 'Theken-Ansturm', short: 'Bestellungen packen, bevor die Geduld weg ist', time: 'Bis 3 Fehler', best: myStats.ansturmBest ? `Bestwert ${myStats.ansturmBest}` : undefined, action: () => setActiveTab('ansturm') },
-            preis: { title: 'Teurer oder billiger?', short: 'Kennst du unsere Preise?', time: 'Bis zum 1. Fehler', best: myStats.priceBest ? `Beste Serie ${myStats.priceBest}` : undefined, learn: true, action: () => setActiveTab('preisduell') },
-            bilder: { title: 'Welches Brot ist das?', short: 'Produkte am Foto erkennen', time: '10 Bilder', best: myStats.bilderBest ? `Bestwert ${myStats.bilderBest}/10` : undefined, learn: true, action: () => setActiveTab('bilderquiz') },
-            schneiden: { title: 'Schneide-Profi', short: 'Die Brotschneidemaschine richtig einstellen', time: '10 Brote', best: myStats.sliceBest ? `Bestwert ${myStats.sliceBest}/10` : undefined, learn: true, action: () => setActiveTab('schneiden') },
-            allergene: { title: 'Allergene-Training', short: 'Kunden mit Allergien richtig beraten', time: '10 Kunden', best: myStats.allergenBest ? `Bestwert ${myStats.allergenBest}/10` : undefined, learn: true, action: () => setActiveTab('allergene') },
-            theke: { title: 'Theken-Simulator', short: 'Ein ganzes Verkaufsgespräch: begrüßen, beraten, kassieren', time: 'Ein Gespräch', learn: true, action: () => setActiveTab('theke') },
-            alt: { title: 'Alternativen-Jäger', short: 'Ausverkauft? Die beste Empfehlung finden', time: '6 Runden', learn: true, action: () => setActiveTab('alternativen') },
-            battle: { title: 'Quiz Battle', short: 'Kollegen herausfordern, 15 Sek. pro Frage', time: '5 Fragen', learn: true, duel: duelInvites, action: () => { setActiveTab('battle'); setBattleState('menu'); fetchCloudData(); } },
-            advent: { title: 'Adventskalender', short: nowMonth === 10 ? 'Ab 1. Dezember jeden Tag ein Türchen' : 'Jeden Tag ein Türchen mit Extra-Punkten', time: adventOpenNow ? `${adventOpenNow} offen` : '1 Frage am Tag', learn: true, action: () => { setAdventPreview(false); setActiveTab('advent'); } },
-          };
-          const groups: { title: string; tint: string; ink: string; keys: string[] }[] = [
-            ...(showAdventCard ? [{ title: 'Saison', tint: dc('#F4EADB'), ink: dc('#3A2010'), keys: ['advent'] }] : []),
-            { title: 'Beraten wie an der Theke', tint: dc('#FFF0C2'), ink: dc('#4B2A14'), keys: ['theke', 'alt'] },
-            { title: 'Produkte kennen', tint: dc('#E1EEDC'), ink: dc('#2F5D3A'), keys: ['bilder', 'allergene', 'schneiden'] },
-            { title: 'Schnell an der Kasse', tint: dc('#FCE1D2'), ink: dc('#9A3412'), keys: ['kasse', 'preis', 'ansturm', 'tueten'] },
-            { title: 'Gegen Kollegen', tint: dc('#DDE6F7'), ink: dc('#2F4F8A'), keys: ['battle'] },
-          ];
-          // Zuletzt gespielt: jüngster eigener Eintrag in der Bestenliste, der zu einem Spiel gehört
-          const lastKey = (() => {
-            let best = 0, key = '';
-            (cloudData.scores || []).forEach((sc: any) => {
-              if (String(sc?.username || '').toLowerCase() !== userKeyLower) return;
-              const ts = Number(String(sc.id || '').split('_').pop()) || 0;
-              const cat = cleanCat(String(sc.category || ''));
-              const k = Object.keys(games).find(g => cat.startsWith(cleanCat(games[g].title)));
-              if (k && ts > best) { best = ts; key = k; }
-            });
-            return key;
-          })();
-          const chip = (text: string, ink: string, strong?: boolean) => <span style={{ padding: '3px 9px', borderRadius: '999px', backgroundColor: dc('#F6EFE2'), color: ink, fontSize: '13px', fontWeight: strong ? 800 : 700, whiteSpace: 'nowrap' }}>{text}</span>;
-          const card = (k: string, _tint: string, ink: string) => {
-            const g = games[k];
-            return (
-              <button key={k} onClick={g.action} className="lt-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px', padding: '16px', minWidth: 0, borderRadius: '20px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ position: 'relative', width: '48px', height: '48px', borderRadius: '14px', backgroundColor: g.duel ? dc('#FFFFFF') : '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(g.duel ? {} : { boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }) }}>
-                  {g.duel ? <><DuelSwords size={34} /><DuelBadge n={g.duel} /></> : <span style={{ color: '#FFD86B', display: 'flex' }} aria-hidden="true"><LtIcon paths={GAME_ICON[g.title] || ICON.game} size={25} width={1.9} /></span>}
-                </span>
-                <span style={{ fontFamily: LT.serif, fontSize: '21px', lineHeight: 1.15, overflowWrap: 'anywhere' }}>{g.title}</span>
-                {g.duel ? <span style={{ fontSize: '15px', fontWeight: 800, color: dc('#B42318') }}>{g.duel === 1 ? 'Du wurdest herausgefordert!' : `${g.duel} Herausforderungen warten!`}</span> : <span className="lt-hide-mobile" style={{ fontSize: '16px', lineHeight: 1.4, color: LT.brown }}>{g.short}</span>}
-                <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto' }}>
-                  {chip(g.time, ink, true)}
-                  {g.best && chip(g.best, ink)}
-                  {g.learn && chip('📚 zählt fürs Lernen', dc('#2F4F8A'))}
-                </span>
-              </button>
-            );
-          };
-          const lastGroup = groups.find(gr => gr.keys.includes(lastKey));
-          return (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-              <div>
-                <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Spielen</h1>
-                <p style={{ margin: '6px 0 0', fontSize: '18px', color: LT.brown }}>Jedes Spiel bringt Punkte für die Bestenliste. Mit 📚 hakst du nebenbei auch Lernfragen ab.</p>
-              </div>
-              {lastKey && lastGroup && (
-                <button onClick={games[lastKey].action} className="lt-card" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderRadius: '20px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), textAlign: 'left', cursor: 'pointer' }}>
-                  <span style={{ flex: '0 0 48px', height: '48px', borderRadius: '14px', backgroundColor: '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={GAME_ICON[games[lastKey].title] || ICON.game} size={25} width={1.9} /></span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: '14px', color: dc('#F0D9AE') }}>Zuletzt gespielt</span>
-                    <span style={{ display: 'block', fontFamily: LT.serif, fontSize: '22px', lineHeight: 1.15 }}>{games[lastKey].title}</span>
-                  </span>
-                  <span style={{ padding: '10px 14px', borderRadius: '12px', backgroundColor: LT.yellow, color: dc('#2B170A'), fontWeight: 800, fontSize: '16px', whiteSpace: 'nowrap' }}>Nochmal →</span>
-                </button>
-              )}
-              {!isAdmin && (() => {
-                const tw = topWeak(5);
-                return (
-                  <section aria-labelledby="lt-focus-h" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 18px', borderRadius: '20px', backgroundColor: dc('#FFFFFF'), border: `2px solid ${LT.line}` }}>
-                    <h2 id="lt-focus-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '24px' }}>🎯 Dein Schwachstellen-Training</h2>
-                    {tw.length > 0 ? (
-                      <>
-                        <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>Diese Produkte kommen in „Welches Brot ist das?“, Allergene-Training, „Teurer oder billiger?“, Schneide-Profi und Alternativen-Jäger jetzt öfter dran, bis du sie sicher kannst:</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {tw.map(x => <span key={x.name} style={{ padding: '6px 12px', borderRadius: '999px', backgroundColor: x.level >= 4 ? dc('#FCE1D2') : dc('#FFF0C2'), color: x.level >= 4 ? dc('#9A3412') : dc('#6B4A12'), fontWeight: 700, fontSize: '15px' }}>{x.name}</span>)}
-                        </div>
-                      </>
-                    ) : (
-                      <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>Noch keine Schwachstellen. Liegst du in einem Spiel oder im Quiz bei einem Produkt daneben, kommt es danach automatisch öfter dran, bis es sitzt.</p>
-                    )}
-                  </section>
-                );
-              })()}
-              {groups.map(gr => (
-                <section key={gr.title} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '24px' }}>{gr.title}</h2>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: '14px' }}>
-                    {gr.keys.map(k => card(k, gr.tint, gr.ink))}
-                  </div>
-                </section>
-              ))}
-            </div>
-          );
-        })()}
+        {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
 
         {/* ═════════ NACHSCHLAGEN ═════════ */}
-        {activeTab === 'nachschlagen' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-            <div>
-              <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Nachschlagen</h1>
-              <p style={{ margin: '6px 0 0', fontSize: '19px', color: LT.brown }}>Schnell etwas nachsehen, Produkte, Zutaten, Allergene und was es wann gibt.</p>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', alignItems: 'start' }}>
-              <button onClick={() => { setSpickArea('produkt'); setSpickView(undefined); setActiveTab('flashcards'); }} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '26px', borderRadius: '26px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.bread} size={28} width={1.9} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Spickzettel Produktkenntnis</span>
-                <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Alle Produkte mit Zutaten, Allergenen und Schnitt, die Steckbriefe zum Nachsehen an der Theke.</span>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>Produkte öffnen</span>
-              </button>
-              <button onClick={() => { setSpickArea('fach'); setSpickView(undefined); setActiveTab('flashcards'); }} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '26px', borderRadius: '26px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.book} size={28} width={1.9} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Spickzettel Fachwissen</span>
-                <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Geschmack, Sauerteig, Mehl, Frischhaltung, Schnittgrößen, Geschichte & mehr, kompakt aus der Verkaufsmappe.</span>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>Fachwissen öffnen</span>
-              </button>
-              <button onClick={() => { setSpickArea('fach'); setSpickView('dictionary'); setActiveTab('flashcards'); }} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '26px', borderRadius: '26px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.globe} size={28} width={1.9} /></span>
-                <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Englisch-Wörterbuch</span>
-                <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Sätze für die Theke, Allergene, Fachbegriffe und alle Produkte auf Englisch, mit Suche und Vorlesen.</span>
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>Wörterbuch öffnen</span>
-              </button>
-              <section style={{ padding: '26px', borderRadius: '26px', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.leaf} size={28} width={1.9} /></span>
-                <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '34px', lineHeight: 1 }}>Saisonkalender</h2>
-                <p style={{ margin: 0, fontSize: '18px', color: LT.brown }}>Was gibt es wann? Tippe auf eine Jahreszeit.</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {[
-                    { key: 'Frühling', title: 'Frühling' },
-                    { key: 'Sommer', title: 'Sommer' },
-                    { key: 'Herbst', title: 'Herbst' },
-                    { key: 'Winter', title: 'Winter & Karneval' }
-                  ].map(seas => {
-                    const isOpen = openSeasons[seas.key];
-                    const itemsList = fullSeasonalMap[seas.key] || [];
-                    return (
-                      <div key={seas.key} style={{ backgroundColor: LT.cream, borderRadius: '14px', border: `1px solid ${LT.line}`, overflow: 'hidden' }}>
-                        <button onClick={() => setOpenSeasons(prev => ({ ...prev, [seas.key]: !prev[seas.key] }))} aria-expanded={!!isOpen} style={{ width: '100%', minHeight: '54px', backgroundColor: 'transparent', border: 'none', padding: '0 16px', textAlign: 'left', fontWeight: 700, fontSize: '18px', color: LT.ink, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>{seas.title}</span><span style={{ color: LT.muted }}>{isOpen ? '▲' : '▼'}</span>
-                        </button>
-                        {isOpen && (
-                          <div style={{ padding: '0 16px 14px', fontSize: '17px', lineHeight: 1.45, color: LT.brown, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                            {itemsList.length === 0 ? <div>Noch keine Einträge.</div> : itemsList.map((txt, i) => (<div key={i}>• {txt}</div>))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
-          </div>
-        )}
+        {activeTab === 'nachschlagen' && <NachschlagenSeite {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
 
         {/* ═════════ LERNEN-ÜBERSICHT ═════════ */}
         {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }} />}
@@ -2449,85 +2310,7 @@ export default function App() {
 
         {activeTab === 'bilderquiz' && <BilderQuizView images={productImages} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
         {activeTab === 'allergene' && <AllergenTrainerView images={productImages} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
-        {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && (() => {
-          const isApp = activeTab === 'appwoche';
-          const wk = isApp ? appWeek : onboarding;
-          const DAYS = isApp ? APP_WEEK_DAYS : ONBOARDING_DAYS;
-          const wkComplete = wk.done === wk.total;
-          const toggleWk = (id: string) => toggleOnboarding(id, isApp ? '_appWeek' : '_onboarding');
-          const itemById = (id: string) => wk.items.find(i => i.id === id)!;
-          const dayDone = (d: typeof DAYS[number]) => d.ids.every(id => itemById(id)?.done);
-          const firstOpen = DAYS.find(d => !dayDone(d)) || DAYS[DAYS.length - 1];
-          const day = DAYS.find(d => d.no === obDay) || firstOpen;
-          const pct = Math.round((wk.done / wk.total) * 100);
-          const R = 34, C = 2 * Math.PI * R;
-          return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <PageHead title={isApp ? 'Meine erste Woche mit der App' : 'Meine erste Woche bei Hinkel'} subtitle={isApp ? 'Lerne die App in Ruhe kennen. Vieles hakt sich beim Ausprobieren von allein ab. Wenn alles erledigt ist, verschwindet diese Liste.' : 'In 5 Tagen fit für die Theke. Vieles hakt sich beim Üben von allein ab, was du schon kannst, hakst du selbst ab.'} onBack={() => setActiveTab('home')} backLabel="Zur Startseite" />
-            <div style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap', background: `linear-gradient(135deg, ${TH.tintYellow}, ${dc('#FFFFFF')})` }}>
-              <svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true" style={{ flex: '0 0 auto' }}>
-                <circle cx="44" cy="44" r={R} fill="none" stroke={dc('#F4EADB')} strokeWidth="10" />
-                <circle cx="44" cy="44" r={R} fill="none" stroke={wkComplete ? TH.green : LT.yellow} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(pct / 100) * C} ${C}`} transform="rotate(-90 44 44)" style={{ transition: 'stroke-dasharray .6s ease' }} />
-                <text x="44" y="50" textAnchor="middle" fontSize="20" fontWeight="700" fill={LT.ink}>{pct}%</text>
-              </svg>
-              <div style={{ flex: '1 1 220px' }}>
-                <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.1 }}>{wkComplete ? 'Geschafft, willkommen im Team!' : `Tag ${firstOpen.no}: ${firstOpen.title}`}</div>
-                <div style={{ fontSize: '17px', color: LT.brown, marginTop: '4px' }}>{wk.done} von {wk.total} Schritten erledigt</div>
-              </div>
-            </div>
-
-            {/* Tage als Weg */}
-            <div style={{ ...cardStyle, padding: '18px 14px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative' }}>
-                <div aria-hidden="true" style={{ position: 'absolute', left: '10%', right: '10%', top: '27px', height: '4px', backgroundColor: dc('#F4EADB'), borderRadius: '4px' }} />
-                {DAYS.map(d => {
-                  const done = dayDone(d); const on = d.no === day.no;
-                  return (
-                    <button key={d.no} onClick={() => setObDay(d.no)} aria-pressed={on} style={{ position: 'relative', flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
-                      <span style={{ width: '58px', height: '58px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', backgroundColor: done ? TH.green : on ? LT.yellow : dc('#FFFFFF'), border: `3px solid ${done ? TH.green : on ? LT.brown : LT.line}`, boxShadow: on ? '0 6px 16px rgba(75,42,20,.22)' : 'none', transform: on ? 'scale(1.08)' : 'none', transition: 'transform .2s ease' }}>{done ? <span style={{ color: dc('#FFFFFF'), fontWeight: 700 }}>✓</span> : d.icon}</span>
-                      <span style={{ fontSize: '14px', fontWeight: 700, color: on ? LT.ink : LT.muted }}>Tag {d.no}</span>
-                      <span className="lt-hide-mobile" style={{ fontSize: '13px', color: LT.muted, textAlign: 'center', lineHeight: 1.2 }}>{d.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Aufgaben des gewählten Tages */}
-            <div key={day.no} className="lt-pop-in" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '40px' }} aria-hidden="true">{day.icon}</span>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: LT.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Tag {day.no} von {DAYS.length}</div>
-                  <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>{day.title}</div>
-                </div>
-              </div>
-              <div style={{ fontSize: '17px', color: LT.brown }}>{day.text}</div>
-              {day.ids.map(id => {
-                const it = itemById(id);
-                if (!it) return null;
-                return (
-                  <div key={it.id} style={{ padding: '14px 16px', borderRadius: '18px', backgroundColor: it.done ? TH.tintSage : LT.cream, border: `2px solid ${it.done ? TH.green : LT.line}`, display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                    <span aria-hidden="true" style={{ flex: '0 0 40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: it.done ? TH.green : dc('#FFFFFF'), border: `2px solid ${it.done ? TH.green : LT.line}`, color: dc('#FFFFFF'), fontWeight: 700, fontSize: '20px' }}>{it.done ? '✓' : ''}</span>
-                    <div style={{ flex: '1 1 220px' }}>
-                      <div style={{ fontSize: '19px', fontWeight: 700 }}>{it.title}</div>
-                      <div style={{ fontSize: '16px', color: LT.muted, marginTop: '2px' }}>{it.desc}{it.self ? ' · selbst abgehakt' : ''}</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      {it.go && !it.done && <button onClick={() => goOnboardingTarget(it.go)} style={{ ...btnPrimary, minHeight: '48px', fontSize: '16px' }}>{it.go === 'fach' ? 'Lesen ›' : 'Üben ›'}</button>}
-                      {it.manual && <button onClick={() => toggleWk(it.id)} style={{ ...(it.done ? btnSecondary : btnPrimary), minHeight: '48px', fontSize: '16px' }}>{it.done ? 'Rückgängig' : 'Erledigt ✓'}</button>}
-                      {!it.manual && !it.done && <button onClick={() => toggleWk(it.id)} style={{ ...btnSecondary, minHeight: '48px', fontSize: '16px' }}>Kann ich schon ✓</button>}
-                      {!it.manual && it.self && <button onClick={() => toggleWk(it.id)} style={{ ...btnSecondary, minHeight: '48px', fontSize: '16px' }}>Rückgängig</button>}
-                    </div>
-                  </div>
-                );
-              })}
-              {day.no < DAYS.length && dayDone(day) && <button onClick={() => setObDay(day.no + 1)} style={{ ...btnPrimary, alignSelf: 'flex-start' }}>Weiter zu Tag {day.no + 1} ›</button>}
-            </div>
-
-          </div>
-          );
-        })()}
+        {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && <EinarbeitungSeite {...{ activeTab, setActiveTab, obDay, setObDay, toggleOnboarding, onboarding, appWeek, goOnboardingTarget }} />}
         {activeTab === 'kassenblitz' && <KassenblitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={productImages} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'schneiden' && <SchneideProfiView images={productImages} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
@@ -2651,171 +2434,20 @@ export default function App() {
       {showTipShop && !isAdmin && <TipShop prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
 
       {/* ── Anleitung: App auf den Startbildschirm ── */}
-      {showInstallHelp && (
-        <div className="lt-overlay" onClick={() => setShowInstallHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="App auf den Startbildschirm legen" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <div style={{ backgroundColor: LT.yellow, padding: '22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span aria-hidden="true" style={{ fontSize: '30px', lineHeight: 1 }}>📱</span></span>
-              <div>
-                <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>Hinkel-App aufs Handy</div>
-                <div style={{ fontSize: '16px' }}>Dann startet sie wie eine echte App mit einem Fingertipp.</div>
-              </div>
-            </div>
-            <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '20px', fontSize: '18px', lineHeight: 1.45 }}>
-              <button onClick={hideInstall} style={{ minHeight: '50px', borderRadius: '14px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.brown, fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>✓ Schon erledigt, Knopf oben ausblenden</button>
-              {canInstallDirect && (
-                <button onClick={installDirect} style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>Jetzt installieren</button>
-              )}
-              {[
-                {
-                  key: 'apple', title: 'iPhone & iPad (Safari)', steps: [
-                    { icon: ICON.share, text: 'Unten (am iPad oben) auf „Teilen“ tippen, das Viereck mit dem Pfeil nach oben.' },
-                    { icon: ICON.plus, text: 'Nach unten scrollen und „Zum Home-Bildschirm“ wählen.' },
-                    { icon: ICON.chevron, text: 'Oben rechts auf „Hinzufügen“ tippen, fertig!' }
-                  ]
-                },
-                {
-                  key: 'android', title: 'Android (Chrome)', steps: [
-                    { icon: ICON.dots, text: 'Oben rechts auf die drei Punkte tippen.' },
-                    { icon: ICON.plus, text: '„Zum Startbildschirm hinzufügen“ oder „App installieren“ wählen.' },
-                    { icon: ICON.chevron, text: 'Mit „Hinzufügen“ bestätigen, fertig!' }
-                  ]
-                }
-              ].sort((a, b) => (a.key === 'apple') === isAppleDevice ? -1 : (b.key === 'apple') === isAppleDevice ? 1 : 0).map(group => (
-                <div key={group.key} style={{ backgroundColor: dc('#FFFFFF'), border: `2px solid ${LT.line}`, borderRadius: '20px', padding: '18px' }}>
-                  <div style={{ fontWeight: 700, fontSize: '19px', marginBottom: '12px' }}>{group.title}</div>
-                  <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {group.steps.map((st, i) => (
-                      <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                        <span style={{ flex: '0 0 36px', height: '36px', borderRadius: '50%', backgroundColor: dc('#FFF0C2'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{i + 1}</span>
-                        <span style={{ flex: 1, paddingTop: '5px' }}>{st.text}</span>
-                        <span style={{ paddingTop: '6px', color: LT.muted }}><LtIcon paths={st.icon} size={22} /></span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ))}
-              <button onClick={() => setShowInstallHelp(false)} style={{ minHeight: '56px', borderRadius: '16px', border: `2px solid ${LT.line}`, backgroundColor: 'transparent', color: LT.ink, fontSize: '18px', fontWeight: 700, cursor: 'pointer' }}>Schließen</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showInstallHelp && <InstallHilfe {...{ setShowInstallHelp, hideInstall, canInstallDirect, isAppleDevice, installDirect }} />}
 
       {/* ── Pop-up: Wochenrückblick ── */}
-      {showWeekReview && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && newBadges.length === 0 && !showLevelUp && !loginDue && loginOpenDay === 0 && !showWheel && !losPrize && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1250, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          {(() => {
-            const range = `${lastMonday.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} bis ${new Date(thisMonday.getTime() - 86400000).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
-            const slides = [
-              { bg: LT.yellow, icon: '📅', top: 'Dein Wochenrückblick', big: `Neue Woche, ${username}!`, sub: `So lief deine letzte Woche (${range}). Tippe rechts für weiter.` },
-              { bg: dc('#FFE7C2'), icon: '🔥', top: 'Lerntage', big: `${Math.min(6, weekDays)} / 6`, sub: weekDays >= 5 ? 'Wahnsinn, fast jeden Tag gelernt!' : weekDays >= 2 ? 'Schön dran geblieben! 👍' : weekDays === 1 ? 'Ein Lerntag ist ein Anfang, diese Woche schaffst du mehr!' : 'Letzte Woche war Pause, diese Woche geht’s wieder los!' },
-              { bg: dc('#E1EEDC'), icon: '⭐', top: 'Punkte', big: weekPoints.toLocaleString('de-DE'), sub: weekMastered !== null ? `Dazu ${weekMastered} ${weekMastered === 1 ? 'Frage' : 'Fragen'} neu gemeistert.` : `Du hast ${masteredNow} Fragen gemeistert.` },
-              { bg: dc('#E3ECF7'), icon: '🎮', top: 'Lieblingsspiel', big: favGame || 'Noch keins', sub: favGame ? 'Das hast du am meisten gespielt.' : 'Probier diese Woche mal ein Spiel aus!' },
-              { bg: LT.cream, icon: '💡', top: 'Tipp für diese Woche', big: '', sub: weekTip },
-            ];
-            const n = slides.length; const i = Math.min(wrSlide, n - 1); const sl = slides[i];
-            const go = (d: number) => setWrSlide(Math.max(0, Math.min(n - 1, i + d)));
-            const finish = () => { setWrSlide(0); closeWeekReview(); };
-            return (
-              <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Dein Wochenrückblick" style={{ width: '100%', maxWidth: '420px', backgroundColor: sl.bg, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)', overflow: 'hidden', transition: 'background-color .35s ease', userSelect: 'none' }}
-                onTouchStart={(e) => { wrTouch.current = e.touches[0].clientX; }}
-                onTouchEnd={(e) => { if (wrTouch.current == null) return; const dx = e.changedTouches[0].clientX - wrTouch.current; wrTouch.current = null; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); }}>
-                <div style={{ display: 'flex', gap: '5px', padding: '14px 16px 0' }}>
-                  {slides.map((_, k) => <span key={k} className="lt-story-bar"><i style={{ width: k <= i ? '100%' : '0%', transition: 'width .35s ease' }} /></span>)}
-                </div>
-                <div style={{ position: 'relative', minHeight: '360px', display: 'flex' }}>
-                  <button aria-label="Zurück" onClick={() => go(-1)} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '35%', background: 'none', border: 'none', cursor: i > 0 ? 'pointer' : 'default', zIndex: 1 }} />
-                  {i < n - 1 && <button aria-label="Weiter" onClick={() => go(1)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '65%', background: 'none', border: 'none', cursor: 'pointer', zIndex: 1 }} />}
-                  <div key={i} className="lt-pop-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '28px 26px', textAlign: 'center' }}>
-                    <span className="lt-emo-bob" style={{ fontSize: '64px', lineHeight: 1 }}>{sl.icon}</span>
-                    <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.brown }}>{sl.top}</div>
-                    {sl.big && <div className="lt-count" style={{ fontFamily: LT.serif, fontSize: sl.big.length > 14 ? '30px' : '46px', lineHeight: 1.1 }}>{sl.big}</div>}
-                    <div style={{ fontSize: '18px', lineHeight: 1.45, color: LT.ink, maxWidth: '320px' }}>{sl.sub}</div>
-                  </div>
-                </div>
-                <div style={{ padding: '0 22px 22px', display: 'flex', gap: '10px', position: 'relative', zIndex: 2 }}>
-                  {i < n - 1 ? (
-                    <>
-                      <button onClick={finish} style={{ minHeight: '52px', padding: '0 16px', border: `2px solid ${LT.line}`, borderRadius: '16px', backgroundColor: 'rgba(255,255,255,.7)', color: LT.brown, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Überspringen</button>
-                      <button onClick={() => go(1)} autoFocus style={{ flex: 1, minHeight: '52px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '18px', fontWeight: 700, cursor: 'pointer' }}>Weiter ›</button>
-                    </>
-                  ) : (
-                    <button onClick={finish} autoFocus style={{ flex: 1, minHeight: '58px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>Los geht’s!</button>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
+      {showWeekReview && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && newBadges.length === 0 && !showLevelUp && !loginDue && loginOpenDay === 0 && !showWheel && !losPrize && <Wochenrueckblick {...{ username, wrSlide, setWrSlide, wrTouch, thisMonday, lastMonday, weekPoints, weekDays, favGame, masteredNow, weekMastered, weekTip, closeWeekReview }} />}
 
       {/* ── Pop-up: neue Stufe erreicht ── */}
-      {showLevelUp && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && newBadges.length === 0 && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1300, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Neue Stufe erreicht" style={{ position: 'relative', width: '100%', maxWidth: '420px', backgroundColor: LT.cream, borderRadius: '28px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
-            <ConfettiOverlay active />
-            <div style={{ backgroundColor: LT.yellow, padding: '26px 22px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Neue Stufe erreicht</div>
-              <div className="lt-levelup" style={{ width: '104px', height: '104px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '58px', boxShadow: '0 10px 24px -8px rgba(75,42,20,.45)' }}>{myLevel.icon}</div>
-              <div style={{ fontFamily: LT.serif, fontSize: '34px', lineHeight: 1.05 }}>{myLevel.title}</div>
-              <div style={{ fontSize: '17px' }}>Stufe {myLevel.no} von {LEVELS.length}</div>
-            </div>
-            <div style={{ padding: '20px 22px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ fontSize: '18px', color: LT.brown, lineHeight: 1.45 }}>
-                Glückwunsch, {username}! Du hast {myTotalScore.toLocaleString('de-DE')} Punkte gesammelt.
-                {myLevel.next ? ` Nächste Stufe: ${myLevel.next.icon} ${myLevel.next.title} ab ${myLevel.next.min.toLocaleString('de-DE')} Punkten.` : ' Das ist die höchste Stufe!'}
-              </div>
-              <button onClick={markLevelSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>Weiter so!</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showLevelUp && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && newBadges.length === 0 && <NeueStufe {...{ username, myTotalScore, myLevel, markLevelSeen }} />}
 
       {/* ── Frage melden ── */}
       {activeTab !== 'quiz' && <FloatingReportButton />}
-      {reportQ && (
-        <div className="lt-overlay" onClick={() => setReportQ(null)} style={{ position: 'fixed', inset: 0, zIndex: 1200, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Frage melden" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <div style={{ backgroundColor: LT.yellow, padding: '20px 22px' }}>
-              <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>⚑ {reportQ.__g ? 'Fehler melden' : 'Frage melden'}</div>
-              <div style={{ fontSize: '16px', marginTop: '4px' }}>Der Ausbilder sieht deine Meldung und kümmert sich darum.</div>
-            </div>
-            <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {reportQ.__g && <div style={{ fontSize: '15px', fontWeight: 700, color: LT.muted }}>{reportQ.__g.game}{reportQ.__g.product ? ` · ${reportQ.__g.product}` : ''}</div>}
-              <div style={{ fontSize: '16px', color: LT.muted, lineHeight: 1.45, whiteSpace: 'pre-line' }}>„{reportQ.question}“</div>
-              <div style={{ fontSize: '17px', fontWeight: 700 }}>Was stimmt nicht?</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {['Antwort ist falsch', 'Frage ist unklar', 'Tippfehler', 'Stimmt nicht mehr (z. B. Preis)', 'Sonstiges'].map(r => {
-                  const on = reportReason === r;
-                  return <button key={r} onClick={() => setReportReason(r)} style={{ minHeight: '46px', padding: '0 14px', borderRadius: '999px', border: on ? 'none' : `2px solid ${LT.line}`, backgroundColor: on ? LT.brown : dc('#FFFFFF'), color: on ? dc('#FFF6E0') : LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>{r}</button>;
-                })}
-              </div>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '16px', fontWeight: 700 }}>
-                Was wäre richtig? Dein Verbesserungsvorschlag (freiwillig)
-                <textarea value={reportText} onChange={(e) => setReportText(e.target.value)} maxLength={300} rows={3} placeholder="z. B. „Der Preis ist inzwischen 3,20 €“" style={{ padding: '12px 14px', borderRadius: '14px', border: `2px solid ${LT.line}`, fontSize: '17px', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }} />
-              </label>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button disabled={!reportReason} onClick={() => { submitReport(reportQ, reportReason, reportText); if (reportSentRef.current) { reportSentRef.current(); reportSentRef.current = null; } setReportQ(null); setToast('Danke! Deine Meldung ist beim Ausbilder angekommen.'); }} style={{ ...btnPrimary, flex: '1 1 200px', opacity: reportReason ? 1 : 0.45 }}>Meldung senden</button>
-                <button onClick={() => setReportQ(null)} style={{ ...btnSecondary, flex: '0 1 auto' }}>Abbrechen</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {reportQ && <FrageMelden {...{ submitReport, setReportQ, reportQ, reportReason, setReportReason, reportText, setReportText, reportSentRef, setToast }} />}
 
       {(introDue || showIntro) && !needRole && <IntroTour name={username} onDone={finishIntro} />}
-      {needPinSetup && (
-        <div role="dialog" aria-modal="true" aria-labelledby="lt-pinsetup-h" style={{ position: 'fixed', inset: 0, zIndex: 3000, backgroundColor: 'rgba(31,20,12,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', boxSizing: 'border-box' }}>
-          <div style={{ width: '100%', maxWidth: '440px', maxHeight: '100%', overflowY: 'auto', backgroundColor: dc('#FFFFFF'), color: LT.ink, borderRadius: '24px', padding: '24px 20px', boxSizing: 'border-box' }}>
-            <h2 id="lt-pinsetup-h" style={{ margin: '0 0 12px', fontFamily: LT.serif, fontWeight: 400, fontSize: '28px' }}>Neu: deine persönliche PIN</h2>
-            <PinSetupForm
-              userKey={username.toLowerCase()}
-              intro={`Damit sich niemand unter deinem Namen anmelden kann, braucht jeder jetzt eine eigene PIN. Du gibst sie nur beim Anmelden ein, ${username}.`}
-              onSave={(entry) => savePin(username.toLowerCase(), entry, ((cloudDataRef.current.pins || {})[username.toLowerCase()]?.ts) || 0)}
-            />
-          </div>
-        </div>
-      )}
+      {needPinSetup && <PinFestlegen {...{ username, cloudDataRef, savePin }} />}
       {loginDue && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && <LoginRewardDialog day={loginDay} onClaim={() => { setLoginOpenDay(loginDay); claimLogin(); }} onClose={() => setLoginOpenDay(0)} />}
       {loginOpenDay > 0 && !loginDue && <LoginRewardDialog day={loginOpenDay} claimedAlready onClaim={() => {}} onClose={() => setLoginOpenDay(0)} />}
       {lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && (
@@ -2855,122 +2487,16 @@ export default function App() {
       )}
 
       {/* ── Pop-up: neues Abzeichen (nur wenn gerade keine Nachricht offen ist) ── */}
-      {!isAdmin && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !losPrize && !stampPrize && !brezelRain && !loginDue && !introDue && !showIntro && loginOpenDay === 0 && newBadges.length > 0 && cloudConnected && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1300, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Neues Abzeichen" style={{ width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', overflow: 'visible', boxShadow: '0 24px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
-            <div style={{ backgroundColor: LT.yellow, padding: '22px' }}>
-              <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{newBadges.length === 1 ? 'Neues Abzeichen' : `${newBadges.length} neue Abzeichen`}</div>
-              <div style={{ fontFamily: LT.serif, fontSize: '32px', lineHeight: 1.1, marginTop: '4px' }}>Glückwunsch, {username}!</div>
-            </div>
-            <div style={{ padding: '22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {newBadges.slice(0, 6).map((b, bi) => (
-                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', borderRadius: '18px', backgroundColor: dc('#FFFFFF'), border: `3px solid ${LT.yellow}`, textAlign: 'left', position: 'relative', zIndex: 6 - bi }}>
-                  <span className="lt-badge-spin" style={{ fontSize: '40px', lineHeight: 1, animationDelay: `${bi * 0.5}s` }}>{b.icon}</span>
-                  <span><span style={{ display: 'block', fontSize: '19px', fontWeight: 700 }}>{b.title}</span><span style={{ display: 'block', fontSize: '15px', color: LT.muted }}>{b.desc}</span></span>
-                </div>
-              ))}
-              {newBadges.length > 6 && <div style={{ fontSize: '16px', color: LT.muted }}>… und {newBadges.length - 6} weitere</div>}
-              <button onClick={markBadgesSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>Super, danke!</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {!isAdmin && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !losPrize && !stampPrize && !brezelRain && !loginDue && !introDue && !showIntro && loginOpenDay === 0 && newBadges.length > 0 && cloudConnected && <NeuesAbzeichen {...{ username, newBadges, markBadgesSeen }} />}
 
       {/* ── Pop-up: Stempelkarte voll ── */}
-      {!isAdmin && cloudConnected && (stampPrize || (!needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !losPrize && !loginDue && !introDue && !showIntro && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && !!myProg._stampV2 && Math.floor((Number(myProg._stamps) || 0) / 10) > (Number(myProg._stampClaimed) || 0))) && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1300, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Stempelkarte voll" style={{ position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '420px', padding: '28px 24px', borderRadius: '28px', backgroundColor: LT.cream, border: '3px dashed #C9971C', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'center' }}>
-            <ConfettiOverlay active />
-            {!stampPrize ? (
-              <>
-                <span className="lt-emo-bob" style={{ fontSize: '64px', lineHeight: 1 }} aria-hidden="true">🎟️</span>
-                <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.1 }}>Stempelkarte voll!</div>
-                <div style={{ fontSize: '18px', color: LT.brown }}>10 Lerntage geschafft, {username}. Dafür bekommst du:</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <span style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontWeight: 800, fontSize: '18px' }}>+500 Punkte</span>
-                  <span style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: dc('#FFF0C2'), color: LT.brown, fontWeight: 800, fontSize: '18px' }}>🪙 3,00 €</span>
-                </div>
-                <button onClick={claimStampCard} autoFocus style={{ width: '100%', minHeight: '58px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>Einlösen</button>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: '16px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.brown }}>Moment, da ist noch was …</div>
-                <PrizeBag icon={stampPrize.icon} />
-                <div className="lt-pb-text" style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.15 }}>Überraschung: {stampPrize.text}</div>
-                <div style={{ fontSize: '16px', color: LT.muted }}>Die neue Stempelkarte liegt schon bereit.</div>
-                <button onClick={() => setStampPrize(null)} autoFocus style={{ width: '100%', minHeight: '58px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>Super, danke!</button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {!isAdmin && cloudConnected && (stampPrize || (!needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !losPrize && !loginDue && !introDue && !showIntro && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && !!myProg._stampV2 && Math.floor((Number(myProg._stamps) || 0) / 10) > (Number(myProg._stampClaimed) || 0))) && <StempelkarteVoll {...{ username, claimStampCard, stampPrize, setStampPrize }} />}
 
       {/* ── Pop-up: neue Nachricht vom Ausbilder ── */}
-      {showAppWeekDone && !needRole && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1350, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Erste Woche mit der App geschafft" style={{ position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '440px', padding: '28px 24px', borderRadius: '28px', backgroundColor: LT.cream, border: `3px solid ${TH.green}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <ConfettiOverlay active />
-            <div style={{ fontSize: '54px' }} aria-hidden="true">🎉</div>
-            <div style={{ fontFamily: LT.serif, fontSize: '32px', lineHeight: 1.1 }}>Du kennst jetzt die App!</div>
-            <div style={{ fontSize: '17px', color: LT.brown }}>Alle Schritte von „Meine erste Woche mit der App“ sind erledigt, {username}. Die Liste verschwindet jetzt von der Startseite. Viel Spaß beim Weiterlernen!</div>
-            <button onClick={finishAppWeek} autoFocus style={{ ...btnPrimary, marginTop: '8px' }}>Super, weiter geht’s</button>
-          </div>
-        </div>
-      )}
-      {showFuehrerschein && !needRole && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1350, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Theken-Führerschein" style={{ position: 'relative', overflow: 'hidden', width: '100%', maxWidth: '460px', maxHeight: '92vh', overflowY: 'auto', padding: '28px 24px', borderRadius: '28px', backgroundColor: LT.yellow, border: `3px dashed ${LT.brown}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <ConfettiOverlay active />
-            <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>Bäckerei Hinkel</div>
-            <div style={{ fontFamily: LT.serif, fontSize: '38px', lineHeight: 1.05 }}>Theken-Führerschein</div>
-            <div style={{ fontSize: '19px' }}>für <strong>{username}</strong></div>
-            <div style={{ fontSize: '16px' }}>hat die erste Woche geschafft: Brote, Beratung und Allergien sitzen. Herzlich willkommen im Team der Brotfreunde!</div>
-            <div style={{ fontSize: '15px', marginTop: '4px' }}>{new Date().toLocaleDateString('de-DE')}</div>
-            <button onClick={finishErsteWoche} autoFocus style={{ ...btnPrimary, marginTop: '8px' }}>Danke! 🎉</button>
-          </div>
-        </div>
-      )}
-      {needRole && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1400, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Wer bist du?" style={{ width: '100%', maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <div style={{ backgroundColor: LT.yellow, padding: '22px' }}>
-              <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.1 }}>Willkommen, {username}!</div>
-              <div style={{ fontSize: '17px', marginTop: '4px' }}>Damit die App gut zu dir passt: Was trifft auf dich zu?</div>
-            </div>
-            <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {(['neu', 'erfahren', 'azubi'] as StaffRole[]).map(r => (
-                <button key={r} onClick={() => setMyRole(r)} className="lt-card" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 18px', borderRadius: '20px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), cursor: 'pointer', textAlign: 'left', color: LT.ink }}>
-                  <span style={{ fontSize: '36px' }} aria-hidden="true">{ROLE_INFO[r].icon}</span>
-                  <span>
-                    <span style={{ display: 'block', fontSize: '20px', fontWeight: 700 }}>{ROLE_INFO[r].title}</span>
-                    <span style={{ display: 'block', fontSize: '16px', color: LT.muted }}>{ROLE_INFO[r].desc}</span>
-                  </span>
-                </button>
-              ))}
-              <div style={{ fontSize: '14px', color: LT.muted }}>Das kannst du später beim Ausbilder ändern lassen.</div>
-            </div>
-          </div>
-        </div>
-      )}
-      {showPinPopup && activePinboard && (
-        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Neue Nachricht vom Ausbilder" style={{ width: '100%', maxWidth: '460px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-            <div style={{ backgroundColor: LT.yellow, padding: '22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span aria-hidden="true" style={{ fontSize: '30px', lineHeight: 1 }}>📣</span></span>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Neu vom Ausbilder</div>
-                <div style={{ fontSize: '16px' }}>{activePinboard.author} · {activePinboard.updatedAt}</div>
-              </div>
-            </div>
-            <div style={{ padding: '24px 22px 22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {activePinboard.image && <img src={activePinboard.image} alt="Foto vom Ausbilder" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '16px' }} />}
-              <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.2, whiteSpace: 'pre-line', maxHeight: '50vh', overflowY: 'auto' }}>„{activePinboard.text}“</div>
-              <div><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
-              <button onClick={markPinSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>Gelesen, danke!</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {showAppWeekDone && !needRole && <AppWocheGeschafft {...{ username, finishAppWeek }} />}
+      {showFuehrerschein && !needRole && <Fuehrerschein {...{ username, finishErsteWoche }} />}
+      {needRole && <RolleWaehlen {...{ username, setMyRole }} />}
+      {showPinPopup && activePinboard && <AusbilderNachricht {...{ activePinboard, markPinSeen }} />}
     </div>
   );
 }

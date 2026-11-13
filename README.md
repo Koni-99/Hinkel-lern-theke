@@ -20,11 +20,11 @@ Die Versionsnummer steht in `src/App.tsx` (`APP_VERSION`) und unten in der App.
 | `basis/` | Gemeinsame Bausteine: Marke und Farben (`LT`), Symbole, Laden, Fakten/Wetter, Lern-Serie, PIN-Formular |
 | `theke-design.ts` | Das Design (CSS) als Text, wird als `<style>` eingefügt |
 | `cloud/` | Laden, Speichern und Live-Updates mit Firebase |
-| `screens/` | Anmeldung, Startseite, `quiz/` (Bereich, Stufe, Frage, Auswertung) |
+| `screens/` | Anmeldung, Startseite, Spiele-Auswahl, Nachschlagen, Einarbeitung, `quiz/` (Bereich, Stufe, Frage, Auswertung), `dialoge/` (Pop-ups) |
 | `games/` | Die Spiele, `theke/` ist der Theken-Simulator |
 | `ui/` | Bausteine für alle Bereiche: Knöpfe, Abzeichen, Statistik, Hilfe, Belohnungen … |
 | `admin/` | Ausbilder-Bereich, ein Reiter pro Datei |
-| `components/` | Größere Ansichten: Ausbilder-Bereich, Karteikarten, Bestenliste, Battle, Tüten-Blitz, Alternativen-Jäger |
+| `components/` | Größere Ansichten: Ausbilder-Bereich, Karteikarten (`karteikarten/`), Bestenliste, Battle, Tüten-Blitz, Alternativen-Jäger |
 | `daten/` | Produkte, Fragen, Sortiment |
 | `hilfen/` | Hilfsfunktionen: Allgemeines, Battle, Daten zusammenführen, PIN, Produkte, Prüfung, Anmeldung, Bestenliste |
 | `types.ts`, `focus.ts` | Datentypen, Lernschwerpunkte |
