@@ -285,6 +285,17 @@ async function cloudTests() {
     ok('Gelesen/Umfrage: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }
+  // Lob von Kollegen: der Gelobte bekommt die Punkte genau einmal
+  {
+    await db('PATCH', '/progress/ben', { _displayName: 'Ben', _kollegenLob: { l1: { an: 'anna', anName: 'Anna', t: 'Danke für die Hilfe!', ts: Date.now() } } });
+    const A = await device({ cloud: true, user: 'Anna' });
+    let pkt = [];
+    for (let i = 0; i < 60 && pkt.length === 0; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (!pkt.length) await sleep(100); }
+    ok('Lob: Gelobte bekommt 10 Punkte', pkt.length === 1 && pkt[0].score === 10, `${pkt.length} Einträge`);
+    ok('Lob: Karte „Lob der Woche“ zeigt das Lob', (await A.page.getByText('Danke für die Hilfe!', { exact: false }).count()) > 0);
+    ok('Lob: keine Fehler', A.errors.length === 0, A.errors[0]);
+    await A.ctx.close();
+  }
   // Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem
   {
     const A = await device({ cloud: true, user: 'Anna', blockLive: true });

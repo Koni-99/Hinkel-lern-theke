@@ -5,6 +5,7 @@ import { dc } from '../daten/data';
 import { TH, cardStyle } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { alleKundenfragen, alleTipps, kfrageBeantworten, kfrageLoeschen, tippEntscheiden, tippLoeschen, KFrageEintrag } from '../hilfen/kollegen';
+import { alleLobs, lobLoeschen } from '../hilfen/team';
 
 const datum = (ts: number) => new Date(ts).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
 const knopf = (tone: 'plain' | 'ok' | 'danger' = 'plain'): CSSProperties => ({
@@ -62,6 +63,7 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
   const beantwortet = fragen.filter((f) => f.a);
   const tippsOffen = alleTipps(cloudData.progress, undefined, 'pending');
   const tippsOk = alleTipps(cloudData.progress, undefined, 'ok');
+  const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= Date.now() - 30 * 86400000);
   const titel = (t: string, sub: string) => (
     <div><h2 style={{ margin: 0, fontFamily: TH.serif, fontWeight: 400, fontSize: '30px', lineHeight: 1.1 }}>{t}</h2><div style={{ fontSize: '17px', color: TH.muted, marginTop: '4px' }}>{sub}</div></div>
   );
@@ -98,6 +100,17 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
             <div key={`${t.user}_${t.id}`} style={{ padding: '10px 14px', borderRadius: '14px', backgroundColor: TH.cream, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
               <span style={{ flex: '1 1 260px' }}><strong>{t.p}</strong> · {t.name}: „{t.t}“</span>
               <button type="button" onClick={() => { if (confirm('Diesen Tipp entfernen?')) mutateCloudData(tippLoeschen(t.user, t.id)); }} style={knopf('danger')}>Entfernen</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {lobs.length > 0 && (
+        <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {titel(`Lob unter Kollegen (${lobs.length})`, 'Die letzten 30 Tage. Steht auf der Startseite unter „Lob der Woche“. Unpassendes kannst du entfernen.')}
+          {lobs.map((l) => (
+            <div key={`${l.von}_${l.id}`} style={{ padding: '10px 14px', borderRadius: '14px', backgroundColor: TH.cream, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
+              <span style={{ flex: '1 1 260px' }}><strong>{l.vonName}</strong> an <strong>{l.anName}</strong>: „{l.t}“ <span style={{ color: TH.muted, fontSize: '14px' }}>· {datum(l.ts)}</span></span>
+              <button type="button" onClick={() => { if (confirm('Dieses Lob entfernen?')) mutateCloudData(lobLoeschen(l.von, l.id)); }} style={knopf('danger')}>Entfernen</button>
             </div>
           ))}
         </div>

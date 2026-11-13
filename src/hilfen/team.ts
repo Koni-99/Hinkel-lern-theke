@@ -83,3 +83,82 @@ export const abstimmen = (userKey: string, name: string, id: string, wahl: numbe
   pr._stimmen = { ...(pr._stimmen || {}), [id]: wahl };
   return curr;
 };
+
+// ── Lob unter Kollegen ──
+// Der Absender speichert das Lob in seinem Fortschritt (_kollegenLob). Der Gelobte schreibt sich die
+// Punkte selbst gut, sobald seine App das Lob sieht (_lobGutgeschrieben). So schreibt niemand für andere.
+// (Nicht verwechseln mit _lob: das ist das Lob vom Ausbilder, das als Pop-up erscheint.)
+export type KLob = { an: string; anName: string; t: string; ts: number };
+export type KLobEintrag = KLob & { id: string; von: string; vonName: string };
+export const LOB_PUNKTE = 10;
+export const LOB_MAX = 140;
+const tagVon = (ts: number) => { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+
+export function alleLobs(progress: CloudPayload['progress'] | undefined): KLobEintrag[] {
+  const out: KLobEintrag[] = [];
+  Object.entries(progress || {}).forEach(([k, pr]: [string, any]) => {
+    const m = pr && pr._kollegenLob;
+    if (!m || typeof m !== 'object') return;
+    Object.entries(m).forEach(([id, l]: [string, any]) => {
+      if (l && typeof l.t === 'string' && l.t.trim() && typeof l.an === 'string' && l.an !== k) out.push({ ...l, id, von: k, vonName: (pr && pr._displayName) || k });
+    });
+  });
+  return out.sort((a, b) => b.ts - a.ts);
+}
+/** Hat dieser Mitarbeiter heute schon jemanden gelobt? */
+export const heuteSchonGelobt = (progress: CloudPayload['progress'] | undefined, userKey: string, now = Date.now()) =>
+  alleLobs(progress).some((l) => l.von === userKey && tagVon(l.ts) === tagVon(now));
+
+export const lobSchicken = (userKey: string, name: string, an: string, anName: string, text: string, now = Date.now()): Upd => (curr) => {
+  const t = text.trim().slice(0, LOB_MAX);
+  if (!t || !an || an === userKey || heuteSchonGelobt(curr.progress, userKey, now)) return curr;
+  const pr = prOf(curr, userKey, name);
+  // nur die letzten 30 eigenen Lobe behalten
+  const alt = Object.entries(pr._kollegenLob || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 29);
+  pr._kollegenLob = { ...Object.fromEntries(alt), [`l${now}`]: { an, anName, t, ts: now } };
+  return curr;
+};
+/** Noch nicht gutgeschriebene Lobe an mich */
+export function offeneLobPunkte(progress: CloudPayload['progress'] | undefined, userKey: string): KLobEintrag[] {
+  const done = (progress && progress[userKey] && (progress[userKey] as any)._lobGutgeschrieben) || {};
+  return alleLobs(progress).filter((l) => l.an === userKey && !done[`${l.von}_${l.id}`]);
+}
+export const lobPunkteGutschreiben = (userKey: string, name: string, lobs: KLobEintrag[], now = Date.now()): Upd => (curr) => {
+  const pr = prOf(curr, userKey, name);
+  const done: Record<string, number> = { ...(pr._lobGutgeschrieben || {}) };
+  const datum = new Date(now).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+  lobs.forEach((l, i) => {
+    const k = `${l.von}_${l.id}`;
+    if (done[k]) return;
+    done[k] = now;
+    curr.scores.push({ id: `${userKey}_lob_${now + i}`, username: name, score: LOB_PUNKTE, date: datum, category: 'Lob von Kollegen' });
+  });
+  pr._lobGutgeschrieben = done;
+  return curr;
+};
+export const lobLoeschen = (vonKey: string, id: string): Upd => (curr) => {
+  const pr: any = curr.progress[vonKey];
+  if (!pr || !pr._kollegenLob || !pr._kollegenLob[id]) return curr;
+  const next = { ...pr._kollegenLob }; delete next[id];
+  pr._kollegenLob = next;
+  return curr;
+};
+
+// ── Eigene Notiz im Steckbrief (nur für einen selbst) ──
+// Produktnamen können Zeichen enthalten, die Firebase als Schlüssel nicht erlaubt. Darum ein kurzer Code als Schlüssel.
+export const NOTIZ_MAX = 300;
+export const notizKey = (produkt: string) => { let h = 0; for (let i = 0; i < produkt.length; i++) h = (h * 31 + produkt.charCodeAt(i)) >>> 0; return `n${h.toString(36)}`; };
+export function meineNotizen(progress: CloudPayload['progress'] | undefined, userKey: string): Record<string, string> {
+  const m = progress && progress[userKey] && (progress[userKey] as any)._notizen;
+  const out: Record<string, string> = {};
+  if (m && typeof m === 'object') Object.values(m).forEach((n: any) => { if (n && typeof n.p === 'string' && typeof n.t === 'string' && n.t.trim()) out[n.p] = n.t; });
+  return out;
+}
+export const notizSpeichern = (userKey: string, name: string, produkt: string, text: string, now = Date.now()): Upd => (curr) => {
+  const pr = prOf(curr, userKey, name);
+  const next = { ...(pr._notizen || {}) };
+  const t = text.trim().slice(0, NOTIZ_MAX);
+  if (t) next[notizKey(produkt)] = { p: produkt, t, ts: now }; else delete next[notizKey(produkt)];
+  pr._notizen = next;
+  return curr;
+};

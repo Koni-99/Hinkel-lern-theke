@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 167;
+const APP_VERSION: number = 168;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -14,7 +14,8 @@ import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { KundenfragenSeite } from './screens/KundenfragenSeite';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
-import { gelesenAm, gelesenBestaetigen } from './hilfen/team';
+import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, meineNotizen, notizSpeichern } from './hilfen/team';
+import { LobKarte } from './screens/LobKarte';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
@@ -1752,6 +1753,16 @@ export default function App() {
     setToast('💬 Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kfNeuKey]);
+  // Lob von Kollegen: Punkte selbst gutschreiben, sobald ein neues Lob an mich da ist (siehe hilfen/team.ts)
+  const lobNeu = isAdmin || !username ? [] : offeneLobPunkte(cloudData.progress, username.toLowerCase());
+  const lobNeuKey = lobNeu.map(l => `${l.von}_${l.id}`).join(',');
+  useEffect(() => {
+    if (!lobNeuKey || !cloudConnected) return;
+    mutateCloudData(lobPunkteGutschreiben(username.toLowerCase(), username, lobNeu));
+    const l = lobNeu[0];
+    setToast(lobNeu.length === 1 ? `${l.vonName} hat dich gelobt: „${l.t}“ (+10 Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * 10} Punkte)`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lobNeuKey, cloudConnected]);
   if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont, darkMode }} />;
 
   const overallPercent = getUserMasteryPercent(username);
@@ -2316,7 +2327,7 @@ export default function App() {
       <Suspense fallback={<div role="status" style={{ padding: '48px 0', textAlign: 'center', color: LT.muted, fontSize: '17px' }}>Wird geladen …</div>}>
 
         {/* ═════════ STARTSEITE ═════════ */}
-        {activeTab === 'home' && <HomeScreen pinGelesenAm={gelesenAm(cloudData.progress, userKeyLower, activePinboard)} onPinGelesen={pinGelesen} teamKarten={isAdmin ? null : <UmfrageKarten cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} />} {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
+        {activeTab === 'home' && <HomeScreen pinGelesenAm={gelesenAm(cloudData.progress, userKeyLower, activePinboard)} onPinGelesen={pinGelesen} teamKarten={isAdmin ? null : <><UmfrageKarten cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} /><LobKarte cloudData={cloudData} username={username} kollegen={allKnownUserKeys.map(k => ({ key: k, name: (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k }))} mutateCloudData={mutateCloudData} setToast={setToast} /></>} {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
 
         {/* ═════════ SPIELE-AUSWAHL ═════════ */}
         {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
@@ -2391,7 +2402,7 @@ export default function App() {
         {activeTab === 'flashcards' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <PageHead title="Spickzettel" subtitle="Produktkenntnis und Fachwissen, alles zum Nachsehen." onBack={() => setActiveTab('nachschlagen')} backLabel="Zurück zu Nachschlagen" />
-            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} /></div>
+            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} meineNotizen={meineNotizen(cloudData.progress, (username || '').toLowerCase())} onNotiz={isAdmin ? undefined : (produkt: string, text: string) => mutateCloudData(notizSpeichern(username.toLowerCase(), username, produkt, text))} /></div>
           </div>
         )}
         {activeTab === 'scoreboard' && overtaken && (

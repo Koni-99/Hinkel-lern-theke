@@ -27,7 +27,11 @@ export function FlashcardView({
   kollegenTipps = [],
   meineTipps = [],
   onTipp,
+  meineNotizen = {},
+  onNotiz,
 }: {
+  meineNotizen?: Record<string, string>;
+  onNotiz?: (produkt: string, text: string) => void;
   kollegenTipps?: TippEintrag[];
   meineTipps?: TippEintrag[];
   onTipp?: (produkt: string, text: string) => void;
@@ -360,7 +364,7 @@ export function FlashcardView({
       )}
 
       {/* ── Steckbrief-Detail ── */}
-      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp }} />}
+      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp, meineNotizen, onNotiz }} />}
     </div>
   );
 }

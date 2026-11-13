@@ -7,6 +7,7 @@ import { ReportContext } from '../../ui/melden';
 import { SpeakButton } from '../../games/spielBasis';
 import { getProductEmoji, Profile } from './daten';
 import { KollegenTipps } from './KollegenTipps';
+import { MeineNotiz } from './MeineNotiz';
 import type { TippEintrag } from '../../hilfen/kollegen';
 
 export type SteckbriefDetailProps = {
@@ -19,9 +20,11 @@ export type SteckbriefDetailProps = {
   kollegenTipps?: TippEintrag[];
   meineTipps?: TippEintrag[];
   onTipp?: (produkt: string, text: string) => void;
+  meineNotizen?: Record<string, string>;
+  onNotiz?: (produkt: string, text: string) => void;
 };
 
-export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp }: SteckbriefDetailProps) {
+export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz }: SteckbriefDetailProps) {
   if (!openProfile) return null; // wie die Bedingung in components/FlashcardView.tsx
   const prod = openProfile;
   const idx = filteredProfiles.indexOf(prod);
@@ -102,6 +105,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
           )}
 
           <KollegenTipps key={sp ? sp.name : prod.name} produkt={sp ? sp.name : prod.name} tipps={kollegenTipps} meine={meineTipps} onTipp={onTipp} />
+          {onNotiz && <MeineNotiz key={`notiz-${sp ? sp.name : prod.name}`} produkt={sp ? sp.name : prod.name} notiz={meineNotizen[sp ? sp.name : prod.name] || ''} onNotiz={onNotiz} />}
 
           <ReportContext report={{ game: "Steckbrief", product: sp ? sp.name : prod.name, text: `Steckbrief ${sp ? sp.name : prod.name}`, detail: sp ? `Preis: ${sp.price || "–"}${prod.slice ? `, Schnitt: ${prod.slice}` : ""}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` : `${prod.name}\n${prod.facts.join("\n")}` }} />
           <button onClick={() => toggleFavorite(prod.ids[0])} style={{ minHeight: "54px", borderRadius: "16px", border: fav ? "none" : `2px solid ${TH.line}`, backgroundColor: fav ? TH.tintYellow : TH.white, color: TH.ink, fontSize: "18px", fontWeight: 700, cursor: "pointer" }}>
