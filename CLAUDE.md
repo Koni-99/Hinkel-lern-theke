@@ -8,10 +8,11 @@ Mehr zum Aufbau: `README.md`.
 - **Immer Deutsch.** Kurz und einfach, keine Fachwörter ohne Erklärung. Er programmiert nicht selbst.
 - Vor größeren Änderungen 2–3 Vorschläge machen, eine Empfehlung nennen, dann fragen.
 - Nach jeder Version sagen: was neu ist, was geprüft wurde, was er selbst testen soll.
+- Wichtig: Persönliche Angaben (z. B. Geburtstag) immer **freiwillig**, nie Pflicht.
 - Er hat **Nein** gesagt zu: Urkunden/Zertifikaten, automatischer Sicherung vor dem Löschen,
   Team-Nachhilfe aus den häufigsten Fehlern, Auswertung als Excel, Paten für Neue, Thema der Woche,
   Allergen-Liste zum Ausdrucken und „So geht's“-Anleitungen (nicht gewählt, könnte später nochmal passen),
-  Geburtstage, Ideen-Box, Kundenstimmen, „Was ist neu?“-Seite, Profilbild (nicht gewählt, nur Hör-Lernen genommen),
+  „Was ist neu?“-Seite, Profilbild,
   Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen).
 - Der Brotkorb auf der Startseite bleibt (er zeigt auch Stufe und Meister-Fortschritt).
 
@@ -73,6 +74,7 @@ Mehr zum Aufbau: `README.md`.
 - 167: „Gelesen“-Bestätigung für wichtige Nachrichten, Team-Umfragen (Reiter „Nachricht & Umfrage“, Karte auf der Startseite)
 - 168: Lob unter Kollegen (Startseite, 1× am Tag, +10 Punkte, Gelobter schreibt sich Punkte selbst gut; Feld `_kollegenLob`, NICHT `_lob` = Ausbilder-Lob), eigene Notiz im Steckbrief (`_notizen`, Schlüssel per Code, weil Produktnamen Sonderzeichen haben)
 - 169: Hör-Lernen (Lernen → „Hör-Lernen“, `src/screens/HoerLernen.tsx`): liest Frage, Denkpause, Antwort vor; Tempo, Bereich, Fehler-Stapel; hält den Bildschirm an
+- 170: Geburtstage (freiwillig, Menü → „Mein Geburtstag“, Karte + Gratulieren), Ideen-Box (Menü, anonym möglich, Ausbilder antwortet), Kundenstimmen (Lob/Kritik/Wunsch, Nachschlagen + Menü). Ausbilder-Reiter heißt jetzt „Rückmeldungen“ (Kundenfragen, Tipps, Ideen, Kundenstimmen, Lob). Logik: `src/hilfen/rueckmeldungen.ts`
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

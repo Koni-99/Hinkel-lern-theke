@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 169;
+const APP_VERSION: number = 170;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -17,6 +17,8 @@ import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
 import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, meineNotizen, notizSpeichern } from './hilfen/team';
 import { LobKarte } from './screens/LobKarte';
 import { HoerLernen } from './screens/HoerLernen';
+import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
+import { alleIdeen } from './hilfen/rueckmeldungen';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
@@ -1764,6 +1766,18 @@ export default function App() {
     setToast(lobNeu.length === 1 ? `${l.vonName} hat dich gelobt: „${l.t}“ (+10 Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * 10} Punkte)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lobNeuKey, cloudConnected]);
+  // Hinweis, wenn der Ausbilder eine eigene Idee beantwortet hat (pro Antwort nur einmal)
+  const ideeNeuKey = isAdmin || !username ? '' : alleIdeen(cloudData.progress).filter(x => x.user === username.toLowerCase() && x.a && !x.seen).map(x => x.id).join(',');
+  useEffect(() => {
+    if (!ideeNeuKey || activeTab === 'ideen') return;
+    let shown: string[] = [];
+    try { shown = JSON.parse(localStorage.getItem('hinkel_idee_hinweis') || '[]'); } catch {}
+    const fresh = ideeNeuKey.split(',').filter(id => !shown.includes(id));
+    if (!fresh.length) return;
+    try { localStorage.setItem('hinkel_idee_hinweis', JSON.stringify([...shown, ...fresh].slice(-50))); } catch {}
+    setToast('Der Ausbilder hat auf deine Idee geantwortet. Du findest die Antwort im Menü unter „Idee einreichen“.');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ideeNeuKey]);
   if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont, darkMode }} />;
 
   const overallPercent = getUserMasteryPercent(username);
@@ -2174,7 +2188,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2275,7 +2289,7 @@ export default function App() {
                 
               </button>
             )}
-              <button onClick={() => setHdrMenu(true)} className="lt-pill lt-pill-round" aria-label="Menü: Schrift, App, Abmelden" aria-expanded={hdrMenu} title="Menü"><LtIcon paths={['M4 7h16', 'M4 12h16', 'M4 17h16']} size={20} width={2.4} /></button>
+              <button onClick={() => setHdrMenu(true)} className="lt-pill lt-pill-round" aria-label="Menü" aria-expanded={hdrMenu} title="Menü"><LtIcon paths={['M4 7h16', 'M4 12h16', 'M4 17h16']} size={20} width={2.4} /></button>
             </div>
           </div>
         </div>
@@ -2291,6 +2305,9 @@ export default function App() {
             <button role="menuitem" onClick={() => { toggleBigFont(); }} aria-pressed={bigFont}><span style={{ width: '24px', fontWeight: 800 }}>A+</span>{bigFont ? 'Normale Schrift' : 'Größere Schrift'}</button>
             {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('statistik'); }}><LtIcon paths={ICON.medal} size={22} />Meine Statistik</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
             <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); if (isAdmin) adminSignOut(); setUsername(''); setTempUsername(''); setAdminPinInput(''); setPinError(false); resetLogin(); setActiveTab('home'); localStorage.removeItem('hinkel_username'); }} style={{ color: '#B42318' }}><LtIcon paths={ICON.logout} size={22} />Abmelden</button>
           </div>
@@ -2328,7 +2345,7 @@ export default function App() {
       <Suspense fallback={<div role="status" style={{ padding: '48px 0', textAlign: 'center', color: LT.muted, fontSize: '17px' }}>Wird geladen …</div>}>
 
         {/* ═════════ STARTSEITE ═════════ */}
-        {activeTab === 'home' && <HomeScreen pinGelesenAm={gelesenAm(cloudData.progress, userKeyLower, activePinboard)} onPinGelesen={pinGelesen} teamKarten={isAdmin ? null : <><UmfrageKarten cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} /><LobKarte cloudData={cloudData} username={username} kollegen={allKnownUserKeys.map(k => ({ key: k, name: (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k }))} mutateCloudData={mutateCloudData} setToast={setToast} /></>} {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
+        {activeTab === 'home' && <HomeScreen pinGelesenAm={gelesenAm(cloudData.progress, userKeyLower, activePinboard)} onPinGelesen={pinGelesen} teamKarten={isAdmin ? null : <><GeburtstagsKarte cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} /><UmfrageKarten cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} /><LobKarte cloudData={cloudData} username={username} kollegen={allKnownUserKeys.map(k => ({ key: k, name: (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k }))} mutateCloudData={mutateCloudData} setToast={setToast} /></>} {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
 
         {/* ═════════ SPIELE-AUSWAHL ═════════ */}
         {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
@@ -2371,6 +2388,9 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={productImages} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
+        {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
+        {activeTab === 'kundenstimmen' && <KundenstimmenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} produkte={Array.from(new Set(SHOP_PRODUCTS.map((p: any) => String(p.name)))).sort()} />}
+        {activeTab === 'geburtstag' && <GeburtstagSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
         {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hilfe' && <HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}

@@ -713,7 +713,7 @@ export function AdminView({
   const tabs: { id: typeof adminTab; label: string }[] = [
     { id: 'team', label: `Mitarbeiter (${allKnownUserKeys.length})` },
     { id: 'reports', label: reports.length ? `Meldungen (${reports.length})` : 'Meldungen' },
-    { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Fragen & Tipps (${offeneKollegenSachen(cloudData.progress)})` : 'Fragen & Tipps' },
+    { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Rückmeldungen (${offeneKollegenSachen(cloudData.progress)})` : 'Rückmeldungen' },
     { id: 'message', label: 'Nachricht & Umfrage' },
     { id: 'content', label: 'Inhalte' },
     { id: 'stats', label: 'Auswertung' },

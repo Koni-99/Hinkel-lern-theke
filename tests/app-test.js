@@ -305,6 +305,23 @@ async function cloudTests() {
     ok('Lob: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }
+  // Geburtstag (freiwillig) und Ideen-Box
+  {
+    const d = new Date();
+    await db('PATCH', '/progress/ben', { _displayName: 'Ben', _geburtstag: `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` });
+    const A = await device({ cloud: true, user: 'Anna' });
+    await clearPopups(A.page);
+    let karte = false; for (let i = 0; i < 50 && !karte; i++) { karte = (await A.page.getByText('Heute hat Ben Geburtstag').count()) > 0; if (!karte) await sleep(100); }
+    ok('Geburtstag: Karte „Heute hat Ben Geburtstag“', karte);
+    await A.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
+    await A.page.getByRole('menuitem', { name: 'Idee einreichen' }).click(); await settle(A.page);
+    await A.page.fill('textarea[aria-label="Deine Idee"]', 'Testidee').catch(() => {});
+    await click(A.page.getByRole('button', { name: 'Idee einreichen' }).first()).catch(() => {}); await sleep(1500);
+    const ideen = (await db('GET', '/progress/anna/_ideen')) || {};
+    ok('Ideen-Box: Idee wird gespeichert', Object.values(ideen).some((x) => x && x.t === 'Testidee'));
+    ok('Geburtstag/Ideen: keine Fehler', A.errors.length === 0, A.errors[0]);
+    await A.ctx.close();
+  }
   // Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem
   {
     const A = await device({ cloud: true, user: 'Anna', blockLive: true });

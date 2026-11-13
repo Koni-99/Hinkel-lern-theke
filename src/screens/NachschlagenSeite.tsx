@@ -48,6 +48,12 @@ export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, s
           <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Fragen von der Theke mit der Antwort vom Ausbilder. Du wusstest etwas nicht? Frag hier nach.</span>
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: 'auto' }}>Fragen ansehen</span>
         </button>
+        <button onClick={() => setActiveTab('kundenstimmen')} className="lt-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '12px', padding: '26px', borderRadius: '26px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.08)' }} aria-hidden="true"><LtIcon paths={ICON.heart} size={28} width={1.9} /></span>
+          <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Kundenstimmen</span>
+          <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Kunde lobt oder kritisiert etwas? Kurz notieren, damit der Ausbilder und die Backstube es erfahren.</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: 'auto' }}>Kundenstimme notieren</span>
+        </button>
         <section style={{ padding: '26px', borderRadius: '26px', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.leaf} size={28} width={1.9} /></span>
           <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '34px', lineHeight: 1 }}>Saisonkalender</h2>

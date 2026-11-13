@@ -1,6 +1,6 @@
 // ═══ Karteikarten: Verkaufstipps von Kollegen im Steckbrief ═══
 // Freigegebene Tipps sehen alle. Mitarbeiter können einen eigenen Tipp schicken,
-// der Ausbilder gibt ihn im Ausbilder-Bereich frei (Reiter „Fragen & Tipps“).
+// der Ausbilder gibt ihn im Ausbilder-Bereich frei (Reiter „Rückmeldungen“).
 import { useState } from 'react';
 import { dc } from '../../daten/data';
 import { TH } from '../../ui/basis';
