@@ -38,7 +38,7 @@ export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudDat
     if (!text.trim() || isAdmin || !me) return;
     mutateCloudData(kfrageStellen(me, username, text));
     setText('');
-    setToast('🙋 Danke! Deine Frage ist beim Ausbilder. Sobald die Antwort da ist, steht sie hier.');
+    setToast('Danke! Deine Frage ist beim Ausbilder. Sobald die Antwort da ist, steht sie hier.');
   };
 
   return (
@@ -52,7 +52,7 @@ export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudDat
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, KFRAGE_MAX))} rows={3} placeholder="z. B. Ist im Dinkelbrot auch Weizen drin?" aria-label="Frage des Kunden"
             style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: '14px', border: `2px solid ${TH.line}`, fontSize: '17px', fontFamily: 'inherit', resize: 'vertical' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={senden} disabled={!text.trim()} style={{ ...btnPrimary, opacity: text.trim() ? 1 : 0.5 }}>🙋 Frage an den Ausbilder schicken</button>
+            <button type="button" onClick={senden} disabled={!text.trim()} style={{ ...btnPrimary, opacity: text.trim() ? 1 : 0.5 }}>Frage an den Ausbilder schicken</button>
             <span style={{ fontSize: '14px', color: TH.muted }}>{text.length}/{KFRAGE_MAX}</span>
           </div>
         </div>
@@ -64,7 +64,7 @@ export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudDat
           {meine.map((f) => (
             <div key={f.id} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: f.a ? TH.tintSage : TH.cream, fontSize: '16px', lineHeight: 1.45 }}>
               <div><strong>„{f.q}“</strong> <span style={{ color: TH.muted, fontSize: '14px' }}>· {datum(f.ts)}</span></div>
-              {f.a ? <div style={{ marginTop: '6px' }}>💬 {f.a}</div> : <div style={{ marginTop: '6px', color: TH.muted }}>⏳ Wartet auf die Antwort vom Ausbilder</div>}
+              {f.a ? <div style={{ marginTop: '6px' }}><strong>Antwort:</strong> {f.a}</div> : <div style={{ marginTop: '6px', color: TH.muted }}>Wartet auf die Antwort vom Ausbilder</div>}
             </div>
           ))}
         </div>
@@ -82,8 +82,8 @@ export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudDat
           <span style={{ fontSize: '16px', color: TH.muted }}>{beantwortet.length ? 'Nichts gefunden.' : 'Noch keine beantworteten Fragen. Die erste kann von dir kommen!'}</span>
         ) : gefiltert.map((f) => (
           <div key={`${f.user}_${f.id}`} style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: dc('#FFFBF2'), border: `2px solid ${TH.line}`, fontSize: '16px', lineHeight: 1.5 }}>
-            <div style={{ fontWeight: 700, fontSize: '17px' }}>🙋 {f.q}</div>
-            <div style={{ marginTop: '6px' }}>💬 {f.a}</div>
+            <div style={{ fontWeight: 700, fontSize: '17px' }}>{f.q}</div>
+            <div style={{ marginTop: '6px' }}><strong>Antwort:</strong> {f.a}</div>
             <div style={{ marginTop: '6px', fontSize: '14px', color: TH.muted }}>gefragt von {f.name} · {datum(f.ts)}</div>
           </div>
         ))}

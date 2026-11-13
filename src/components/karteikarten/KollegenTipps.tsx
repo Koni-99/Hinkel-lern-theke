@@ -19,7 +19,7 @@ export function KollegenTipps({ produkt, tipps, meine, onTipp }: { produkt: stri
   };
   return (
     <div style={{ padding: '16px', borderRadius: '18px', backgroundColor: TH.tintYellow, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ fontSize: '15px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>💡 Tipps von Kollegen</div>
+      <div style={{ fontSize: '15px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Tipps von Kollegen</div>
       {freigegeben.length === 0 && <div style={{ fontSize: '16px', color: TH.muted }}>Noch kein Tipp. Wie verkaufst du {produkt}?</div>}
       {freigegeben.map((t) => (
         <div key={`${t.user}_${t.id}`} style={{ padding: '10px 12px', borderRadius: '12px', backgroundColor: dc('#FFFFFF'), fontSize: '17px', lineHeight: 1.45 }}>
@@ -27,7 +27,7 @@ export function KollegenTipps({ produkt, tipps, meine, onTipp }: { produkt: stri
         </div>
       ))}
       {onTipp && (wartet ? (
-        <div style={{ fontSize: '15px', color: TH.muted }}>⏳ Dein Tipp wartet auf die Freigabe vom Ausbilder.</div>
+        <div style={{ fontSize: '15px', color: TH.muted }}>Dein Tipp wartet auf die Freigabe vom Ausbilder.</div>
       ) : offen ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, TIPP_MAX))} rows={3} autoFocus aria-label="Dein Verkaufstipp"

@@ -172,6 +172,21 @@ async function offlineTests() {
     }
     ok('Nachschlagen: Karteikarten und Filter ohne Fehler', failed.length === 0, failed.join('; '));
   }
+  // Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)
+  {
+    const d = await device({ user: 'Anna' });
+    await d.page.waitForFunction(() => !!navigator.serviceWorker && !!navigator.serviceWorker.controller, null, { timeout: 15000 }).catch(() => {});
+    const sw = await d.page.evaluate(() => !!(navigator.serviceWorker && navigator.serviceWorker.controller));
+    ok('Offline: Service Worker ist aktiv', sw);
+    await d.ctx.setOffline(true);
+    await d.page.reload(); await settle(d.page, 2500);
+    const n = await nav(d.page).count();
+    let empty = 0;
+    for (let i = 0; i < n; i++) { await click(nav(d.page).nth(i)); await settle(d.page); if ((await mainText(d.page)) < 20) empty++; }
+    ok('Offline: App geht ohne Internet auf, alle Hauptseiten mit Inhalt', n >= 5 && empty === 0, `${n} Seiten, ${empty} leer`);
+    ok('Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Ausbilder-Bereich: alle Reiter mit Beispieldaten
   {
     const d = await device({ admin: true, backup: SAMPLE });
