@@ -131,6 +131,15 @@ async function offlineTests() {
     ok('Quiz: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Hör-Lernen: Seite geht auf, Auswahl und Abspiel-Knopf sind da
+  {
+    const d = await device({ user: 'Anna' });
+    await click(nav(d.page).nth(1)); await settle(d.page);
+    await click(d.page.locator('button.lt-card', { hasText: 'Hör-Lernen' }).first()); await settle(d.page);
+    ok('Hör-Lernen: Seite mit Abspiel-Knopf', (await d.page.getByRole('button', { name: 'Vorlesen starten' }).count()) > 0 && (await d.page.getByRole('button', { name: /^Alles \(/ }).count()) > 0);
+    ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Alle Spiele öffnen und ein paar Mal klicken
   {
     const d0 = await device({ user: 'Anna' });

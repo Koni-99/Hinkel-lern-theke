@@ -11,6 +11,7 @@ Mehr zum Aufbau: `README.md`.
 - Er hat **Nein** gesagt zu: Urkunden/Zertifikaten, automatischer Sicherung vor dem Löschen,
   Team-Nachhilfe aus den häufigsten Fehlern, Auswertung als Excel, Paten für Neue, Thema der Woche,
   Allergen-Liste zum Ausdrucken und „So geht's“-Anleitungen (nicht gewählt, könnte später nochmal passen),
+  Geburtstage, Ideen-Box, Kundenstimmen, „Was ist neu?“-Seite, Profilbild (nicht gewählt, nur Hör-Lernen genommen),
   Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen).
 - Der Brotkorb auf der Startseite bleibt (er zeigt auch Stufe und Meister-Fortschritt).
 
@@ -71,6 +72,7 @@ Mehr zum Aufbau: `README.md`.
 - 166: Quizfragen aus Excel übernehmen (Ausbilder → Inhalte)
 - 167: „Gelesen“-Bestätigung für wichtige Nachrichten, Team-Umfragen (Reiter „Nachricht & Umfrage“, Karte auf der Startseite)
 - 168: Lob unter Kollegen (Startseite, 1× am Tag, +10 Punkte, Gelobter schreibt sich Punkte selbst gut; Feld `_kollegenLob`, NICHT `_lob` = Ausbilder-Lob), eigene Notiz im Steckbrief (`_notizen`, Schlüssel per Code, weil Produktnamen Sonderzeichen haben)
+- 169: Hör-Lernen (Lernen → „Hör-Lernen“, `src/screens/HoerLernen.tsx`): liest Frage, Denkpause, Antwort vor; Tempo, Bereich, Fehler-Stapel; hält den Bildschirm an
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

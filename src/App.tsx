@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 168;
+const APP_VERSION: number = 169;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -16,6 +16,7 @@ import { KundenfragenSeite } from './screens/KundenfragenSeite';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
 import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, meineNotizen, notizSpeichern } from './hilfen/team';
 import { LobKarte } from './screens/LobKarte';
+import { HoerLernen } from './screens/HoerLernen';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
@@ -2173,7 +2174,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2370,6 +2371,7 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={productImages} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
+        {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
         {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hilfe' && <HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
         {activeTab === 'statistik' && (
