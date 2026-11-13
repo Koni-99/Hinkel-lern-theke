@@ -6,6 +6,7 @@ import { weakThekeTopics } from '../games/theke/ThekenSimulator';
 import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/adminHelfer';
 import type { ReportItem } from '../admin/adminHelfer';
 import { KollegenTab, offeneKollegenSachen } from '../admin/KollegenTab';
+import { FragenImport } from '../admin/FragenImport';
 
 import { CloudPayload } from '../types';
 import { cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
@@ -766,6 +767,7 @@ export function AdminView({
       {adminTab === 'message' && <NachrichtTab {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
 
       {/* ═════════ INHALTE ═════════ */}
+      {adminTab === 'content' && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
 
       {/* ═════════ MELDUNGEN ═════════ */}

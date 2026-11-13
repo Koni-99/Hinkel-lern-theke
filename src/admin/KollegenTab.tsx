@@ -63,18 +63,18 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
   const tippsOffen = alleTipps(cloudData.progress, undefined, 'pending');
   const tippsOk = alleTipps(cloudData.progress, undefined, 'ok');
   const titel = (t: string, sub: string) => (
-    <div><div style={{ fontWeight: 700, fontSize: '20px' }}>{t}</div><div style={{ fontSize: '15px', color: TH.muted, marginTop: '2px' }}>{sub}</div></div>
+    <div><h2 style={{ margin: 0, fontFamily: TH.serif, fontWeight: 400, fontSize: '30px', lineHeight: 1.1 }}>{t}</h2><div style={{ fontSize: '17px', color: TH.muted, marginTop: '4px' }}>{sub}</div></div>
   );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {titel(`🙋 Neue Kundenfragen (${offen.length})`, 'Fragen, die Kunden an der Theke gestellt haben. Deine Antwort sehen danach alle unter Nachschlagen → „Das hat ein Kunde gefragt“.')}
+        {titel(`Neue Kundenfragen (${offen.length})`, 'Fragen, die Kunden an der Theke gestellt haben. Deine Antwort sehen danach alle unter Nachschlagen → „Das hat ein Kunde gefragt“.')}
         {offen.length === 0 ? <div style={{ fontSize: '16px', color: TH.green, fontWeight: 700 }}>Keine offenen Fragen.</div>
           : offen.map((f) => <FrageKarte key={`${f.user}_${f.id}`} f={f} mutateCloudData={mutateCloudData} onAlsQuizfrage={onAlsQuizfrage} />)}
       </div>
 
       <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {titel(`💡 Verkaufstipps zur Freigabe (${tippsOffen.length})`, 'Freigegebene Tipps erscheinen bei allen im Steckbrief des Produkts.')}
+        {titel(`Verkaufstipps zur Freigabe (${tippsOffen.length})`, 'Freigegebene Tipps erscheinen bei allen im Steckbrief des Produkts.')}
         {tippsOffen.length === 0 ? <div style={{ fontSize: '16px', color: TH.green, fontWeight: 700 }}>Keine Tipps zur Freigabe.</div> : tippsOffen.map((t) => (
           <div key={`${t.user}_${t.id}`} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: TH.tintYellow, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
             <span style={{ flex: '1 1 260px' }}><strong>{t.p}</strong> · {t.name}: „{t.t}“</span>
