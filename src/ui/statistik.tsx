@@ -1,7 +1,7 @@
 // ═══ Statistik-Ansicht ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { ReactNode } from 'react';
-import { SORTIMENT_SUBFILTERS } from '../data';
+import { SORTIMENT_SUBFILTERS } from '../daten/data';
 import { TH, cardStyle } from './basis';
 import { scoreDay } from './kalender';
 

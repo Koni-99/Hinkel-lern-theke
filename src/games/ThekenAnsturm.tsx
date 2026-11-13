@@ -2,8 +2,9 @@
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
 import { shuffleArray } from '../utils';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, productImageKey, ProductImages, ConfettiOverlay, scrollToPlay } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, productImageKey, ProductImages, ConfettiOverlay } from '../ui/basis';
+import { scrollToPlay } from '../ui/belohnungen';
 
 // ───────── Theken-Ansturm ─────────
 export const ANSTURM_FACES = ['👩', '👨', '👵', '👴', '🧑', '👩‍🦰', '👨‍🦳', '🧔', '👱‍♀️', '👷'];

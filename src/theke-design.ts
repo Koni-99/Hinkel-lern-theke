@@ -1,7 +1,7 @@
 // ═══ Design der Lern-Theke ═══
 // Vorher als langer Text (LT_CSS) mitten in App.tsx. Der Text ist unverändert übernommen
 // und wird wie bisher als <style> eingefügt, damit die App genau gleich aussieht.
-import { dc } from './data';
+import { dc } from './daten/data';
 
 /** Stylesheet für Hover-Effekte und die automatische Handy-Ansicht. kueken = Küken-Bild für Platzhalter. */
 export const buildLtCss = (kueken: string): string => `

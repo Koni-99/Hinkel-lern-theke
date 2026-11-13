@@ -1,12 +1,12 @@
 // ═══ Quiz: Stufe wählen ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
-import { dc } from '../../data';
-import { SORTIMENT_SUBFILTERS } from '../../data';
+import { dc, SORTIMENT_SUBFILTERS } from '../../daten/data';
 import { matchesSortimentSubfilter } from '../../utils';
-import { TH, btnSecondary, PageHead, correctIdSet } from '../../components/minigameUtils';
+import { TH, btnSecondary, PageHead } from '../../ui/basis';
+import { correctIdSet } from '../../ui/lernstand';
 import { LT } from '../../appBasis';
-import type { Question } from '../../questions';
+import type { Question } from '../../daten/questions';
 
 export type QuizLevelsProps = {
   questions: Question[];

@@ -1,31 +1,40 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
-import { dc, isDarkMode } from './data';
-import { CATS, questions as rawQuestions, examQuestions } from './questions';
-import { SHOP_PRODUCTS } from './shopProducts';
+import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
+import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
+import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 158;
-// Versionsnummern der anderen Dateien – fehlt eine, ist die Datei veraltet (dann 0)
-const GAMES_VERSION: number = Number((GamesModule as any).GAMES_VERSION) || 0;
+const APP_VERSION: number = 159;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
-let ALT_VERSION = 99; // wird beim Laden des Alternativen-Jägers geprüft
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
 const BattleView = lazy(() => import('./components/BattleView').then((m) => ({ default: m.BattleView })));
 const TuetenBlitzView = lazy(() => import('./components/TuetenBlitzView').then((m) => ({ default: m.TuetenBlitzView })));
-const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => { ALT_VERSION = Number((m as any).ALT_VERSION) || 0; return { default: m.AlternativenJaegerView }; }));
-const UTILS_VERSION: number = Number((UtilsModule as any).UTILS_VERSION) || 0;
+const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => ({ default: m.AlternativenJaegerView })));
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, topWeak, WEAK_MAX } from './focus';
-import { BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './data';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleQuestionOptions, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory, hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT, settleBattle, awardBattlePoints, applyProductFixes, patchProductQuestion, registerNewProducts, battleWinnerSide } from './utils';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
-import { KassenblitzView, ThekenSimulatorView, BilderQuizView, AllergenTrainerView, buildPhotoBattleQuestions, PreisDuellView, SchneideProfiView, AdventView, ThekenAnsturmView, buildBilderPool, adventPoints, AdventDone, LEARN_PATTERNS, LearnItem, LearnKind, KnownMap, SpeakButton } from './components/KassenblitzView';
-import * as GamesModule from './components/KassenblitzView';
-import * as UtilsModule from './components/minigameUtils';
-import { PrizeBag, ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './components/minigameUtils';
-import { productImageKey, AusbildungView, LernpfadView, GluecksradCard, buildPfad, WHEEL, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, onboardingStatus, computeBadges, correctIdSet, ConfettiOverlay, FloatingReportButton, ONBOARDING_DAYS, APP_WEEK_DAYS, appWeekStatus, ROLE_INFO, StaffRole, setGameReporter, reportKeyOf, GameReport, StatistikView, comboTake, comboReset, IntroTour, HilfeView, LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './components/minigameUtils';
+import { KassenblitzView } from './games/Kassenblitz';
+import { ThekenSimulatorView } from './games/theke/ThekenSimulator';
+import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
+import { AllergenTrainerView } from './games/AllergenTrainer';
+import { PreisDuellView } from './games/PreisDuell';
+import { SchneideProfiView } from './games/SchneideProfi';
+import { AdventView, adventPoints, AdventDone } from './games/Advent';
+import { ThekenAnsturmView } from './games/ThekenAnsturm';
+import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap, SpeakButton } from './games/spielBasis';
+import { PrizeBag, productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
+import { ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './ui/belohnungen';
+import { AusbildungView } from './ui/ausbildung';
+import { LernpfadView, GluecksradCard, buildPfad, WHEEL } from './ui/lernpfadRad';
+import { onboardingStatus, computeBadges, correctIdSet, ONBOARDING_DAYS, APP_WEEK_DAYS, appWeekStatus, ROLE_INFO, StaffRole } from './ui/lernstand';
+import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
+import { StatistikView } from './ui/statistik';
+import { comboTake, comboReset } from './ui/antwortFx';
+import { IntroTour, HilfeView } from './ui/hilfe';
+import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON, wxKindOf, WxIcon, ShopIcon3D, idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat, TAB_ORDER, nameClassOf, PT_SHOP, TipShop, PinSetupForm } from './appBasis';
 import type { ShopItem, PtItem } from './appBasis';
 import { HomeScreen } from './screens/HomeScreen';
@@ -2601,9 +2610,8 @@ export default function App() {
 
       {/* ── Versionsanzeige ── */}
       {(() => {
-        const stale = [GAMES_VERSION < 65 ? `KassenblitzView.tsx (Version ${GAMES_VERSION})` : '', ALT_VERSION < 49 ? `AlternativenJaegerView.tsx (Version ${ALT_VERSION})` : '', UTILS_VERSION < 88 ? `minigameUtils.tsx (Version ${UTILS_VERSION})` : ''].filter(Boolean);
         return (
-          <div style={{ marginTop: '40px', fontSize: '14px', color: stale.length ? dc('#9A3412') : LT.muted, fontWeight: stale.length ? 700 : 400, textAlign: 'center', padding: '0 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <div style={{ marginTop: '40px', fontSize: '14px', color: LT.muted, fontWeight: 400, textAlign: 'center', padding: '0 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
             {username && <button onClick={() => setActiveTab('hilfe')} style={{ minHeight: '44px', padding: '0 16px', borderRadius: '999px', border: 'none', backgroundColor: LT.yellow, color: LT.ink, fontSize: '15px', fontWeight: 800, cursor: 'pointer' }}>So funktioniert die Lern-Theke</button>}
                         {activeTab === 'home' && <button onClick={toggleSky} aria-pressed={!skyOn} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '999px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
               {skyOn ? 'Markise wieder gelb' : 'Markise zeigt das Wetter'}
@@ -2611,7 +2619,7 @@ export default function App() {
             {activeTab === 'home' && <button onClick={toggleAnim} aria-pressed={!animOn} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '999px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
               {animOn ? 'Animationen ausschalten' : 'Animationen einschalten'}
             </button>}
-            <span>{stale.length ? `Achtung: Dateien passen nicht zusammen. App.tsx ist Version ${APP_VERSION}, veraltet: ${stale.join(', ')}. Bitte neu einfügen und speichern.` : `Lern-Theke · Version ${APP_VERSION}`}</span>
+            <span>{`Lern-Theke · Version ${APP_VERSION}`}</span>
           </div>
         );
       })()}

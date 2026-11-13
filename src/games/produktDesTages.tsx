@@ -1,7 +1,7 @@
 // ═══ Produkt des Tages ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { ProductImages } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { ProductImages } from '../ui/basis';
 import { seededShuffle, imgOf } from './spielBasis';
 import { ShopProduct } from './BilderQuiz';
 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { dc } from '../data';
-import { CATS } from "../questions";
-import { BAKERY_DICTIONARY, DICTIONARY_EXTRA } from "../data";
-import { SHOP_PRODUCTS, ShopProduct } from "../shopProducts";
+import { dc, BAKERY_DICTIONARY, DICTIONARY_EXTRA } from '../daten/data';
+import { CATS } from "../daten/questions";
+import { SHOP_PRODUCTS, ShopProduct } from "../daten/shopProducts";
 import { CustomProductItem } from "../types";
 import { getRightAnswerText } from "../utils";
-import { TH, cardStyle, productImageKey, ProductImages, ReportContext } from "./minigameUtils";
-import { SpeakButton } from "./KassenblitzView";
+import { TH, cardStyle, productImageKey, ProductImages } from '../ui/basis';
+import { ReportContext } from '../ui/melden';
+import { SpeakButton } from '../games/spielBasis';
 
 // ───────── Englisch-Wörterbuch: Produkte automatisch aus dem Sortiment ─────────
 const EN_BREAD: Record<string, string> = { schwarzbrot: "dark wholegrain rye bread", roggen: "rye bread", roggenmisch: "rye bread with some wheat", weizenmisch: "wheat bread with some rye", weizen: "light wheat bread", stuten: "sweet milk loaf", dinkel: "spelt bread", spezial: "special bread" };

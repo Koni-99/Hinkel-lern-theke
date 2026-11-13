@@ -1,0 +1,36 @@
+# Hinkel Lern-Theke
+
+Lern-App für die Bäckerei Hinkel: Quiz, Spiele, Nachschlagen, Ausbildung und Ausbilder-Bereich.
+Daten (Punkte, Fortschritt, PINs) liegen in Firebase.
+
+**Online:** https://koni-99.github.io/Hinkel-lern-theke/
+(der alte Link https://66jqlv.csb.app leitet dorthin weiter, siehe `umzug/index.tsx`)
+
+## Wie Änderungen online gehen
+
+Jede Änderung auf dem Branch wird von GitHub Actions automatisch gebaut und auf GitHub Pages
+veröffentlicht (`.github/workflows/deploy.yml`). Nach 1 bis 2 Minuten ist sie online.
+Die Versionsnummer steht in `src/App.tsx` (`APP_VERSION`) und unten in der App.
+
+## Aufbau von `src/`
+
+| Ordner / Datei | Inhalt |
+|---|---|
+| `App.tsx` | Zustand der App, Abläufe, Navigation |
+| `appBasis.tsx` | Gemeinsame Bausteine: Farben (`LT`), Symbole, Laden, Lern-Serie, PIN-Formular |
+| `theke-design.ts` | Das Design (CSS) als Text, wird als `<style>` eingefügt |
+| `cloud/` | Laden, Speichern und Live-Updates mit Firebase |
+| `screens/` | Anmeldung, Startseite, `quiz/` (Bereich, Stufe, Frage, Auswertung) |
+| `games/` | Die Spiele, `theke/` ist der Theken-Simulator |
+| `ui/` | Bausteine für alle Bereiche: Knöpfe, Abzeichen, Statistik, Hilfe, Belohnungen … |
+| `admin/` | Ausbilder-Bereich, ein Reiter pro Datei |
+| `components/` | Größere Ansichten: Ausbilder-Bereich, Karteikarten, Bestenliste, Battle, Tüten-Blitz, Alternativen-Jäger |
+| `daten/` | Produkte, Fragen, Sortiment |
+| `utils.ts`, `types.ts`, `focus.ts` | Hilfsfunktionen, Datentypen, Lernschwerpunkte |
+
+## Lokal bauen
+
+```
+npm ci
+DISABLE_ESLINT_PLUGIN=true npx react-scripts build
+```

@@ -1,4 +1,4 @@
-import type { Question } from "./questions";
+import type { Question } from "./daten/questions";
 
 export interface ScoreEntry {
   id?: string;

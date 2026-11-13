@@ -1,11 +1,14 @@
 // ═══ Spiel: Bilderquiz ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useRef } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { shuffleArray } from '../utils';
 import { focusShuffle, noteResult } from '../focus';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { GameProgress, TH, cardStyle, btnPrimary, PageHead, StatChip, GameResult, productImageKey, ProductImages, AnswerFx, AnswerFxState, ReportContext, scrollToPlay, starsFor } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameResult, productImageKey, ProductImages, starsFor } from '../ui/basis';
+import { ReportContext } from '../ui/melden';
+import { scrollToPlay } from '../ui/belohnungen';
 import { scrollToCard, OnLearn, LearnHint, SpeakButton, AllAtOnceButton, FinishEarlyButton, learnedText } from './spielBasis';
 
 // ═════════════════════════ Bilderquiz „Welches Brot ist das?“ ═════════════════════════

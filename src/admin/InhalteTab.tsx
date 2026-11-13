@@ -2,9 +2,9 @@
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
 import { FormEvent, CSSProperties } from 'react';
-import { TH, cardStyle, btnPrimary } from '../components/minigameUtils';
-import { CATS } from '../questions';
-import type { Question } from '../questions';
+import { TH, cardStyle, btnPrimary } from '../ui/basis';
+import { CATS } from '../daten/questions';
+import type { Question } from '../daten/questions';
 import type { CustomProductItem, QuestionEdit } from '../types';
 
 export type InhalteTabProps = {

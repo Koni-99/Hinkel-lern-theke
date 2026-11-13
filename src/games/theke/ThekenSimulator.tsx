@@ -1,8 +1,11 @@
 // ═══ Spiel: Theken-Simulator ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
-import { dc } from '../../data';
-import { GameProgress, TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, AnswerFx, AnswerFxState, ConfettiOverlay, ReportLink, ReportContext, scrollToPlay } from '../../components/minigameUtils';
+import { dc } from '../../daten/data';
+import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
+import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, ConfettiOverlay } from '../../ui/basis';
+import { ReportLink, ReportContext } from '../../ui/melden';
+import { scrollToPlay } from '../../ui/belohnungen';
 import { OnLearn, LearnHint, SpeakButton, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
 import { SimOpt, Conversation, ChatMsg, pick } from './basis';

@@ -1,7 +1,7 @@
 // ═══ Ausbilder-Bereich: Auswertung, Wochenbericht ═══
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { CSSProperties } from 'react';
-import { TH, cardStyle } from '../components/minigameUtils';
+import { TH, cardStyle } from '../ui/basis';
 
 export type AuswertungWocheProps = {
   allKnownUserKeys: string[];

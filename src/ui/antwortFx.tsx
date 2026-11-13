@@ -1,7 +1,7 @@
 // ═══ Antwort-Effekte und Combo-Zähler, Fortschrittsleiste ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useEffect } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { TH } from './basis';
 
 // ───────────────────────── Rückmeldung nach einer Antwort ─────────────────────────

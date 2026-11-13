@@ -2,8 +2,8 @@
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
 import { CSSProperties } from 'react';
-import { dc } from '../data';
-import { TH, cardStyle, btnPrimary, btnSecondary } from '../components/minigameUtils';
+import { dc } from '../daten/data';
+import { TH, cardStyle, btnPrimary, btnSecondary } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { compactScores, compactCutoff } from '../utils';
 import type { Tombstones } from '../types';

@@ -2,8 +2,11 @@
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
 import { shuffleArray } from '../utils';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, AnswerFx, AnswerFxState, ReportList, ReportContext, scrollToPlay } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
+import { AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { ReportList, ReportContext } from '../ui/melden';
+import { scrollToPlay } from '../ui/belohnungen';
 
 /** Artikel mit festem Stückpreis aus dem Shop (in Cent), ohne „ab …“-Preise und sehr teure Artikel */
 export const kassenArtikel = () => SHOP_PRODUCTS

@@ -1,10 +1,12 @@
 // ═══ Adventskalender ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { shuffleArray } from '../utils';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { TH, cardStyle, btnPrimary, StatChip, AnswerFx, AnswerFxState, ReportContext } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { TH, cardStyle, btnPrimary, StatChip } from '../ui/basis';
+import { AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { ReportContext } from '../ui/melden';
 import { SpeakButton, seededShuffle } from './spielBasis';
 import { scrollToNext } from './BilderQuiz';
 

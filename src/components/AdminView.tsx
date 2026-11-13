@@ -1,16 +1,16 @@
 import { useState, FormEvent, CSSProperties } from 'react';
-import { dc } from '../data';
-import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, onboardingStatus, computeBadges, correctIdSet } from './minigameUtils';
-import { weakThekeTopics } from './KassenblitzView';
+import { dc, ALT_MAP } from '../daten/data';
+import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from '../ui/basis';
+import { onboardingStatus, computeBadges, correctIdSet } from '../ui/lernstand';
+import { weakThekeTopics } from '../games/theke/ThekenSimulator';
 import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/adminHelfer';
 import type { ReportItem } from '../admin/adminHelfer';
 
 import { CloudPayload } from '../types';
 import { cleanStatNumber, getRightAnswerText, scoreKey, originalProductData } from '../utils';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { ALT_MAP } from '../data';
-import { CATS, questions as BUILTIN_QUESTIONS, examQuestions as BUILTIN_EXAMS } from '../questions';
-import type { Question } from '../questions';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { CATS, questions as BUILTIN_QUESTIONS, examQuestions as BUILTIN_EXAMS } from '../daten/questions';
+import type { Question } from '../daten/questions';
 import { EinstellungenTab } from '../admin/EinstellungenTab';
 import { AuswertungSchwachstellen } from '../admin/AuswertungSchwachstellen';
 import { AuswertungWoche } from '../admin/AuswertungWoche';

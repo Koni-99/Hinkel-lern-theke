@@ -1,16 +1,19 @@
 // ═══ Startseite ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
-import type { Badge, OnboardingItem } from '../components/minigameUtils';
+import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { PinboardMessage, ScoreEntry } from '../types';
-import type { Question } from '../questions';
+import type { Question } from '../daten/questions';
 import type { Season } from '../appBasis';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { CloudPayload } from '../types';
 import { getRightAnswerText } from '../utils';
-import { productOfTheDay, SpeakButton } from '../components/KassenblitzView';
-import { BadgeAlbumView } from '../components/minigameUtils';
-import { productImageKey, TH, cardStyle, ProductImages, ONBOARDING_DAYS, APP_WEEK_DAYS, OSTER_TABS, monthLabel } from '../components/minigameUtils';
+import { productOfTheDay } from '../games/produktDesTages';
+import { SpeakButton } from '../games/spielBasis';
+import { BadgeAlbumView } from '../ui/belohnungen';
+import { productImageKey, TH, cardStyle, ProductImages } from '../ui/basis';
+import { ONBOARDING_DAYS, APP_WEEK_DAYS } from '../ui/lernstand';
+import { OSTER_TABS, monthLabel } from '../ui/kalender';
 import { LT, LtIcon, ICON, MENU_ICON, KuekenFact, BonLine, TEAM_REWARD, weekIdNow, dayKey, streakMultFor, mondayOf, parseBonDate, BON_DIVIDER, nameClassOf } from '../appBasis';
 
 export type HomeScreenProps = {

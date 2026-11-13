@@ -2,11 +2,11 @@
 // Farben, Symbole, Laden, Lern-Serie, PIN-Formular und weitere Helfer.
 // Vorher standen sie oben in App.tsx. Jetzt können auch die Bildschirme in src/screens/ sie benutzen.
 import { useState, useEffect, useRef } from 'react';
-import { dc } from './data';
+import { dc } from './daten/data';
 import { CloudPayload, PinEntry } from './types';
 import { buildLtCss } from './theke-design';
 import { makePinEntry, pinFormatError, PIN_MAX } from './utils';
-import { registerBagLogo, registerKueken, TH } from './components/minigameUtils';
+import { registerBagLogo, registerKueken, TH } from './ui/basis';
 
 export const DEFAULT_CLOUD_URL = 'https://hinkel-lern-app-default-rtdb.europe-west1.firebasedatabase.app/';
 

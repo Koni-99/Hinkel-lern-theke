@@ -1,7 +1,7 @@
 // ═══ Ausbildungsplan und Ausbildungs-Ansicht ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState, CSSProperties, ReactNode } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from './basis';
 
 // ───────────────────────── Ausbildung (für alle sichtbar, Abhaken nur für Azubis) ─────────────────────────

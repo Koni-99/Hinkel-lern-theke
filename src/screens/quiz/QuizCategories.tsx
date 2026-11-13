@@ -1,14 +1,14 @@
 // ═══ Quiz: Bereich wählen ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
-import { dc } from '../../data';
-import { CATS } from '../../questions';
+import { dc } from '../../daten/data';
+import { CATS } from '../../daten/questions';
 import { CloudPayload } from '../../types';
 import { todayLocal } from '../../utils';
-import { cardStyle, PageHead } from '../../components/minigameUtils';
+import { cardStyle, PageHead } from '../../ui/basis';
 import { LT, LtIcon, ICON, CAT_STYLE } from '../../appBasis';
-import type { OnboardingItem } from '../../components/minigameUtils';
-import type { Question } from '../../questions';
+import type { OnboardingItem } from '../../ui/lernstand';
+import type { Question } from '../../daten/questions';
 
 export type QuizCategoriesProps = {
   username: string;

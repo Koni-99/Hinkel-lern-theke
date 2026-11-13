@@ -1,7 +1,7 @@
 // ═══ Theken-Simulator: Grundlagen (Typen, Produktlisten, Kunden-Typen) ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { shuffleArray } from '../../utils';
-import { SHOP_PRODUCTS } from '../../shopProducts';
+import { SHOP_PRODUCTS } from '../../daten/shopProducts';
 import { LearnItem } from '../spielBasis';
 
 // ═══════════════════════════════════════════════════════════════════════════

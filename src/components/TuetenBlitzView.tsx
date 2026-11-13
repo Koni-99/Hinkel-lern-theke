@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { dc } from '../data';
-import { GameProgress, useFeedbackState, ConfettiOverlay, TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, AnswerFx, AnswerFxState, ReportLink, ReportList, ReportContext, scrollToPlay } from './minigameUtils';
-import { SHOP_PRODUCTS } from '../shopProducts';
+import { dc } from '../daten/data';
+import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { useFeedbackState, ConfettiOverlay, TH, cardStyle, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
+import { ReportLink, ReportList, ReportContext } from '../ui/melden';
+import { scrollToPlay } from '../ui/belohnungen';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
 
 interface PackItem {
   name: string;

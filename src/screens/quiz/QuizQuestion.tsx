@@ -1,11 +1,13 @@
 // ═══ Quiz: eine Frage ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
-import { dc } from '../../data';
+import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getRightAnswerText } from '../../utils';
-import { SpeakButton } from '../../components/KassenblitzView';
-import { TH, cardStyle, btnPrimary, AnswerFx, GameProgress, ReportContext } from '../../components/minigameUtils';
+import { SpeakButton } from '../../games/spielBasis';
+import { TH, cardStyle, btnPrimary } from '../../ui/basis';
+import { AnswerFx, GameProgress } from '../../ui/antwortFx';
+import { ReportContext } from '../../ui/melden';
 import { HINKEL_KUEKEN, LT, BTN_YELLOW, LtIcon } from '../../appBasis';
 
 export type QuizQuestionProps = {

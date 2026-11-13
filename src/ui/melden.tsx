@@ -1,7 +1,7 @@
 // ═══ „Frage melden“: Meldungen aus Spielen und Quiz ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, CSSProperties, ReactNode } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { TH, cardStyle } from './basis';
 
 // ───────────────────────── Fehler melden (in allen Spielen) ─────────────────────────

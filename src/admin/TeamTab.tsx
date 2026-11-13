@@ -2,13 +2,14 @@
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
 import { CSSProperties } from 'react';
-import { dc } from '../data';
-import { TH, cardStyle, ROLE_INFO, StaffRole } from '../components/minigameUtils';
+import { dc } from '../daten/data';
+import { TH, cardStyle } from '../ui/basis';
+import { ROLE_INFO, StaffRole } from '../ui/lernstand';
 import { streakOf } from './adminHelfer';
 import { CloudPayload } from '../types';
 import { getRankByPercentage, cleanStatNumber, getRightAnswerText } from '../utils';
-import { CATS } from '../questions';
-import type { Badge, OnboardingItem } from '../components/minigameUtils';
+import { CATS } from '../daten/questions';
+import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { ScoreEntry } from '../types';
 
 export type TeamTabProps = {

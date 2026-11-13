@@ -1,7 +1,7 @@
 // ═══ Anmeldung (Name, PIN, Ausbilder-Login) ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { CloudPayload, PinEntry } from '../types';
 import { formatEndpointUrl, sanitizeUsername, checkPin, PIN_MAX, adminSignIn } from '../utils';
 import { HINKEL_LOGO, LT, LT_CSS, PinSetupForm } from '../appBasis';

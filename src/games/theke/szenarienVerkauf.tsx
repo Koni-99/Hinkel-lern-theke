@@ -1,8 +1,8 @@
 // ═══ Theken-Simulator: Verkaufs-Situationen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { shuffleArray } from '../../utils';
-import { SHOP_PRODUCTS } from '../../shopProducts';
-import { ALT_MAP } from '../../data';
+import { SHOP_PRODUCTS } from '../../daten/shopProducts';
+import { ALT_MAP } from '../../daten/data';
 import { ShopItem, SimStep, pick, sample, rnd, closeByName, parseCents, BREADS, SWEETS, ROLLS, TYPE_LABEL, ALLERGY_TARGETS, hasAllergen, allergenText, Core, opts, evenOpts } from './basis';
 
 // ── Beratungs-Szenarien ──

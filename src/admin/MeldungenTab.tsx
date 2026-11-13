@@ -1,10 +1,10 @@
 // ═══ Ausbilder-Bereich: Reiter Meldungen ═══
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { CSSProperties } from 'react';
-import { TH, cardStyle } from '../components/minigameUtils';
+import { TH, cardStyle } from '../ui/basis';
 import type { ReportItem } from './adminHelfer';
 import { getRightAnswerText } from '../utils';
-import { SHOP_PRODUCTS } from '../shopProducts';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import type { ProductFix } from '../types';
 
 export type MeldungenTabProps = {

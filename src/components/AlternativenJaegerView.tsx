@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { dc } from '../data';
+import { dc, ALT_MAP } from '../daten/data';
 import { focusShuffle, noteResult } from '../focus';
-import { GameProgress, useFeedbackState, ConfettiOverlay, TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, AnswerFx, AnswerFxState, ReportContext, scrollToPlay } from './minigameUtils';
-import { LearnHint, OnLearn, OnlyNewToggle, KnownMap, OnKnown, SpeakButton } from './KassenblitzView';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { ALT_MAP } from '../data';
+import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { useFeedbackState, ConfettiOverlay, TH, cardStyle, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
+import { ReportContext } from '../ui/melden';
+import { scrollToPlay } from '../ui/belohnungen';
+import { LearnHint, OnLearn, OnlyNewToggle, KnownMap, OnKnown, SpeakButton } from '../games/spielBasis';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { fixedAltProducts } from '../utils';
 
-/** Versionsnummer dieser Datei – wird unten in der App geprüft */
-export const ALT_VERSION: number = 49;
 
 interface ScenarioOption {
   text: string;

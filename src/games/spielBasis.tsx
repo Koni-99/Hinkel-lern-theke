@@ -1,8 +1,8 @@
 // ═══ Gemeinsame Spiel-Bausteine (Vorlesen, Lern-Hinweise, „Nur neue“, Zufall mit festem Startwert) ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect } from 'react';
-import { dc } from '../data';
-import { TH, btnPrimary, productImageKey, ProductImages } from '../components/minigameUtils';
+import { dc } from '../daten/data';
+import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
 import type { ShopProduct } from './BilderQuiz';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */

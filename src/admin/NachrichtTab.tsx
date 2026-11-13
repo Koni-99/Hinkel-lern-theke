@@ -2,7 +2,7 @@
 // Vorher mitten in components/AdminView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
 import { CSSProperties } from 'react';
-import { TH, cardStyle, btnPrimary } from '../components/minigameUtils';
+import { TH, cardStyle, btnPrimary } from '../ui/basis';
 import { CloudPayload } from '../types';
 import type { PinboardMessage } from '../types';
 

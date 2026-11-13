@@ -1,10 +1,13 @@
 // ═══ Spiel: Preis-Duell ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { focusShuffle, noteResult } from '../focus';
-import { SHOP_PRODUCTS } from '../shopProducts';
-import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult, ProductImages, AnswerFx, AnswerFxState, ReportList, ReportContext, scrollToPlay } from '../components/minigameUtils';
+import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult, ProductImages } from '../ui/basis';
+import { AnswerFx, AnswerFxState } from '../ui/antwortFx';
+import { ReportList, ReportContext } from '../ui/melden';
+import { scrollToPlay } from '../ui/belohnungen';
 import { OnLearn, LearnHint, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText, imgOf, centsText } from './spielBasis';
 import { pick, parseCents } from './theke/basis';
 import { ShopProduct, bqName } from './BilderQuiz';

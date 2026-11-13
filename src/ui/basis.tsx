@@ -1,7 +1,7 @@
 // ═══ Grundbausteine: Farben (TH), Knöpfe, Karten, Kopfzeilen, Bon, Konfetti, Produktfotos, Sterne ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState, useRef, CSSProperties, ReactNode } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 
 // ───────────────────────── Lern-Theke: gemeinsames Design ─────────────────────────
 

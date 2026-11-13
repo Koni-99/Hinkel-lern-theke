@@ -1,7 +1,7 @@
 // ═══ Lernpfad und Glücksrad ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, PageHead, PrizeBag, ConfettiOverlay } from './basis';
 
 // ───────────────────────── Lernpfad (Brettspiel) ─────────────────────────

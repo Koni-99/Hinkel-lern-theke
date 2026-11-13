@@ -6,11 +6,11 @@ import {
   Tombstones,
   PinEntry,
 } from "./types";
-import type { Question } from "./questions";
-import { refixAlternativeQuestion, neutralDescription } from "./questions";
-import type { ShopProduct } from "./shopProducts";
-import { SHOP_PRODUCTS } from "./shopProducts";
-import { ALT_MAP } from "./data";
+import type { Question } from "./daten/questions";
+import { refixAlternativeQuestion, neutralDescription } from "./daten/questions";
+import type { ShopProduct } from "./daten/shopProducts";
+import { SHOP_PRODUCTS } from "./daten/shopProducts";
+import { ALT_MAP } from "./daten/data";
 
 /** Punkte für Sieg/Niederlage im Quiz Battle */
 export const BATTLE_POINTS = 25;

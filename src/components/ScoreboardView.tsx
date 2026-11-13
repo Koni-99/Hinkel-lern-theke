@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { dc } from '../data';
-import { monthChampions, monthTotals, monthKeyOf, prevMonthKey, monthLabel } from "./minigameUtils";
+import { dc } from '../daten/data';
+import { monthChampions, monthTotals, monthKeyOf, prevMonthKey, monthLabel } from '../ui/kalender';
 import { ScoreEntry, Tombstones } from "../types";
 import {
   getRankByPercentage,

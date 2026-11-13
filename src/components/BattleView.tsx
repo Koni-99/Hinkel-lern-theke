@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { getRankByPercentage, battleOutcomeSinceReset, BATTLE_POINTS, battleTimeOf, formatBattleTime } from "../utils";
-import { dc } from '../data';
+import { dc } from '../daten/data';
 import { Tombstones } from "../types";
-import { GameProgress, TH, cardStyle, btnPrimary, btnSecondary, PageHead, StatChip, ProductImages, AnswerFx, ConfettiOverlay, ReportLink, ReportContext, Swords3D } from "./minigameUtils";
+import { GameProgress, AnswerFx } from '../ui/antwortFx';
+import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, StatChip, ProductImages, ConfettiOverlay } from '../ui/basis';
+import { ReportLink, ReportContext } from '../ui/melden';
+import { Swords3D } from '../ui/hilfe';
 
 export function BattleView({
   username,

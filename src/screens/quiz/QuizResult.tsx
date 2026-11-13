@@ -1,13 +1,14 @@
 // ═══ Quiz: Auswertung nach der Runde ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
-import { dc } from '../../data';
+import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getExamEvaluation, getRightAnswerText } from '../../utils';
-import { StarRating, starsFor, ReceiptHead, ReceiptFoot } from '../../components/minigameUtils';
-import { TH, cardStyle, btnPrimary, btnSecondary, ihkGrade, ConfettiOverlay, ReportLink } from '../../components/minigameUtils';
+import { StarRating, starsFor, ReceiptHead, ReceiptFoot, TH, cardStyle, btnPrimary, btnSecondary, ConfettiOverlay } from '../../ui/basis';
+import { ihkGrade } from '../../ui/lernstand';
+import { ReportLink } from '../../ui/melden';
 import { LT, BTN_YELLOW } from '../../appBasis';
-import type { Question } from '../../questions';
+import type { Question } from '../../daten/questions';
 
 export type QuizResultProps = {
   fetchCloudData: (customUrl?: string | undefined) => Promise<CloudPayload | null>;
