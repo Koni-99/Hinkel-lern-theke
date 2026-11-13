@@ -19,6 +19,8 @@ export interface PinboardMessage {
   author: string;
   updatedAt: string;
   timestamp: number;
+  /** Wichtig: jeder Mitarbeiter muss „Gelesen“ bestätigen */
+  pflicht?: boolean;
 }
 
 export interface CustomProductItem {

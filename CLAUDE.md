@@ -18,6 +18,7 @@ Mehr zum Aufbau: `README.md`.
 
 ## Wichtige Regeln im Code
 - **Neue Daten nur im eigenen Fortschritt speichern** (`progress/<name>/_feld`), wie Spruch, Kundenfragen, Tipps.
+  Umfragen liegen unter `progress/admin/_umfragen` ("admin" wird aus allen Mitarbeiter-Listen gefiltert).
   Die echten Firebase-Regeln liegen NICHT im Repo und sind unbekannt. Neue Bereiche ganz oben in der
   Datenbank könnten abgelehnt werden und dann auch das Speichern von Punkten blockieren.
   Nur der Ausbilder schreibt in fremde Fortschritte und in `customQuestions`, `customProducts`, `pinboard` usw.
@@ -65,8 +66,9 @@ Mehr zum Aufbau: `README.md`.
 - 164: Kundenfragen („Das hat ein Kunde gefragt“) und Verkaufstipps
 - 165: App geht ohne Internet auf (Service Worker), Sprechblasen-Symbol
 - 166: Quizfragen aus Excel übernehmen (Ausbilder → Inhalte)
+- 167: „Gelesen“-Bestätigung für wichtige Nachrichten, Team-Umfragen (Reiter „Nachricht & Umfrage“, Karte auf der Startseite)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
-- „Gelesen“-Bestätigung für wichtige Infos, Thema der Woche, Team-Umfrage
+- Thema der Woche
 - Absturz-Schutz (Fehlerseite statt weißem Bildschirm), Team-Code für neue Anmeldungen, Datenschutz-Hinweis
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

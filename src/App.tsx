@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 166;
+const APP_VERSION: number = 167;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -14,6 +14,8 @@ import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { KundenfragenSeite } from './screens/KundenfragenSeite';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
+import { gelesenAm, gelesenBestaetigen } from './hilfen/team';
+import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
 import { shuffleQuestionOptions } from './hilfen/pruefung';
@@ -2133,6 +2135,11 @@ export default function App() {
   // Pop-up: neue Nachricht vom Ausbilder, pro Nachricht nur einmal (gespeichert in der Cloud beim Mitarbeiter)
   const myPinSeen = (cloudProgress[userKeyLower] || {})._pinSeen;
   const showPinPopup = !needRole && !introDue && !showIntro && !isAdmin && !!activePinboard && !!activePinboard.text && !!activePinboard.timestamp && myPinSeen !== activePinboard.timestamp;
+  // Wichtige Nachricht: „Gelesen und verstanden“ im eigenen Fortschritt vermerken (siehe hilfen/team.ts)
+  const pinGelesen = () => {
+    if (!activePinboard || !activePinboard.pflicht || isAdmin || !username) return;
+    mutateCloudData(gelesenBestaetigen(userKeyLower, username, activePinboard));
+  };
   const markPinSeen = () => {
     if (!activePinboard) return;
     const ts = activePinboard.timestamp;
@@ -2309,7 +2316,7 @@ export default function App() {
       <Suspense fallback={<div role="status" style={{ padding: '48px 0', textAlign: 'center', color: LT.muted, fontSize: '17px' }}>Wird geladen …</div>}>
 
         {/* ═════════ STARTSEITE ═════════ */}
-        {activeTab === 'home' && <HomeScreen {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
+        {activeTab === 'home' && <HomeScreen pinGelesenAm={gelesenAm(cloudData.progress, userKeyLower, activePinboard)} onPinGelesen={pinGelesen} teamKarten={isAdmin ? null : <UmfrageKarten cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} />} {...{ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }} />}
 
         {/* ═════════ SPIELE-AUSWAHL ═════════ */}
         {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
@@ -2518,7 +2525,7 @@ export default function App() {
       {showAppWeekDone && !needRole && <AppWocheGeschafft {...{ username, finishAppWeek }} />}
       {showFuehrerschein && !needRole && <Fuehrerschein {...{ username, finishErsteWoche }} />}
       {needRole && <RolleWaehlen {...{ username, setMyRole }} />}
-      {showPinPopup && activePinboard && <AusbilderNachricht {...{ activePinboard, markPinSeen }} />}
+      {showPinPopup && activePinboard && <AusbilderNachricht activePinboard={activePinboard} markPinSeen={() => { markPinSeen(); if (activePinboard.pflicht) pinGelesen(); }} />}
     </div>
   );
 }

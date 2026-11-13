@@ -1,6 +1,6 @@
 // ═══ Startseite ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
-import type { Dispatch, SetStateAction } from 'react';
+import type { ReactNode, Dispatch, SetStateAction } from 'react';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { PinboardMessage, ScoreEntry } from '../types';
 import type { Question } from '../daten/questions';
@@ -106,9 +106,12 @@ export type HomeScreenProps = {
   adventOpenNow: number;
   showAdventCard: boolean;
   masteredNow: number;
+  pinGelesenAm?: number;
+  onPinGelesen?: () => void;
+  teamKarten?: ReactNode;
 };
 
-export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow }: HomeScreenProps) {
+export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow , pinGelesenAm = 0, onPinGelesen, teamKarten }: HomeScreenProps) {
   return (
     <div className="lt-home" style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       <section className="lt-home-greet" style={{ display: 'block', marginBottom: '-8px' }}>
@@ -381,11 +384,16 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
             <span className="lt-board-txt">{activePinboard.text}</span>
             <span className="lt-board-sig">– {activePinboard.author}{activePinboard.updatedAt ? <small> · {activePinboard.updatedAt}</small> : null}</span>
             <div className="lt-board-speak"><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
+            {activePinboard.pflicht && !isAdmin && (pinGelesenAm
+              ? <span style={{ display: 'block', marginTop: '10px', fontSize: '15px', fontWeight: 700, color: '#2F5D3A' }}>✓ Gelesen bestätigt am {new Date(pinGelesenAm).toLocaleDateString('de-DE')}</span>
+              : <button type="button" onClick={onPinGelesen} style={{ marginTop: '12px', minHeight: '50px', padding: '0 18px', borderRadius: '14px', border: 'none', backgroundColor: '#4B2A14', color: '#FFF6E0', fontSize: '17px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Gelesen und verstanden</button>)}
             <span className="lt-board-ledge" aria-hidden="true"><span className="lt-board-sponge" /><span className="lt-board-piece" /></span>
           </div>
         </section>
       )}
     
+      {teamKarten}
+
       {/* Statistik und Lern-Bon, immer sichtbar */}
       {!isAdmin && (() => {
         const qs: Record<string, any> = myProg._qs || {};

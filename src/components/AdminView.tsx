@@ -7,6 +7,7 @@ import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/admin
 import type { ReportItem } from '../admin/adminHelfer';
 import { KollegenTab, offeneKollegenSachen } from '../admin/KollegenTab';
 import { FragenImport } from '../admin/FragenImport';
+import { UmfragenVerwaltung } from '../admin/UmfragenVerwaltung';
 
 import { CloudPayload } from '../types';
 import { cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
@@ -713,7 +714,7 @@ export function AdminView({
     { id: 'team', label: `Mitarbeiter (${allKnownUserKeys.length})` },
     { id: 'reports', label: reports.length ? `Meldungen (${reports.length})` : 'Meldungen' },
     { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Fragen & Tipps (${offeneKollegenSachen(cloudData.progress)})` : 'Fragen & Tipps' },
-    { id: 'message', label: 'Nachricht' },
+    { id: 'message', label: 'Nachricht & Umfrage' },
     { id: 'content', label: 'Inhalte' },
     { id: 'stats', label: 'Auswertung' },
     { id: 'settings', label: 'Einstellungen' },
@@ -764,7 +765,8 @@ export function AdminView({
       {adminTab === 'team' && <TeamTab {...{ cloudData, allKnownUserKeys, questions, examQuestions, allFlashcards, getUserMasteryPercent, mutateCloudData, learnInfo, openUser, setOpenUser, setTeamOpen, teamOpen, teamCat, setTeamCat, cloudProgress, cloudLastSeen, cloudScores, adminResetUserWrongStats, adminResetUserProgress, adminResetUserPin, adminDeleteUserCompletely, adminDeleteScoreEntry, adminDeleteAllUserPoints, allQById, hiddenMap, smallBtn, thisWeek, weekInfo, nameOf }} />}
 
       {/* ═════════ NACHRICHT ═════════ */}
-      {adminTab === 'message' && <NachrichtTab {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {adminTab === 'message' && <NachrichtTab progress={cloudData.progress} alleMitarbeiter={allKnownUserKeys} {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {adminTab === 'message' && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
 
       {/* ═════════ INHALTE ═════════ */}
       {adminTab === 'content' && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}

@@ -26,7 +26,7 @@ export function AusbilderNachricht({ activePinboard, markPinSeen }: AusbilderNac
           {activePinboard.image && <img src={activePinboard.image} alt="Foto vom Ausbilder" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '16px' }} />}
           <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.2, whiteSpace: 'pre-line', maxHeight: '50vh', overflowY: 'auto' }}>„{activePinboard.text}“</div>
           <div><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
-          <button onClick={markPinSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>Gelesen, danke!</button>
+          <button onClick={markPinSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>{activePinboard.pflicht ? 'Gelesen und verstanden' : 'Gelesen, danke!'}</button>
         </div>
       </div>
     </div>

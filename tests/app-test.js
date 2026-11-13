@@ -264,6 +264,27 @@ async function cloudTests() {
     ok('Kundenfragen: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }
+  // Wichtige Nachricht bestätigen und Team-Umfrage abstimmen
+  {
+    const ts = Date.now();
+    await db('PATCH', '', { pinboard: { text: 'Testnachricht wichtig', author: 'Ausbilder', updatedAt: 'heute', timestamp: ts, pflicht: true } });
+    await db('PATCH', '/progress/admin', { _umfragen: { u1: { frage: 'Testumfrage?', optionen: ['Ja', 'Nein'], anonym: true, ts, offen: true } } });
+    const A = await device({ cloud: true, user: 'Anna' });
+    const knopf = A.page.locator('[role=dialog] button', { hasText: 'Gelesen und verstanden' });
+    for (let i = 0; i < 50 && !(await knopf.count()); i++) await sleep(100);
+    ok('Gelesen: wichtige Nachricht zeigt „Gelesen und verstanden“', (await knopf.count()) > 0);
+    if (await knopf.count()) { await knopf.first().click(); await sleep(1500); }
+    const g = (await db('GET', '/progress/anna/_gelesen')) || {};
+    ok('Gelesen: Bestätigung wird gespeichert', Number(g[String(ts)]) > 0);
+    await clearPopups(A.page);
+    await click(nav(A.page).nth(0)); await settle(A.page);
+    const ja = A.page.getByRole('button', { name: 'Ja', exact: true });
+    for (let i = 0; i < 30 && !(await ja.count()); i++) await sleep(100);
+    if (await ja.count()) { await ja.first().click(); await sleep(1500); }
+    ok('Umfrage: Stimme wird gespeichert', (await db('GET', '/progress/anna/_stimmen/u1')) === 0);
+    ok('Gelesen/Umfrage: keine Fehler', A.errors.length === 0, A.errors[0]);
+    await A.ctx.close();
+  }
   // Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem
   {
     const A = await device({ cloud: true, user: 'Anna', blockLive: true });
