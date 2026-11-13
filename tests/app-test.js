@@ -79,6 +79,14 @@ async function settle(page, ms = 800) {
 const nav = (page) => page.locator('[aria-label="Hauptmenü"] button:visible');
 const mainText = async (page) => ((await page.locator('main').first().innerText().catch(() => '')) || '').trim().length;
 const click = (loc) => loc.evaluate((el) => el.click());
+/** Offene Pop-ups (Belohnung, Rückblick …) wegklicken, so wie ein Mensch es tun würde */
+async function clearPopups(page) {
+  for (let k = 0; k < 8; k++) {
+    const o = page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+    if (!(await o.count())) return;
+    await o.last().click({ timeout: 2000 }).catch(() => {}); await page.waitForTimeout(400);
+  }
+}
 
 async function offlineTests() {
   // Anmeldeseite
@@ -220,6 +228,25 @@ async function cloudTests() {
     for (let i = 0; i < 60 && !arrived; i++) { arrived = await A.page.evaluate(() => !!(JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').progress || {}).carla); if (!arrived) await sleep(50); }
     ok('Live: Änderung eines Kollegen kommt sofort an', arrived, `${Date.now() - t0} ms`);
     ok('Live: Annas Aktivität ist gespeichert', !!(await db('GET', '/lastSeen/anna')));
+    await A.ctx.close();
+  }
+  // Kundenfragen: Mitarbeiter fragt, Ausbilder antwortet, Antwort kommt live an
+  {
+    await db('PATCH', '/pins', { anna: { h: 'x', s: 'y', ts: 1 } });
+    const A = await device({ cloud: true, user: 'Anna' });
+    await clearPopups(A.page);
+    await click(nav(A.page).nth(3)); await settle(A.page);
+    await click(A.page.getByText('Das hat ein Kunde gefragt').first()); await settle(A.page);
+    await A.page.fill('textarea[aria-label="Frage des Kunden"]', 'Gibt es das Brot auch halb?').catch(() => {});
+    await click(A.page.getByText('Frage an den Ausbilder schicken').first()).catch(() => {}); await sleep(2000);
+    const kf = (await db('GET', '/progress/anna/_kfragen')) || {};
+    const id = Object.keys(kf).find((k) => kf[k] && kf[k].q === 'Gibt es das Brot auch halb?');
+    ok('Kundenfragen: Frage wird gespeichert', !!id);
+    if (id) await db('PATCH', `/progress/anna/_kfragen/${id}`, { a: 'Ja, alle Brote gibt es auch halb.', aTs: Date.now(), seen: false });
+    let shown = false;
+    for (let i = 0; i < 50 && !shown; i++) { shown = (await A.page.getByText('Ja, alle Brote gibt es auch halb.').count()) > 0; if (!shown) await sleep(100); }
+    ok('Kundenfragen: Antwort vom Ausbilder erscheint sofort', shown);
+    ok('Kundenfragen: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }
   // Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem

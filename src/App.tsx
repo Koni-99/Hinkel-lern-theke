@@ -3,7 +3,7 @@ import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 163;
+const APP_VERSION: number = 164;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -12,6 +12,8 @@ const TuetenBlitzView = lazy(() => import('./components/TuetenBlitzView').then((
 const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => ({ default: m.AlternativenJaegerView })));
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
+import { KundenfragenSeite } from './screens/KundenfragenSeite';
+import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
 import { shuffleQuestionOptions } from './hilfen/pruefung';
@@ -1735,6 +1737,19 @@ export default function App() {
     }
   }, [username, cloudConnected, isSyncing, myRankIdx, rankTable.map(r => r[0]).join(',')]);
 
+  // Hinweis, wenn der Ausbilder eine eigene Kundenfrage beantwortet hat (pro Antwort nur einmal)
+  const kfNeu = isAdmin || !username ? [] : alleKundenfragen(cloudData.progress).filter(f => f.user === username.toLowerCase() && f.a && !f.seen);
+  const kfNeuKey = kfNeu.map(f => f.id).join(',');
+  useEffect(() => {
+    if (!kfNeuKey || activeTab === 'kundenfragen') return;
+    let shown: string[] = [];
+    try { shown = JSON.parse(localStorage.getItem('hinkel_kf_hinweis') || '[]'); } catch {}
+    const fresh = kfNeuKey.split(',').filter(id => !shown.includes(id));
+    if (!fresh.length) return;
+    try { localStorage.setItem('hinkel_kf_hinweis', JSON.stringify([...shown, ...fresh].slice(-50))); } catch {}
+    setToast('💬 Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kfNeuKey]);
   if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont, darkMode }} />;
 
   const overallPercent = getUserMasteryPercent(username);
@@ -1754,6 +1769,12 @@ export default function App() {
       return curr;
     });
     setToast(it.kind === 'spruch' ? '💬 Dein Spruch ist eingereicht. Sobald der Ausbilder ihn freigibt, sehen ihn alle einen Tag lang.' : `💎 ${it.label} gehört jetzt dir!`);
+  };
+  // ── Verkaufstipps und Kundenfragen (siehe hilfen/kollegen.ts) ──
+  const sendTipp = (produkt: string, text: string) => {
+    if (!username || isAdmin || !text.trim()) return;
+    mutateCloudData(tippGeben(username.toLowerCase(), username, produkt, text));
+    setToast('💡 Danke für deinen Tipp! Sobald der Ausbilder ihn freigibt, sehen ihn alle im Steckbrief.');
   };
   const equipPtsItem = (it: PtItem, on: boolean) => {
     if (!username || isAdmin) return;
@@ -2134,7 +2155,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2294,7 +2315,7 @@ export default function App() {
         {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
 
         {/* ═════════ NACHSCHLAGEN ═════════ */}
-        {activeTab === 'nachschlagen' && <NachschlagenSeite {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
+        {activeTab === 'nachschlagen' && <NachschlagenSeite kundenfragenNeu={kfNeu.length} {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
 
         {/* ═════════ LERNEN-ÜBERSICHT ═════════ */}
         {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }} />}
@@ -2331,6 +2352,7 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={productImages} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
+        {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hilfe' && <HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
         {activeTab === 'statistik' && (
           <StatistikView name={username} avatar={myProg._avatar} avatarClass={myProg._effect ? `lt-fx-${String(myProg._effect).replace('fx_', '')}` : 'lt-emo-bob'}
@@ -2362,7 +2384,7 @@ export default function App() {
         {activeTab === 'flashcards' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <PageHead title="Spickzettel" subtitle="Produktkenntnis und Fachwissen, alles zum Nachsehen." onBack={() => setActiveTab('nachschlagen')} backLabel="Zurück zu Nachschlagen" />
-            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} /></div>
+            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} /></div>
           </div>
         )}
         {activeTab === 'scoreboard' && overtaken && (

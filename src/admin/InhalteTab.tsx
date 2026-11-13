@@ -117,7 +117,7 @@ export function InhalteTab({ newProdName, setNewProdName, newProdGroup, setNewPr
           </div>
         )}
       </div>
-      <div style={cardStyle}>
+      <div id="lt-neue-quizfrage" style={cardStyle}>
         {sectionTitle(editingQId !== null ? 'Quizfrage bearbeiten' : 'Neue Quizfrage', editingQId !== null ? 'Ändere die Felder und speichere.' : 'Erscheint sofort im Quiz aller Mitarbeiter.')}
         <form onSubmit={handleAddCustomQuizQuestion} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <label style={labelStyle}>Frage<textarea rows={2} placeholder="Fragetext eingeben …" value={quizQuestionText} onChange={(e) => setQuizQuestionText(e.target.value)} style={inputStyle} /></label>

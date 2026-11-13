@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { dc } from '../daten/data';
 import { SHOP_PRODUCTS } from "../daten/shopProducts";
 import { CustomProductItem } from "../types";
+import type { TippEintrag } from '../hilfen/kollegen';
 import { getRightAnswerText } from '../hilfen/allgemein';
 import { ProductImages } from '../ui/basis';
 import { DICT_ALL, speakGerman, QUICK_TAGS, customProductNumericId, BREAD_TYPES, Profile, FachSection, FACH_SECTIONS, normName } from './karteikarten/daten';
@@ -23,7 +24,13 @@ export function FlashcardView({
   initialArea = "produkt",
   initialView,
   images = {},
+  kollegenTipps = [],
+  meineTipps = [],
+  onTipp,
 }: {
+  kollegenTipps?: TippEintrag[];
+  meineTipps?: TippEintrag[];
+  onTipp?: (produkt: string, text: string) => void;
   initialArea?: "produkt" | "fach";
   initialView?: "dictionary";
   images?: ProductImages;
@@ -353,7 +360,7 @@ export function FlashcardView({
       )}
 
       {/* ── Steckbrief-Detail ── */}
-      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile }} />}
+      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp }} />}
     </div>
   );
 }

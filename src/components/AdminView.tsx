@@ -5,6 +5,7 @@ import { onboardingStatus, computeBadges, correctIdSet } from '../ui/lernstand';
 import { weakThekeTopics } from '../games/theke/ThekenSimulator';
 import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/adminHelfer';
 import type { ReportItem } from '../admin/adminHelfer';
+import { KollegenTab, offeneKollegenSachen } from '../admin/KollegenTab';
 
 import { CloudPayload } from '../types';
 import { cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
@@ -131,7 +132,7 @@ export function AdminView({
     reader.readAsDataURL(file);
   };
   const [tempCloudUrl, setTempCloudUrl] = useState(cloudUrl);
-  const [adminTab, setAdminTab] = useState<'team' | 'reports' | 'message' | 'content' | 'stats' | 'settings'>('team');
+  const [adminTab, setAdminTab] = useState<'team' | 'reports' | 'kollegen' | 'message' | 'content' | 'stats' | 'settings'>('team');
   const [openUser, setOpenUser] = useState<string | null>(null);
   const [teamOpen, setTeamOpen] = useState(false);
   const [teamCat, setTeamCat] = useState<string>('');
@@ -710,6 +711,7 @@ export function AdminView({
   const tabs: { id: typeof adminTab; label: string }[] = [
     { id: 'team', label: `Mitarbeiter (${allKnownUserKeys.length})` },
     { id: 'reports', label: reports.length ? `Meldungen (${reports.length})` : 'Meldungen' },
+    { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Fragen & Tipps (${offeneKollegenSachen(cloudData.progress)})` : 'Fragen & Tipps' },
     { id: 'message', label: 'Nachricht' },
     { id: 'content', label: 'Inhalte' },
     { id: 'stats', label: 'Auswertung' },
@@ -777,6 +779,13 @@ export function AdminView({
       {adminTab === 'stats' && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} />}
 
       {/* ═════════ EINSTELLUNGEN ═════════ */}
+      {adminTab === 'kollegen' && <KollegenTab cloudData={cloudData} mutateCloudData={mutateCloudData} onAlsQuizfrage={(frage, antwort) => {
+        // Formular „Eigene Frage“ im Reiter Inhalte vorausfüllen: Frage, richtige Antwort, Erklärung
+        setEditingQId(null); setQuizQuestionText(frage); setOptA(antwort.length > 90 ? antwort.slice(0, 90).replace(/\s+\S*$/, '') + ' …' : antwort); setQuizExplanation(antwort);
+        setAdminTab('content');
+        window.setTimeout(() => { const el = document.getElementById('lt-neue-quizfrage'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+        alert('Die Frage steht jetzt im Formular „Neue Quizfrage“. Bitte noch zwei oder drei falsche Antworten eintragen, Bereich wählen und speichern.');
+      }} />}
       {adminTab === 'settings' && <EinstellungenTab {...{ cloudData, setCloudUrl, cloudConnected, setCloudConnected, fetchCloudData, overwriteCloudDataDirectly, imageCount, onImportImages, setImageMsg, imageMsg, imageBusy, setImageBusy, backupMsg, downloadBackup, restoreBackup, tempCloudUrl, setTempCloudUrl, markDeleted, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
     </div>
   );

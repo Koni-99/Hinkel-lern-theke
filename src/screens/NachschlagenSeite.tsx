@@ -12,9 +12,10 @@ export type NachschlagenSeiteProps = {
   setSpickArea: Dispatch<SetStateAction<"produkt" | "fach">>;
   setSpickView: Dispatch<SetStateAction<"dictionary" | undefined>>;
   fullSeasonalMap: Record<string, string[]>;
+  kundenfragenNeu?: number;
 };
 
-export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }: NachschlagenSeiteProps) {
+export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap, kundenfragenNeu = 0 }: NachschlagenSeiteProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
       <div>
@@ -39,6 +40,13 @@ export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, s
           <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Englisch-Wörterbuch</span>
           <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Sätze für die Theke, Allergene, Fachbegriffe und alle Produkte auf Englisch, mit Suche und Vorlesen.</span>
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: '4px' }}>Wörterbuch öffnen</span>
+        </button>
+        <button onClick={() => setActiveTab('kundenfragen')} className="lt-card" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '12px', padding: '26px', borderRadius: '26px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+          {kundenfragenNeu > 0 && <span style={{ position: 'absolute', top: '18px', right: '18px', padding: '4px 12px', borderRadius: '999px', backgroundColor: LT.yellow, fontSize: '15px', fontWeight: 800 }}>{kundenfragenNeu === 1 ? 'Neue Antwort!' : `${kundenfragenNeu} neue Antworten!`}</span>}
+          <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '30px' }} aria-hidden="true">🙋</span>
+          <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Das hat ein Kunde gefragt</span>
+          <span style={{ fontSize: '18px', lineHeight: 1.45, color: LT.brown }}>Fragen von der Theke mit der Antwort vom Ausbilder. Du wusstest etwas nicht? Frag hier nach.</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '56px', borderRadius: '16px', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '18px', fontWeight: 700, marginTop: 'auto' }}>Fragen ansehen</span>
         </button>
         <section style={{ padding: '26px', borderRadius: '26px', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <span style={{ width: '60px', height: '60px', borderRadius: '18px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.leaf} size={28} width={1.9} /></span>
