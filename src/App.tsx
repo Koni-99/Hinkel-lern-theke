@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 175;
+const APP_VERSION: number = 176;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -2287,7 +2287,7 @@ export default function App() {
               </button>
             )}
             </div>
-            <button onClick={() => setActiveTab('home')} aria-label="Zur Startseite" title="Zur Startseite" style={{ position: 'relative', zIndex: 1, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', display: 'block' }}>
+            <button className="lt-hdr-logo" onClick={() => setActiveTab('home')} aria-label="Zur Startseite" title="Zur Startseite" style={{ position: 'relative', zIndex: 1, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', display: 'block' }}>
               {skySky && <span aria-hidden="true" style={{ position: 'absolute', left: '50%', top: '50%', width: '260%', height: '150%', transform: 'translate(-50%, -50%)', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(255,236,170,.85), rgba(255,236,170,0))', pointerEvents: 'none', zIndex: -1 }} />}
               <img className="lt-logo" onClick={(e) => { const el = e.currentTarget; el.classList.remove('lt-spin'); void el.offsetWidth; el.classList.add('lt-spin'); onLogoTap(); }} src={HINKEL_LOGO} alt="Bäckerei Hinkel, Die Bäckerei der Brotfreunde" style={{ width: 'auto', display: 'block' }} />
             </button>

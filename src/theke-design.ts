@@ -170,6 +170,20 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-hdr-pills{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
 .lt-pill{position:relative;display:flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border:none;border-radius:999px;background:#1F140C;color:#FFD86B;font-size:16px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 6px 14px -8px rgba(31,20,12,.7)}
 .lt-pill-round{width:42px;padding:0;justify-content:center}
+/* Handy: Markise größer und in zwei Reihen (oben Punkte/Trinkgeld/Menü, darunter groß das Logo), damit nichts übereinanderliegt */
+@media (max-width:560px){
+  .lt-root .lt-awning:not(.lt-awning-sm){height:auto;min-height:232px}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-hdr-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"l r" "m m";row-gap:6px;padding-top:14px;padding-bottom:12px}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-pill{min-height:46px;font-size:17px}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-pill-round{width:46px}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-hdr-left{grid-area:l}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-hdr-pills{grid-area:r}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-hdr-logo{grid-area:m;justify-self:center}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-logo{height:132px}
+  .lt-root .lt-awning-sm .lt-wxpill{display:none}
+  .lt-root .lt-awning:not(.lt-awning-sm) .lt-wxpill{position:absolute;left:16px;bottom:14px}
+  .lt-root .lt-awning.lt-awning-sm{height:96px}.lt-root .lt-awning-sm .lt-logo{height:70px}
+}
 .lt-menu-pop{position:fixed;top:12px;right:12px;z-index:120;min-width:240px;padding:8px;border-radius:18px;background:#FFFFFF;box-shadow:0 24px 50px -16px rgba(31,20,12,.55);display:flex;flex-direction:column;gap:2px;animation:ltFadeUp .25s cubic-bezier(.2,.8,.2,1)}
 .lt-menu-pop button{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 14px;border:none;border-radius:12px;background:transparent;color:#2B170A;font-size:16px;font-weight:700;text-align:left;cursor:pointer}
 .lt-menu-pop button:hover{background:#FBF6EC}

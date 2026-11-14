@@ -58,6 +58,7 @@ Mehr zum Aufbau: `README.md`.
    `npx firebase-tools@15.36.0 emulators:exec --only database --project demo-hinkel "EMU=http://127.0.0.1:9000 node app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/"`
    (In der Claude-Umgebung dafür die Proxy-Variablen weglassen: `env -u HTTPS_PROXY -u https_proxy -u GLOBAL_AGENT_HTTPS_PROXY -u NODE_OPTIONS`.)
 4. Neue Funktionen auch in `tests/app-test.js` aufnehmen. Pop-ups vorher mit `clearPopups` wegklicken.
+   **Immer** (Wunsch des Nutzers): jede neue oder geänderte Funktion auch in „So funktioniert die Lern-Theke“ (`src/ui/hilfe.tsx`) erklären, bei Bedarf auch in „Wo finde ich was?“ und der Einführung; das Thema in den Hilfe-Test in `tests/app-test.js` aufnehmen.
 5. Browser-Ports 5060 sind gesperrt (unsicherer Port), lieber 5055–5059 oder 5070.
 
 ## Umgebung
@@ -82,6 +83,7 @@ Mehr zum Aufbau: `README.md`.
 - 173: Englisch-Wörterbuch (`src/daten/data.ts` DICTIONARY_EXTRA, Produkte automatisch in `karteikarten/daten.tsx`): neue Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“, mehr Verkaufssätze, Übersetzungen korrigiert (z. B. „ohne Schokolade“ zählte als Schokolade), Wörterbuch-Seite ohne Emojis (`ICON.speaker`)
 - 174: „Mein Monat“ (Menü, `src/screens/MeinMonat.tsx`, Logik `src/hilfen/meinMonat.ts`): Punkte + Vergleich Vormonat, Platz im Team, Lerntage, neu gemeistert (Stand am Monatsanfang in `_monatSnap`), Lieblings-Spiel, bester Tag, Tipp. Dunkler Modus entfernt (`dc()` gibt Farbe nur noch weiter)
 - 175: Emojis aufgeräumt auf Überschriften, Knöpfen, Filtern, Hinweisen, Pop-ups, Ausbilder-Knöpfen. **Bewusst geblieben** (Spiel-Inhalt): Laden-Zeichen, Abzeichen, Stufen-Symbole, Ränge, Glücksrad/Rubbellos-Preise, Adventskalender, Gesichter im Theken-Ansturm/Simulator, Produkt-Platzhalter ohne Foto, kleine Animationen. Spiel-Namen in `scores` (z. B. 'Kassenblitz ⚡') NICHT ändern, sonst zerfällt die Bestenliste
+- 176: Markise am Handy (bis 560px breit) größer (232px hoch, Logo 132px), zwei Reihen: oben Punkte/Trinkgeld/Menü, darunter großes Logo, Wetter links unten (`theke-design.ts`, Klasse `lt-hdr-logo`). Hilfe-Thema „Englisch für die Theke“
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.
