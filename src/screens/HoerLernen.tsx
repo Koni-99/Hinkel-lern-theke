@@ -7,11 +7,11 @@ import { LT } from '../basis/marke';
 import { LtIcon, ICON } from '../basis/symbole';
 import { canSpeak, bestGermanVoice } from '../games/spielBasis';
 import { getRightAnswerText, shuffleArray } from '../hilfen/allgemein';
+import { hoerTexte, stimmeKey, sauber } from '../hilfen/stimme';
 
 type Phase = 'frage' | 'denken' | 'antwort' | 'pause';
 const TEMPO: Record<string, { label: string; rate: number }> = { langsam: { label: 'Langsam', rate: 0.9 }, normal: { label: 'Normal', rate: 1.05 }, schnell: { label: 'Schnell', rate: 1.25 } };
 const DENKEN: Record<string, { label: string; ms: number }> = { kurz: { label: '2 Sek.', ms: 2000 }, mittel: { label: '4 Sek.', ms: 4000 }, lang: { label: '7 Sek.', ms: 7000 } };
-const sauber = (t: string) => String(t || '').replace(/[„“"]/g, '').replace(/·/g, ',').replace(/\s+/g, ' ').trim();
 
 export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen: any[]; bereiche: string[]; fehlerIds: number[]; onZurueck: () => void }) {
   const [auswahl, setAuswahl] = useState<string>('alle');
@@ -35,17 +35,42 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
   };
   const anzahl = (a: string) => pool(a).length;
 
+  // Natürliche Stimme: Liste der vorhandenen Tondateien (public/stimme/index.json)
+  const dateien = useRef<Set<string>>(new Set());
+  const [mitDateien, setMitDateien] = useState(0);
+  const audio = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    let weg = false;
+    fetch(`${import.meta.env.BASE_URL}stimme/index.json`).then((r) => (r.ok ? r.json() : [])).then((liste: string[]) => {
+      if (!weg && Array.isArray(liste)) { dateien.current = new Set(liste); setMitDateien(liste.length); }
+    }).catch(() => {});
+    return () => { weg = true; };
+  }, []);
+
   const halt = () => {
     lauf.current++;
     window.clearTimeout(timer.current);
     if (canSpeak()) window.speechSynthesis.cancel();
+    if (audio.current) { try { audio.current.pause(); } catch {} }
     setLaeuft(false);
     if (wake.current) { try { wake.current.release(); } catch {} wake.current = null; }
   };
   useEffect(() => () => halt(), []); // beim Verlassen der Seite aufhören
 
-  const sprich = (text: string, fertig: () => void) => {
+  const sprich = (text: string, fertig: () => void, datei = true) => {
     const my = lauf.current;
+    // Gibt es eine Tondatei mit der natürlichen Stimme? Dann die abspielen, sonst die Handy-Stimme.
+    const key = stimmeKey(text);
+    if (datei && dateien.current.has(key)) {
+      const a = audio.current || (audio.current = new Audio());
+      a.onended = () => { if (my === lauf.current) fertig(); };
+      a.onerror = () => { if (my === lauf.current) sprich(text, fertig, false); };
+      a.src = `${import.meta.env.BASE_URL}stimme/${key}.mp3`;
+      a.playbackRate = TEMPO[einst.current.tempo].rate / 1.05;
+      a.play().catch(() => { if (my === lauf.current) sprich(text, fertig, false); });
+      return;
+    }
+    if (!canSpeak()) { fertig(); return; }
     const synth = window.speechSynthesis;
     const u = new SpeechSynthesisUtterance(sauber(text));
     u.lang = 'de-DE'; u.rate = TEMPO[einst.current.tempo].rate; u.pitch = 1.05;
@@ -60,13 +85,14 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
     if (!l.length) return;
     const q = l[i % l.length];
     setIdx(i % l.length); setPhase('frage');
+    const t = hoerTexte(q);
     const optionen = einst.current.mitOptionen && Array.isArray(q.options) && q.options.length ? ` Möglich sind: ${q.options.join(', ')}.` : '';
-    sprich(`Frage ${(i % l.length) + 1}. ${q.question}${optionen}`, () => {
+    // Mit Antwortmöglichkeiten liest die Handy-Stimme alles am Stück (dafür gibt es keine Tondateien)
+    sprich(optionen ? `${t.frage}${optionen}` : t.frage, () => {
       setPhase('denken');
       warte(DENKEN[einst.current.denken].ms, () => {
         setPhase('antwort');
-        const erkl = q.explanation && sauber(q.explanation) !== sauber(getRightAnswerText(q)) ? ` ${q.explanation}` : '';
-        sprich(`Antwort: ${getRightAnswerText(q)}.${erkl}`, () => {
+        sprich(t.antwort, () => {
           setPhase('pause');
           warte(1500, () => spiele(l, i + 1));
         });
@@ -75,7 +101,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
   };
 
   const start = async (neu: boolean) => {
-    if (!canSpeak()) return;
+    if (!canSpeak() && !dateien.current.size) return;
     halt();
     lauf.current++;
     const l = neu || !liste.length ? shuffleArray(pool(auswahl)) : liste;
@@ -88,7 +114,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
   const springe = (d: number) => {
     if (!liste.length) return;
     const n = (idx + d + liste.length) % liste.length;
-    if (laeuft) { lauf.current++; window.clearTimeout(timer.current); window.speechSynthesis.cancel(); spiele(liste, n); }
+    if (laeuft) { lauf.current++; window.clearTimeout(timer.current); if (canSpeak()) window.speechSynthesis.cancel(); if (audio.current) { try { audio.current.pause(); } catch {} } spiele(liste, n); }
     else { setIdx(n); setPhase('frage'); }
   };
 
@@ -96,7 +122,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
   const chip = (aktiv: boolean) => ({ minHeight: '44px', padding: '0 14px', borderRadius: '999px', border: aktiv ? 'none' : `2px solid ${LT.line}`, backgroundColor: aktiv ? LT.brown : dc('#FFFFFF'), color: aktiv ? dc('#FFF6E0') : LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' } as const);
   const rund = (gross = false) => ({ width: gross ? '76px' : '56px', height: gross ? '76px' : '56px', borderRadius: '50%', border: 'none', backgroundColor: gross ? LT.brown : dc('#FFFFFF'), color: gross ? '#FFD86B' : LT.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 8px 18px -12px rgba(31,20,12,.5)' } as const);
 
-  if (!canSpeak()) {
+  if (!canSpeak() && !mitDateien) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Hör-Lernen</h1>

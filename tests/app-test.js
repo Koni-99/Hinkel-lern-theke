@@ -41,8 +41,9 @@ const SAMPLE = (() => {
 
 let browser;
 /** Neues „Gerät“: user = angemeldeter Name, cloud = mit Emulator verbinden, sonst ohne Internet-Datenbank */
-async function device({ user = '', admin = false, cloud = false, backup = null, viewport = { width: 1100, height: 900 }, blockLive = false } = {}) {
+async function device({ user = '', admin = false, cloud = false, backup = null, viewport = { width: 1100, height: 900 }, blockLive = false, vorher = null } = {}) {
   const ctx = await browser.newContext({ viewport });
+  if (vorher) await vorher(ctx);
   await ctx.route(/open-meteo|fonts\.g/, (r) => r.abort());
   if (cloud) {
     await ctx.route(/googleapis\.com/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ idToken: fakeToken(), id_token: fakeToken(), refreshToken: 'r', refresh_token: 'r', expiresIn: '3600', expires_in: '3600', localId: 'test' }) }));
@@ -66,6 +67,23 @@ async function device({ user = '', admin = false, cloud = false, backup = null, 
   await page.goto(APP);
   await settle(page, 2500);
   return { ctx, page, errors };
+}
+/** Codes aller Hör-Lernen-Texte, genau wie die App sie berechnet (App-Code kurz übersetzen) */
+function stimmeKeys() {
+  const path = require('path'), os = require('os'), fs = require('fs');
+  const root = path.resolve(__dirname, '..'), out = fs.mkdtempSync(path.join(os.tmpdir(), 'lt-keys-'));
+  require('child_process').execFileSync(path.join(root, 'node_modules/.bin/tsc'), ['src/daten/questions.ts', 'src/hilfen/stimme.ts', '--ignoreConfig', '--outDir', out, '--module', 'commonjs', '--target', 'es2020', '--skipLibCheck', '--esModuleInterop', '--rootDir', 'src'], { cwd: root });
+  const Q = require(path.join(out, 'daten/questions.js')), { hoerTexte, stimmeKey } = require(path.join(out, 'hilfen/stimme.js'));
+  const keys = new Set();
+  [...(Q.questions || []), ...(Q.examQuestions || [])].forEach((q) => { const t = hoerTexte(q); keys.add(stimmeKey(t.frage)); keys.add(stimmeKey(t.antwort)); });
+  return [...keys];
+}
+/** 0,3 Sekunden Stille als WAV (Ersatz für eine echte Tondatei) */
+function stilleWav() {
+  const n = 2400, b = Buffer.alloc(44 + n * 2);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(8000, 24); b.writeUInt32LE(16000, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
+  return b;
 }
 /** Warten, bis nachgeladene Bereiche da sind (kein „Lädt …“ mehr) */
 async function settle(page, ms = 800) {
@@ -138,6 +156,24 @@ async function offlineTests() {
     await click(d.page.locator('button.lt-card', { hasText: 'Hör-Lernen' }).first()); await settle(d.page);
     ok('Hör-Lernen: Seite mit Abspiel-Knopf', (await d.page.getByRole('button', { name: 'Vorlesen starten' }).count()) > 0 && (await d.page.getByRole('button', { name: /^Alles \(/ }).count()) > 0);
     ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
+  // Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)
+  {
+    const keys = stimmeKeys();
+    const ctxRoute = async (ctx) => {
+      await ctx.route(/\/stimme\/index\.json/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(keys) }));
+      await ctx.route(/\/stimme\/[0-9a-f]+\.mp3/, (r) => { tonAbrufe++; r.fulfill({ contentType: 'audio/wav', body: stilleWav() }); });
+    };
+    let tonAbrufe = 0;
+    const d = await device({ user: 'Anna', vorher: ctxRoute });
+    await click(nav(d.page).nth(1)); await settle(d.page);
+    await click(d.page.locator('button.lt-card', { hasText: 'Hör-Lernen' }).first()); await settle(d.page);
+    await click(d.page.getByRole('button', { name: 'Vorlesen starten' }).first());
+    await d.page.waitForTimeout(9000);
+    ok('Hör-Lernen: spielt Tondateien ab (Frage und Antwort)', tonAbrufe >= 2, `${tonAbrufe} Tondateien geladen`);
+    await click(d.page.getByRole('button', { name: 'Vorlesen anhalten' }).first());
+    ok('Hör-Lernen mit Tondateien: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
   // Alle Spiele öffnen und ein paar Mal klicken

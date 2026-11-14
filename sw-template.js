@@ -4,6 +4,7 @@
 // Regeln:
 // - Seite (index.html): zuerst aus dem Netz (immer die neueste Version), ohne Netz die gespeicherte.
 // - App-Dateien (assets/…): aus dem Speicher, sie haben eindeutige Namen und ändern sich nie.
+// - Tondateien (stimme/…): NICHT anfassen, der Browser lädt sie stückweise. Ohne Netz liest die Handy-Stimme.
 // - Firebase, Wetter und alles von anderen Adressen: wird NICHT angefasst.
 const VERSION = '__VERSION__';
 const FILES = __FILES__;
@@ -38,6 +39,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== SCOPE.origin || !url.pathname.startsWith(SCOPE.pathname)) return;
+  if (url.pathname.includes('/stimme/')) return;
 
   if (req.mode === 'navigate') {
     e.respondWith(
