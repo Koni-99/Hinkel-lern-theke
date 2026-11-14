@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 178;
+const APP_VERSION: number = 179;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -12,15 +12,12 @@ const TuetenBlitzView = lazy(() => import('./components/TuetenBlitzView').then((
 const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaegerView').then((m) => ({ default: m.AlternativenJaegerView })));
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
-import { KundenfragenSeite } from './screens/KundenfragenSeite';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
 import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, meineNotizen, notizSpeichern } from './hilfen/team';
 import { LobKarte } from './screens/LobKarte';
-import { HoerLernen } from './screens/HoerLernen';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
 import { neuerMonatSnap } from './hilfen/meinMonat';
-import { MeinMonat } from './screens/MeinMonat';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
@@ -30,22 +27,27 @@ import { settleBattle, awardBattlePoints, battleWinnerSide } from './hilfen/batt
 import { applyProductFixes, patchProductQuestion, registerNewProducts } from './hilfen/produkte';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
-import { KassenblitzView } from './games/Kassenblitz';
-import { ThekenSimulatorView } from './games/theke/ThekenSimulator';
+// Seiten und Spiele erst laden, wenn man sie öffnet (schnellerer Start)
+const KundenfragenSeite = lazy(() => import('./screens/KundenfragenSeite').then((m) => ({ default: m.KundenfragenSeite })));
+const HoerLernen = lazy(() => import('./screens/HoerLernen').then((m) => ({ default: m.HoerLernen })));
+const MeinMonat = lazy(() => import('./screens/MeinMonat').then((m) => ({ default: m.MeinMonat })));
+const KassenblitzView = lazy(() => import('./games/Kassenblitz').then((m) => ({ default: m.KassenblitzView })));
+const ThekenSimulatorView = lazy(() => import('./games/theke/ThekenSimulator').then((m) => ({ default: m.ThekenSimulatorView })));
+const AllergenTrainerView = lazy(() => import('./games/AllergenTrainer').then((m) => ({ default: m.AllergenTrainerView })));
+const PreisDuellView = lazy(() => import('./games/PreisDuell').then((m) => ({ default: m.PreisDuellView })));
+const SchneideProfiView = lazy(() => import('./games/SchneideProfi').then((m) => ({ default: m.SchneideProfiView })));
+const ThekenAnsturmView = lazy(() => import('./games/ThekenAnsturm').then((m) => ({ default: m.ThekenAnsturmView })));
+const AusbildungView = lazy(() => import('./ui/ausbildung').then((m) => ({ default: m.AusbildungView })));
+const StatistikView = lazy(() => import('./ui/statistik').then((m) => ({ default: m.StatistikView })));
+const EinarbeitungSeite = lazy(() => import('./screens/EinarbeitungSeite').then((m) => ({ default: m.EinarbeitungSeite })));
 import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
-import { AllergenTrainerView } from './games/AllergenTrainer';
-import { PreisDuellView } from './games/PreisDuell';
-import { SchneideProfiView } from './games/SchneideProfi';
 import { AdventView, adventPoints, AdventDone } from './games/Advent';
-import { ThekenAnsturmView } from './games/ThekenAnsturm';
 import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
 import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
 import { ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './ui/belohnungen';
-import { AusbildungView } from './ui/ausbildung';
 import { LernpfadView, GluecksradCard, buildPfad, WHEEL } from './ui/lernpfadRad';
 import { onboardingStatus, computeBadges, correctIdSet, appWeekStatus, StaffRole } from './ui/lernstand';
 import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
-import { StatistikView } from './ui/statistik';
 import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
@@ -72,7 +74,6 @@ import { FrageMelden } from './screens/dialoge/FrageMelden';
 import { NeueStufe } from './screens/dialoge/NeueStufe';
 import { Wochenrueckblick } from './screens/dialoge/Wochenrueckblick';
 import { InstallHilfe } from './screens/dialoge/InstallHilfe';
-import { EinarbeitungSeite } from './screens/EinarbeitungSeite';
 import { NachschlagenSeite } from './screens/NachschlagenSeite';
 import { SpielenSeite } from './screens/SpielenSeite';
 
@@ -112,7 +113,7 @@ export default function App() {
 
   const todayDayNum = new Date().getDay();
   const [selectedBakeDay, setSelectedBakeDay] = useState<number>(todayDayNum >= 1 && todayDayNum <= 6 ? todayDayNum : 1);
-  const [showBakingCalendar, setShowBakingCalendar] = useState<boolean>(true);
+  const [showBakingCalendar, setShowBakingCalendar] = useState<boolean>(false);
   const [openSeasons, setOpenSeasons] = useState<Record<string, boolean>>({
     'Frühling': false, 'Sommer': false, 'Herbst': false, 'Winter': false
   });
@@ -1546,7 +1547,18 @@ export default function App() {
     window.addEventListener('pointerdown', onDown, { passive: true });
     return () => window.removeEventListener('pointerdown', onDown);
   }, []);
-  useEffect(() => { const t = window.setTimeout(() => setBootWait(false), 6000); return () => window.clearTimeout(t); }, []);
+  // Nach dem Start still vorladen, was erst später gebraucht wird (dann öffnen sich die Seiten ohne „Wird geladen“)
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      [() => import('./components/FlashcardView'), () => import('./components/ScoreboardView'), () => import('./screens/HoerLernen'), () => import('./screens/MeinMonat'), () => import('./screens/KundenfragenSeite'),
+        () => import('./ui/statistik'), () => import('./ui/ausbildung'), () => import('./screens/EinarbeitungSeite'), () => import('./games/Kassenblitz'), () => import('./games/theke/ThekenSimulator'),
+        () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
+        () => import('./components/TuetenBlitzView'), () => import('./components/AlternativenJaegerView')].forEach((f, i) => window.setTimeout(() => { f().catch(() => {}); }, i * 150));
+    }, 4000);
+    return () => window.clearTimeout(t);
+  }, []);
+  // Ladebild beim Start: höchstens 6 s warten; liegt schon ein gespeicherter Stand auf dem Gerät, reichen 2,5 s (der wird dann gezeigt und live aktualisiert)
+  useEffect(() => { let gespeichert = false; try { gespeichert = !!localStorage.getItem('hinkel_cloud_backup'); } catch {} const t = window.setTimeout(() => setBootWait(false), gespeichert ? 2500 : 6000); return () => window.clearTimeout(t); }, []);
   useEffect(() => { setResOpen(null); }, [quizFinished]);
   const wrTouch = useRef<number | null>(null);
   const prevTabRef = useRef(activeTab);

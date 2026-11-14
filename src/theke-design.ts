@@ -300,10 +300,11 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-count{animation:ltCount .7s cubic-bezier(.2,.8,.2,1)}
 .lt-root{overflow-x:clip}
 .lt-root p{line-height:1.55}
-@keyframes ltSlideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
-@keyframes ltSlideL{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
-.lt-page.lt-dir-r{animation:ltSlideR .26s cubic-bezier(.16,1,.3,1)}
-.lt-page.lt-dir-l{animation:ltSlideL .26s cubic-bezier(.16,1,.3,1)}
+@keyframes ltSlideR{from{opacity:0;transform:translateX(56px)}to{opacity:1;transform:none}}
+@keyframes ltSlideL{from{opacity:0;transform:translateX(-56px)}to{opacity:1;transform:none}}
+.lt-page.lt-dir-r{animation:ltSlideR .42s cubic-bezier(.16,1,.3,1)}
+@media (prefers-reduced-motion: reduce){.lt-page.lt-dir-r,.lt-page.lt-dir-l{animation:ltFadeUp .2s ease}}
+.lt-page.lt-dir-l{animation:ltSlideL .42s cubic-bezier(.16,1,.3,1)}
 @keyframes ltShimmer{0%{background-position:-220px 0}100%{background-position:220px 0}}
 .lt-root img:not(.lt-logo):not(.lt-loaded){background-color:${dc('#F4EADB')};background-image:url(${kueken});background-size:auto 42%;background-repeat:no-repeat;background-position:50% 62%;animation:ltKHop .7s cubic-bezier(.3,0,.5,1) infinite}
 @keyframes ltKHop{0%,100%{background-position:50% 64%;background-size:auto 40%}45%,55%{background-position:50% 30%;background-size:auto 44%}}

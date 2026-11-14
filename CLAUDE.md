@@ -16,6 +16,8 @@ Mehr zum Aufbau: `README.md`.
   Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen),
   Schicht-Checklisten, Prüfungs-Countdown für Azubis, dunkler Modus (gefällt ihm nicht, Code in 174 entfernt).
 - Teamziel gibt es schon als **Wochenziel** – nicht nochmal vorschlagen.
+- Außerdem **Nein** (14.11.2026): Spiel „Wer bin ich?“ (will er ausdrücklich nicht), Allergie-Profi-Spiel, „Heute neu gelernt“-Karte (die meisten schließen die App einfach), Update-Hinweis „Neue Version da“.
+- **Startseite bei jeder neuen Funktion mit aufräumen** (Wunsch des Nutzers): nicht einfach eine Karte dazupacken, sondern prüfen, was zusammengefasst/zugeklappt werden kann.
 - Der Brotkorb auf der Startseite bleibt (er zeigt auch Stufe und Meister-Fortschritt).
 
 ## Stil der App
@@ -86,6 +88,7 @@ Mehr zum Aufbau: `README.md`.
 - 176: Markise am Handy (bis 560px breit) größer (232px hoch, Logo 132px), zwei Reihen: oben Punkte/Trinkgeld/Menü, darunter großes Logo, Wetter links unten (`theke-design.ts`, Klasse `lt-hdr-logo`). Hilfe-Thema „Englisch für die Theke“
 - 177: Hilfe-Zeilen brechen am Handy um („Was ist was?“ jetzt Begriff oben, Erklärung darunter). Schatzkammer-Namensfarben (`.lt-goldname`, `.lt-nc-*`) kräftiger, ohne die hellen 3D-Schatten der Begrüßung (die machten sie blass)
 - 178: Produktdaten mit Excel „Hinkel_Produktliste_Shopify_korrigiert“ abgeglichen: doppelt angehängte Zutaten-Enden bei 41 Produkten entfernt (alter Fehler `' + BACKMALZ + …`), Roggenstange-Allergene, Apfelring-Zutat („Zeel.Quarkini“ → Quarkbällchen-Backmischung), Spuntino „Zucchini“, Warnhinweis Prasselkuchen (Marzipan fehlt in Zutaten), neu: Stollen-Konfekt. Preise der App = Filialpreise (Kasse 07.11.2026)
+- 179: Schnellerer Start (12 Seiten/Spiele per `lazy()`, nach 4 s still vorgeladen; Ladebild nur 2,5 s, wenn gespeicherter Stand da), Seitenwechsel deutlicher (56px, .42s), Startseite aufgeräumt (Backkalender zu, Lern-Bon zugeklappt, Erledigtes in „Heute erledigt“). Saison-Deko auf der Markise gab es schon
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.

@@ -299,7 +299,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
             <>
               <div className="lt-menu lt-tiles">
                 <div className="lt-rc-mono" aria-hidden="true" style={{ textAlign: 'center', fontSize: '13px', letterSpacing: '3px', color: LT.muted, padding: '4px 0 6px' }}>~ TAGESKARTE ~</div>
-                {menuItems.filter(t => t.key !== 'fakt').map(t => (
+                {menuItems.filter(t => t.key !== 'fakt' && (t as any).prog !== 1).map(t => (
                   <button key={t.key} onClick={t.action} className="lt-menu-row lt-tile">
                     <span className="lt-gold-tile" style={{ flex: '0 0 auto', width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={MENU_ICON[t.key] || ICON.leaf} size={22} width={1.9} /></span>
                     <span style={{ flex: 1, minWidth: 0 }}>
@@ -313,6 +313,18 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
                     {t.dot && <span className="lt-dot-pulse" aria-hidden="true" style={{ position: 'absolute', top: '19px', right: '12px', width: '9px', height: '9px', borderRadius: '50%', backgroundColor: '#D92D20' }} />}
                   </button>
                 ))}
+                {(() => { const fertig = menuItems.filter(t => t.key !== 'fakt' && (t as any).prog === 1); if (!fertig.length) return null; return (
+                  <details className="lt-done-fold" style={{ marginTop: '4px' }}>
+                    <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '10px', minHeight: '46px', padding: '6px 10px', color: TH.green, fontWeight: 800, fontSize: '16px' }}>
+                      <LtIcon paths={['M20 6 9 17l-5-5']} size={20} width={2.4} />
+                      <span style={{ flex: 1 }}>Heute erledigt: {fertig.map(t => t.title).join(', ')}</span>
+                      <span aria-hidden="true" style={{ color: LT.muted, fontSize: '14px' }}>▾</span>
+                    </summary>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px 0 2px' }}>
+                      {fertig.map(t => <button key={t.key} onClick={t.action} className="lt-menu-row lt-tile" style={{ opacity: 0.8 }}><span style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'block', fontWeight: 800, fontSize: '16px' }}>{t.title}</span><span style={{ display: 'block', fontSize: '14px', color: LT.muted }}>{t.sub}</span></span></button>)}
+                    </div>
+                  </details>
+                ); })()}
               </div>
               {(() => {
                 // Knifflige Frage der Woche: im Team am häufigsten falsch (ohne Namen)
@@ -448,6 +460,12 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               </div>
             </section>
     
+            <details className="lt-fold" style={{ ...cardStyle, padding: 0 }}>
+              <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', minHeight: '60px' }}>
+                <span style={{ flex: 1 }}><span style={{ display: 'block', fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Dein Lern-Bon</span><span style={{ display: 'block', fontSize: '15px', color: LT.muted }}>Alle Zahlen auf einen Blick</span></span>
+                <span className="lt-fold-arrow" aria-hidden="true" style={{ fontSize: '20px' }}>▾</span>
+              </summary>
+              <div style={{ padding: '0 12px 18px' }}>
             <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
               <div className="lt-bon" style={{ position: 'relative', width: '100%', maxWidth: '380px', transform: 'rotate(-1.2deg)', filter: 'drop-shadow(0 18px 24px rgba(75,42,20,0.22))' }}>
                 <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(225deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', backgroundPosition: 'bottom left' }} />
@@ -479,6 +497,8 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               </div>
               <button onClick={() => { setActiveTab('scoreboard'); fetchCloudData(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '50px', padding: '0 22px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '17px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 20px -12px rgba(31,20,12,.7)' }}><LtIcon paths={ICON.trophy} size={20} width={2} />Zur Bestenliste</button>
             </section>
+              </div>
+            </details>
           </>
         );
       })()}
