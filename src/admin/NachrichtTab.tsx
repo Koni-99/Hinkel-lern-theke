@@ -35,7 +35,7 @@ export function NachrichtTab({ overwriteCloudDataDirectly, pinboardDraft, setPin
       {sectionTitle('Nachricht an alle', 'Erscheint auf der Startseite und einmal als Pop-up bei jedem Mitarbeiter.')}
       {activePinboard && activePinboard.text && (
         <div style={{ padding: '16px', borderRadius: '16px', backgroundColor: TH.tintYellow, marginBottom: '14px' }}>
-          <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Aktuell angepinnt · {activePinboard.updatedAt}{(activePinboard as any).banner ? ` · 📣 Banner${(activePinboard as any).until ? ` bis ${String((activePinboard as any).until).split('-').reverse().join('.')}` : ''}` : ''}</div>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Aktuell angepinnt · {activePinboard.updatedAt}{(activePinboard as any).banner ? ` · Banner${(activePinboard as any).until ? ` bis ${String((activePinboard as any).until).split('-').reverse().join('.')}` : ''}` : ''}</div>
           {activePinboard.image && <img src={activePinboard.image} alt="" style={{ width: '100%', maxWidth: '360px', borderRadius: '14px', marginTop: '8px', display: 'block' }} />}
           <div style={{ fontFamily: TH.serif, fontSize: '24px', marginTop: '6px', whiteSpace: 'pre-line' }}>„{activePinboard.text}“</div>
         </div>
@@ -53,7 +53,7 @@ export function NachrichtTab({ overwriteCloudDataDirectly, pinboardDraft, setPin
           </div>
         ) : (
           <label style={{ ...smallBtn(), display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start', gap: '8px' }}>
-            📷 {pinImgBusy ? 'Wird geladen …' : 'Foto auswählen'}
+            {pinImgBusy ? 'Wird geladen …' : 'Foto auswählen'}
             <input type="file" accept="image/*" onChange={(e) => { loadPinImage(e.target.files && e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
           </label>
         )}
@@ -62,7 +62,7 @@ export function NachrichtTab({ overwriteCloudDataDirectly, pinboardDraft, setPin
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '14px', padding: '14px 16px', borderRadius: '16px', backgroundColor: TH.tintYellow }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>
           <input type="checkbox" checked={pinBanner} onChange={(e) => setPinBanner(e.target.checked)} style={{ width: '22px', height: '22px', accentColor: TH.brown }} />
-          📣 Zusätzlich als Banner oben auf jeder Seite zeigen
+          Zusätzlich als Banner oben auf jeder Seite zeigen
         </label>
         {pinBanner && (
           <label style={labelStyle}>

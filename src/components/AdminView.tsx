@@ -230,7 +230,7 @@ export function AdminView({
       return curr;
     });
     setNp(emptyNp);
-    setNpMsg(`Gespeichert. „${name}“ steht jetzt in den Steckbriefen, und die Quizfragen dazu sind sofort da. Auf der Startseite erscheint 3 Wochen lang „🆕 Neu im Sortiment“.`);
+    setNpMsg(`Gespeichert. „${name}“ steht jetzt in den Steckbriefen, und die Quizfragen dazu sind sofort da. Auf der Startseite erscheint 3 Wochen lang „Neu im Sortiment“.`);
   };
   const editNewProduct = (p: any) => { setNp({ ...emptyNp, ...p, allergens: [...(p.allergens || [])], traces: [...(p.traces || [])] }); setNpMsg(''); window.setTimeout(() => document.getElementById('lt-np-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); };
   const deleteNewProduct = (p: any) => {
@@ -740,7 +740,7 @@ export function AdminView({
               });
               return (
                 <div style={{ marginBottom: '16px', padding: '14px 16px', borderRadius: '16px', backgroundColor: '#FFF4C7', border: '2px solid #C9971C', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <strong style={{ fontSize: '17px' }}>💬 Sprüche zur Freigabe ({pend.length})</strong>
+                  <strong style={{ fontSize: '17px' }}>Sprüche zur Freigabe ({pend.length})</strong>
                   <span style={{ fontSize: '14px', color: TH.muted }}>Mitarbeiter haben dafür 15.000 Punkte bezahlt. Freigegeben erscheint der Spruch heute bei allen auf der Startseite. Abgelehnt bekommt die Person die Punkte zurück.</span>
                   {pend.map(([k, pr]: [string, any]) => (
                     <div key={k} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 12px', borderRadius: '12px', backgroundColor: '#FFFFFF' }}>

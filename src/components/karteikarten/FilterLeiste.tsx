@@ -52,7 +52,7 @@ export function FilterLeiste({ questions, favorites, setFilterMode, filterMode, 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={displayStyle === "dictionary" ? "🔍 Deutsch oder englisch suchen, z. B. Nüsse, Rückgeld, Monday" : area === "fach" ? "🔍 Fachwissen durchsuchen, z. B. Sauerteig, Gluten, mild …" : "🔍 Brotsorte, Zutat oder Allergen suchen …"}
+                placeholder={displayStyle === "dictionary" ? "Deutsch oder englisch suchen, z. B. Nüsse, Rückgeld, Monday" : area === "fach" ? "Fachwissen durchsuchen, z. B. Sauerteig, Gluten, mild …" : "Brotsorte, Zutat oder Allergen suchen …"}
                 style={{
                   flex: "1 1 240px",
                   padding: "11px 14px",
@@ -103,10 +103,10 @@ export function FilterLeiste({ questions, favorites, setFilterMode, filterMode, 
                     {questions.some((q: any) => q.examGroup) && (
                       <>
                         <option value="Zwischenprüfungen">
-                          🎓 Zwischenprüfungen ({questions.filter((q: any) => q.examGroup === "ZP").length})
+                          Zwischenprüfungen ({questions.filter((q: any) => q.examGroup === "ZP").length})
                         </option>
                         <option value="Abschlussprüfungen">
-                          🏆 Abschlussprüfungen ({questions.filter((q: any) => q.examGroup === "AP").length})
+                          Abschlussprüfungen ({questions.filter((q: any) => q.examGroup === "AP").length})
                         </option>
                       </>
                     )}
@@ -195,7 +195,7 @@ export function FilterLeiste({ questions, favorites, setFilterMode, filterMode, 
                     cursor: "pointer",
                   }}
                 >
-                  ⭐ Gemerkt ({favorites.length})
+                  Gemerkt ({favorites.length})
                 </button>
               </div> : <span />}
     

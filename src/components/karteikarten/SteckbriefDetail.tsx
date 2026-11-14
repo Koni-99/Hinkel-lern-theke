@@ -63,7 +63,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
                 </div>
               ))}
               {sp?.vegan && (
-                <div style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.tintSage, color: TH.green, display: "flex", alignItems: "center", fontSize: "19px", fontWeight: 700 }}>🌱 Vegan</div>
+                <div style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.tintSage, color: TH.green, display: "flex", alignItems: "center", fontSize: "19px", fontWeight: 700 }}>Vegan</div>
               )}
             </div>
           )}

@@ -41,7 +41,7 @@ export function MeldungenTab({ pfName, pfMsg, allQById, startFix, renderFixEdito
       <div style={cardStyle}>
         {sectionTitle('Gemeldete Fehler', 'Mitarbeiter können im Quiz, in allen Spielen, in den Lernkarten und Steckbriefen auf „Fehler melden“ tippen und einen Verbesserungsvorschlag schreiben. Hier siehst du alle Meldungen.')}
         {reports.length === 0 ? (
-          <p style={{ margin: 0, fontSize: '18px', color: TH.muted }}>Keine offenen Meldungen, alles in Ordnung. 👍</p>
+          <p style={{ margin: 0, fontSize: '18px', color: TH.muted }}>Keine offenen Meldungen, alles in Ordnung.</p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {reports.map(rep => (
@@ -70,9 +70,9 @@ export function MeldungenTab({ pfName, pfMsg, allQById, startFix, renderFixEdito
                   ))}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {rep.q && <button onClick={() => startFix(Number(rep.qid))} style={smallBtn('warn')}>✏️ Frage korrigieren</button>}
-                  {rep.product && SHOP_PRODUCTS.some(p => p.name === rep.product) && <button onClick={() => startProductFix(rep.product!, rep.qid)} style={smallBtn('warn')}>🛠️ Produkt korrigieren</button>}
-                  {!rep.q && rep.game && <button onClick={() => copyReportText(rep)} style={smallBtn()}>📋 Meldung kopieren</button>}
+                  {rep.q && <button onClick={() => startFix(Number(rep.qid))} style={smallBtn('warn')}>Frage korrigieren</button>}
+                  {rep.product && SHOP_PRODUCTS.some(p => p.name === rep.product) && <button onClick={() => startProductFix(rep.product!, rep.qid)} style={smallBtn('warn')}>Produkt korrigieren</button>}
+                  {!rep.q && rep.game && <button onClick={() => copyReportText(rep)} style={smallBtn()}>Meldung kopieren</button>}
                   <button onClick={() => resolveReport(rep.qid)} style={smallBtn()}>Erledigt ✓</button>
                   {rep.q && <button onClick={() => hideQuestion(rep.qid)} style={smallBtn('danger')}>Frage ausblenden</button>}
                 </div>

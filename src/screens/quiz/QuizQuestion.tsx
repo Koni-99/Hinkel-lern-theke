@@ -94,10 +94,10 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
           )}
           {doubleOn && !isAnswered && <span className="lt-deal" style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '999px', backgroundColor: TH.tintPeach, fontWeight: 800, fontSize: '15px' }}>✖️ Doppelte Punkte aktiv</span>}
           {!isAnswered && !isExamMode && !examSim && !isAdmin && (Number(myProg._jokersSwap) || 0) > 0 && (
-            <button onClick={applySwapJoker} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintBlue, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>🔄 Frage tauschen ({Number(myProg._jokersSwap) || 0} übrig)</button>
+            <button onClick={applySwapJoker} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintBlue, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Frage tauschen ({Number(myProg._jokersSwap) || 0} übrig)</button>
           )}
           {canJoker && (
-            <button onClick={() => applyJoker(jokerKey, currentQ.options.map((_: string, i: number) => i).filter((i: number) => !requiredIndices.includes(i)))} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintYellow, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>🃏 50:50-Joker einsetzen ({myJokers} übrig)</button>
+            <button onClick={() => applyJoker(jokerKey, currentQ.options.map((_: string, i: number) => i).filter((i: number) => !requiredIndices.includes(i)))} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintYellow, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>50:50-Joker einsetzen ({myJokers} übrig)</button>
           )}
           {currentQ.options.map((opt: string, idx: number) => {
             if (hiddenOpts.includes(idx) && !isAnswered) return null;

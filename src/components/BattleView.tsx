@@ -134,7 +134,7 @@ export function BattleView({
                       {b.challengerKey === myKey
                         ? <><strong>{b.opponent}</strong> hat gespielt, jetzt bist du dran!</>
                         : <><strong>{b.challenger}</strong> fordert dich heraus!</>}
-                      {Number(b.stake) > 0 && <span style={{ display: "inline-block", marginLeft: "8px", padding: "2px 10px", borderRadius: "999px", backgroundColor: "#FFE27A", fontSize: "15px", fontWeight: 800 }}>💰 Einsatz {b.stake} Pkt</span>}
+                      {Number(b.stake) > 0 && <span style={{ display: "inline-block", marginLeft: "8px", padding: "2px 10px", borderRadius: "999px", backgroundColor: "#FFE27A", fontSize: "15px", fontWeight: 800 }}>Einsatz {b.stake} Pkt</span>}
                     </div>
                     <button onClick={() => acceptBattleChallenge(b)} style={{ ...btnPrimary, minHeight: "52px", fontSize: "17px" }}>Jetzt spielen</button>
                   </div>
@@ -146,7 +146,7 @@ export function BattleView({
           <div style={cardStyle}>
             {sectionTitle("Kollegen herausfordern")}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }}>
-              <span style={{ fontSize: "17px", fontWeight: 700 }}>💰 Einsatz:</span>
+              <span style={{ fontSize: "17px", fontWeight: 700 }}>Einsatz:</span>
               {[0, 50, 100, 250].map(v => (
                 <button key={v} onClick={() => setStake(v)} disabled={v > 0 && myBalance < v} style={{ minHeight: "44px", padding: "0 14px", borderRadius: "999px", border: stake === v ? "none" : `2px solid ${TH.line}`, backgroundColor: stake === v ? TH.brown : TH.white, color: stake === v ? "#FFE27A" : TH.ink, fontSize: "16px", fontWeight: 800, cursor: v > 0 && myBalance < v ? "not-allowed" : "pointer", opacity: v > 0 && myBalance < v ? 0.45 : 1 }}>{v === 0 ? "ohne" : `${v} Pkt`}</button>
               ))}
@@ -287,7 +287,7 @@ export function BattleView({
             const same = activeBattle.challengerScore === activeBattle.opponentScore;
             return (
               <div className="lt-levelup" style={{ padding: "14px 18px", borderRadius: "18px", backgroundColor: oc === "won" ? TH.tintSage : oc === "tie" ? TH.cream : TH.tintPeach, maxWidth: "480px" }}>
-                <div style={{ fontFamily: TH.serif, fontSize: "30px", lineHeight: 1.1, color: oc === "won" ? TH.green : oc === "tie" ? TH.ink : TH.red }}>{oc === "won" ? `🏆 Gewonnen${same ? ", du warst schneller!" : "!"}` : oc === "tie" ? "🤝 Unentschieden" : `Verloren${same ? ", knapp zu langsam" : ""}`}</div>
+                <div style={{ fontFamily: TH.serif, fontSize: "30px", lineHeight: 1.1, color: oc === "won" ? TH.green : oc === "tie" ? TH.ink : TH.red }}>{oc === "won" ? `Gewonnen${same ? ", du warst schneller!" : "!"}` : oc === "tie" ? "Unentschieden" : `Verloren${same ? ", knapp zu langsam" : ""}`}</div>
                 <div style={{ fontSize: "17px", color: TH.brown, marginTop: "6px" }}>{other}: {oSc}/{battleQuestions.length}{oT ? ` · ⏱️ ${oT}` : ""}</div>
               </div>
             );

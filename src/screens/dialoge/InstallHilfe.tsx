@@ -18,7 +18,7 @@ export function InstallHilfe({ setShowInstallHelp, hideInstall, canInstallDirect
     <div className="lt-overlay" onClick={() => setShowInstallHelp(false)} style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="App auf den Startbildschirm legen" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
         <div style={{ backgroundColor: LT.yellow, padding: '22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <span style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span aria-hidden="true" style={{ fontSize: '30px', lineHeight: 1 }}>📱</span></span>
+          <span style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span aria-hidden="true" style={{ display: 'inline-flex', lineHeight: 1 }}><LtIcon paths={ICON.phone} size={30} /></span></span>
           <div>
             <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>Hinkel-App aufs Handy</div>
             <div style={{ fontSize: '16px' }}>Dann startet sie wie eine echte App mit einem Fingertipp.</div>

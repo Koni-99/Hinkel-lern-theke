@@ -363,8 +363,8 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
                 <div style={{ padding: '16px 18px', borderRadius: '16px', backgroundColor: TH.tintYellow, fontSize: '18px', lineHeight: 1.5 }}>
                   <strong>Beratungstipp: </strong>
                   {selectedOpt !== null && selectedOpt >= 0 ? scen.options[selectedOpt].explanation : `Zeit abgelaufen. ${scen.options.find(o => o.isBest)?.explanation || ''}`}
-                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>📚 Die Quizfrage „{scen.missing} ist ausverkauft“ ist jetzt in deinem Lernbereich abgehakt.</div>}
-                  {alreadyNow && selectedOpt !== null && selectedOpt >= 0 && scen.options[selectedOpt].isBest && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>📚 Diese Quizfrage hattest du schon gemeistert.</div>}
+                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>Die Quizfrage „{scen.missing} ist ausverkauft“ ist jetzt in deinem Lernbereich abgehakt.</div>}
+                  {alreadyNow && selectedOpt !== null && selectedOpt >= 0 && scen.options[selectedOpt].isBest && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>Diese Quizfrage hattest du schon gemeistert.</div>}
                 </div>
               )}
             </div>
@@ -377,7 +377,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
           title="Verkaufstraining beendet"
           big={`${score} Punkte`}
           text="Stark beraten! Je schneller die richtige Empfehlung, desto mehr Punkte."
-          reward={[score > 0 ? 'Punkte in der Bestenliste gespeichert' : '', learned > 0 ? `📚 ${learned} ${learned === 1 ? 'Frage' : 'Fragen'} im Lernbereich abgehakt` : ''].filter(Boolean).join(' · ') || null}
+          reward={[score > 0 ? 'Punkte in der Bestenliste gespeichert' : '', learned > 0 ? `${learned} ${learned === 1 ? 'Frage' : 'Fragen'} im Lernbereich abgehakt` : ''].filter(Boolean).join(' · ') || null}
           againLabel="Neue 6er-Runde"
           onAgain={() => startTraining(6)}
         />

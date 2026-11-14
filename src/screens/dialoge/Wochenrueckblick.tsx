@@ -2,6 +2,7 @@
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction, MutableRefObject } from 'react';
 import { dc } from '../../daten/data';
+import { LtIcon, ICON } from '../../basis/symbole';
 import { LT } from '../../basis/marke';
 
 export type WochenrueckblickProps = {
@@ -26,11 +27,11 @@ export function Wochenrueckblick({ username, wrSlide, setWrSlide, wrTouch, thisM
       {(() => {
         const range = `${lastMonday.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} bis ${new Date(thisMonday.getTime() - 86400000).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
         const slides = [
-          { bg: LT.yellow, icon: '📅', top: 'Dein Wochenrückblick', big: `Neue Woche, ${username}!`, sub: `So lief deine letzte Woche (${range}). Tippe rechts für weiter.` },
-          { bg: dc('#FFE7C2'), icon: '🔥', top: 'Lerntage', big: `${Math.min(6, weekDays)} / 6`, sub: weekDays >= 5 ? 'Wahnsinn, fast jeden Tag gelernt!' : weekDays >= 2 ? 'Schön dran geblieben! 👍' : weekDays === 1 ? 'Ein Lerntag ist ein Anfang, diese Woche schaffst du mehr!' : 'Letzte Woche war Pause, diese Woche geht’s wieder los!' },
-          { bg: dc('#E1EEDC'), icon: '⭐', top: 'Punkte', big: weekPoints.toLocaleString('de-DE'), sub: weekMastered !== null ? `Dazu ${weekMastered} ${weekMastered === 1 ? 'Frage' : 'Fragen'} neu gemeistert.` : `Du hast ${masteredNow} Fragen gemeistert.` },
-          { bg: dc('#E3ECF7'), icon: '🎮', top: 'Lieblingsspiel', big: favGame || 'Noch keins', sub: favGame ? 'Das hast du am meisten gespielt.' : 'Probier diese Woche mal ein Spiel aus!' },
-          { bg: LT.cream, icon: '💡', top: 'Tipp für diese Woche', big: '', sub: weekTip },
+          { bg: LT.yellow, icon: ICON.calendar, top: 'Dein Wochenrückblick', big: `Neue Woche, ${username}!`, sub: `So lief deine letzte Woche (${range}). Tippe rechts für weiter.` },
+          { bg: dc('#FFE7C2'), icon: ICON.flame, top: 'Lerntage', big: `${Math.min(6, weekDays)} / 6`, sub: weekDays >= 5 ? 'Wahnsinn, fast jeden Tag gelernt!' : weekDays >= 2 ? 'Schön dran geblieben!' : weekDays === 1 ? 'Ein Lerntag ist ein Anfang, diese Woche schaffst du mehr!' : 'Letzte Woche war Pause, diese Woche geht’s wieder los!' },
+          { bg: dc('#E1EEDC'), icon: ICON.sparkle, top: 'Punkte', big: weekPoints.toLocaleString('de-DE'), sub: weekMastered !== null ? `Dazu ${weekMastered} ${weekMastered === 1 ? 'Frage' : 'Fragen'} neu gemeistert.` : `Du hast ${masteredNow} Fragen gemeistert.` },
+          { bg: dc('#E3ECF7'), icon: ICON.game, top: 'Lieblingsspiel', big: favGame || 'Noch keins', sub: favGame ? 'Das hast du am meisten gespielt.' : 'Probier diese Woche mal ein Spiel aus!' },
+          { bg: LT.cream, icon: ICON.bulb, top: 'Tipp für diese Woche', big: '', sub: weekTip },
         ];
         const n = slides.length; const i = Math.min(wrSlide, n - 1); const sl = slides[i];
         const go = (d: number) => setWrSlide(Math.max(0, Math.min(n - 1, i + d)));
@@ -46,7 +47,7 @@ export function Wochenrueckblick({ username, wrSlide, setWrSlide, wrTouch, thisM
               <button aria-label="Zurück" onClick={() => go(-1)} style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '35%', background: 'none', border: 'none', cursor: i > 0 ? 'pointer' : 'default', zIndex: 1 }} />
               {i < n - 1 && <button aria-label="Weiter" onClick={() => go(1)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '65%', background: 'none', border: 'none', cursor: 'pointer', zIndex: 1 }} />}
               <div key={i} className="lt-pop-in" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '28px 26px', textAlign: 'center' }}>
-                <span className="lt-emo-bob" style={{ fontSize: '64px', lineHeight: 1 }}>{sl.icon}</span>
+                <span className="lt-emo-bob" style={{ display: 'inline-flex', lineHeight: 1 }}><LtIcon paths={sl.icon} size={64} width={1.6} /></span>
                 <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.brown }}>{sl.top}</div>
                 {sl.big && <div className="lt-count" style={{ fontFamily: LT.serif, fontSize: sl.big.length > 14 ? '30px' : '46px', lineHeight: 1.1 }}>{sl.big}</div>}
                 <div style={{ fontSize: '18px', lineHeight: 1.45, color: LT.ink, maxWidth: '320px' }}>{sl.sub}</div>

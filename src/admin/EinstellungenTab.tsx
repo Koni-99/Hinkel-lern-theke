@@ -39,7 +39,7 @@ export function EinstellungenTab({ cloudData, setCloudUrl, cloudConnected, setCl
       <div style={cardStyle}>
         {sectionTitle('Sicherung (Backup)', 'Alle Daten der App als Datei sichern: Punkte, Lernfortschritt, Meldungen, Korrekturen, Nachrichten und eigene Inhalte. Die Produktfotos sind nicht dabei.')}
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button type="button" onClick={downloadBackup} style={btnPrimary}>💾 Sicherung herunterladen</button>
+          <button type="button" onClick={downloadBackup} style={btnPrimary}>Sicherung herunterladen</button>
           <label style={{ ...btnSecondary, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             ↩️ Sicherung wiederherstellen
             <input type="file" accept=".json,application/json" onChange={(e) => { restoreBackup(e.target.files && e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />

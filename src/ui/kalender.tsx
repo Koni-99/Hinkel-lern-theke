@@ -117,7 +117,7 @@ export function LoginRewardDialog({ day, onClaim, onClose, claimedAlready = fals
           })}
         </div>
         {claimed ? (
-          <div className="lt-levelup" style={{ fontSize: '19px', fontWeight: 800, color: TH.green }}>+{(LOGIN_REWARDS[day - 1] / 100).toFixed(2).replace('.', ',')} € Trinkgeld{day === 7 ? ' und ein Joker 🃏' : ''}!</div>
+          <div className="lt-levelup" style={{ fontSize: '19px', fontWeight: 800, color: TH.green }}>+{(LOGIN_REWARDS[day - 1] / 100).toFixed(2).replace('.', ',')} € Trinkgeld{day === 7 ? ' und ein Joker' : ''}!</div>
         ) : null}
         <button autoFocus onClick={() => { if (!claimed) { setClaimed(true); onClaim(); } else onClose(); }} style={btnPrimary}>{claimed ? 'Weiter geht’s' : `Tag ${day} abholen`}</button>
       </div>

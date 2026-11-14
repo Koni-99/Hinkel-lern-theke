@@ -298,8 +298,8 @@ export function FlashcardView({
       {/* BEREICHS-UMSCHALTER: PRODUKTKENNTNIS / FACHWISSEN */}
       <div className="fc-area" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%" }}>
         {([
-          { id: "produkt", title: "🥖 Produktkenntnis", sub: "Steckbriefe, Zutaten, Allergene" },
-          { id: "fach", title: "📚 Fachwissen", sub: "Geschmack, Sauerteig, Mehl & mehr" },
+          { id: "produkt", title: "Produktkenntnis", sub: "Steckbriefe, Zutaten, Allergene" },
+          { id: "fach", title: "Fachwissen", sub: "Geschmack, Sauerteig, Mehl & mehr" },
         ] as const).map((a) => {
           const on = area === a.id;
           return (
@@ -355,7 +355,7 @@ export function FlashcardView({
         >
           <p style={{ color: dc('#6B4A30'), fontSize: "18px", margin: 0 }}>
             {filterMode === "fav"
-              ? "Du hast noch keine Karten mit ⭐ gemerkt."
+              ? "Du hast noch keine Karten mit ★ gemerkt."
               : "Keine passende Lernkarte gefunden."}
           </p>
         </div>

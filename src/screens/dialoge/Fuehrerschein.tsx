@@ -18,7 +18,7 @@ export function Fuehrerschein({ username, finishErsteWoche }: FuehrerscheinProps
         <div style={{ fontSize: '19px' }}>für <strong>{username}</strong></div>
         <div style={{ fontSize: '16px' }}>hat die erste Woche geschafft: Brote, Beratung und Allergien sitzen. Herzlich willkommen im Team der Brotfreunde!</div>
         <div style={{ fontSize: '15px', marginTop: '4px' }}>{new Date().toLocaleDateString('de-DE')}</div>
-        <button onClick={finishErsteWoche} autoFocus style={{ ...btnPrimary, marginTop: '8px' }}>Danke! 🎉</button>
+        <button onClick={finishErsteWoche} autoFocus style={{ ...btnPrimary, marginTop: '8px' }}>Danke!</button>
       </div>
     </div>
   );

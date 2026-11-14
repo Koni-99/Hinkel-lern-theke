@@ -37,11 +37,11 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
           {pcGroups.map((g) => <option key={g} value={g}>{g} ({cardProducts.filter((p) => p.group === g).length})</option>)}
         </select>
         <div role="tablist" aria-label="Vorderseite" style={{ display: "flex", gap: "4px", padding: "4px", borderRadius: "14px", backgroundColor: TH.cream, border: `2px solid ${TH.line}` }}>
-          {([["foto", "📷 Foto vorne"], ["name", "🏷️ Name vorne"]] as const).map(([m, l]) => (
+          {([["foto", "Foto vorne"], ["name", "Name vorne"]] as const).map(([m, l]) => (
             <button key={m} role="tab" aria-selected={pcMode === m} onClick={() => { setPcMode(m); setPcFlipped(false); }} style={{ padding: "0 14px", borderRadius: "10px", border: "none", backgroundColor: pcMode === m ? TH.brown : "transparent", color: pcMode === m ? dc('#FFF6E0') : TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>{l}</button>
           ))}
         </div>
-        <button onClick={pcShuffle} style={{ padding: "0 16px", borderRadius: "12px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>🔀 Mischen</button>
+        <button onClick={pcShuffle} style={{ padding: "0 16px", borderRadius: "12px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>Mischen</button>
       </div>
     
       {!pcCurrent ? (
@@ -60,7 +60,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
         return (<>
           {typeof window !== "undefined" && "speechSynthesis" in window && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-              <button onClick={() => setAskMode(!askMode)} aria-pressed={askMode} style={{ minHeight: "42px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${askMode ? TH.green : TH.line}`, backgroundColor: askMode ? TH.tintSage : TH.white, color: askMode ? TH.green : TH.brown, fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>🎧 Frag mich ab{askMode ? ": an" : ""}</button>
+              <button onClick={() => setAskMode(!askMode)} aria-pressed={askMode} style={{ minHeight: "42px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${askMode ? TH.green : TH.line}`, backgroundColor: askMode ? TH.tintSage : TH.white, color: askMode ? TH.green : TH.brown, fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Frag mich ab{askMode ? ": an" : ""}</button>
               {askMode && <span style={{ fontSize: "14px", color: TH.muted, textAlign: "center" }}>Ich lese die Karte vor. Sag die Antwort laut, dann dreh die Karte um.</span>}
             </div>
           )}
@@ -99,7 +99,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
                   {img && <img src={img} alt="" style={{ flex: "0 0 64px", width: "64px", height: "64px", objectFit: "cover", borderRadius: "14px" }} />}
                   <div>
                     <div style={{ fontFamily: TH.serif, fontSize: "28px", lineHeight: 1.1 }}>{p.name}</div>
-                    <div style={{ fontSize: "15px", color: TH.muted }}>{p.group}{sp.vegan ? " · 🌱 vegan" : ""}</div>
+                    <div style={{ fontSize: "15px", color: TH.muted }}>{p.group}{sp.vegan ? " · vegan" : ""}</div>
                   </div>
                 </div>
                 <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>

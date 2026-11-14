@@ -182,8 +182,8 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
                   {r.mode === 'safe'
                     ? `${r.answer.name} enthält laut Liste ${r.test.kein}, die anderen schon.`
                     : `${r.answer.name} enthält ${r.test.label}, davon musst du abraten.`}
-                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>📚 Die Quizfrage „Welche Allergene sind bei {r.answer.name} angegeben?“ ist jetzt in deinem Lernbereich abgehakt.</div>}
-                  {alreadyNow && chosen === r.answer.name && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>📚 Die Allergen-Frage zu {r.answer.name} hattest du schon gemeistert.</div>}
+                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>Die Quizfrage „Welche Allergene sind bei {r.answer.name} angegeben?“ ist jetzt in deinem Lernbereich abgehakt.</div>}
+                  {alreadyNow && chosen === r.answer.name && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>Die Allergen-Frage zu {r.answer.name} hattest du schon gemeistert.</div>}
                 </div>
                 <button onClick={next} className="lt-sticky-next" style={btnPrimary}>{idx + 1 < rounds.length ? 'Nächster Kunde →' : 'Auswertung'}</button>
               </>

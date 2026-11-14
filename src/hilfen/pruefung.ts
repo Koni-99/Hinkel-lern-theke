@@ -8,7 +8,7 @@ export function getExamEvaluation(points: number, total: number) {
     return {
       grade: "Note 1 (Sehr gut)",
       pct,
-      title: `${pct}%, Note 1 (Sehr gut) 🌟`,
+      title: `${pct}%, Note 1 (Sehr gut)`,
       desc: "Herausragende Prüfungsleistung! (ab 92%)",
       passed: true,
       color: "#065f46",
@@ -18,7 +18,7 @@ export function getExamEvaluation(points: number, total: number) {
     return {
       grade: "Note 2 (Gut)",
       pct,
-      title: `${pct}%, Note 2 (Gut) 👏`,
+      title: `${pct}%, Note 2 (Gut)`,
       desc: "Sehr sicheres Fachwissen! (81% bis 91%)",
       passed: true,
       color: "#065f46",
@@ -28,7 +28,7 @@ export function getExamEvaluation(points: number, total: number) {
     return {
       grade: "Note 3 (Befriedigend)",
       pct,
-      title: `${pct}%, Note 3 (Befriedigend) 👍`,
+      title: `${pct}%, Note 3 (Befriedigend)`,
       desc: "Solide Leistung, Prüfung sicher bestanden! (67% bis 80%)",
       passed: true,
       color: "#065f46",
@@ -38,7 +38,7 @@ export function getExamEvaluation(points: number, total: number) {
     return {
       grade: "Note 4 (Ausreichend)",
       pct,
-      title: `${pct}%, Note 4 (Ausreichend) ⚠️`,
+      title: `${pct}%, Note 4 (Ausreichend)`,
       desc: "Prüfung bestanden (ab 50%), aber noch Lernpotenzial.",
       passed: true,
       color: "#b45309",
@@ -48,7 +48,7 @@ export function getExamEvaluation(points: number, total: number) {
     return {
       grade: "Note 5 (Mangelhaft)",
       pct,
-      title: `${pct}%, Note 5 (Mangelhaft) ❌`,
+      title: `${pct}%, Note 5 (Mangelhaft)`,
       desc: "Leider nicht bestanden (unter 50%). Grundlagen wiederholen!",
       passed: false,
       color: "#9f1239",
@@ -57,7 +57,7 @@ export function getExamEvaluation(points: number, total: number) {
   return {
     grade: "Note 6 (Ungenügend)",
     pct,
-    title: `${pct}%, Note 6 (Ungenügend) 📚`,
+    title: `${pct}%, Note 6 (Ungenügend)`,
     desc: "Nicht bestanden. Bitte Lernkarten wiederholen!",
     passed: false,
     color: "#9f1239",

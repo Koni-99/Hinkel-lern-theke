@@ -1,6 +1,9 @@
 // ═══ Karteikarten: Fachwissen kompakt ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { dc } from '../../daten/data';
+import { LtIcon, ICON } from '../../basis/symbole';
+
+const FACH_ICON: Record<string, string[]> = { geschmack: ICON.drop, sonderverkauf: ICON.swap, begriffe: ICON.book, frische: ICON.bread, mehl: ICON.leaf, sauerteig: ICON.basket, schnitt: ICON.knife, gutzuwissen: ICON.bulb, geschichte: ICON.calendar, geschaefte: ICON.home, mitarbeiter: ICON.checklist };
 import { FachSection } from './daten';
 
 export type FachKompaktProps = {
@@ -20,7 +23,7 @@ export function FachKompakt({ searchQuery, fachTerm, filteredFach }: FachKompakt
       {filteredFach.map((sec, si) => (
         <section key={sec.id} className="fc-item" style={{ animationDelay: `${Math.min(si, 8) * 0.05}s`, backgroundColor: dc('#FFFFFF'), border: `2px solid ${dc('#F1E3C8')}`, borderRadius: "20px", padding: "20px 22px", display: "flex", flexDirection: "column", gap: "12px" }}>
           <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: "10px", fontFamily: "'Fredoka', Georgia, serif", fontWeight: 400, fontSize: "28px", color: dc('#2B170A') }}>
-            <span style={{ width: "44px", height: "44px", borderRadius: "14px", backgroundColor: dc('#FFF0C2'), display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{sec.icon}</span>
+            <span style={{ width: "44px", height: "44px", borderRadius: "14px", backgroundColor: dc('#FFF0C2'), display: "inline-flex", alignItems: "center", justifyContent: "center", color: dc('#4B2A14'), flexShrink: 0 }}><LtIcon paths={FACH_ICON[sec.id] || ICON.book} size={24} /></span>
             {sec.title}
           </h3>
           {sec.intro && <p style={{ margin: 0, fontSize: "17px", color: dc('#6B4A30') }}>{sec.intro}</p>}

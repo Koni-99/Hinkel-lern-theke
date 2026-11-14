@@ -3,6 +3,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { PrizeBag, TH, ConfettiOverlay } from '../../ui/basis';
+import { LtIcon, ICON } from '../../basis/symbole';
 import { LT } from '../../basis/marke';
 
 export type StempelkarteVollProps = {
@@ -19,12 +20,12 @@ export function StempelkarteVoll({ username, claimStampCard, stampPrize, setStam
         <ConfettiOverlay active />
         {!stampPrize ? (
           <>
-            <span className="lt-emo-bob" style={{ fontSize: '64px', lineHeight: 1 }} aria-hidden="true">🎟️</span>
+            <span className="lt-emo-bob" style={{ display: 'inline-flex', color: LT.brown }} aria-hidden="true"><LtIcon paths={ICON.ticket} size={64} width={1.6} /></span>
             <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.1 }}>Stempelkarte voll!</div>
             <div style={{ fontSize: '18px', color: LT.brown }}>10 Lerntage geschafft, {username}. Dafür bekommst du:</div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <span style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontWeight: 800, fontSize: '18px' }}>+500 Punkte</span>
-              <span style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: dc('#FFF0C2'), color: LT.brown, fontWeight: 800, fontSize: '18px' }}>🪙 3,00 €</span>
+              <span style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: dc('#FFF0C2'), color: LT.brown, fontWeight: 800, fontSize: '18px' }}>3,00 €</span>
             </div>
             <button onClick={claimStampCard} autoFocus style={{ width: '100%', minHeight: '58px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>Einlösen</button>
           </>

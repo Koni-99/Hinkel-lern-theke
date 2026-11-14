@@ -135,7 +135,7 @@ export type ProfileData = {
   battles: { w: number; l: number; d: number }; isMe: boolean;
 };
 
-export const PRAISE_TEXTS = ['👏 Super gemacht!', '🌟 Weiter so, ich bin stolz auf dich!', '🥨 Klasse Fortschritt diese Woche!', '💪 Du bist auf einem richtig guten Weg!', '🏆 Spitze, du gehörst zu den Besten!'];
+export const PRAISE_TEXTS = ['Super gemacht!', 'Weiter so, ich bin stolz auf dich!', 'Klasse Fortschritt diese Woche!', 'Du bist auf einem richtig guten Weg!', 'Spitze, du gehörst zu den Besten!'];
 
 export function ProfileView({ d, onBack, onPraise }: { d: ProfileData; onBack: () => void; onPraise?: (text: string) => void }) {
   const [sent, setSent] = useState('');

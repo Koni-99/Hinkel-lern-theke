@@ -242,8 +242,8 @@ export function BilderQuizView({ images, onSaveScore, onFinished, known = [], on
                   {r.answer.flour ? ` · ${r.answer.flour}` : ''}
                   <div style={{ marginTop: '4px', color: TH.brown }}>{firstSentence(r.answer.description)}</div>
                   <div style={{ marginTop: '4px', color: TH.muted, fontSize: '16px' }}>Warengruppe: {r.answer.group}</div>
-                  {learnedNow > 0 && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>📚 {learnedNow === 1 ? 'Eine Quizfrage' : `${learnedNow} Quizfragen`} zu „{bqName(r.answer.name)}“ jetzt in deinem Lernbereich abgehakt.</div>}
-                  {learnedNow === 0 && chosen === r.answer.name && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>📚 Die Quizfragen zu diesem Produkt hattest du schon gemeistert.</div>}
+                  {learnedNow > 0 && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>{learnedNow === 1 ? 'Eine Quizfrage' : `${learnedNow} Quizfragen`} zu „{bqName(r.answer.name)}“ jetzt in deinem Lernbereich abgehakt.</div>}
+                  {learnedNow === 0 && chosen === r.answer.name && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>Die Quizfragen zu diesem Produkt hattest du schon gemeistert.</div>}
                 </div>
                 <button onClick={next} className="lt-sticky-next" style={btnPrimary}>{idx + 1 < rounds.length ? 'Nächstes Foto →' : 'Auswertung'}</button>
               </div>

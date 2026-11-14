@@ -118,7 +118,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
           <div style={{ fontFamily: TH.serif, fontSize: '28px', lineHeight: 1.1 }}>Deine Azubis</div>
           {azubis.length === 0 ? <div style={{ fontSize: '17px', color: TH.muted }}>Noch niemand hat sich als Azubi angemeldet.</div> : azubis.map(a => (
             <div key={a.name} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: TH.cream, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ fontWeight: 700, fontSize: '18px' }}>🎓 {a.name}{a.lehrjahr ? ` · ${a.lehrjahr}. Lehrjahr` : ''} <span style={{ letterSpacing: '2px' }}>{azubiBadges(a.plan, a.exam).filter(b => b.got).map(b => b.icon).join('')}</span></div>
+              <div style={{ fontWeight: 700, fontSize: '18px' }}>{a.name}{a.lehrjahr ? ` · ${a.lehrjahr}. Lehrjahr` : ''} <span style={{ letterSpacing: '2px' }}>{azubiBadges(a.plan, a.exam).filter(b => b.got).map(b => b.icon).join('')}</span></div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '15px' }}>
                 {[1, 2, 3].map(j => <span key={j} style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>{j}. Jahr: {yearPct(a.plan, j)} %</span>)}
                 <span style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>Lehrgänge: {AUSBILDUNG_LEHRGAENGE.filter(l => a.plan[l.id]).length} von {AUSBILDUNG_LEHRGAENGE.length}</span>
@@ -131,7 +131,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
 
       <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}><span className="lt-emo-bob">📋</span> Ausbildungsplan</div>
+          <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Ausbildungsplan</div>
           {canTick && (
             <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '15px', fontWeight: 700, color: TH.muted }}>Ich bin im</span>
@@ -169,7 +169,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
           );
         })}
         <div style={{ padding: '14px 16px', borderRadius: '18px', backgroundColor: TH.tintBlue, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontWeight: 700, fontSize: '18px' }}>🏫 Lehrgänge außerhalb des Betriebs</div>
+          <div style={{ fontWeight: 700, fontSize: '18px' }}>Lehrgänge außerhalb des Betriebs</div>
           <div style={{ fontSize: '15px', color: TH.muted }}>Das lernst du nicht bei uns im Geschäft, sondern in Lehrgängen. Die Termine bekommst du vom Ausbilder.</div>
           {AUSBILDUNG_LEHRGAENGE.map(it => {
             const on = !!plan[it.id];
@@ -187,7 +187,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
         const bs = azubiBadges(plan, exam);
         return (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontFamily: TH.serif, fontSize: '28px', lineHeight: 1.1 }}>🏅 Deine Abzeichen <span style={{ fontSize: '18px', color: TH.muted, fontFamily: 'inherit' }}>{bs.filter(b => b.got).length} von {bs.length}</span></div>
+            <div style={{ fontFamily: TH.serif, fontSize: '28px', lineHeight: 1.1 }}>Deine Abzeichen <span style={{ fontSize: '18px', color: TH.muted, fontFamily: 'inherit' }}>{bs.filter(b => b.got).length} von {bs.length}</span></div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '10px' }}>
               {bs.map(b => (
                 <div key={b.id} className={b.got ? 'lt-tilt lt-pop-in' : undefined} style={{ padding: '14px 10px', borderRadius: '18px', textAlign: 'center', backgroundColor: b.got ? TH.tintYellow : TH.cream, border: `2px solid ${b.got ? dc('#E8B500') : TH.line}`, opacity: b.got ? 1 : 0.55, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
@@ -202,7 +202,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
       })()}
 
       <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}><span className="lt-emo-bob">📒</span> Berichtsheft-Hilfe</div>
+        <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Berichtsheft-Hilfe</div>
         <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>Wähle aus, was du diese Woche gemacht hast. Unten entsteht dein Wochenbericht zum Abschreiben oder Kopieren.</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => setWeek(week + 1)} style={chip(false)}>‹ Woche davor</button>
@@ -227,7 +227,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
         </label>
         <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '17px', lineHeight: 1.5, padding: '16px', borderRadius: '16px', backgroundColor: TH.cream, border: `2px dashed ${TH.line}` }}>{reportText}</pre>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button onClick={copy} style={btnPrimary}>{copied ? '✓ Kopiert' : '📋 Bericht kopieren'}</button>
+          <button onClick={copy} style={btnPrimary}>{copied ? '✓ Kopiert' : 'Bericht kopieren'}</button>
           {(picked.length > 0 || schule || extra) && <button onClick={() => { setPicked([]); setSchule(''); setExtra(''); }} style={btnSecondary}>Leeren</button>}
         </div>
         <div style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: TH.tintYellow, display: 'flex', flexDirection: 'column', gap: '6px' }}>

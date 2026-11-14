@@ -9,6 +9,7 @@ import { StarRating, starsFor, ReceiptHead, ReceiptFoot, TH, cardStyle, btnPrima
 import { ihkGrade } from '../../ui/lernstand';
 import { ReportLink } from '../../ui/melden';
 import { LT, BTN_YELLOW } from '../../basis/marke';
+import { LtIcon, ICON } from '../../basis/symbole';
 import type { Question } from '../../daten/questions';
 
 export type QuizResultProps = {
@@ -82,13 +83,13 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
           </div>
         )}
         {!isExamMode && !isAdmin && score > 0 && lastComboExtra > 0 && (
-          <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', background: 'linear-gradient(90deg,#C9971C,#FFE27A,#C9971C)', fontSize: '16px', fontWeight: 800 }}>⚡ Combo-Bonus: +{lastComboExtra} Punkte</div>
+          <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', background: 'linear-gradient(90deg,#C9971C,#FFE27A,#C9971C)', fontSize: '16px', fontWeight: 800 }}>Combo-Bonus: +{lastComboExtra} Punkte</div>
         )}
         {!isExamMode && !isAdmin && score > 0 && streakMult > 1 && (
-          <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', backgroundColor: dc('#FFE0B2'), fontSize: '16px', fontWeight: 800 }}>🔥 Serien-Bonus ×{streakMult.toFixed(1).replace('.', ',')}: +{Math.round(score * streakMult) - score} Punkte extra</div>
+          <div className="lt-deal" style={{ padding: '6px 14px', borderRadius: '999px', backgroundColor: dc('#FFE0B2'), fontSize: '16px', fontWeight: 800 }}>Serien-Bonus ×{streakMult.toFixed(1).replace('.', ',')}: +{Math.round(score * streakMult) - score} Punkte extra</div>
         )}
         {!isExamMode && !isAdmin && isNewcomer && (
-          <div style={{ fontSize: '15px', color: LT.muted }}>🌱 In deiner ersten Woche gibt es für falsche Antworten keine Minuspunkte.</div>
+          <div style={{ fontSize: '15px', color: LT.muted }}>In deiner ersten Woche gibt es für falsche Antworten keine Minuspunkte.</div>
         )}
         {!isExamMode && !isAdmin && masteryStart && (() => {
           const now = masteredState();
@@ -97,12 +98,12 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
           return (
             <div className="lt-levelup" style={{ marginTop: '6px', width: '100%', maxWidth: '520px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.tintBlue }}>
-                <div style={{ fontSize: '26px' }} aria-hidden="true">📈</div>
+                <div aria-hidden="true" style={{ color: LT.brown }}><LtIcon paths={ICON.sparkle} size={26} /></div>
                 <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1 }}>{plus > 0 ? `+${plus}` : '±0'}</div>
                 <div style={{ fontSize: '14px', color: LT.brown }}>Fragen neu gemeistert · jetzt {now.ids.size} von {questions.length}</div>
               </div>
               <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.tintSage }}>
-                <div style={{ fontSize: '26px' }} aria-hidden="true">🥖</div>
+                <div aria-hidden="true" style={{ color: LT.brown }}><LtIcon paths={ICON.bread} size={26} /></div>
                 <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1 }}>{now.products.size} <span style={{ fontSize: '18px' }}>von {productTotal}</span></div>
                 <div style={{ fontSize: '14px', color: LT.brown }}>Produkten kennst du schon{prodPlus > 0 ? ` (+${prodPlus} neu)` : ''}</div>
                 {(() => { const miss = Array.from(albumNames).filter(n => !now.products.has(n)); return miss.length > 0 && miss.length <= 8 ? <>
@@ -123,8 +124,8 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
               <div style={{ fontSize: '18px', marginTop: '6px', color: LT.brown }}>{pct} % richtig · {g.passed ? 'bestanden' : 'leider nicht bestanden (ab 50 %)'}</div>
               {examPrev.last !== null && (() => { const d = pct - (examPrev.last as number); return (
                 <div style={{ marginTop: '10px', fontSize: '17px', fontWeight: 700, color: d > 0 ? TH.green : d < 0 ? TH.red : LT.brown }}>
-                  {d > 0 ? `📈 ${d} % besser als beim letzten Mal (${examPrev.last} %)` : d < 0 ? `📉 ${-d} % weniger als beim letzten Mal (${examPrev.last} %)` : `Genauso gut wie beim letzten Mal (${examPrev.last} %)`}
-                  {examPrev.best !== null && pct > (examPrev.best as number) ? ' · 🏆 Neuer Bestwert!' : examPrev.best !== null ? ` · Bestwert ${examPrev.best} %` : ''}
+                  {d > 0 ? `${d} % besser als beim letzten Mal (${examPrev.last} %)` : d < 0 ? `${-d} % weniger als beim letzten Mal (${examPrev.last} %)` : `Genauso gut wie beim letzten Mal (${examPrev.last} %)`}
+                  {examPrev.best !== null && pct > (examPrev.best as number) ? ' · Neuer Bestwert!' : examPrev.best !== null ? ` · Bestwert ${examPrev.best} %` : ''}
                 </div>); })()}
               {examPrev.hist.length > 1 && (
                 <div aria-label="Deine letzten Versuche" style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '70px', marginTop: '12px' }}>
@@ -182,7 +183,7 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
         {String(currentQuizCategory || '').startsWith('Lernpfad') ? (
           <>
             {pfadMsg && <div className="lt-levelup" style={{ padding: '14px 18px', borderRadius: '16px', backgroundColor: correctCount >= 4 ? TH.tintSage : TH.tintPeach, color: correctCount >= 4 ? TH.green : TH.red, fontSize: '18px', fontWeight: 800, textAlign: 'center' }}>{pfadMsg}</div>}
-            <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); setActiveTab('pfad'); }} style={btnPrimary}>🎲 Zurück zum Lernpfad</button>
+            <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); setActiveTab('pfad'); }} style={btnPrimary}>Zurück zum Lernpfad</button>
           </>
         ) : <button onClick={() => { setCurrentQuizCategory(null); setSelectedLevel(null); }} style={BTN_YELLOW}>Zurück zu Lernen</button>}
         <button onClick={() => { setActiveTab('scoreboard'); fetchCloudData(); }} style={btnSecondary}>Zur Bestenliste</button>

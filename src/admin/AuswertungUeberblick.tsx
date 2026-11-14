@@ -54,7 +54,7 @@ export function AuswertungUeberblick({ allKnownUserKeys, allQById, startFix, ren
               <div style={{ fontSize: '15px', color: TH.green }}>Richtig laut App: <strong>{getRightAnswerText(q)}</strong></div>
               <div style={{ fontSize: '15px', color: TH.red, fontWeight: 700 }}>{rate} % falsch · {st.r + st.w} Antworten von {st.users} {st.users === 1 ? 'Person' : 'Personen'}</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button onClick={() => startFix(id)} style={smallBtn('warn')}>✏️ Korrigieren</button>
+                <button onClick={() => startFix(id)} style={smallBtn('warn')}>Korrigieren</button>
                 <button onClick={() => hideQuestion(String(id))} style={smallBtn('danger')}>Ausblenden</button>
               </div>
             </div>

@@ -35,7 +35,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
             fontWeight: "700",
           }}
         >
-          🔪 Offizielle Schnittstärken an der Brotschneidemaschine
+          Offizielle Schnittstärken an der Brotschneidemaschine
         </h3>
         <div
           style={{
@@ -166,7 +166,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
             fontWeight: "700",
           }}
         >
-          🌾 1-Klick Allergen- & Spezial-Check für Kundengespräche
+          1-Klick Allergen- & Spezial-Check für Kundengespräche
         </h3>
         <div
           style={{
@@ -191,7 +191,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
                 marginBottom: "4px",
               }}
             >
-              ✅ 100 % Glutenfreie Rezeptur (ohne Weizen/Roggen/Dinkel):
+              100 % Glutenfreie Rezeptur (ohne Weizen/Roggen/Dinkel):
             </strong>
             <span>
               • <strong>Buchweizenbrot</strong> (100% Buchweizenvollkornmehl
@@ -199,7 +199,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
               <br />• <strong>Düsselhappen</strong> (Dauergebäck aus
               Haselnüssen, Zucker, Vollei & Zartbitterkuvertüre komplett
               ohne Mehl)
-              <br />⚠️ Beim Buchweizenbrot können durch Mehlstaub in der Backstube Spuren von Roggen und Weizen enthalten sein. Bei Zöliakie immer darauf hinweisen.
+              <br />Achtung: Beim Buchweizenbrot können durch Mehlstaub in der Backstube Spuren von Roggen und Weizen enthalten sein. Bei Zöliakie immer darauf hinweisen.
             </span>
           </div>
           <div
@@ -217,7 +217,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
                 marginBottom: "4px",
               }}
             >
-              🚫 Komplett ohne Bäckerhefe gebacken:
+              Komplett ohne Bäckerhefe gebacken:
             </strong>
             <span>
               • <strong>Reines Roggen</strong> (100 % Roggen, nur mit
@@ -247,7 +247,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
                 marginBottom: "4px",
               }}
             >
-              🥛 Mit Milchprodukten (Laktose / Milcheiweiß beachten!):
+              Mit Milchprodukten (Laktose / Milcheiweiß beachten!):
             </strong>
             <span>
               • <strong>Quark im Teig:</strong> Münsterländer, Schweizer,
@@ -274,7 +274,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
                 marginBottom: "4px",
               }}
             >
-              🌶️ Pikante Stangen, Mit vs. Ohne Käse:
+              Pikante Stangen, Mit vs. Ohne Käse:
             </strong>
             <span>
               • <strong>Feuriges (250 g):</strong> Mit Paprika, Peperoni &
@@ -298,7 +298,7 @@ export function Leitfaeden({  }: LeitfaedenProps) {
                 marginBottom: "4px",
               }}
             >
-              🌭 Mit Düsseldorfer ABB-Senf (Allergen Senf):
+              Mit Düsseldorfer ABB-Senf (Allergen Senf):
             </strong>
             <span>
               • <strong>Senfkrustenbrot</strong> (mit Gouda im Teig) &{" "}

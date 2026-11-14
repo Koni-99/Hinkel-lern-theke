@@ -46,7 +46,7 @@ export function Fragenkatalog({ favorites, toggleFavorite, filteredCards }: Frag
               cursor: "pointer",
             }}
           >
-            {favorites.includes(item.id) ? "⭐" : "☆"}
+            {favorites.includes(item.id) ? "★" : "☆"}
           </button>
           <span
             style={{
@@ -84,7 +84,7 @@ export function Fragenkatalog({ favorites, toggleFavorite, filteredCards }: Frag
           <div
             style={{ fontSize: "16px", color: dc('#6B4A30'), lineHeight: 1.4 }}
           >
-            💡 {item.explanation}
+            {item.explanation}
           </div>
         </div>
       ))}

@@ -98,7 +98,7 @@ export function InhalteTab({ newProdName, setNewProdName, newProdGroup, setNewPr
                   {q.question}
                   <span style={{ display: 'block', fontSize: '14px', color: TH.muted }}>{q.category || (q.examGroup ? 'Prüfung' : '')}{q.product ? ` · ${q.product}` : ''}{activeEdit(q.id) ? ' · korrigiert' : ''}</span>
                 </span>
-                <button onClick={() => startFix(q.id)} style={smallBtn('warn')}>✏️ Korrigieren</button>
+                <button onClick={() => startFix(q.id)} style={smallBtn('warn')}>Korrigieren</button>
               </div>
             ))}
           </div>
@@ -164,7 +164,7 @@ export function InhalteTab({ newProdName, setNewProdName, newProdGroup, setNewPr
       </div>
     
       <div id="lt-np-form" style={{ ...cardStyle, borderColor: TH.green, borderWidth: '3px' }}>
-        {sectionTitle(np.id ? `Neues Produkt bearbeiten: ${np.name}` : '🆕 Neues Produkt ins Sortiment', 'Für neue Ware oder Saisonware. Das Produkt bekommt einen Steckbrief, kommt in die Spiele, und die Quizfragen (Zutaten, Allergene, Preis, Warengruppe, Beschreibung, Schnitt) entstehen automatisch.')}
+        {sectionTitle(np.id ? `Neues Produkt bearbeiten: ${np.name}` : 'Neues Produkt ins Sortiment', 'Für neue Ware oder Saisonware. Das Produkt bekommt einen Steckbrief, kommt in die Spiele, und die Quizfragen (Zutaten, Allergene, Preis, Warengruppe, Beschreibung, Schnitt) entstehen automatisch.')}
         <form onSubmit={saveNewProduct} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
             <label style={labelStyle}>Name<input type="text" placeholder="z. B. Lebkuchenherz" value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} style={inputStyle} /></label>
@@ -203,7 +203,7 @@ export function InhalteTab({ newProdName, setNewProdName, newProdGroup, setNewPr
             <strong style={{ fontSize: '17px' }}>Von dir angelegte Produkte ({sortimentProducts.length})</strong>
             {sortimentProducts.map((p: any) => (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 14px', borderRadius: '14px', backgroundColor: TH.cream }}>
-                <span style={{ flex: '1 1 240px', fontSize: '16px' }}><strong>{p.name}</strong> <span style={{ color: TH.muted }}>· {p.group}{p.price ? ` · ${p.price}` : ''}{Date.now() - (Number(p.createdAt) || 0) < 21 * 864e5 ? ' · 🆕 auf der Startseite' : ''}</span></span>
+                <span style={{ flex: '1 1 240px', fontSize: '16px' }}><strong>{p.name}</strong> <span style={{ color: TH.muted }}>· {p.group}{p.price ? ` · ${p.price}` : ''}{Date.now() - (Number(p.createdAt) || 0) < 21 * 864e5 ? ' · neu auf der Startseite' : ''}</span></span>
                 <button onClick={() => editNewProduct(p)} style={smallBtn()}>Bearbeiten</button>
                 <button onClick={() => deleteNewProduct(p)} style={smallBtn('danger')}>Entfernen</button>
               </div>

@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 174;
+const APP_VERSION: number = 175;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -225,7 +225,7 @@ export default function App() {
     if (wasOfflineRef.current) {
       wasOfflineRef.current = false;
       setOfflineSince(0); setOfflineDismissed(false);
-      if (!unsyncedRef.current) { setToast('📶 Wieder online! Alles, was du offline gemacht hast, ist gespeichert.'); window.setTimeout(() => setToast(''), 4000); }
+      if (!unsyncedRef.current) { setToast('Wieder online! Alles, was du offline gemacht hast, ist gespeichert.'); window.setTimeout(() => setToast(''), 4000); }
     }
   }, [cloudConnected]);
 
@@ -373,7 +373,7 @@ export default function App() {
       fresh.forEach((_w, i) => curr.scores.push({ id: `${k}_team_${Date.now() + i}`, username, score: TEAM_REWARD, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: TEAM_CAT }));
       return curr;
     });
-    setToast(`🤝 Team-Challenge geschafft! +${TEAM_REWARD * due.length} Punkte für dich.`);
+    setToast(`Team-Challenge geschafft! +${TEAM_REWARD * due.length} Punkte für dich.`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [team.reached, team.lastReached, team.week, cloudConnected, username, isAdmin, focusWeakKey, JSON.stringify(focusProg._teamWon || [])]);
 
@@ -597,7 +597,7 @@ export default function App() {
       curr.battles[battleId] = { id: battleId, challenger: username, challengerKey: username.toLowerCase(), opponent: opponentName, opponentKey, questions: selected, challengerScore: null, opponentScore: null, status: 'pending', winner: null, ...(stake > 0 ? { stake } : {}) } as any;
       return curr;
     });
-    showNote(`Herausforderung an ${opponentName} gesendet! ⚔️${stake > 0 ? ` Einsatz: ${stake} Punkte.` : ''}`);
+    showNote(`Herausforderung an ${opponentName} gesendet!${stake > 0 ? ` Einsatz: ${stake} Punkte.` : ''}`);
   };
 
   const acceptBattleChallenge = (battle: any) => {
@@ -743,7 +743,7 @@ export default function App() {
     const comboExtra = finalScore > 0 && catName !== 'Quiz Battle' ? comboRaw : 0;
     setLastComboExtra(comboExtra);
     const withBonus = Math.round((finalScore + comboExtra) * mult);
-    if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `⚡ Combo-Bonus +${comboExtra}` : ''}${comboExtra > 0 && mult > 1 ? ' · ' : ''}${mult > 1 ? `🔥 Serien-Bonus ×${mult.toFixed(1).replace('.', ',')}` : ''}: ${withBonus} statt ${finalScore} Punkte!`);
+    if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `Combo-Bonus +${comboExtra}` : ''}${comboExtra > 0 && mult > 1 ? ' · ' : ''}${mult > 1 ? `Serien-Bonus ×${mult.toFixed(1).replace('.', ',')}` : ''}: ${withBonus} statt ${finalScore} Punkte!`);
     finalScore = withBonus;
     mutateCloudData((curr) => {
       curr.scores.push({ id: `${userKey}_${Date.now()}`, username, score: finalScore, date: nowStr, category: catName });
@@ -950,7 +950,7 @@ export default function App() {
     if (right >= 4 && no === cur + 1) {
       mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); pr._pfad = Math.max(Number(pr._pfad) || 0, no); return curr; });
       const ms = PFAD[no - 1]?.milestone;
-      setPfadMsg(no >= PFAD.length ? '👑 Ziel erreicht, du bist Brotmeister!' : ms ? `${ms.icon} Meilenstein: ${ms.title}! Weiter auf Feld ${no + 1}.` : `✓ Feld ${no} geschafft, weiter auf Feld ${no + 1}!`);
+      setPfadMsg(no >= PFAD.length ? 'Ziel erreicht, du bist Brotmeister!' : ms ? `${ms.icon} Meilenstein: ${ms.title}! Weiter auf Feld ${no + 1}.` : `✓ Feld ${no} geschafft, weiter auf Feld ${no + 1}!`);
     } else if (no === cur + 1) setPfadMsg(`Diesmal ${right} von 5, ab 4 richtigen geht es weiter. Versuch es gleich nochmal!`);
   };
   // Glücksrad: einmal pro Woche
@@ -1187,7 +1187,7 @@ export default function App() {
   const launchQuizWithLevel = (level: string) => {
     const available = quizPool(level, onlyNew);
     if (available.length === 0) {
-      showNote(onlyNew ? 'Super, hier hast du schon alle Fragen richtig beantwortet! 🎉 Schalte „Nur neue Fragen“ aus, um alles zu wiederholen.' : 'Hier gibt es leider keine Fragen.');
+      showNote(onlyNew ? 'Super, hier hast du schon alle Fragen richtig beantwortet! Schalte „Nur neue Fragen“ aus, um alles zu wiederholen.' : 'Hier gibt es leider keine Fragen.');
       return;
     }
     setExamSim(false);
@@ -1201,7 +1201,7 @@ export default function App() {
   const launchDailyChallenge = () => {
     setExamSim(false);
     if (doneGet('daily', todayLocal())) {
-      showNote("Du hast die Tages-Challenge heute bereits einmal absolviert! Komm morgen wieder für neue Punkte! 🌟");
+      showNote("Du hast die Tages-Challenge heute bereits einmal absolviert! Komm morgen wieder für neue Punkte!");
       return;
     }
     setCurrentQuizCategory('Tages-Challenge'); setSelectedLevel('mixed');
@@ -1303,7 +1303,7 @@ export default function App() {
     setExamSim(false);
     const info = getFehlerInfo();
     if (info.due.length === 0) {
-      if (info.total === 0) showNote('Dein Fehler-Stapel ist leer, prima! 🎉 Falsch beantwortete Fragen landen automatisch hier.');
+      if (info.total === 0) showNote('Dein Fehler-Stapel ist leer, prima! Falsch beantwortete Fragen landen automatisch hier.');
       else showNote(`Heute ist nichts fällig. ${info.total} Fragen warten im Stapel, die nächste kommt am ${info.nextDay.split('-').reverse().join('.')} wieder.`);
       return;
     }
@@ -1570,7 +1570,7 @@ export default function App() {
     const pr = (cloudData.progress || {})[k] || {};
     if (Array.isArray(pr._meister) && pr._meister.includes(ch[0].month)) return;
     mutateCloudData((curr) => { const p2 = curr.progress[k] || (curr.progress[k] = { _displayName: username }); const m: string[] = Array.isArray(p2._meister) ? p2._meister : []; if (!m.includes(ch[0].month)) { p2._meister = [...m, ch[0].month]; p2._tipCents = (Number(p2._tipCents) || 0) + 200; } return curr; });
-    setToast(`👑 Du bist Monatsmeister ${monthLabel(ch[0].month)}! +2,00 € Trinkgeld.`);
+    setToast(`Du bist Monatsmeister ${monthLabel(ch[0].month)}! +2,00 € Trinkgeld.`);
   }, [username, cloudConnected, isSyncing, (cloudData.scores || []).length]);
   // Stand beim Quiz-Start merken, um am Ende den Lernfortschritt zu zeigen
   useEffect(() => {
@@ -1585,7 +1585,7 @@ export default function App() {
     if (pr._login?.d !== dayKey(new Date())) return; // erst nach der Anmelde-Belohnung
     const key = `lt_wheel_note_${username.toLowerCase()}`;
     try { if (localStorage.getItem(key) === weekIdNow()) return; } catch { return; }
-    const t = window.setTimeout(() => { try { localStorage.setItem(key, weekIdNow()); } catch {} setToast(pr._wheel ? '🎡 Das Glücksrad ist wieder bereit! Dreh auf der Startseite.' : '🎡 Dein erstes Glücksrad wartet auf der Startseite!'); }, 1500);
+    const t = window.setTimeout(() => { try { localStorage.setItem(key, weekIdNow()); } catch {} setToast(pr._wheel ? 'Das Glücksrad ist wieder bereit! Dreh auf der Startseite.' : 'Dein erstes Glücksrad wartet auf der Startseite!'); }, 1500);
     return () => window.clearTimeout(t);
   }, [username, cloudConnected, isSyncing, (cloudData.progress || {})[username.toLowerCase()]?._wheel, (cloudData.progress || {})[username.toLowerCase()]?._intro, (cloudData.progress || {})[username.toLowerCase()]?._login?.d, (cloudData.progress || {})[username.toLowerCase()]?._role]);
   useEffect(() => { if (!toast) return; const t = window.setTimeout(() => setToast(''), toast.length > 70 ? 5500 : 3200); return () => window.clearTimeout(t); }, [toast]);
@@ -1751,7 +1751,7 @@ export default function App() {
       const names = passers.map(k => (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k);
       const gap = Math.max(1, (rankTable[myRankIdx - 1]?.[1] || 0) - (rankTable[myRankIdx]?.[1] || 0) + 1);
       setOvertaken({ by: names, place: myRankIdx + 1, gap });
-      if (activeTab !== 'scoreboard') setToast(`🏃💨 ${names.length === 1 ? `${names[0]} hat` : `${names.slice(0, 2).join(' und ')}${names.length > 2 ? ' und andere haben' : ' haben'}`} dich überholt! Jetzt Platz ${myRankIdx + 1}.`);
+      if (activeTab !== 'scoreboard') setToast(`${names.length === 1 ? `${names[0]} hat` : `${names.slice(0, 2).join(' und ')}${names.length > 2 ? ' und andere haben' : ' haben'}`} dich überholt! Jetzt Platz ${myRankIdx + 1}.`);
     }
   }, [username, cloudConnected, isSyncing, myRankIdx, rankTable.map(r => r[0]).join(',')]);
 
@@ -1765,7 +1765,7 @@ export default function App() {
     const fresh = kfNeuKey.split(',').filter(id => !shown.includes(id));
     if (!fresh.length) return;
     try { localStorage.setItem('hinkel_kf_hinweis', JSON.stringify([...shown, ...fresh].slice(-50))); } catch {}
-    setToast('💬 Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
+    setToast('Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kfNeuKey]);
   // Lob von Kollegen: Punkte selbst gutschreiben, sobald ein neues Lob an mich da ist (siehe hilfen/team.ts)
@@ -1808,13 +1808,13 @@ export default function App() {
       pr._ptsSpent = (Number(pr._ptsSpent) || 0) + it.price;
       return curr;
     });
-    setToast(it.kind === 'spruch' ? '💬 Dein Spruch ist eingereicht. Sobald der Ausbilder ihn freigibt, sehen ihn alle einen Tag lang.' : `💎 ${it.label} gehört jetzt dir!`);
+    setToast(it.kind === 'spruch' ? 'Dein Spruch ist eingereicht. Sobald der Ausbilder ihn freigibt, sehen ihn alle einen Tag lang.' : `${it.label} gehört jetzt dir!`);
   };
   // ── Verkaufstipps und Kundenfragen (siehe hilfen/kollegen.ts) ──
   const sendTipp = (produkt: string, text: string) => {
     if (!username || isAdmin || !text.trim()) return;
     mutateCloudData(tippGeben(username.toLowerCase(), username, produkt, text));
-    setToast('💡 Danke für deinen Tipp! Sobald der Ausbilder ihn freigibt, sehen ihn alle im Steckbrief.');
+    setToast('Danke für deinen Tipp! Sobald der Ausbilder ihn freigibt, sehen ihn alle im Steckbrief.');
   };
   const equipPtsItem = (it: PtItem, on: boolean) => {
     if (!username || isAdmin) return;
@@ -1923,9 +1923,9 @@ export default function App() {
     setBrezelRain(true); window.setTimeout(() => setBrezelRain(false), 4200);
     if (!username || isAdmin) return;
     const k = username.toLowerCase();
-    if (((cloudData.progress || {})[k] || {})._egg) { setToast('🥨 Brezelregen! Du kennst das Geheimnis ja schon.'); return; }
+    if (((cloudData.progress || {})[k] || {})._egg) { setToast('Brezelregen! Du kennst das Geheimnis ja schon.'); return; }
     mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); pr._egg = true; return curr; });
-    setToast('🤫 Geheimnis entdeckt! Neues Abzeichen freigeschaltet.');
+    setToast('Geheimnis entdeckt! Neues Abzeichen freigeschaltet.');
   };
   // Monatsmeister, Ostereier, Anmelde-Belohnung
   const champs = monthChampions((cloudData.scores || []) as any);
@@ -2008,7 +2008,7 @@ export default function App() {
     });
     const left = OSTER_TABS.length - osterFound.length - 1;
     setBrezelRain(false);
-    setToast(all || left <= 0 ? '🐣 Alle Eier gefunden! +1,50 € Trinkgeld und ein neues Abzeichen.' : `🥚 Ei gefunden! Noch ${left} versteckt.`);
+    setToast(all || left <= 0 ? 'Alle Eier gefunden! +1,50 € Trinkgeld und ein neues Abzeichen.' : `Ei gefunden! Noch ${left} versteckt.`);
   };
   const introDue = !isAdmin && !!username && cloudConnected && !isSyncing && !!cloudProgress[userKeyLower] && !!myProg._role && !myProg._intro && (Array.isArray(myProg._days) ? myProg._days.length : 0) < 3;
   const finishIntro = () => {
@@ -2330,7 +2330,7 @@ export default function App() {
       {/* ── Banner-Ankündigung vom Ausbilder ── */}
       {username && activePinboard && (activePinboard as any).banner && (!(activePinboard as any).until || dayKey(new Date()) <= String((activePinboard as any).until)) && bannerHidden !== String(activePinboard.timestamp || '') && (
         <div role="status" style={{ width: '92%', maxWidth: '1100px', marginTop: '14px', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: '18px', backgroundColor: dc('#B42318'), color: '#FFFFFF', boxShadow: '0 8px 20px -8px rgba(180,35,24,.6)' }}>
-          <span aria-hidden="true" className="lt-emo-shake" style={{ fontSize: '26px' }}>📣</span>
+          <span aria-hidden="true" className="lt-emo-shake" style={{ display: 'inline-flex' }}><LtIcon paths={ICON.bell} size={26} /></span>
           <span style={{ flex: 1, fontSize: '17px', fontWeight: 700, lineHeight: 1.4, whiteSpace: 'pre-line' }}>{activePinboard.text}</span>
           <button onClick={() => { const v = String(activePinboard.timestamp || ''); setBannerHidden(v); try { localStorage.setItem('lt_banner_hidden', v); } catch {} }} aria-label="Banner ausblenden" style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,.2)', color: '#FFFFFF', fontSize: '18px', cursor: 'pointer', flex: '0 0 auto' }}>✕</button>
         </div>
@@ -2448,10 +2448,10 @@ export default function App() {
             <span className="lt-overtake-ic" style={{ fontSize: '42px', lineHeight: 1 }} aria-hidden="true">😱</span>
             <span style={{ flex: '1 1 240px' }}>
               <span style={{ display: 'block', fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.1 }}>{overtaken.by.length === 1 ? `${overtaken.by[0]} hat dich überholt!` : `${overtaken.by.slice(0, 2).join(' und ')}${overtaken.by.length > 2 ? ' und andere haben' : ' haben'} dich überholt!`}</span>
-              <span style={{ display: 'block', fontSize: '17px', color: LT.brown, marginTop: '4px' }}>Du bist jetzt auf Platz {overtaken.place}. Mit {overtaken.gap.toLocaleString('de-DE')} Punkten holst du dir den Platz zurück. 💪</span>
+              <span style={{ display: 'block', fontSize: '17px', color: LT.brown, marginTop: '4px' }}>Du bist jetzt auf Platz {overtaken.place}. Mit {overtaken.gap.toLocaleString('de-DE')} Punkten holst du dir den Platz zurück.</span>
             </span>
             <span style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button onClick={() => { setOvertaken(null); setActiveTab('spielen'); }} style={{ minHeight: '48px', padding: '0 16px', borderRadius: '14px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '16px', fontWeight: 800, cursor: 'pointer' }}>Zurückholen! 🎮</button>
+              <button onClick={() => { setOvertaken(null); setActiveTab('spielen'); }} style={{ minHeight: '48px', padding: '0 16px', borderRadius: '14px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '16px', fontWeight: 800, cursor: 'pointer' }}>Zurückholen!</button>
               <button onClick={() => setOvertaken(null)} aria-label="Hinweis schließen" style={{ minHeight: '48px', padding: '0 14px', borderRadius: '14px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Okay</button>
             </span>
           </div>
@@ -2533,7 +2533,7 @@ export default function App() {
             <ConfettiOverlay active />
             <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>Lob von deinem Ausbilder</div>
             <div style={{ fontFamily: LT.serif, fontSize: '32px', lineHeight: 1.2 }}>{lobDue.text}</div>
-            <button onClick={closeLob} style={{ minHeight: '50px', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Danke! 😊</button>
+            <button onClick={closeLob} style={{ minHeight: '50px', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Danke!</button>
           </div>
         </div>
       )}

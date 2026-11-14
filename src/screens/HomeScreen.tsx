@@ -120,7 +120,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           <h1 className="lt-h1" style={{ margin: '6px 0 0', fontFamily: LT.serif, fontWeight: 400, lineHeight: 1.05 }}>{greeting}, {myProg._avatar ? <><span className={myLevel.no >= 13 ? 'lt-frame-gold' : myLevel.no >= 9 ? 'lt-frame-silver' : myLevel.no >= 5 ? 'lt-frame-bronze' : undefined} title={myLevel.no >= 5 ? 'Rahmen nach deiner Stufe' : undefined} style={myLevel.no >= 5 ? { width: '1.35em', height: '1.35em' } : undefined}><span className={myProg._effect ? `lt-fx-${String(myProg._effect).replace('fx_', '')}` : 'lt-emo-bob'} style={myLevel.no >= 5 ? { fontSize: '.8em' } : undefined}>{myProg._avatar}</span></span>{' '}</> : ''}<span className={nameClassOf(myProg)}>{username}</span>!</h1>
           {myProg._title && <div style={{ marginTop: '6px', display: 'inline-block', padding: '4px 12px', borderRadius: '999px', backgroundColor: LT.yellow, color: dc('#2B170A'), fontSize: '15px', fontWeight: 700 }}>{myProg._title}</div>}
           {isMeister && <div className="lt-meister-chip" style={{ marginTop: '8px', marginRight: '8px', display: 'inline-block', padding: '4px 12px', borderRadius: '999px', fontSize: '15px', fontWeight: 800 }}>Hinkel-Meister</div>}
-          {lastChamp && lastChamp.key === userKeyLower && <div className="lt-deal" style={{ marginTop: '8px', marginLeft: myProg._title ? '8px' : 0, display: 'inline-block', padding: '4px 12px', borderRadius: '999px', backgroundColor: dc('#4B2A14'), color: '#FFE27A', fontSize: '15px', fontWeight: 800 }}>👑 Monatsmeister {monthLabel(lastChamp.month).split(' ')[0]}</div>}
+          {lastChamp && lastChamp.key === userKeyLower && <div className="lt-deal" style={{ marginTop: '8px', marginLeft: myProg._title ? '8px' : 0, display: 'inline-block', padding: '4px 12px', borderRadius: '999px', backgroundColor: dc('#4B2A14'), color: '#FFE27A', fontSize: '15px', fontWeight: 800 }}>Monatsmeister {monthLabel(lastChamp.month).split(' ')[0]}</div>}
           
         </div>
       </section>
@@ -133,7 +133,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
         return (
           <section aria-labelledby="lt-team-h" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '18px', borderRadius: '22px', backgroundColor: team.reached ? dc('#E3F4EA') : dc('#FFFFFF'), border: `2px solid ${team.reached ? dc('#1F7A4D') : LT.line}` }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>🤝 Team-Challenge</h2>
+              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>Team-Challenge</h2>
               <span style={{ fontSize: '15px', color: LT.muted, fontWeight: 700 }}>{team.reached ? 'Geschafft!' : team.daysLeft === 1 ? 'Noch heute' : `Noch ${team.daysLeft} Tage`}</span>
             </div>
             <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
@@ -254,12 +254,12 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
         const who = cloudLastSeen[sp.k]?.displayName || sp.pr._displayName || sp.k;
         return (
           <section className="lt-spruch" style={{ position: 'relative', overflow: 'hidden', padding: '18px 22px', borderRadius: '22px', background: 'linear-gradient(135deg,#2B170A,#5A3519)', color: '#FFF6E0', display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <span className="lt-emo-bob" style={{ fontSize: '40px' }} aria-hidden="true">💬</span>
+            <span className="lt-emo-bob" style={{ color: '#FFE27A', display: 'inline-flex' }} aria-hidden="true"><LtIcon paths={ICON.chat} size={36} /></span>
             <span style={{ flex: 1 }}>
               <span style={{ display: 'block', fontSize: '13px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: '#FFE27A' }}>Spruch des Tages von {who}</span>
               <span style={{ display: 'block', fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.2, marginTop: '4px' }}>„{sp.pr._spruch.text}“</span>
             </span>
-            <span className="lt-emo-twinkle" style={{ fontSize: '26px' }} aria-hidden="true">💎</span>
+            <span className="lt-emo-twinkle" style={{ color: '#FFE27A', display: 'inline-flex' }} aria-hidden="true"><LtIcon paths={ICON.sparkle} size={24} /></span>
           </section>
         );
       })()}
@@ -267,17 +267,17 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
       <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '30px' }}>Heute für dich</h2>
         {(() => { const menuItems = [
-            { show: true, key: 'daily', prog: isDailyDone ? 1 : 0, icon: '☀️', anim: 'lt-emo-spin2', title: 'Tages-Challenge', sub: isDailyDone ? 'Heute erledigt ✓' : '5 Fragen, Extra-Punkte', bg: isDailyDone ? dc('#F4EADB') : LT.yellow, dot: !isDailyDone, action: () => { if (!isDailyDone) { setActiveTab('quiz'); launchDailyChallenge(); } } },
-            { show: !isAdmin, key: 'heute', prog: heuteDone ? 1 : 0, icon: '🗓️', anim: heuteDone ? '' : 'lt-emo-bob', title: 'Heute dran', sub: heuteDone ? 'Heute erledigt ✓, gern nochmal' : '8 Fragen, genau für dich, ca. 5 Minuten', bg: heuteDone ? dc('#F4EADB') : TH.tintBlue, dot: !heuteDone, action: launchHeuteDran },
-            { show: !isAdmin && fehlerDue > 0, key: 'fehler', icon: '🔁', anim: 'lt-emo-spin2', title: 'Fehler-Stapel', sub: `${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'} fällig`, bg: TH.tintPeach, dot: true, action: () => { setActiveTab('quiz'); launchPersonalWeaknessQuiz(); } },
-            { show: !isAdmin, key: 'los', icon: '🎫', anim: '', title: 'Rubbellos', sub: (Number(myProg._jokersLos) || 0) > 0 ? `${Number(myProg._jokersLos)} ${Number(myProg._jokersLos) === 1 ? 'Los' : 'Lose'} bereit, jetzt rubbeln!` : 'Noch kein Los. Gibt es im Trinkgeld-Laden unter Joker.', bg: dc('#FFF0C2'), dot: (Number(myProg._jokersLos) || 0) > 0, action: () => { if ((Number(myProg._jokersLos) || 0) > 0) openLos(); else setShowTipShop(true); } },
-            { show: !isAdmin, key: 'rad', icon: '🎡', anim: wheelReady ? 'lt-emo-spin2' : '', title: 'Glücksrad', sub: wheelReady ? 'Jetzt drehen!' : (Number(myProg._jokersSpin) || 0) > 0 ? 'Extra-Dreh bereit' : 'Wieder ab Montag', bg: wheelReady ? TH.tintSage : dc('#F4EADB'), dot: wheelReady, action: () => setShowWheel(true) },
-            { show: freshProducts.length > 0 && !isAdmin, key: 'neu', icon: '🆕', anim: 'lt-emo-twinkle', title: 'Neu im Sortiment', sub: freshProducts.length === 1 ? `${freshProducts[0]}: jetzt kennenlernen` : `${freshProducts.slice(0, 2).join(', ')}${freshProducts.length > 2 ? ' und mehr' : ''}: jetzt kennenlernen`, bg: dc('#E1EEDC'), dot: true, action: launchNewProducts },
-            { show: !!weekProduct && !isAdmin, key: 'woche', prog: weekProductDone ? 1 : 0, icon: '🏆', anim: 'lt-emo-twinkle', title: 'Produkt der Woche', sub: weekProductDone ? 'Diese Woche geschafft ✓' : `${weekProduct}, doppelte Punkte`, bg: weekProductDone ? dc('#F4EADB') : dc('#FFF0C2'), dot: !weekProductDone, action: launchWeekProduct },
-            { show: !!seasonNow && seasonPool.length >= 4, key: 'saison', icon: seasonNow ? seasonNow.deco[0] : '🍂', anim: 'lt-sway', title: seasonNow ? seasonNow.title : 'Saison', sub: 'Saison-Quiz, Extra-Punkte', bg: seasonNow ? seasonNow.tint : TH.cream, dot: false, action: launchSeasonQuiz },
-            { show: !isAdmin && reviewYear > 0, key: 'jahr', icon: '🎁', anim: 'lt-emo-bob', title: `Dein Jahr ${reviewYear}`, sub: 'Dein persönlicher Jahresrückblick', bg: dc('#FFF0C2'), dot: true, action: () => { setActiveTab('jahr'); window.scrollTo(0, 0); } },
-            { show: showAdventCard, key: 'advent', icon: '🎄', anim: 'lt-emo-bob', title: 'Adventskalender', sub: nowMonth === 10 ? 'Ab 1. Dezember' : adventOpenNow > 0 ? `${adventOpenNow} Türchen offen` : 'Bis morgen!', bg: dc('#F4EADB'), dot: nowMonth !== 10 && adventOpenNow > 0, action: () => { setAdventPreview(false); setActiveTab('advent'); } },
-            { show: osterAktiv, key: 'ostern', prog: OSTER_TABS.length ? osterFound.length / OSTER_TABS.length : 0, icon: '🐣', anim: 'lt-emo-bob', title: 'Ostereiersuche', sub: osterFound.length >= OSTER_TABS.length ? 'Alle Eier gefunden ✓' : `${osterFound.length} von ${OSTER_TABS.length} Eiern, sie sind in der App versteckt`, bg: dc('#FCE4F0'), dot: osterFound.length < OSTER_TABS.length, action: () => setToast(osterFound.length >= OSTER_TABS.length ? '🐣 Super, du hast alle Eier gefunden!' : `🥚 Noch ${OSTER_TABS.length - osterFound.length} Eier versteckt. Schau auf allen Seiten genau hin!`) },
+            { show: true, key: 'daily', prog: isDailyDone ? 1 : 0, anim: 'lt-emo-spin2', title: 'Tages-Challenge', sub: isDailyDone ? 'Heute erledigt ✓' : '5 Fragen, Extra-Punkte', bg: isDailyDone ? dc('#F4EADB') : LT.yellow, dot: !isDailyDone, action: () => { if (!isDailyDone) { setActiveTab('quiz'); launchDailyChallenge(); } } },
+            { show: !isAdmin, key: 'heute', prog: heuteDone ? 1 : 0, anim: heuteDone ? '' : 'lt-emo-bob', title: 'Heute dran', sub: heuteDone ? 'Heute erledigt ✓, gern nochmal' : '8 Fragen, genau für dich, ca. 5 Minuten', bg: heuteDone ? dc('#F4EADB') : TH.tintBlue, dot: !heuteDone, action: launchHeuteDran },
+            { show: !isAdmin && fehlerDue > 0, key: 'fehler', anim: 'lt-emo-spin2', title: 'Fehler-Stapel', sub: `${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'} fällig`, bg: TH.tintPeach, dot: true, action: () => { setActiveTab('quiz'); launchPersonalWeaknessQuiz(); } },
+            { show: !isAdmin, key: 'los', anim: '', title: 'Rubbellos', sub: (Number(myProg._jokersLos) || 0) > 0 ? `${Number(myProg._jokersLos)} ${Number(myProg._jokersLos) === 1 ? 'Los' : 'Lose'} bereit, jetzt rubbeln!` : 'Noch kein Los. Gibt es im Trinkgeld-Laden unter Joker.', bg: dc('#FFF0C2'), dot: (Number(myProg._jokersLos) || 0) > 0, action: () => { if ((Number(myProg._jokersLos) || 0) > 0) openLos(); else setShowTipShop(true); } },
+            { show: !isAdmin, key: 'rad', anim: wheelReady ? 'lt-emo-spin2' : '', title: 'Glücksrad', sub: wheelReady ? 'Jetzt drehen!' : (Number(myProg._jokersSpin) || 0) > 0 ? 'Extra-Dreh bereit' : 'Wieder ab Montag', bg: wheelReady ? TH.tintSage : dc('#F4EADB'), dot: wheelReady, action: () => setShowWheel(true) },
+            { show: freshProducts.length > 0 && !isAdmin, key: 'neu', anim: 'lt-emo-twinkle', title: 'Neu im Sortiment', sub: freshProducts.length === 1 ? `${freshProducts[0]}: jetzt kennenlernen` : `${freshProducts.slice(0, 2).join(', ')}${freshProducts.length > 2 ? ' und mehr' : ''}: jetzt kennenlernen`, bg: dc('#E1EEDC'), dot: true, action: launchNewProducts },
+            { show: !!weekProduct && !isAdmin, key: 'woche', prog: weekProductDone ? 1 : 0, anim: 'lt-emo-twinkle', title: 'Produkt der Woche', sub: weekProductDone ? 'Diese Woche geschafft ✓' : `${weekProduct}, doppelte Punkte`, bg: weekProductDone ? dc('#F4EADB') : dc('#FFF0C2'), dot: !weekProductDone, action: launchWeekProduct },
+            { show: !!seasonNow && seasonPool.length >= 4, key: 'saison', anim: 'lt-sway', title: seasonNow ? seasonNow.title : 'Saison', sub: 'Saison-Quiz, Extra-Punkte', bg: seasonNow ? seasonNow.tint : TH.cream, dot: false, action: launchSeasonQuiz },
+            { show: !isAdmin && reviewYear > 0, key: 'jahr', anim: 'lt-emo-bob', title: `Dein Jahr ${reviewYear}`, sub: 'Dein persönlicher Jahresrückblick', bg: dc('#FFF0C2'), dot: true, action: () => { setActiveTab('jahr'); window.scrollTo(0, 0); } },
+            { show: showAdventCard, key: 'advent', anim: 'lt-emo-bob', title: 'Adventskalender', sub: nowMonth === 10 ? 'Ab 1. Dezember' : adventOpenNow > 0 ? `${adventOpenNow} Türchen offen` : 'Bis morgen!', bg: dc('#F4EADB'), dot: nowMonth !== 10 && adventOpenNow > 0, action: () => { setAdventPreview(false); setActiveTab('advent'); } },
+            { show: osterAktiv, key: 'ostern', prog: OSTER_TABS.length ? osterFound.length / OSTER_TABS.length : 0, anim: 'lt-emo-bob', title: 'Ostereiersuche', sub: osterFound.length >= OSTER_TABS.length ? 'Alle Eier gefunden ✓' : `${osterFound.length} von ${OSTER_TABS.length} Eiern, sie sind in der App versteckt`, bg: dc('#FCE4F0'), dot: osterFound.length < OSTER_TABS.length, action: () => setToast(osterFound.length >= OSTER_TABS.length ? 'Super, du hast alle Eier gefunden!' : `Noch ${OSTER_TABS.length - osterFound.length} Eier versteckt. Schau auf allen Seiten genau hin!`) },
           ].filter(t => t.show && t.key !== heroKey && (!simpleStart || ['daily', 'heute', 'rad', 'fakt'].includes(t.key)));
           const priceOf = (t: any): string => {
             if (t.prog === 1) return '✓';
@@ -327,7 +327,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
                 return (
                   <details className="lt-card lt-tile" style={{ backgroundColor: dc('#FFF4F0'), border: `2px solid ${dc('#F3C9BC')}`, borderRadius: '18px', padding: '14px 16px' }}>
                     <summary style={{ cursor: 'pointer', listStyle: 'none' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: TH.red }}>🧩 Knifflige Frage der Woche</div>
+                      <div style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: TH.red }}>Knifflige Frage der Woche</div>
                       <div style={{ fontWeight: 700, fontSize: '17px', marginTop: '4px', lineHeight: 1.4 }}>{q.question}</div>
                       <div style={{ fontSize: '14px', color: LT.muted, marginTop: '4px' }}>{cnt} aus dem Team hatten sie schon mal falsch · Tippen für die Antwort</div>
                     </summary>
@@ -586,13 +586,13 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           <section style={{ backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', borderRadius: '20px', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
               <strong style={{ fontSize: '17px', display: 'flex', alignItems: 'center', gap: '10px' }}><span aria-hidden="true" style={{ width: '34px', height: '34px', borderRadius: '10px', backgroundColor: '#1F140C', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.ticket} size={18} width={1.9} /></span>Stempelkarte</strong>
-              <span style={{ fontSize: '14px', color: LT.muted }}>{n >= 10 ? 'Voll! Belohnung wartet 🎉' : `Noch ${10 - n} Lerntage bis +500 Punkte und 3 €`}</span>
+              <span style={{ fontSize: '14px', color: LT.muted }}>{n >= 10 ? 'Voll! Belohnung wartet.' : `Noch ${10 - n} Lerntage bis +500 Punkte und 3 €`}</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '5px', maxWidth: '420px' }} aria-label={`${n} von 10 Stempeln`}>
               {[...Array(10)].map((_, i) => i < n ? (
-                <span key={i} className={`lt-stamp lt-stamp-on${i === n - 1 && myDays.includes(dayKey(new Date())) ? ' lt-stamp-new' : ''}`} style={{ fontSize: '15px', ['--sr' as any]: `${((i * 37) % 40) - 20}deg`, transform: `rotate(${((i * 37) % 40) - 20}deg)` }}>🥨</span>
+                <span key={i} className={`lt-stamp lt-stamp-on${i === n - 1 && myDays.includes(dayKey(new Date())) ? ' lt-stamp-new' : ''}`} style={{ ['--sr' as any]: `${((i * 37) % 40) - 20}deg`, transform: `rotate(${((i * 37) % 40) - 20}deg)` }}><LtIcon paths={ICON.bread} size={18} /></span>
               ) : i === 9 ? (
-                <span key={i} className="lt-stamp" style={{ border: '2px dashed #C9971C', fontSize: '14px' }}>🎁</span>
+                <span key={i} className="lt-stamp" style={{ border: '2px dashed #C9971C', color: '#C9971C' }}><LtIcon paths={ICON.gift} size={16} /></span>
               ) : (
                 <span key={i} className="lt-stamp" style={{ border: `2px dashed ${dc('#D8C4A0')}`, color: dc('#C8B48E'), fontWeight: 700, fontSize: '11px' }}>{i + 1}</span>
               ))}
@@ -615,7 +615,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
       {!isAdmin && (
         <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: `2px dashed ${LT.line}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '14px', color: LT.muted, maxWidth: '520px' }}>Neu anfangen? Damit löschst du deinen ganzen Lernstand. Das lässt sich nicht rückgängig machen.</span>
-          <button onClick={handleResetMyProgress} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '12px', border: `2px solid ${LT.line}`, backgroundColor: 'transparent', color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>⚠️ Lernstand zurücksetzen</button>
+          <button onClick={handleResetMyProgress} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '12px', border: `2px solid ${LT.line}`, backgroundColor: 'transparent', color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Lernstand zurücksetzen</button>
         </div>
       )}
         </div>

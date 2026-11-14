@@ -78,7 +78,7 @@ export const QUICK_TAGS: {
 }[] = [
   {
     id: "glutenfrei",
-    label: "🌾 Glutenfreie Rezeptur",
+    label: "Glutenfreie Rezeptur",
     test: (p) =>
       !!p.shop &&
       (p.shop.name === "Buchweizenbrot" ||
@@ -86,7 +86,7 @@ export const QUICK_TAGS: {
   },
   {
     id: "ohnehefe",
-    label: "🚫 Brot ohne Hefe",
+    label: "Brot ohne Hefe",
     test: (p) =>
       !!p.shop &&
       (!!p.shop.breadType ||
@@ -97,28 +97,28 @@ export const QUICK_TAGS: {
   },
   {
     id: "quark",
-    label: "🥣 Quark im Teig",
+    label: "Quark im Teig",
     test: (p) => ing(p).includes("quark"),
   },
   {
     id: "pikant",
-    label: "🌶️ Pikant & Käse",
+    label: "Pikant & Käse",
     test: (p) =>
       /gouda|feta|käse|peperoni|chili|speck|schinken|oliven/.test(ing(p)),
   },
   {
     id: "nuss",
-    label: "🌰 Nüsse & Mandeln",
+    label: "Nüsse & Mandeln",
     test: (p) =>
       !!p.shop &&
       p.shop.allergens.some((a) => /^schalenfrüchte|mandel|pistazie|haselnu|walnu/i.test(a)),
   },
   {
     id: "stuten",
-    label: "🍯 Brioche & Stuten",
+    label: "Brioche & Stuten",
     test: (p) => p.shop?.breadType === "stuten",
   },
-  { id: "vegan", label: "🌱 Vegan", test: (p) => !!p.shop?.vegan },
+  { id: "vegan", label: "Vegan", test: (p) => !!p.shop?.vegan },
 ];
 
 /** Eigene Artikel brauchen eine eigene Zahl als „Merken“-Schlüssel, sonst würde ein Stern alle eigenen Artikel markieren. */

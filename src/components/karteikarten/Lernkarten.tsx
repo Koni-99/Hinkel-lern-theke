@@ -26,7 +26,7 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
       {/* Lernkarte mit echter 3D-Dreh-Animation */}
       {typeof window !== "undefined" && "speechSynthesis" in window && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-              <button onClick={() => setAskMode(!askMode)} aria-pressed={askMode} style={{ minHeight: "42px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${askMode ? TH.green : TH.line}`, backgroundColor: askMode ? TH.tintSage : TH.white, color: askMode ? TH.green : TH.brown, fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>🎧 Frag mich ab{askMode ? ": an" : ""}</button>
+              <button onClick={() => setAskMode(!askMode)} aria-pressed={askMode} style={{ minHeight: "42px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${askMode ? TH.green : TH.line}`, backgroundColor: askMode ? TH.tintSage : TH.white, color: askMode ? TH.green : TH.brown, fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Frag mich ab{askMode ? ": an" : ""}</button>
               {askMode && <span style={{ fontSize: "14px", color: TH.muted, textAlign: "center" }}>Ich lese die Karte vor. Sag die Antwort laut, dann dreh die Karte um.</span>}
             </div>
           )}
@@ -54,7 +54,7 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
                     aria-label={isFav ? "Nicht mehr merken" : "Karte merken"}
                     style={{ background: "none", border: "none", fontSize: "26px", cursor: "pointer", padding: 0, minHeight: "auto", lineHeight: 1 }}
                   >
-                    {isFav ? "⭐" : "☆"}
+                    {isFav ? "★" : "☆"}
                   </button>
                 </span>
               </div>

@@ -137,14 +137,14 @@ export const BAKERY_DICTIONARY = [
 ];
 
 export const SORTIMENT_SUBFILTERS = [
-  { id: "all", label: "🥖 Alle Sortimentsfragen" },
-  { id: "schwarzbrot", label: "🍞 Vollkorn, Schwarzbrot & Roggen" },
-  { id: "roggenmisch", label: "🌾 Roggenmisch" },
-  { id: "weizen", label: "🥖 Weizen, Weizenmisch & Baguette" },
-  { id: "stuten", label: "🍯 Stuten, Dinkel & Spezialbrote" },
-  { id: "broetchen", label: "🥐 Brötchen, Feingebäck & Snacks" },
-  { id: "kuchen", label: "🍰 Kuchen, Kekse & Weihnachtsgebäck" },
-  { id: "backtage", label: "📅 Nur Backtage" },
+  { id: "all", label: "Alle Sortimentsfragen" },
+  { id: "schwarzbrot", label: "Vollkorn, Schwarzbrot & Roggen" },
+  { id: "roggenmisch", label: "Roggenmisch" },
+  { id: "weizen", label: "Weizen, Weizenmisch & Baguette" },
+  { id: "stuten", label: "Stuten, Dinkel & Spezialbrote" },
+  { id: "broetchen", label: "Brötchen, Feingebäck & Snacks" },
+  { id: "kuchen", label: "Kuchen, Kekse & Weihnachtsgebäck" },
+  { id: "backtage", label: "Nur Backtage" },
 ];
 
 export const BASE_BAKING_SCHEDULE: Record<

@@ -46,7 +46,7 @@ export function StatistikView({ name, avatar, avatarClass, levelTitle, levelIcon
   });
   const quote = right + wrong > 0 ? Math.round((right / (right + wrong)) * 100) : 0;
   const cats = Object.entries(cat).filter(([c]) => c !== 'Prüfung').map(([c, v]) => ({ c, pct: v.total ? Math.round((v.mastered / v.total) * 100) : 0, hit: v.r + v.w > 0 ? Math.round((v.r / (v.r + v.w)) * 100) : null, mastered: v.mastered, seen: v.seen + v.mastered, total: v.total, n: v.r + v.w }));
-  const subLabel = (id: string) => (SORTIMENT_SUBFILTERS.find(f => f.id === id)?.label || id).replace(/^\S+\s/, '');
+  const subLabel = (id: string) => (SORTIMENT_SUBFILTERS.find(f => f.id === id)?.label || id);
   const subs = Object.entries(sub).filter(([, v]) => v.r + v.w >= 3).map(([c, v]) => ({ c: subLabel(c), pct: Math.round((v.r / (v.r + v.w)) * 100), n: v.r + v.w })).sort((a, b) => b.pct - a.pct);
   const strong = subs.slice(0, 3), weak = subs.length > 3 ? subs.slice(-3).reverse() : [];
   // letzte 14 Tage

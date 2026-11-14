@@ -166,8 +166,8 @@ export function SchneideProfiView({ images, best = 0, onSaveScore, onFinished, o
                   <span style={{ float: 'right', marginLeft: '8px' }}><SpeakButton small text={`${p.name} wird mit ${correct} geschnitten.`} /></span>
                   <strong>{chosen === correct ? 'Richtig! ' : 'Leider nicht. '}{p.name} wird mit {correct} geschnitten.</strong>
                   <div style={{ marginTop: '4px', color: TH.brown }}>{p.name} ist {TYPE_LABEL[p.breadType!] === 'Stuten & Brioche' ? 'ein Stuten' : `ein ${TYPE_LABEL[p.breadType!]}`}{p.flour ? ` (${p.flour})` : ''}.</div>
-                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>📚 Die Quizfrage zur Schnittstärke von „{p.name}“ ist jetzt in deinem Lernbereich abgehakt.</div>}
-                  {alreadyNow && chosen === correct && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>📚 Diese Quizfrage hattest du schon gemeistert.</div>}
+                  {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>Die Quizfrage zur Schnittstärke von „{p.name}“ ist jetzt in deinem Lernbereich abgehakt.</div>}
+                  {alreadyNow && chosen === correct && onLearn && <div style={{ marginTop: '8px', fontSize: '15px', color: dc('#2F4F8A') }}>Diese Quizfrage hattest du schon gemeistert.</div>}
                 </div>
                 <button onClick={next} className="lt-sticky-next" style={btnPrimary}>{idx + 1 < rounds.length ? 'Nächstes Brot →' : 'Auswertung'}</button>
               </div>

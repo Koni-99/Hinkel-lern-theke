@@ -82,7 +82,7 @@ export function TipJar({ balance, onOpenShop, big, todayLeft }: { balance: numbe
           {todayLeft !== undefined && <span style={{ display: 'block', fontSize: '14px', color: TH.muted }}>{todayLeft > 0 ? `Heute noch bis ${euro(todayLeft)} möglich` : 'Für heute ist die Kasse voll, morgen geht es weiter'}</span>}
         </span>
       </span>
-      <button onClick={onOpenShop} style={{ minHeight: '50px', padding: '0 20px', borderRadius: '14px', border: 'none', backgroundColor: TH.brown, color: dc('#FFF6E0'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>🛍️ Trinkgeld-Laden</button>
+      <button onClick={onOpenShop} style={{ minHeight: '50px', padding: '0 20px', borderRadius: '14px', border: 'none', backgroundColor: TH.brown, color: dc('#FFF6E0'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Trinkgeld-Laden</button>
     </div>
   );
 }
@@ -140,8 +140,8 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
       add.push({ from: 'note-ok', text: pick(['Richtig!', 'Sehr gut!', 'Genau so!', 'Perfekt!']) });
       if (step.learn && onLearn) {
         const n = onLearn([step.learn]);
-        if (n > 0) { setLearned(v => v + n); add.push({ from: 'note-ok', text: `📚 Frage abgehakt: ${step.topic} von „${step.learn.product}“ zählt jetzt auch in deinem Lernbereich.` }); }
-        else if (n === 0) add.push({ from: 'note-ok', text: `📚 ${step.topic} von „${step.learn.product}“ hattest du schon gemeistert.` });
+        if (n > 0) { setLearned(v => v + n); add.push({ from: 'note-ok', text: `Frage abgehakt: ${step.topic} von „${step.learn.product}“ zählt jetzt auch in deinem Lernbereich.` }); }
+        else if (n === 0) add.push({ from: 'note-ok', text: `${step.topic} von „${step.learn.product}“ hattest du schon gemeistert.` });
       }
     } else {
       add.push({ from: 'note-bad', text: `${o.why || 'Nicht ganz.'}${right ? ` Besser: „${right.text}“` : ''}` });
@@ -327,7 +327,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
               <div className="lt-count" style={{ fontFamily: TH.serif, fontSize: '56px', lineHeight: 1 }}>{correct} / {total}</div>
               <div style={{ fontSize: '19px', color: TH.brown }}>{isPerfect ? 'Perfekte Beratung, so geht Theke!' : correct >= total - 2 ? 'Gut gemacht! Deine Bewertung steht unten.' : 'Übung macht den Meister, unten siehst du, was du besser machen kannst.'}</div>
               {correct > 0 && <div style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontSize: '18px', fontWeight: 700 }}>+{correct * 10 + (isPerfect ? 10 : 0)} Punkte für die Bestenliste</div>}
-              {earnedTip > 0 && <div className="lt-count" style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintYellow, fontSize: '18px', fontWeight: 700 }}>💰 +{euro(earnedTip)} Trinkgeld von {conv.persona.title}{tipTotal > earnedTip ? ` · in dieser Runde ${euro(tipTotal)}` : ''}</div>}
+              {earnedTip > 0 && <div className="lt-count" style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintYellow, fontSize: '18px', fontWeight: 700 }}>+{euro(earnedTip)} Trinkgeld von {conv.persona.title}{tipTotal > earnedTip ? ` · in dieser Runde ${euro(tipTotal)}` : ''}</div>}
               {tipCapped && <div style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.cream, color: TH.muted, fontSize: '16px', fontWeight: 700 }}>{tipTodayLeft ? `Nur ${euro(tipTodayLeft)} davon passen heute noch in die Kasse, Tageslimit erreicht.` : 'Deine Kasse ist für heute voll, das Trinkgeld zählt erst morgen wieder.'}</div>}
               {tipLost && <div style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintPeach, color: TH.red, fontSize: '17px', fontWeight: 700 }}>Das Trinkgeld ist diesmal weg, weil die Antwort beim Bezahlen nicht gepasst hat.</div>}
               {onOpenShop && <TipJar balance={tipBalance || 0} onOpenShop={onOpenShop} todayLeft={tipTodayLeft} />}

@@ -367,7 +367,7 @@ export function ScoreboardView({
         {champs.length > 0 && (
           <div style={{ width: "100%", maxWidth: "760px", margin: "0 auto", padding: "18px", borderRadius: "22px", background: "linear-gradient(135deg, #4B2A14, #7A4A26)", color: "#FFF6E0", display: "flex", flexDirection: "column", gap: "10px", boxSizing: "border-box" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
-              <span style={{ fontFamily: C.serif, fontSize: "26px", color: "#FFE27A" }}>🏆 Hall of Fame</span>
+              <span style={{ fontFamily: C.serif, fontSize: "26px", color: "#FFE27A" }}>Hall of Fame</span>
               <span style={{ fontSize: "14px", opacity: 0.85 }}>Die Monatsmeister</span>
             </div>
             <div className="sb-hofrow">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { dc } from '../daten/data';
 import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
+import { LtIcon, ICON } from '../basis/symbole';
 import type { ShopProduct } from './BilderQuiz';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */
@@ -34,7 +35,7 @@ export const LEARN_PATTERNS: Record<LearnKind, RegExp> = {
 export function LearnHint({ text }: { text: string }) {
   return (
     <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '12px 16px', borderRadius: '16px', backgroundColor: TH.tintBlue, fontSize: '16px', lineHeight: 1.45, color: TH.ink }}>
-      <span style={{ fontSize: '22px', lineHeight: 1 }} aria-hidden="true">📚</span>
+      <span style={{ display: 'inline-flex', lineHeight: 1 }} aria-hidden="true"><LtIcon paths={ICON.book} size={22} /></span>
       <span><strong>Zählt fürs Lernen:</strong> {text}</span>
     </div>
   );
@@ -99,7 +100,7 @@ export function SpeakButton({ text, label = 'Vorlesen', small }: { text: string;
       title={on ? 'Vorlesen stoppen' : 'Vorlesen'}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: small ? '38px' : '44px', padding: small ? '0 10px' : '0 14px', borderRadius: '12px', border: `2px solid ${on ? TH.brown : TH.line}`, backgroundColor: on ? TH.tintYellow : TH.white, color: TH.ink, fontSize: small ? '14px' : '16px', fontWeight: 700, cursor: 'pointer', flex: '0 0 auto' }}
     >
-      <span aria-hidden="true">{on ? '⏹' : '🔊'}</span>{on ? 'Stopp' : label}
+      <span aria-hidden="true" style={{ display: 'inline-flex' }}><LtIcon paths={on ? ICON.pause : ICON.speaker} size={18} /></span>{on ? 'Stopp' : label}
     </button>
   );
 }
@@ -168,7 +169,7 @@ export function FinishEarlyButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-export const learnedText = (n: number) => `📚 ${n} ${n === 1 ? 'Frage' : 'Fragen'} im Lernbereich abgehakt`;
+export const learnedText = (n: number) => `${n} ${n === 1 ? 'Frage' : 'Fragen'} im Lernbereich abgehakt`;
 
 // ═════════════════════════ Kleine Helfer für die neuen Spiele ═════════════════════════
 

@@ -70,7 +70,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
         <span style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'auto' }}>
           {chip(g.time, ink, true)}
           {g.best && chip(g.best, ink)}
-          {g.learn && chip('📚 zählt fürs Lernen', dc('#2F4F8A'))}
+          {g.learn && chip('zählt fürs Lernen', dc('#2F4F8A'))}
         </span>
       </button>
     );
@@ -80,7 +80,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
       <div>
         <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Spielen</h1>
-        <p style={{ margin: '6px 0 0', fontSize: '18px', color: LT.brown }}>Jedes Spiel bringt Punkte für die Bestenliste. Mit 📚 hakst du nebenbei auch Lernfragen ab.</p>
+        <p style={{ margin: '6px 0 0', fontSize: '18px', color: LT.brown }}>Jedes Spiel bringt Punkte für die Bestenliste. Spiele mit „zählt fürs Lernen“ haken nebenbei auch Lernfragen ab.</p>
       </div>
       {lastKey && lastGroup && (
         <button onClick={games[lastKey].action} className="lt-card" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderRadius: '20px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), textAlign: 'left', cursor: 'pointer' }}>
@@ -96,7 +96,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
         const tw = topWeak(5);
         return (
           <section aria-labelledby="lt-focus-h" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 18px', borderRadius: '20px', backgroundColor: dc('#FFFFFF'), border: `2px solid ${LT.line}` }}>
-            <h2 id="lt-focus-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '24px' }}>🎯 Dein Schwachstellen-Training</h2>
+            <h2 id="lt-focus-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '24px' }}>Dein Schwachstellen-Training</h2>
             {tw.length > 0 ? (
               <>
                 <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>Diese Produkte kommen in „Welches Brot ist das?“, Allergene-Training, „Teurer oder billiger?“, Schneide-Profi und Alternativen-Jäger jetzt öfter dran, bis du sie sicher kannst:</p>

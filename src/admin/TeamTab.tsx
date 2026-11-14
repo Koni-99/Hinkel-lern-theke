@@ -10,6 +10,7 @@ import { CloudPayload } from '../types';
 import { getRankByPercentage, cleanStatNumber, getRightAnswerText } from '../hilfen/allgemein';
 import { CATS } from '../daten/questions';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
+import { LtIcon, ICON } from '../basis/symbole';
 import type { ScoreEntry } from '../types';
 
 export type TeamTabProps = {
@@ -84,7 +85,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
           return (
             <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', border: `2px solid ${TH.yellow}` }}>
               <button onClick={() => setTeamOpen(!teamOpen)} aria-expanded={teamOpen} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', padding: '16px 20px', border: 'none', background: 'transparent', color: TH.ink, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ flex: '0 0 52px', height: '52px', borderRadius: '50%', backgroundColor: TH.yellow, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>👥</span>
+                <span style={{ flex: '0 0 52px', height: '52px', borderRadius: '50%', backgroundColor: TH.yellow, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.users} size={24} /></span>
                 <span style={{ flex: '1 1 200px' }}>
                   <span style={{ display: 'block', fontSize: '20px', fontWeight: 700 }}>Ganzes Team</span>
                   <span style={{ display: 'block', fontSize: '16px', color: TH.muted }}>{items.length === 0 ? 'Keine offenen Fehler, top!' : `${items.length} offene ${items.length === 1 ? 'Frage' : 'Fragen'} bei ${people} ${people === 1 ? 'Person' : 'Personen'} · ${shared} bei mehreren`}</span>

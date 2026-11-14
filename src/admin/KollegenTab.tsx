@@ -40,10 +40,10 @@ function FrageKarte({ f, mutateCloudData, onAlsQuizfrage }: { f: KFrageEintrag; 
         </>
       ) : (
         <>
-          <div>💬 {f.a}</div>
+          <div><strong>Antwort:</strong> {f.a}</div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => onAlsQuizfrage(f.q, f.a || '')} style={knopf()}>➕ Als Quizfrage anlegen</button>
-            <button type="button" onClick={() => setBearbeiten(true)} style={knopf()}>✏️ Antwort ändern</button>
+            <button type="button" onClick={() => onAlsQuizfrage(f.q, f.a || '')} style={knopf()}>Als Quizfrage anlegen</button>
+            <button type="button" onClick={() => setBearbeiten(true)} style={knopf()}>Antwort ändern</button>
             <button type="button" onClick={loeschen} style={knopf('danger')}>Löschen</button>
           </div>
         </>
@@ -70,7 +70,7 @@ function IdeeKarte({ i, mutateCloudData }: { i: ReturnType<typeof alleIdeen>[num
         <>
           <div><strong>Deine Antwort:</strong> {i.a}</div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button type="button" onClick={() => setBearbeiten(true)} style={knopf()}>✏️ Antwort ändern</button>
+            <button type="button" onClick={() => setBearbeiten(true)} style={knopf()}>Antwort ändern</button>
             <button type="button" onClick={() => { if (confirm('Diese Idee löschen?')) mutateCloudData(ideeLoeschen(i.user, i.id)); }} style={knopf('danger')}>Löschen</button>
           </div>
         </>
