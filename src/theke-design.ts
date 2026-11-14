@@ -474,15 +474,17 @@ html.lt-noanim .lt-float,html.lt-noanim .lt-fx,html.lt-noanim .lt-kaching,html.l
 .lt-overtake-ic{display:inline-block;animation:ltOvertakeShake 1.4s ease-in-out infinite}
 .lt-overtake{animation:ltTileIn .5s cubic-bezier(.2,.8,.2,1) backwards}
 @keyframes ltGoldText{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-.lt-goldname{background:linear-gradient(90deg,#B8860B,#FFD700,#FFF3B0,#FFD700,#B8860B);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-fill-color:transparent;animation:ltGoldText 3s linear infinite;filter:drop-shadow(0 1px 0 rgba(75,42,20,.35))}
-.lt-nc{background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-fill-color:transparent;animation:ltGoldText 3s linear infinite;filter:drop-shadow(0 1px 0 rgba(75,42,20,.3))}
-.lt-nc-gold{background-image:linear-gradient(90deg,#B8860B,#FFD700,#FFF3B0,#FFD700,#B8860B)}
-.lt-nc-silber{background-image:linear-gradient(90deg,#6B7280,#E5E7EB,#FFFFFF,#E5E7EB,#6B7280)}
-.lt-nc-rose{background-image:linear-gradient(90deg,#B76E79,#F4C2C2,#FFE4E1,#F4C2C2,#B76E79)}
-.lt-nc-smaragd{background-image:linear-gradient(90deg,#065F46,#10B981,#A7F3D0,#10B981,#065F46)}
-.lt-nc-saphir{background-image:linear-gradient(90deg,#1E3A8A,#3B82F6,#BFDBFE,#3B82F6,#1E3A8A)}
-.lt-nc-feuer{background-image:linear-gradient(90deg,#B91C1C,#F97316,#FACC15,#F97316,#B91C1C)}
-.lt-nc-regenbogen{background-image:linear-gradient(90deg,#E11D48,#F59E0B,#22C55E,#3B82F6,#8B5CF6,#E11D48)}
+.lt-goldname{background:linear-gradient(90deg,#8A6100,#C99A06,#E8C547,#C99A06,#8A6100);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-fill-color:transparent;animation:ltGoldText 3s linear infinite;-webkit-text-stroke:.6px rgba(43,23,10,.45);filter:drop-shadow(0 1px 0 rgba(43,23,10,.5))}
+.lt-nc{background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-fill-color:transparent;animation:ltGoldText 3s linear infinite;-webkit-text-stroke:.6px rgba(43,23,10,.45);filter:drop-shadow(0 1px 0 rgba(43,23,10,.5))}
+/* Die 3D-Schrift der Begrüßung (helle Schatten) schimmerte durch die Farbschrift und machte sie blass */
+.lt-root .lt-goldname,.lt-root .lt-nc{text-shadow:none !important}
+.lt-nc-gold{background-image:linear-gradient(90deg,#8A6100,#C99A06,#E8C547,#C99A06,#8A6100)}
+.lt-nc-silber{background-image:linear-gradient(90deg,#374151,#6B7280,#A3AAB5,#6B7280,#374151)}
+.lt-nc-rose{background-image:linear-gradient(90deg,#8E3B4B,#B9606F,#D88F9C,#B9606F,#8E3B4B)}
+.lt-nc-smaragd{background-image:linear-gradient(90deg,#064E3B,#047857,#10B981,#047857,#064E3B)}
+.lt-nc-saphir{background-image:linear-gradient(90deg,#1E3A8A,#1D4ED8,#3B82F6,#1D4ED8,#1E3A8A)}
+.lt-nc-feuer{background-image:linear-gradient(90deg,#991B1B,#DC2626,#EA580C,#DC2626,#991B1B)}
+.lt-nc-regenbogen{background-image:linear-gradient(90deg,#BE123C,#C2410C,#15803D,#1D4ED8,#6D28D9,#BE123C)}
 .lt-nc-schoko{background-image:linear-gradient(90deg,#3B1F0E,#7B4A2A,#C08A5B,#7B4A2A,#3B1F0E)}
 html.lt-pt_mk_croissant .lt-awning,html.lt-pt_mk_croissant .lt-awning-edge{background-color:#FFC72C !important;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2790%27%20height%3D%2780%27%3E%3Ctext%20x%3D%2712%27%20y%3D%2738%27%20font-size%3D%2726%27%3E%F0%9F%A5%90%3C/text%3E%3Ctext%20x%3D%2755%27%20y%3D%2772%27%20font-size%3D%2720%27%3E%F0%9F%A5%90%3C/text%3E%3C/svg%3E") !important;background-size:90px 80px !important}
 .lt-mk-sw-pt_mk_croissant{background-color:#FFC72C;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2790%27%20height%3D%2780%27%3E%3Ctext%20x%3D%2712%27%20y%3D%2738%27%20font-size%3D%2726%27%3E%F0%9F%A5%90%3C/text%3E%3Ctext%20x%3D%2755%27%20y%3D%2772%27%20font-size%3D%2720%27%3E%F0%9F%A5%90%3C/text%3E%3C/svg%3E");background-size:90px 80px}

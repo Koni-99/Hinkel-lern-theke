@@ -56,7 +56,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       <div style={{ padding: '0 20px 18px', fontSize: '17px', lineHeight: 1.55, color: TH.ink, display: 'flex', flexDirection: 'column', gap: '10px' }}>{body}</div>
     </details>
   );
-  const row = (a: string, b: string) => <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 14px', borderRadius: '12px', backgroundColor: '#FBF6EC' }}><span>{a}</span><strong style={{ whiteSpace: 'nowrap' }}>{b}</strong></div>;
+  const row = (a: string, b: string) => <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: '4px 12px', padding: '10px 14px', borderRadius: '12px', backgroundColor: '#FBF6EC' }}><span style={{ minWidth: 0 }}>{a}</span><strong style={{ marginLeft: 'auto', textAlign: 'right', whiteSpace: b.length <= 18 ? 'nowrap' : 'normal', minWidth: 0 }}>{b}</strong></div>;
   const ort = (a: string, b: string) => <div style={{ padding: '10px 14px', borderRadius: '12px', backgroundColor: '#FBF6EC' }}><strong style={{ display: 'block' }}>{a}</strong><span>{b}</span></div>;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -77,16 +77,16 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
       </>, 0, true)}
       {box(boxIcon(ICON.bulb), 'Was ist was? Kurz erklärt', <>
-        {row('Punkte', 'für die Bestenliste und deine Stufe')}
-        {row('Stufe', 'steigt mit deinen Punkten, vom Neuling an')}
-        {row('Rang', 'zeigt, wie viel Prozent aller Fragen du gemeistert hast')}
-        {row('Brotkorb', 'füllt sich mit gemeisterten Quizfragen')}
-        {row('Trinkgeld', 'Geld für den Laden: Zeichen, Farben, Joker')}
-        {row('Schatzkammer', 'dort bezahlst du mit Punkten statt mit Trinkgeld')}
-        {row('Joker', 'helfen im Quiz oder im Battle, kaufst du im Laden')}
-        {row('Rubbellos', 'im Laden kaufen, auf der Startseite freirubbeln')}
-        {row('Abzeichen', 'für besondere Erfolge, siehst du im Abzeichen-Album')}
-        {row('Krone', 'für die meisten Punkte in einem Monat')}
+        {ort('Punkte', 'für die Bestenliste und deine Stufe')}
+        {ort('Stufe', 'steigt mit deinen Punkten, vom Neuling an')}
+        {ort('Rang', 'zeigt, wie viel Prozent aller Fragen du gemeistert hast')}
+        {ort('Brotkorb', 'füllt sich mit gemeisterten Quizfragen')}
+        {ort('Trinkgeld', 'Geld für den Laden: Zeichen, Farben, Joker')}
+        {ort('Schatzkammer', 'dort bezahlst du mit Punkten statt mit Trinkgeld')}
+        {ort('Joker', 'helfen im Quiz oder im Battle, kaufst du im Laden')}
+        {ort('Rubbellos', 'im Laden kaufen, auf der Startseite freirubbeln')}
+        {ort('Abzeichen', 'für besondere Erfolge, siehst du im Abzeichen-Album')}
+        {ort('Krone', 'für die meisten Punkte in einem Monat')}
       </>, 0)}
       {box(boxIcon(ICON.sparkle), 'Punkte', <>
         <div>Für jede richtige Antwort gibt es Punkte, schwere Fragen bringen mehr:</div>
