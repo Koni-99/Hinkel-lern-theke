@@ -30,8 +30,6 @@ export interface ShopProduct {
   vegan?: boolean;
 }
 
-const BACKMALZ =
-  'Backmalz (Weizenmalzmehl, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, Weizenmalzextrakt, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, Weizenmehl, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)';
 const VANILLEAROMA =
   'Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)';
 
@@ -61,11 +59,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Apfelring ist außen goldbraun, innen herrlich weich und steckt voller saftiger Apfelstücke. Der lockere Hefeteig erhält durch das Ausbacken eine besonders feine Kruste. Direkt nach dem Backen wird der Ring in Zucker gewälzt, was ihm einen angenehmen Crunch verleiht und die Süße der Äpfel perfekt abrundet.',
     shortIngredients: 'Hefeteig mit Äpfeln, Quark, Butter, Ei und Zimt, in Zucker gewälzt',
     fullIngredients:
-      'Apfel, WEIZENMEHL, Zucker, Wasser, Pflanzenfett (Sonnenblumenöl, Kokosnussöl, Zitronensäure), VOLLEI, Zeel.Quarkini 632 25kg (WEIZENMEHL, Rapsöl, Palmöl, Zucker, VOLLEIPULVER, WEIZENSTÄRKE, Salz, Natriumcarbonat, Diphosphate, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, WEIZENLECITHIN, HÜHNEREIWEIßPULVER, Glukosesirup, Guarkernmehl, natürliches Aroma (BUTTER), MILCHEIWEIß, Kaliumtartrate), EIGELB, Hefe, BUTTER, MAGERQUARK, VOLLMILCHPULVER, WEIZENKLEBER, Zimt, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), natürliches Bourbon-Vanillearoma' +
-      VANILLEAROMA +
-      ', ' +
-      BACKMALZ +
-      ', natürliches Bourbon-Vanillearoma',
+      'Apfel, WEIZENMEHL, Zucker, Wasser, Pflanzenfett (Sonnenblumenöl, Kokosnussöl, Zitronensäure), VOLLEI, Quarkbällchen-Backmischung (WEIZENMEHL, Rapsöl, Palmöl, Zucker, VOLLEIPULVER, WEIZENSTÄRKE, Salz, Natriumcarbonat, Diphosphate, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, WEIZENLECITHIN, HÜHNEREIWEIßPULVER, Glukosesirup, Guarkernmehl, natürliches Aroma (BUTTER), MILCHEIWEIß, Kaliumtartrate), EIGELB, Hefe, BUTTER, MAGERQUARK, VOLLMILCHPULVER, WEIZENKLEBER, Zimt, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), natürliches Bourbon-Vanillearoma',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -76,9 +70,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Apfeltasche ist ein handgefertigtes Plundergebäck, das sich durch echte Handwerkskunst und beste Zutaten auszeichnet. Der Teig wird mit hochwertiger Markenbutter zubereitet und sorgt so für den typisch blättrigen, buttrigen Biss. Die Füllung besteht aus frischen Äpfeln, Mandeln, Rosinen und einer feinen Zimtnote. Jede einzelne Apfeltasche wird bei uns von Hand gefüllt, sorgfältig gefaltet und abschließend aprikotiert und mit feinem Fondant überzogen.',
     shortIngredients: 'Blätterteig mit Butter, gefüllt mit Äpfeln, Rosinen, Mandeln und Zimt, aprikotiert',
     fullIngredients:
-      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Wasser, MILCH, Fondant (Zucker, Glukosesirup), Zucker, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Braun Kabi Saftbinder (acetyliertes Distärkephosphat, acetyliertes Distärkeadipat, Zucker), Hefe, Rosinen (Rosinen, Sonnenblumenöl), MANDELN, BUTTER, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz, Fruchtsäure (Wasser, Zitronensäure), Zimt' +
-      BACKMALZ +
-      ', Salz, Fruchtsäure (Wasser, Zitronensäure), Zimt',
+      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Wasser, MILCH, Fondant (Zucker, Glukosesirup), Zucker, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Braun Kabi Saftbinder (acetyliertes Distärkephosphat, acetyliertes Distärkeadipat, Zucker), Hefe, Rosinen (Rosinen, Sonnenblumenöl), MANDELN, BUTTER, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz, Fruchtsäure (Wasser, Zitronensäure), Zimt',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -105,9 +97,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Bärentatze ist ein echter Klassiker unter den feinen Gebäcken. Buttrig zartes Spritzgebäck trifft auf eine großzügige Portion dunkler Kuvertüre. Einmal mittig gefüllt, einmal zur Hälfte überzogen. Ein knusprig schokoladiger Genuss für alle, die es süß und kräftig mögen.',
     shortIngredients: 'Butter-Spritzgebäck mit Ei, mit dunkler Kuvertüre gefüllt bzw. überzogen',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), natürliches Bourbon-Vanillearoma, Salz' +
-      VANILLEAROMA +
-      ', natürliches Bourbon-Vanillearoma, Salz',
+      'WEIZENMEHL, BUTTER, Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), natürliches Bourbon-Vanillearoma, Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Soja', 'Milch']
   },
   {
@@ -118,11 +108,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Berliner ist ein echter Klassiker aus lockerem Hefeteig, goldbraun ausgebacken und in der klassischen Version mit feiner Erdbeerkonfitüre gefüllt. Der Teig ist weich und saftig, die Zuckerschicht außen sorgt für den typischen süßen Abschluss. Zur Berliner-Saison, etwa an Silvester oder zu Karneval, gibt es ihn auch in weiteren Varianten, mit Vanillepudding, Schokopudding, Eierlikör oder mit feinem Guss statt Zucker.',
     shortIngredients: 'Hefeteig mit Ei und Butter, gefüllt mit Erdbeerkonfitüre, in Zucker gewälzt',
     fullIngredients:
-      'Erdbeerkonfitüre (Erdbeeren, Zucker, Glukose-Fruktose-Sirup, Pektin, Zitronensäure, Trinatriumcitrat, Calciumcitrat), WEIZENMEHL, Zucker, Wasser, VOLLEI, EIGELB, Hefe, BUTTER, Pflanzenfett (Sonnenblumenöl, Kokosnussöl, Zitronensäure), VOLLMILCHPULVER, WEIZENKLEBER, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), natürliches Bourbon-Vanillearoma' +
-      VANILLEAROMA +
-      ', ' +
-      BACKMALZ +
-      ', natürliches Bourbon-Vanillearoma',
+      'Erdbeerkonfitüre (Erdbeeren, Zucker, Glukose-Fruktose-Sirup, Pektin, Zitronensäure, Trinatriumcitrat, Calciumcitrat), WEIZENMEHL, Zucker, Wasser, VOLLEI, EIGELB, Hefe, BUTTER, Pflanzenfett (Sonnenblumenöl, Kokosnussöl, Zitronensäure), VOLLMILCHPULVER, WEIZENKLEBER, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), natürliches Bourbon-Vanillearoma',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -133,9 +119,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Bratapfelkuchen vereint alles, was man an herbstlichem und winterlichem Gebäck liebt. Saftige Apfelstücke, aromatisch abgeschmeckt mit Zimt und einem Hauch Rum, treffen auf einen buttrigen Rührteig. Dazu kommen feines Marzipan und gehackte Mandeln, die dem Kuchen eine besonders weiche, aber zugleich leicht nussige Note verleihen. Ein runder, vollmundiger Geschmack.',
     shortIngredients: 'Rührteig mit Äpfeln, Marzipan und Mandeln, mit Zimt und einem Hauch Rum',
     fullIngredients:
-      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Zucker, BUTTER, VOLLEI, MANDELN, WEIZENSTÄRKE, Wasser, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, EIGELB, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Rum 38% vol., Salz' +
-      VANILLEAROMA +
-      ', Rum 38% vol., Salz',
+      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Zucker, BUTTER, VOLLEI, MANDELN, WEIZENSTÄRKE, Wasser, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, EIGELB, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Rum 38% vol., Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -147,7 +131,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Piepken ist das klassische Hinkel-Brötchen, mild aromatisch, mit zartsplittriger Kruste und saftiger Krume. Jedes Brötchen ist ein Unikat, von Hand aufgemacht und aus besonders weichem Teig hergestellt, der maschinell nicht verarbeitet werden kann. Für alle, die echtes Bäckerhandwerk schon beim Frühstück schmecken möchten.',
     shortIngredients: 'Weizenmehl, Wasser, Hefe, Salz und etwas Butter',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER' + BACKMALZ + ', Butter',
+      'WEIZENMEHL, Wasser, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen'
   },
@@ -202,8 +186,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Butterkuchen ist ein saftiger Blechkuchen aus lockerem Hefeteig, der mit zartem Marzipan, fein gehobelten Mandeln, reichlich Butter und einem Hauch Sahne veredelt wird. Ein knusprig karamellisierter Zuckerbelag rundet das Ganze ab und macht ihn zu einem echten Genussmoment für jeden Tag.',
     shortIngredients: 'Hefeteig mit viel Butter und Sahne, Marzipan und Mandeln, Zuckerbelag',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Wasser, VOLLEI, Zucker, Sahne (SAHNE, Carrageen), Cremepulver (Zucker, modifizierte Stärke, VOLLMILCHPULVER, MAGERMILCHPULVER, Dextrose, Natriumalginat, Diphosphate, Monoglyceride von Speisefettsäuren, MILCHEIWEIß, Karottenkonzentrat), Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' +
-      BACKMALZ,
+      'WEIZENMEHL, BUTTER, Wasser, VOLLEI, Zucker, Sahne (SAHNE, Carrageen), Cremepulver (Zucker, modifizierte Stärke, VOLLMILCHPULVER, MAGERMILCHPULVER, Dextrose, Natriumalginat, Diphosphate, Monoglyceride von Speisefettsäuren, MILCHEIWEIß, Karottenkonzentrat), Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -282,9 +265,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Weihnachtsstollen wird in sorgfältiger Handarbeit gefertigt, nach überliefertem Familienrezept und mit viel Zeit. Der Teig hat eine lange Ruhezeit vor dem Backen, damit sich Aromen und Struktur optimal entwickeln können. Nach dem Backen reift jeder Stollen erneut über viele Tage, um seinen vollen Geschmack zu entfalten: Ein Prozess, der Erfahrung, Geduld und Sorgfalt erfordert. Verarbeitet werden ausschließlich hochwertige Zutaten wie gute Butter, geröstete Mandeln und aromatische Sultaninen. Für den besonderen rheinischen Akzent werden die Mandeln in Altbier und die Rosinen in Düsseldorfer Killepitsch eingelegt, eine traditionelle Veredelung mit lokaler Handschrift. Jeder Stollen wird von Hand geformt, gebacken und mit Butter und Zucker veredelt. Ganz im Sinne klassischer Stollenherstellung. Erhältlich mit oder ohne Marzipan, als Mini-Stollen oder in Form von feinem Stollen-Konfekt. Der Stollen wird ohne Aufpreis in einer hochwertigen Hinkel-Blechdose verpackt.',
     shortIngredients: 'Stollenteig mit Butter, Rosinen (in Killepitsch), Mandeln (in Altbier), Marzipan, Zitronat & Orangeat',
     fullIngredients:
-      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)' +
-      VANILLEAROMA +
-      ', Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
+      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
     allergens: ['Gluten (Weizen, Gerste)', 'Milch', 'Schalenfrüchte (Mandeln)'],
     note: 'Mit oder ohne Marzipan erhältlich, kostenlos in Hinkel-Blechdose. Auch als Mini-Stollen.'
   },
@@ -362,9 +343,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Düsselwelle ist ein saftiger Marmorsandkuchen vom Blech, der mit eingebackenen Kirschen und feinen Quarktupfen für fruchtige Frische sorgt. Verfeinert mit Schokoladendrops und buttrigen Streuseln wird dieser Kuchen zu einem süßen Highlight, das jeden Kaffeetisch verschönert.',
     shortIngredients: 'Marmor-Rührteig, Kirschen, Schokodrops, Butterstreusel, etwas Rum',
     fullIngredients:
-      'Kirschen (Kirschen, Glukosesirup, Invertzucker, Fruktose, WEIZENSTÄRKE, Ethylalkohol, Milchsäure, Holunderbeerensaftkonzentrat, natürliche Aromastoffe, SCHALENFRÜCHTE (SPUREN), Rote-Bete, EIER (SPUR), NÜSSE (SPUR), MILCH (SPUR)), WEIZENMEHL, Zucker, BUTTER, VOLLEI, WEIZENSTÄRKE, Wasser, Kuvertüre (Kakaomasse, Zucker, Kakaobutter, SOJALEZITHIN, MILCH (SPUR)), Kakaopulver, EIGELB, VOLLMILCHPULVER, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Rum 38% vol., Salz' +
-      VANILLEAROMA +
-      ', Rum 38% vol., Salz',
+      'Kirschen (Kirschen, Glukosesirup, Invertzucker, Fruktose, WEIZENSTÄRKE, Ethylalkohol, Milchsäure, Holunderbeerensaftkonzentrat, natürliche Aromastoffe, SCHALENFRÜCHTE (SPUREN), Rote-Bete, EIER (SPUR), NÜSSE (SPUR), MILCH (SPUR)), WEIZENMEHL, Zucker, BUTTER, VOLLEI, WEIZENSTÄRKE, Wasser, Kuvertüre (Kakaomasse, Zucker, Kakaobutter, SOJALEZITHIN, MILCH (SPUR)), Kakaopulver, EIGELB, VOLLMILCHPULVER, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Rum 38% vol., Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Soja', 'Milch'],
     allergenNote: 'Kann Spuren enthalten: Schalenfrüchte.'
   },
@@ -760,7 +739,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Käsebrötchen ist ein mildes Weizenbrötchen, goldgelb überbacken mit geriebenem Gouda. Die saftige Krume und die fein-aromatische Käsekruste machen es zum herzhaften Klassiker für jede Gelegenheit.',
     shortIngredients: 'Weizenmehl, Wasser, Gouda, Hefe, Salz, etwas Butter',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Gouda (MILCH, Salz, Lab, Maisstärke), Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER' + BACKMALZ + ', Butter',
+      'WEIZENMEHL, Wasser, Gouda (MILCH, Salz, Lab, Maisstärke), Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen'
   },
@@ -947,7 +926,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Kürbiskernbrötchen ist ein locker-saftiges Weizenbrötchen mit mildem Roggenanteil und vielen knackigen Kürbiskernen, außen wie innen. Die Kerne liefern nicht nur einen angenehmen Biss und nussiges Aroma, sondern sind auch reich an wertvollen Nährstoffen wie Magnesium, Eisen und ungesättigten Fettsäuren. Unsere Kürbiskerne beziehen wir ausschließlich aus der Steiermark.',
     shortIngredients: 'Weizenmehl, Kürbiskerne, Roggenmehl, Wasser, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Kürbiskerne, Wasser, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)' + BACKMALZ + ', Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
+      'WEIZENMEHL, Kürbiskerne, Wasser, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
     allergens: ['Gluten (Weizen, Roggen)'],
     note: 'Kürbiskerne ausschließlich aus der Steiermark.',
     flour: 'Weizen mit etwas Roggen',
@@ -1002,9 +981,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mambolito ist ein würzig-pikanter Snack aus Weizenteig, verfeinert mit getrockneten Tomaten, Zwiebeln, Mais, Markerbsen und Paprika. Abgeschmeckt mit Chili, Knoblauch und mediterranen Kräutern, bringt er eine feine Schärfe mit, gefüllt mit Feta und überbacken mit Gouda.',
     shortIngredients: 'Weizenteig mit getrockneten Tomaten, Röstzwiebeln, Mais, Erbsen, Paprika, Feta, Gouda, Chili',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Tomaten getr (Tomaten, Salz), Röstzwiebel (Zwiebel, Palmöl, WEIZENMEHL, Salz), ROGGENMEHL, Mexikomix (Mais, Erbsen, Wasser, Paprika, Salz), Feta (MILCH, Salz, Buttereikulturen), Gouda (MILCH, Salz, Lab, Maisstärke), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Oregano, Basilikum, Olivenöl, Paprika, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Chili, Knoblauch' +
-      BACKMALZ +
-      ', Hefe, Salz, Oregano, Basilikum, Olivenöl, Paprika, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Chili, Knoblauch',
+      'WEIZENMEHL, Wasser, Tomaten getr (Tomaten, Salz), Röstzwiebel (Zwiebel, Palmöl, WEIZENMEHL, Salz), ROGGENMEHL, Mexikomix (Mais, Erbsen, Wasser, Paprika, Salz), Feta (MILCH, Salz, Buttereikulturen), Gouda (MILCH, Salz, Lab, Maisstärke), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Oregano, Basilikum, Olivenöl, Paprika, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Chili, Knoblauch',
     allergens: ['Gluten (Weizen, Roggen)', 'Milch'],
     note: 'Leicht scharf (Chili).'
   },
@@ -1054,7 +1031,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mandelstuten ist mit gestifteten, leicht gerösteten Mandeln verfeinert und bringt so ein zartes Nussaroma in jeden Bissen. Saftig, mild und herrlich duftend.',
     shortIngredients: 'Weizenmehl, Mandeln, Zucker, Butter, Milchpulver, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, MANDELN, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' + BACKMALZ + ', Salz',
+      'WEIZENMEHL, Wasser, MANDELN, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)'],
     flour: '100 % Weizen',
     breadType: 'stuten'
@@ -1096,9 +1073,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mehrkornbrötchen ist ein kerniges, rustikales Brötchen mit kräftiger Kruste und aromatischer Krume. Leinsaat, Sesam, Sonnenblumen- und Kürbiskerne sowie Roggenflocken verleihen ihm seinen typischen Biss und eine nussige Tiefe.',
     shortIngredients: 'Weizenmehl, Leinsaat, Sesam, Sonnenblumen- und Kürbiskerne, Roggenflocken, Roggenmehl, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Mehrkorn Mischung (Leinsaat, SESAMSAAT, Sonnenblumenkerne, Kürbiskerne, ROGGENFLOCKEN), ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)' +
-      BACKMALZ +
-      ', Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
+      'WEIZENMEHL, Wasser, Mehrkorn Mischung (Leinsaat, SESAMSAAT, Sonnenblumenkerne, Kürbiskerne, ROGGENFLOCKEN), ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
     allergens: ['Gluten (Weizen, Roggen)', 'Sesam'],
     flour: 'Weizen mit etwas Roggen',
     vegan: true
@@ -1114,9 +1089,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mini-Stollen ist der kleine Bruder unseres Christstollens: gleiches überliefertes Familienrezept, gleiche Sorgfalt, nur im handlichen Format. Wie der große Stollen wird er von Hand gefertigt und mit viel Zeit hergestellt. Der Teig ruht vor dem Backen lange, damit sich Aromen und Struktur gut entwickeln. Nach dem Backen reift auch jeder Mini-Stollen über viele Tage, bis er seinen vollen Geschmack hat. Dafür braucht es Erfahrung, Geduld und Sorgfalt, ganz gleich, wie groß der Stollen ist. Wir verwenden ausschließlich hochwertige Zutaten wie gute Butter, geröstete Mandeln und aromatische Sultaninen. Für den rheinischen Akzent legen wir die Mandeln in Altbier und die Rosinen in Düsseldorfer Killepitsch ein. Das ist eine traditionelle Veredelung mit lokaler Handschrift. Jeder Mini-Stollen wird von Hand geformt, gebacken und mit Butter und Zucker veredelt, ganz im Sinne klassischer Stollenherstellung. Er wird ohne Marzipan gebacken und eignet sich für kleinere Haushalte, zum Probieren, als Mitbringsel oder als Geschenk.',
     shortIngredients: 'Stollenteig mit Butter, Rosinen (in Killepitsch), Mandeln (in Altbier), Zitronat & Orangeat',
     fullIngredients:
-      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)' +
-      VANILLEAROMA +
-      ', Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
+      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
     allergens: ['Gluten (Weizen, Gerste)', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1126,7 +1099,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       'Unser Mohnbrötchen ist ein mild-aromatisches Spitzbrötchen, von Hand gefertigt und mit Blaumohn bestreut. Die zartsplittrige Kruste und der nussige Mohn machen es zum Klassiker auf jedem Frühstückstisch.',
     shortIngredients: 'Weizenmehl, Wasser, Mohn, Hefe, Salz, etwas Butter',
-    fullIngredients: 'WEIZENMEHL, Wasser, Mohn, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER' + BACKMALZ + ', Butter',
+    fullIngredients: 'WEIZENMEHL, Wasser, Mohn, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen'
   },
@@ -1138,8 +1111,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Mohnschnecke vereint handwerkliche Tradition mit feinsten Zutaten. Die Mohnfüllung wird aus frisch gemahlenem Blaumohn gekocht, der für ein besonders intensives Aroma direkt in unserer Backstube verarbeitet wird. Der Plunderteig wird mit reiner Butter zubereitet und sorgt für eine zarte, blättrige Textur. Obenauf runden buttrige Streusel das Gebäck ab, zum Schluss wird es aprikotiert und mit Fondant überzogen.',
     shortIngredients: 'Butter-Plunderteig, gekochte Mohnfüllung, Streusel, aprikotiert',
     fullIngredients:
-      'WEIZENMEHL, Wasser, MILCH, Zucker, Mohn, Fondant (Zucker, Glukosesirup), BUTTER, Süße Brösel (WEIZENMEHL, Zucker, MILCH, Wasser, MANDELN, Kakaomasse, HÜHNEREIWEIßPULVER, Kakaobutter, Salz, SOJALEZITHIN, natürliches Aroma Vanille, Invertzucker, Rum 38% vol.), VOLLMILCHPULVER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' +
-      BACKMALZ,
+      'WEIZENMEHL, Wasser, MILCH, Zucker, Mohn, Fondant (Zucker, Glukosesirup), BUTTER, Süße Brösel (WEIZENMEHL, Zucker, MILCH, Wasser, MANDELN, Kakaomasse, HÜHNEREIWEIßPULVER, Kakaobutter, Salz, SOJALEZITHIN, natürliches Aroma Vanille, Invertzucker, Rum 38% vol.), VOLLMILCHPULVER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Soja', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1150,9 +1122,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mohnstreusel ist ein echter Genuss für alle Mohnliebhaber. Auf lockerem Hefeteig liegt eine gekochte Mohnmasse aus frisch gemahlenem Mohn, die besonders aromatisch und saftig ist. Obendrauf kommen knusprige Butterstreusel und ein feiner Fondant auf der Aprikotur, der dem Ganzen den perfekten Abschluss verleiht.',
     shortIngredients: 'Hefeteig, gekochte Mohnmasse, Butterstreusel, Guss',
     fullIngredients:
-      'Wasser, WEIZENMEHL, Zucker, Mohn, BUTTER, Süße Brösel (WEIZENMEHL, Zucker, MILCH, Wasser, MANDELN, Kakaomasse, HÜHNEREIWEIßPULVER, Kakaobutter, Salz, SOJALEZITHIN, natürliches Aroma Vanille, Invertzucker, Rum 38% vol.), Fondant (Zucker, Glukosesirup), VOLLMILCHPULVER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), Hefe, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'Wasser, WEIZENMEHL, Zucker, Mohn, BUTTER, Süße Brösel (WEIZENMEHL, Zucker, MILCH, Wasser, MANDELN, Kakaomasse, HÜHNEREIWEIßPULVER, Kakaobutter, Salz, SOJALEZITHIN, natürliches Aroma Vanille, Invertzucker, Rum 38% vol.), Fondant (Zucker, Glukosesirup), VOLLMILCHPULVER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), Hefe, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Soja', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1163,7 +1133,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Monte Christo ist der Inbegriff von saftigem, süßem Hefegebäck. Der Teig wird mit besonders viel Ei und Butter angesetzt, was ihm seine weiche, fast schon puddingartige Krume verleiht. Rosinen und Hagelzucker sorgen für Süße und Struktur. Von Hand abgewogen und geformt ist er nicht nur optisch ein Hingucker, sondern vor allem purer Genuss für alle, die es richtig schön klebrig mögen.',
     shortIngredients: 'Hefeteig mit viel Ei und Butter, Rosinen, Hagelzucker',
     fullIngredients:
-      'WEIZENMEHL, Zucker, Wasser, Rosinen, VOLLEI, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' + BACKMALZ + ', Salz',
+      'WEIZENMEHL, Zucker, Wasser, Rosinen, VOLLEI, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -1189,9 +1159,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mürbchen ist herrlich weich, fein süß und besonders saftig. Ein Hauch Marzipan im Teig sorgt für eine dezente Note, die es wunderbar abrundet. Ein kleines Stück Kindheit mit jedem Bissen.',
     shortIngredients: 'Weizenmehl, Butter, Zucker, Milchpulver, etwas Marzipan, Hefe',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1204,7 +1172,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mürbestuten ist ein klassischer, leicht gesüßter Weizenstuten mit zarter Krume und feinem Geschmack. Ob pur oder mit Marmelade, er passt zu jedem Frühstückstisch.',
     shortIngredients: 'Weizenmehl, Wasser, Zucker, Butter, Milchpulver, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' + BACKMALZ + ', Salz',
+      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen',
     breadType: 'stuten'
@@ -1279,8 +1247,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Nussschleife ist ein buttriges Plunderteilchen, das mit einer kräftigen Portion saftiger Nussfüllung gewickelt wird. Fein gemahlene Haselnüsse, sanft gewürzt und mit Zucker abgeschmeckt, geben der Schleife ihr intensives Aroma. Das Aprikotieren rundet das Gebäck ab und bringt eine angenehme Süße ins Spiel. Außen knusprig, innen nussig.',
     shortIngredients: 'Plunderteig, Haselnuss-Füllung, Marzipan, aprikotiert',
     fullIngredients:
-      'WEIZENMEHL, Wasser, MILCH, Nussmasse (Zucker, HASELNÜSSE, WEIZENMEHL, Maismehl, Diphosphate, Natriumcarbonat, Salz, Zimt, Kakaopulver, Aromaextrakte), HASELNÜSSE, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Fondant (Zucker, Glukosesirup), Zucker, VOLLEI, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' +
-      BACKMALZ,
+      'WEIZENMEHL, Wasser, MILCH, Nussmasse (Zucker, HASELNÜSSE, WEIZENMEHL, Maismehl, Diphosphate, Natriumcarbonat, Salz, Zimt, Kakaopulver, Aromaextrakte), HASELNÜSSE, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Fondant (Zucker, Glukosesirup), Zucker, VOLLEI, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln, Haselnüsse)']
   },
   {
@@ -1326,7 +1293,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       'Unser Paniermehl entsteht aus unseren Haus-Brötchen und wird in der Backstube frisch zerkleinert. Die Grundlage bildet ein mildes Brötchen mit Butter, das durch seine feine Krume ein besonders gleichmäßiges und hochwertiges Paniermehl ergibt. Ideal zum Verfeinern, Panieren oder als Bindemittel in der Küche, für alle, die auch bei den kleinen Dingen auf Handwerksqualität achten.',
     shortIngredients: 'Zerkleinerte Haus-Brötchen (Weizenmehl, Wasser, Hefe, Salz, etwas Butter)',
-    fullIngredients: 'WEIZENMEHL, Wasser, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER' + BACKMALZ + ', Butter',
+    fullIngredients: 'WEIZENMEHL, Wasser, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER',
     allergens: ['Gluten (Weizen)', 'Milch']
   },
   {
@@ -1353,7 +1320,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Prasselkuchen, vielerorts auch als „Bobbes“ bekannt, ist ein buttrig-knuspriges Gebäck mit einfacher, aber überzeugender Kombination. Eine Schicht Blätterteig bildet die Basis und sorgt für eine zarte, leicht splitternde Struktur. Darauf liegt eine feine Marzipanschicht, die für Saftigkeit und eine dezente Süße sorgt, bevor goldene Butterstreusel dem Ganzen den typischen, mürben Biss verleihen.',
     shortIngredients: 'Blätterteig, Marzipanschicht, Butterstreusel',
     fullIngredients: 'WEIZENMEHL, BUTTER, Zucker, Wasser, VOLLMILCHPULVER, Salz',
-    allergens: ['Gluten (Weizen)', 'Milch']
+    allergens: ['Gluten (Weizen)', 'Milch'],
+    allergenNote: 'Achtung: Laut Beschreibung mit Marzipanschicht (Mandeln), in der Zutatenliste fehlt das noch. Bei Mandel-Allergie bis zur Klärung nicht empfehlen.'
   },
   {
     name: 'Printenbruch',
@@ -1378,10 +1346,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Puddingbrezel besteht aus zartem Butterplunder und wird in der Mitte mit einem Klecks selbstgekochtem Vanillepudding gefüllt. Der Pudding sorgt mit seiner feinen Vanillenote für einen cremigen Kontrast zur knusprigen Brezel. Nach dem Backen wird die Puddingbrezel aprikotiert, mit Fondant überzogen und erhält dadurch ihren typischen Glanz und eine leichte Süße.',
     shortIngredients: 'Butterplunder, selbstgekochter Vanillepudding, aprikotiert',
     fullIngredients:
-      'Wasser, WEIZENMEHL, MILCH, Zucker, Fondant (Zucker, Glukosesirup), Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLMILCHPULVER, EIGELB, WEIZENSTÄRKE, BUTTER, VOLLEI, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)' +
-      BACKMALZ +
-      ', ' +
-      VANILLEAROMA,
+      'Wasser, WEIZENMEHL, MILCH, Zucker, Fondant (Zucker, Glukosesirup), Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLMILCHPULVER, EIGELB, WEIZENSTÄRKE, BUTTER, VOLLEI, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -1404,9 +1369,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Quarkschnecke mit Himbeeren vereint luftigen Hefeteig mit einer cremigen Quarkmasse und fruchtigen Himbeeren. Beim Backen verschmelzen die süßsäuerlichen Beeren mit der feinen Quarkfüllung zu einem herrlich saftigen Kern. Der Teig wird sanft aufgerollt und gebacken, bevor sie zum Schluss aprikotiert und mit Fondant überzogen wird.',
     shortIngredients: 'Hefeteig, Quarkfüllung, Himbeeren, aprikotiert',
     fullIngredients:
-      'MAGERQUARK, WEIZENMEHL, Himbeeren, Fondant (Zucker, Glukosesirup), Zucker, Wasser, BUTTER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Cremepulver (Maisstärke, natürliches Aroma Vanille, Salz, Natriumphosphate, GLUTENHALTIGES GETREIDE, EIER (SPUR), MILCH (SPUR), NÜSSE (SPUR)), Cremepulver (Zucker, modifizierte Stärke, VOLLMILCHPULVER, MAGERMILCHPULVER, Dextrose, Natriumalginat, Diphosphate, Monoglyceride von Speisefettsäuren, MILCHEIWEIß, Karottenkonzentrat), Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'MAGERQUARK, WEIZENMEHL, Himbeeren, Fondant (Zucker, Glukosesirup), Zucker, Wasser, BUTTER, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, Cremepulver (Maisstärke, natürliches Aroma Vanille, Salz, Natriumphosphate, GLUTENHALTIGES GETREIDE, EIER (SPUR), MILCH (SPUR), NÜSSE (SPUR)), Cremepulver (Zucker, modifizierte Stärke, VOLLMILCHPULVER, MAGERMILCHPULVER, Dextrose, Natriumalginat, Diphosphate, Monoglyceride von Speisefettsäuren, MILCHEIWEIß, Karottenkonzentrat), Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch'],
     allergenNote: 'Kann Spuren enthalten: Schalenfrüchte.'
   },
@@ -1434,7 +1397,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       'Unser Röggelchen ist ein rheinisches Brötchen aus einer Mischung aus Weizen- und Roggenmehl. Saftig, aromatisch und traditionell paarweise aneinander gebacken. Der Brötchen-Klassiker aus dem Rheinland.',
     shortIngredients: 'Weizenmehl, Roggenmehl, Wasser, Sauerteig, Salz, Hefe',
-    fullIngredients: 'WEIZENMEHL, Wasser, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz, ROGGENMEHL, Hefe, ROGGENSAUER' + BACKMALZ + ', Salz, Roggenmehl, Hefe, Roggensauer',
+    fullIngredients: 'WEIZENMEHL, Wasser, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz, ROGGENMEHL, Hefe, ROGGENSAUER',
     allergens: ['Gluten (Weizen, Roggen)'],
     note: 'Rheinischer Klassiker, traditionell paarweise aneinander gebacken.',
     flour: 'Weizen- und Roggenmehl',
@@ -1451,7 +1414,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     shortIngredients: 'Schwarzwälder-Teig: Roggenmehl (70 %), Weizenmehl (30 %), Wasser, Sauerteig, Salz, Hefe',
     fullIngredients:
       'Roggenmehl, Wasser, Weizenmehl, Salz, zerkleinertes Roggenmischbrot (Roggenmehl, Weizenmehl, Roggensauer, Salz, Hefe, Weizengrieß, Weizenmalzmehl, Wasser), Hefe, Roggensauer, Weizenmalzmehl, Weizengrieß',
-    allergens: ['Gluten', 'Weizen'],
+    allergens: ['Gluten (Weizen, Roggen)'],
     note: 'Gleicher Teig wie das Schwarzwälder, nur als Stange gebacken.',
     flour: '70 % Roggen, 30 % Weizen',
     breadType: 'roggenmisch',
@@ -1465,7 +1428,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Römer-Brötchen ist groß, rustikal und besonders knusprig. Mit 98 % Weizen und einem kleinen Anteil Roggen erhält es eine milde, aromatische Note und eine saftige Krume. Die Allzweckwaffe zu jedem Frühstück.',
     shortIngredients: 'Weizenmehl (98 %), etwas Roggenmehl, Wasser, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)' + BACKMALZ + ', Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
+      'WEIZENMEHL, Wasser, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
     allergens: ['Gluten (Weizen, Roggen)'],
     flour: '98 % Weizen, 2 % Roggen',
     vegan: true
@@ -1479,9 +1442,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Rosinen-Mürbchen überzeugt mit besonders vielen Rosinen und einer angenehm weichen, saftigen Krume. Der feine Marzipananteil im Teig verleiht ihm eine harmonische Süße, die es von anderen abhebt.',
     shortIngredients: 'Weizenmehl, Rosinen, Butter, Zucker, Milchpulver, etwas Marzipan, Hefe',
     fullIngredients:
-      'WEIZENMEHL, Rosinen, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'WEIZENMEHL, Rosinen, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1492,8 +1453,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Rosinenschnecke ist ein feines Plunderstück mit saftigen Rosinen und einer Schicht aus zarter Marzipanmasse. Der buttrige Plunderteig wird sorgfältig aufgerollt, damit sich Rosinen und Marzipan harmonisch miteinander verbinden. Nach dem Backen wird die Schnecke fein aprikotiert und mit Fondant überzogen, was sie leicht glänzen lässt und ihre süßen Aromen abrundet.',
     shortIngredients: 'Plunderteig, Marzipanmasse, Rosinen, aprikotiert',
     fullIngredients:
-      'WEIZENMEHL, MILCH, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Rosinen, Wasser, Zucker, Fondant (Zucker, Glukosesirup), VOLLEI, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' +
-      BACKMALZ,
+      'WEIZENMEHL, MILCH, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Rosinen, Wasser, Zucker, Fondant (Zucker, Glukosesirup), VOLLEI, Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1504,8 +1464,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Rosinenstriezel ist ein echter Klassiker für alle, die es süß und saftig mögen. In seinem Inneren verbirgt sich eine üppige Mischung aus Rosinen, feinem Marzipan und zarten gestifteten Mandeln. All das wird von lockerem Hefeteig umhüllt, der beim Backen goldbraun aufgeht und für eine herrlich weiche Krume sorgt. Der Striezel wird nach dem Backen sorgfältig aprikotiert und mit Fondant überzogen, was ihm einen feinen Glanz und eine zarte Süße verleiht. Besonders schön: Hier wird wirklich nicht gespart, weder bei Rosinen noch bei Marzipan oder Mandeln. Jeder Bissen steckt voller Aroma und Textur.',
     shortIngredients: 'Hefeteig mit Rosinen, Marzipan und gestifteten Mandeln, aprikotiert',
     fullIngredients:
-      'Rosinen (Rosinen, Sonnenblumenöl), WEIZENMEHL, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Wasser, Zucker, Fondant (Zucker, Glukosesirup), Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, MANDELN, BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' +
-      BACKMALZ,
+      'Rosinen (Rosinen, Sonnenblumenöl), WEIZENMEHL, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Wasser, Zucker, Fondant (Zucker, Glukosesirup), Aprikosenmarmelade (Glukose-Fruktose-Sirup, Aprikosen, Zucker, Pektin, Zitronensäure), VOLLEI, MANDELN, BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1518,7 +1477,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Rosinen-Stuten überzeugt durch seine üppige Füllung mit saftigen Rosinen. Ein süßer Klassiker für alle, die es gerne ein wenig fruchtiger haben.',
     shortIngredients: 'Weizenmehl, Wasser, Rosinen, Zucker, Butter, Milchpulver, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Rosinen, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' + BACKMALZ + ', Salz',
+      'WEIZENMEHL, Wasser, Rosinen, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen',
     breadType: 'stuten'
@@ -1589,9 +1548,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Schoko-Mürbchen ist vollgepackt mit kräftigen Schokostückchen und bleibt dabei herrlich weich und ausgewogen süß. Der dezente Marzipananteil im Teig sorgt für eine feine Note, die perfekt zur Schokolade passt.',
     shortIngredients: 'Weizenmehl, Schokostückchen, Butter, Zucker, Milchpulver, etwas Marzipan, Hefe',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Kuvertüre (Kakaomasse, Zucker, Kakaobutter, SOJALEZITHIN, MILCH (SPUR)), Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'WEIZENMEHL, Wasser, Kuvertüre (Kakaomasse, Zucker, Kakaobutter, SOJALEZITHIN, MILCH (SPUR)), Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Soja', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1687,7 +1644,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       'Unser Sesambrötchen ist ein handgearbeitetes Spitzbrötchen mit mildem Aroma und zartsplittriger Kruste. Bestreut mit goldgelbem Sesam für eine feine Röstnote und ein rundes Geschmackserlebnis.',
     shortIngredients: 'Weizenmehl, Wasser, Sesam, Hefe, Salz, etwas Butter',
-    fullIngredients: 'WEIZENMEHL, Wasser, SESAMSAAT, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER' + BACKMALZ + ', Butter',
+    fullIngredients: 'WEIZENMEHL, Wasser, SESAMSAAT, Hefe, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), BUTTER',
     allergens: ['Gluten (Weizen)', 'Milch', 'Sesam'],
     flour: '100 % Weizen'
   },
@@ -1751,9 +1708,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Spinatstange ist ein herzhaftes Blätterteiggebäck, gefüllt mit würzigem Gouda, frischem Spinat und Zwiebeln. Außen knusprig mit Sesam bestreut, innen aromatisch und saftig. Ein vegetarischer Snack für jede Gelegenheit.',
     shortIngredients: 'Teig aus Weizen- und Roggenmehl, Spinat, Gouda, Zwiebeln, Sesam',
     fullIngredients:
-      'Spinat, WEIZENMEHL, Gouda (MILCH, Salz, Lab, Maisstärke), Wasser, Zwiebel, MILCH, SESAMSAAT, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Muskatnuss, Pfeffer' +
-      BACKMALZ +
-      ', Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Muskatnuss, Pfeffer',
+      'Spinat, WEIZENMEHL, Gouda (MILCH, Salz, Lab, Maisstärke), Wasser, Zwiebel, MILCH, SESAMSAAT, ROGGENMEHL, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure), Muskatnuss, Pfeffer',
     allergens: ['Gluten (Weizen, Roggen)', 'Milch', 'Sesam'],
     note: 'Vegetarische Alternative zur Vesperstange mit Speck.'
   },
@@ -1779,9 +1734,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Spritzgebäck wird von Hand gefertigt und mit echter Butter gebacken. Die feine Vanillenote, kombiniert mit einer zart mürben Textur, macht jeden Bissen zu einem kleinen Genussmoment. Ob pur oder zum Kaffee serviert - dieses klassische Gebäck gehört einfach in jede Keksdose.',
     shortIngredients: 'Weizenmehl, Butter, Zucker, Kondensmilch, Ei, Vanille',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, natürliches Bourbon-Vanillearoma' +
-      VANILLEAROMA +
-      ', Salz, natürliches Bourbon-Vanillearoma',
+      'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, natürliches Bourbon-Vanillearoma',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -1792,7 +1745,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Spuntino Mediterano ist ein lockeres Weizenbrötchen, welches gefüllt mit Paprika, Zucchini & Feta-Käse und überbacken mit Gouda der ideale Snack für Zwischendurch ist.',
     shortIngredients: 'Weizenbrötchen mit Paprika, Zucchini, Tomaten, Feta, überbacken mit Gouda',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Gouda (MILCH, Salz, Lab, Maisstärke), Tomaten, Zuccini, Feta (MILCH, Salz, Buttereikulturen), Paprika, Zwiebel, Hefe, Salz, Knoblauchpulver, Zitronensäure, Basilikum, Pfeffer, Olivenöl',
+      'WEIZENMEHL, Wasser, Gouda (MILCH, Salz, Lab, Maisstärke), Tomaten, Zucchini, Feta (MILCH, Salz, Buttereikulturen), Paprika, Zwiebel, Hefe, Salz, Knoblauchpulver, Zitronensäure, Basilikum, Pfeffer, Olivenöl',
     allergens: ['Gluten (Weizen)', 'Milch']
   },
   {
@@ -1812,6 +1765,20 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     vegan: true
   },
   {
+    name: 'Stollen-Konfekt',
+    aliases: ['Stollenkonfekt'],
+    group: 'Weihnachtsgebäck',
+    price: '3,20 €',
+    pricePerKg: '32,00 € / kg',
+    weight: '100 g',
+    description:
+      'Unser Stollen-Konfekt bringt den vollen Geschmack unseres klassischen Christstollens in handlichen Stücken auf den Tisch. Gebacken mit echter Butter, gerösteten Mandeln und ausgewählten Trockenfrüchten, die zuvor in Altbier und Killepitsch eingelegt wurden, entfaltet jedes Konfektstück ein wunderbar ausgewogenes Aroma. Dank langer Teig- und Ruhezeiten bleibt es saftig und aromatisch. 100 Gramm sind ca. 4 Stück.',
+    shortIngredients: 'Stollenteig mit Butter, Rosinen, Mandeln, Marzipan, Zitronat & Orangeat',
+    fullIngredients:
+      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
+    allergens: ['Gluten (Weizen, Gerste)', 'Milch', 'Schalenfrüchte (Mandeln)']
+  },
+  {
     name: 'Streuselkuchen',
     group: 'Kuchen',
     price: '2,50 €',
@@ -1819,10 +1786,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Streuselkuchen wird aus einem lockeren Butterhefeteig gebacken, der mit einem Hauch Vanillepudding verfeinert wird. Obenauf kommt eine großzügige Schicht goldgelber Butterstreusel, die beim Backen herrlich knusprig werden.',
     shortIngredients: 'Butterhefeteig mit Vanillepudding, Butterstreusel (Weizenmehl, Zucker, Butter)',
     fullIngredients:
-      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Hefe, EIGELB, WEIZENSTÄRKE, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)' +
-      BACKMALZ +
-      ', ' +
-      VANILLEAROMA,
+      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Hefe, EIGELB, WEIZENSTÄRKE, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -1833,8 +1797,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Tarte Depart ist eigentlich als saisonale Liebeserklärung entstanden, doch sie wurde zur festen Größe. Ursprünglich haben wir sie 2017 zur Tour de France in Düsseldorf gebacken, um den Start der berühmten Rundfahrt auf unsere Art zu feiern. Doch was als einmalige Hommage begann, wurde von unseren Kundinnen und Kunden so begeistert aufgenommen, dass schnell klar war: Diese Tarte darf nicht wieder verschwinden. Gebettet auf feinem Blätterteig liegt ein Klecks unserer hauseigenen Puddingcreme, darüber kommen frische Apfelscheiben, geröstete Mandelblättchen und eine Prise Zimt mit Zucker. Beim Backen karamellisiert alles leicht, wodurch ein wunderbar knusprig-saftiges Gebäck entsteht. Ein feiner, süßer Genuss mit Geschichte.',
     shortIngredients: 'Blätterteig, Puddingcreme, Apfel, Mandeln, Zimt und Zucker',
     fullIngredients:
-      'Apfel, MILCH, WEIZENMEHL, Wasser, MANDELN, Zucker, VOLLMILCHPULVER, EIGELB, WEIZENSTÄRKE, Salz, Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)' +
-      VANILLEAROMA,
+      'Apfel, MILCH, WEIZENMEHL, Wasser, MANDELN, Zucker, VOLLMILCHPULVER, EIGELB, WEIZENSTÄRKE, Salz, Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)'],
     note: 'Entstanden 2017 zum Tour-de-France-Start in Düsseldorf.'
   },
@@ -1848,7 +1811,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Toastbrot ist ein ungesüßtes Weißbrot mit einem kleinen Anteil Butter. Die feine Krume und der milde Geschmack machen es ideal für herzhafte oder süße Beläge, ob frisch oder knusprig getoastet.',
     shortIngredients: 'Weizenmehl, Wasser, Butter, Milchpulver, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, Wasser, BUTTER, VOLLMILCHPULVER, Hefe, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Zucker, Salz' + BACKMALZ + ', Zucker, Salz',
+      'WEIZENMEHL, Wasser, BUTTER, VOLLMILCHPULVER, Hefe, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Zucker, Salz',
     allergens: ['Gluten (Weizen)', 'Milch'],
     flour: '100 % Weizen',
     breadType: 'weizen'
@@ -1861,9 +1824,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Vesperstange mit Speck ist ein rustikales Blätterteiggebäck, gefüllt mit würzigem Gouda, Röstzwiebeln und feinem Speck. Außen knusprig mit Mohn und Sesam bestreut, innen herzhaft und saftig. Der ideale Snack für unterwegs oder zwischendurch.',
     shortIngredients: 'Teig aus Weizen- und Roggenmehl, Gouda, Schinkenwürfel (Schwein), Röstzwiebeln, Sesam, Mohn',
     fullIngredients:
-      'Gouda (MILCH, Salz, Lab, Maisstärke), WEIZENMEHL, Wasser, Schinkenwürfel (Schweinefleisch, Salz, Dextrose, Gewürze, Milchsäure, Kaliumsorbat, Ascorbinsäure), MILCH, Röstzwiebel (Zwiebel, Palmöl, WEIZENMEHL, Salz), ROGGENMEHL, SESAMSAAT, Mohn, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)' +
-      BACKMALZ +
-      ', Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
+      'Gouda (MILCH, Salz, Lab, Maisstärke), WEIZENMEHL, Wasser, Schinkenwürfel (Schweinefleisch, Salz, Dextrose, Gewürze, Milchsäure, Kaliumsorbat, Ascorbinsäure), MILCH, Röstzwiebel (Zwiebel, Palmöl, WEIZENMEHL, Salz), ROGGENMEHL, SESAMSAAT, Mohn, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Hefe, Salz, Ablaufsirup (Zuckerablaufsirup, Karamellzucker, Zitronensäure)',
     allergens: ['Gluten (Weizen, Roggen)', 'Milch', 'Sesam'],
     note: 'Enthält Schweinefleisch, nicht vegetarisch und nicht für Kunden, die kein Schwein essen.'
   },
@@ -2014,9 +1975,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Wochenendstuten vereint Rosinen, gestiftete Mandeln, Zitronat und Orangeat zu einer aromatischen Mischung.',
     shortIngredients: 'Weizenmehl, Butter, Zucker, Milchpulver, Rosinen, Mandeln, Zitronat & Orangeat, Hefe',
     fullIngredients:
-      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure), Rosinen, MANDELN, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz' +
-      BACKMALZ +
-      ', Salz',
+      'WEIZENMEHL, Wasser, Zucker, BUTTER, Hefe, VOLLMILCHPULVER, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure), Rosinen, MANDELN, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme), Salz',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)'],
     flour: '100 % Weizen',
     breadType: 'stuten'
@@ -2042,7 +2001,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Der Wunderzopf ist eine köstliche Brioche-Spezialität, die speziell für das Wochenende kreiert wurde. Diese delikate Leckerei ist mit karamellisierten Mandeln verfeinert und aprikotiert, was ihr ein einzigartiges Aroma verleiht. Jeder Bissen ist ein wahres Geschmackserlebnis, das Ihre Geschmacksknospen verwöhnt. Perfekt geeignet für gemütliche Frühstücke oder als süßer Snack zwischendurch.',
     shortIngredients: 'Brioche-Teig (Weizenmehl, Eigelb, Butter, Zucker), karamellisierte Mandeln',
     fullIngredients:
-      'WEIZENMEHL, MANDELN, Wasser, Zucker, EIGELB, BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)' + BACKMALZ,
+      'WEIZENMEHL, MANDELN, Wasser, Zucker, EIGELB, BUTTER, Hefe, VOLLMILCHPULVER, Salz, Backmalz (WEIZENMALZMEHL, Guarkernmehl, Natrium-Carboxymethylcellulose, Zucker, WEIZENMALZEXTRAKT, Monocetylweinsäureester v. Monoglyceriden v. Speisefettsäure, WEIZENMEHL, Diphosphate, Calciumphosphate, Dextrose, Aromaextrakte, Ascorbinsäure, Backenzyme)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)'],
     note: 'Wochenend-Spezialität.',
     flour: '100 % Weizen',
