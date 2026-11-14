@@ -75,6 +75,7 @@ Mehr zum Aufbau: `README.md`.
 - 168: Lob unter Kollegen (Startseite, 1× am Tag, +10 Punkte, Gelobter schreibt sich Punkte selbst gut; Feld `_kollegenLob`, NICHT `_lob` = Ausbilder-Lob), eigene Notiz im Steckbrief (`_notizen`, Schlüssel per Code, weil Produktnamen Sonderzeichen haben)
 - 169: Hör-Lernen (Lernen → „Hör-Lernen“, `src/screens/HoerLernen.tsx`): liest Frage, Denkpause, Antwort vor; Tempo, Bereich, Fehler-Stapel; hält den Bildschirm an
 - 170: Geburtstage (freiwillig, Menü → „Mein Geburtstag“, Karte + Gratulieren), Ideen-Box (Menü, anonym möglich, Ausbilder antwortet), Kundenstimmen (Lob/Kritik/Wunsch, Nachschlagen + Menü). Ausbilder-Reiter heißt jetzt „Rückmeldungen“ (Kundenfragen, Tipps, Ideen, Kundenstimmen, Lob). Logik: `src/hilfen/rueckmeldungen.ts`
+- 171: Hilfe für Neue (`src/ui/hilfe.tsx`): Einführung 7 Seiten (neu „Wo finde ich was?“, „Gemeinsam im Team“), Hilfe-Seite mit „Wo finde ich was?“ oben + Themen zu allen neuen Funktionen. Neue Funktionen künftig auch dort erklären!
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.

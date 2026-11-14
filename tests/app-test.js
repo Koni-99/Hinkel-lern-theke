@@ -158,6 +158,27 @@ async function offlineTests() {
     ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Hilfe für Neue: Orientierung und neue Funktionen erklärt, Einführung mit 7 Seiten
+  {
+    const d = await device({ user: 'Anna' });
+    await click(d.page.getByRole('button', { name: 'Menü' }).first());
+    await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
+    const themen = ['Wo finde ich was?', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Ohne Internet'];
+    const fehlt = [];
+    for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
+    ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
+    await click(d.page.getByRole('button', { name: /Einführung noch einmal ansehen/ }).first()); await d.page.waitForTimeout(400);
+    let seiten = 1, titel = [];
+    for (let i = 0; i < 10; i++) {
+      titel.push(await d.page.locator('[aria-label="Kurze Einführung"]').innerText().catch(() => ''));
+      const weiter = d.page.locator('[aria-label="Kurze Einführung"] button', { hasText: 'Weiter' });
+      if (!(await weiter.count())) break;
+      await click(weiter.first()); await d.page.waitForTimeout(250); seiten++;
+    }
+    ok('Einführung: 7 Seiten mit „Wo finde ich was?“ und „Gemeinsam im Team“', seiten === 7 && titel.some((t) => t.includes('Wo finde ich was?')) && titel.some((t) => t.includes('Gemeinsam im Team')), `${seiten} Seiten`);
+    ok('Hilfe: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)
   {
     const keys = stimmeKeys();
