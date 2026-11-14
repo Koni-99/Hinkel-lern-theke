@@ -108,6 +108,13 @@ export interface ProductFix {
   price?: string;
   shortIngredients?: string;
   allergens?: string[];
+  /** Aus der Excel-Produktliste übernommen (Ausbilder → Inhalte → Produktliste) */
+  pricePerKg?: string;
+  allergenNote?: string;
+  fullIngredients?: string;
+  description?: string;
+  vegan?: boolean;
+  weight?: string;
   alts?: string[];
   restored?: boolean;
   ts: number;

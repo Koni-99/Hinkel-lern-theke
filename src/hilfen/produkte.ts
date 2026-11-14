@@ -8,7 +8,7 @@ import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { ALT_MAP } from '../daten/data';
 
 // Originaldaten merken, damit Korrekturen zurückgenommen werden können
-export type ProductOriginal = { price?: string; shortIngredients: string; allergens: string[] };
+export type ProductOriginal = { price?: string; shortIngredients: string; allergens: string[]; pricePerKg?: string; allergenNote?: string; fullIngredients: string; description: string; vegan?: boolean; weight?: string };
 
 export const PRODUCT_ORIGINALS = new Map<string, ProductOriginal>();
 
@@ -21,7 +21,7 @@ export function applyProductFixes(fixes?: CloudPayload['productFixes']) {
   // erst alles auf Original zurück …
   PRODUCT_ORIGINALS.forEach((orig, name) => {
     const p = SHOP_PRODUCTS.find(x => x.name === name);
-    if (p) { p.price = orig.price; p.shortIngredients = orig.shortIngredients; p.allergens = [...orig.allergens]; }
+    if (p) { p.price = orig.price; p.shortIngredients = orig.shortIngredients; p.allergens = [...orig.allergens]; p.pricePerKg = orig.pricePerKg; p.allergenNote = orig.allergenNote; p.fullIngredients = orig.fullIngredients; p.description = orig.description; p.vegan = orig.vegan; p.weight = orig.weight; }
   });
   ALT_ORIGINALS.forEach((orig, name) => {
     if (orig) ALT_MAP[name] = [...orig]; else delete ALT_MAP[name];
@@ -33,10 +33,17 @@ export function applyProductFixes(fixes?: CloudPayload['productFixes']) {
     if (!f || f.restored) return;
     const p = SHOP_PRODUCTS.find(x => x.name === name);
     if (p) {
-      if (!PRODUCT_ORIGINALS.has(name)) PRODUCT_ORIGINALS.set(name, { price: p.price, shortIngredients: p.shortIngredients, allergens: [...p.allergens] });
+      if (!PRODUCT_ORIGINALS.has(name)) PRODUCT_ORIGINALS.set(name, { price: p.price, shortIngredients: p.shortIngredients, allergens: [...p.allergens], pricePerKg: p.pricePerKg, allergenNote: p.allergenNote, fullIngredients: p.fullIngredients, description: p.description, vegan: p.vegan, weight: p.weight });
       if (typeof f.price === 'string' && f.price.trim()) p.price = f.price.trim();
       if (typeof f.shortIngredients === 'string' && f.shortIngredients.trim()) p.shortIngredients = f.shortIngredients.trim();
       if (Array.isArray(f.allergens)) p.allergens = [...f.allergens];
+      // Felder aus der Excel-Produktliste
+      if (typeof f.pricePerKg === 'string' && f.pricePerKg.trim()) p.pricePerKg = f.pricePerKg.trim();
+      if (typeof f.allergenNote === 'string') p.allergenNote = f.allergenNote.trim() || undefined;
+      if (typeof f.fullIngredients === 'string' && f.fullIngredients.trim()) p.fullIngredients = f.fullIngredients.trim();
+      if (typeof f.description === 'string' && f.description.trim()) p.description = f.description.trim();
+      if (typeof f.vegan === 'boolean') p.vegan = f.vegan;
+      if (typeof f.weight === 'string' && f.weight.trim()) p.weight = f.weight.trim();
     }
     if (Array.isArray(f.alts)) {
       if (!ALT_ORIGINALS.has(name)) ALT_ORIGINALS.set(name, ALT_MAP[name] ? [...ALT_MAP[name]] : undefined);

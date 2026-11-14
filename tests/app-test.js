@@ -319,6 +319,20 @@ async function offlineTests() {
     }
     ok(`Ausbilder: alle ${n} Reiter mit Inhalt`, n >= 5 && empty === 0, `${empty} leer`);
     ok('Ausbilder: keine Fehler', d.errors.length === 0, d.errors[0]);
+    // Produktliste aus Excel: Datei hochladen, Felder wählen, Vorschau, übernehmen
+    try {
+      const writeXlsx = require('write-excel-file/node');
+      const tabelle = [['Produktname', 'Preis Filiale (Kasse)', 'Allergene', 'Vegan'], ['Mohnbrötchen', '0,75 €', 'Gluten (Weizen), Milch', 'Nein'], ['Gibt es nicht', '1,00 €', '', 'Ja']];
+      const buf = await (writeXlsx.default || writeXlsx)(tabelle.map((r) => r.map((v) => ({ value: v })))).toBuffer();
+      await click(d.page.getByRole('tab', { name: 'Inhalte' })); await settle(d.page, 500);
+      await d.page.locator('input[aria-label="Excel-Datei mit der Produktliste"]').setInputFiles({ name: 'produkte.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from(buf) });
+      await d.page.getByText(/Produkte erkannt/).first().waitFor({ timeout: 8000 });
+      const vorschau = await d.page.getByText('0,70 €').count() > 0 && await d.page.getByText('0,75 €').count() > 0;
+      await click(d.page.getByRole('button', { name: /Änderung(en)? übernehmen/ }).first()); await settle(d.page, 500);
+      const fertig = await d.page.getByText(/übernommen\. Sie gelten ab sofort/).count() > 0;
+      ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', vorschau && fertig, `Vorschau ${vorschau}, übernommen ${fertig}`);
+    } catch (e) { ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', false, String(e.message || e).slice(0, 160)); }
+    ok('Ausbilder: keine Fehler beim Einlesen', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
 }

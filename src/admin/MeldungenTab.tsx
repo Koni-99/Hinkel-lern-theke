@@ -95,7 +95,7 @@ export function MeldungenTab({ pfName, pfMsg, allQById, startFix, renderFixEdito
             <div style={{ fontSize: '16px', fontWeight: 700 }}>Bereits korrigiert</div>
             {fixedProducts.map(n => {
               const f = pFixes[n];
-              const what = [f.price ? 'Preis' : '', f.shortIngredients ? 'Zutaten' : '', f.allergens ? 'Allergene' : '', f.alts ? 'Alternativen' : ''].filter(Boolean).join(', ');
+              const what = [f.price || f.pricePerKg ? 'Preis' : '', f.shortIngredients ? 'Im Verkauf sagen' : '', f.fullIngredients ? 'Zutaten' : '', f.allergens ? 'Allergene' : '', f.description ? 'Beschreibung' : '', typeof f.vegan === 'boolean' ? 'Vegan' : '', f.weight ? 'Gewicht' : '', f.alts ? 'Alternativen' : ''].filter(Boolean).join(', ');
               return (
                 <div key={n} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '12px 14px', borderRadius: '14px', backgroundColor: TH.cream }}>
                   <span style={{ flex: '1 1 220px', fontSize: '16px' }}><strong>{n}</strong>{what ? ` · ${what}` : ''}</span>

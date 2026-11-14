@@ -7,6 +7,7 @@ import { weekStart, weekDayKeys, parseScoreDate, streakOf } from '../admin/admin
 import type { ReportItem } from '../admin/adminHelfer';
 import { KollegenTab, offeneKollegenSachen } from '../admin/KollegenTab';
 import { FragenImport } from '../admin/FragenImport';
+import { ProduktImport } from '../admin/ProduktImport';
 import { UmfragenVerwaltung } from '../admin/UmfragenVerwaltung';
 
 import { CloudPayload } from '../types';
@@ -545,6 +546,9 @@ export function AdminView({
     if (!sameList(pfAlts, orig.alts)) fix.alts = [...pfAlts];
     const name = pfName;
     const rk = pfReportKey;
+    // Aus der Excel-Produktliste übernommene Angaben (Zutaten, Beschreibung, Vegan, Gewicht, Preis/kg) beim Bearbeiten behalten
+    const alt: any = pFixes[name] && !pFixes[name].restored ? pFixes[name] : {};
+    ['pricePerKg', 'allergenNote', 'fullIngredients', 'description', 'vegan', 'weight'].forEach((k) => { if (alt[k] !== undefined) fix[k] = alt[k]; });
     const changed = Object.keys(fix).length > 1;
     mutateCloudData((curr) => {
       curr.productFixes = { ...(curr.productFixes || {}), [name]: changed ? fix : { restored: true, ts: Date.now() } };
@@ -769,6 +773,7 @@ export function AdminView({
       {adminTab === 'message' && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
 
       {/* ═════════ INHALTE ═════════ */}
+      {adminTab === 'content' && <ProduktImport mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
 

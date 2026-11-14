@@ -30,8 +30,6 @@ export interface ShopProduct {
   vegan?: boolean;
 }
 
-const VANILLEAROMA =
-  'Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe)';
 
 export const SHOP_PRODUCTS: ShopProduct[] = [
   {
@@ -198,9 +196,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Spekulatius ist knusprig, hauchdünn und sorgfältig gebacken nach bewährter Handwerkstradition. Mit viel Fingerspitzengefühl werden die filigranen Motive geprägt und die feine Rezeptur in jeder Charge frisch zubereitet.',
     shortIngredients: 'Weizenmehl, Zucker, Butter, Milchpulver, etwas Marzipan, Spekulatiusgewürz',
     fullIngredients:
-      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Spekulatiusgewürz (Zimt, Nelken, Anis, Ingwer, Muskatnuss, Cardamom), Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Triebmittel: Hirschhornsalz (Ammoniumhydrogencarbonat, Magnesiumcarbonat)' +
-      VANILLEAROMA +
-      ', Hirschhornsalz ABC Trieb (Ammoniumhydrogencarbonat, Magnesiumcarbonat)',
+      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Spekulatiusgewürz (Zimt, Nelken, Anis, Ingwer, Muskatnuss, Cardamom), Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Triebmittel: Hirschhornsalz (Ammoniumhydrogencarbonat, Magnesiumcarbonat)',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)'],
     note: 'Gleiche Zutaten wie der Gewürzspekulatius, nur andere Reihenfolge.'
   },
@@ -492,9 +488,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Spekulatius ist knusprig, hauchdünn und sorgfältig gebacken nach bewährter Handwerkstradition. Mit viel Fingerspitzengefühl werden die filigranen Motive geprägt und die feine Rezeptur in jeder Charge frisch zubereitet.',
     shortIngredients: 'Weizenmehl, Zucker, Butter, Milchpulver, Spekulatiusgewürz, etwas Marzipan',
     fullIngredients:
-      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Spekulatiusgewürz (Zimt, Nelken, Anis, Ingwer, Muskatnuss, Cardamom), Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Triebmittel: Hirschhornsalz (Ammoniumhydrogencarbonat, Magnesiumcarbonat)' +
-      VANILLEAROMA +
-      ', Hirschhornsalz ABC Trieb (Ammoniumhydrogencarbonat, Magnesiumcarbonat)',
+      'WEIZENMEHL, Zucker, BUTTER, Wasser, VOLLMILCHPULVER, Spekulatiusgewürz (Zimt, Nelken, Anis, Ingwer, Muskatnuss, Cardamom), Marzipan (MANDELN, Zucker, Wasser, Invertzucker), Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Triebmittel: Hirschhornsalz (Ammoniumhydrogencarbonat, Magnesiumcarbonat)',
     allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -678,9 +672,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Hüftgold ist ein zartes Mandel-Spritzgebäck mit feiner Struktur und buttrigem Geschmack. Auf den beiden Plätzchen sorgt ein Klecks roter Fruchtmarmelade für fruchtige Frische und eine schöne Balance zur Süße. Abgerundet wird das Ganze mit einer feinen Schicht Puderzucker. Ein kleines Gebäck mit großem Suchtfaktor.',
     shortIngredients: 'Mandel-Spritzgebäck mit Butter, Himbeer-Johannisbeer-Konfitüre, Puderzucker',
     fullIngredients:
-      'BUTTER, WEIZENMEHL, Zucker, MANDELN, Himbeer-Johannisbeer-Konfitüre (Himbeeren, Zucker, Zitronensaftkonzentrat, Pektin), Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), NATUERLICHES BOURBON VANILLEAROMA, Salz' +
-      VANILLEAROMA +
-      ', natürliches Bourbon-Vanillearoma, Salz',
+      'BUTTER, WEIZENMEHL, Zucker, MANDELN, Himbeer-Johannisbeer-Konfitüre (Himbeeren, Zucker, Zitronensaftkonzentrat, Pektin), Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), NATUERLICHES BOURBON VANILLEAROMA, Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
