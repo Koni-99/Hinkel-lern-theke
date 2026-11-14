@@ -486,27 +486,9 @@ export const ALT_MAP: Record<string, string[]> = {
   'Zeusstange': ['Olivenstange', 'Feuriges'],
 };
 
-// ───────────────────────── Dunkler Modus ─────────────────────────
-// Wird beim Start aus dem Gerät gelesen (Schalter oben in der App, danach lädt die App neu)
-let DARK_ON = false;
-// Dunkelmodus ist abgeschaltet, alte Einstellung wird entfernt
-try { if (typeof window !== 'undefined') window.localStorage.removeItem('lt_theme'); } catch { /* egal */ }
-DARK_ON = false;
-export const isDarkMode = () => DARK_ON;
-// Mokka-Braun statt fast Schwarz: helle Farben werden zu warmen Brauntönen, dunkle Schrift wird hell
-const DARK_MAP: Record<string, string> = {
-  '#FFFFFF': '#6A4B36', '#FFFBF2': '#54392A', '#F1E3C8': '#86634A', '#2B170A': '#FFF4E4', '#6B4A30': '#EBD6BC', '#4B2A14': '#FFC72C', '#FFF6E0': '#2B170A',
-  '#FFF0C2': '#7A5A2A', '#FCE1D2': '#7A4A3A', '#E1EEDC': '#3F5A3E', '#DDE6F7': '#3E4C66', '#2F5D3A': '#B9EBC2', '#9A3412': '#FFB89E', '#F4EADB': '#6F5240',
-  '#7A4A00': '#FFD873', '#2F4F8A': '#C4D6FF', '#8A5A00': '#FFD873', '#F0D9AE': '#8A6A44', '#3A2010': '#FFF4E4', '#7A4A2B': '#F3DCC0', '#FAF6F0': '#54392A',
-  '#D9CBB5': '#8A6E55', '#C9DAEC': '#4A5A74', '#9EC3EA': '#5A7398', '#D6E4F2': '#43536C', '#E6D6B8': '#8A6E55', '#CFE3C9': '#4F6E4E', '#C9D6EE': '#4E5D7A', '#F5C6AE': '#8A5A48',
-};
-/** Farbe für den aktuellen Modus (hell = unverändert) */
-export const dc = (c: string): string => {
-  if (!DARK_ON) return c;
-  const k = c.toUpperCase();
-  const full = k.length === 4 ? `#${k[1]}${k[1]}${k[2]}${k[2]}${k[3]}${k[3]}` : k;
-  return DARK_MAP[full] || c;
-};
+// Farben: früher gab es einen dunklen Modus, der ist entfernt. dc() gibt die Farbe unverändert zurück
+// (bleibt, damit nicht in über 60 Dateien jede Farbe angefasst werden muss).
+export const dc = (c: string): string => c;
 
 // ───────── Englisch-Wörterbuch: weitere Begriffe (Produkte kommen automatisch aus dem Sortiment dazu) ─────────
 export const DICTIONARY_EXTRA: { de: string; en: string; cat: string }[] = [

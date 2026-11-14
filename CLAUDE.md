@@ -13,7 +13,9 @@ Mehr zum Aufbau: `README.md`.
   Team-Nachhilfe aus den häufigsten Fehlern, Auswertung als Excel, Paten für Neue, Thema der Woche,
   Allergen-Liste zum Ausdrucken und „So geht's“-Anleitungen (nicht gewählt, könnte später nochmal passen),
   „Was ist neu?“-Seite, Profilbild,
-  Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen).
+  Absturz-Schutz/Team-Code/Datenschutz-Seite (Vorschlag „Muss“-Liste, wollte lieber andere Ideen),
+  Schicht-Checklisten, Prüfungs-Countdown für Azubis, dunkler Modus (gefällt ihm nicht, Code in 174 entfernt).
+- Teamziel gibt es schon als **Wochenziel** – nicht nochmal vorschlagen.
 - Der Brotkorb auf der Startseite bleibt (er zeigt auch Stufe und Meister-Fortschritt).
 
 ## Stil der App
@@ -78,6 +80,7 @@ Mehr zum Aufbau: `README.md`.
 - 171: Hilfe für Neue (`src/ui/hilfe.tsx`): Einführung 7 Seiten (neu „Wo finde ich was?“, „Gemeinsam im Team“), Hilfe-Seite mit „Wo finde ich was?“ oben + Themen zu allen neuen Funktionen. Neue Funktionen künftig auch dort erklären!
 - 172: Hilfe-Seite und Einführung ohne Emojis (alles `LtIcon`)
 - 173: Englisch-Wörterbuch (`src/daten/data.ts` DICTIONARY_EXTRA, Produkte automatisch in `karteikarten/daten.tsx`): neue Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“, mehr Verkaufssätze, Übersetzungen korrigiert (z. B. „ohne Schokolade“ zählte als Schokolade), Wörterbuch-Seite ohne Emojis (`ICON.speaker`)
+- 174: „Mein Monat“ (Menü, `src/screens/MeinMonat.tsx`, Logik `src/hilfen/meinMonat.ts`): Punkte + Vergleich Vormonat, Platz im Team, Lerntage, neu gemeistert (Stand am Monatsanfang in `_monatSnap`), Lieblings-Spiel, bester Tag, Tipp. Dunkler Modus entfernt (`dc()` gibt Farbe nur noch weiter)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.

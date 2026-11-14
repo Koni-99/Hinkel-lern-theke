@@ -1,13 +1,12 @@
 // Sonnige Theke: 3D-Neigen mit Glanzlicht für die großen Karten auf der Startseite.
-// Läuft ohne Änderungen an App.tsx; aus bei "Animationen ausschalten", reduzierter Bewegung und im Dunkelmodus.
+// Läuft ohne Änderungen an App.tsx; aus bei "Animationen ausschalten", reduzierter Bewegung.
 const SELECTOR = ".lt-hero-cta, .lt-herocard";
 const MAX_DEG = 7;
 
 function calm(): boolean {
   return (
     document.documentElement.classList.contains("lt-noanim") ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-    !!document.querySelector(".lt-root.lt-dark")
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 }
 

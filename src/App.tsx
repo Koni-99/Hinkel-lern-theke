@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
-import { dc, isDarkMode, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
+import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 173;
+const APP_VERSION: number = 174;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -19,6 +19,8 @@ import { LobKarte } from './screens/LobKarte';
 import { HoerLernen } from './screens/HoerLernen';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
+import { neuerMonatSnap } from './hilfen/meinMonat';
+import { MeinMonat } from './screens/MeinMonat';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
@@ -393,7 +395,6 @@ export default function App() {
   };
 
   // Hell / Dunkel: wird pro Gerät gemerkt, die App lädt danach kurz neu
-  const darkMode = isDarkMode();
   useEffect(() => {
     try { document.documentElement.style.backgroundColor = LT.cream; document.body.style.backgroundColor = LT.cream; } catch {}
   }, []);
@@ -1600,6 +1601,17 @@ export default function App() {
   const myMarkise = username ? String(((cloudData.progress || {})[username.toLowerCase()] || {})._markise || '') : '';
   useEffect(() => { PT_SHOP.filter(x => x.kind === 'markise').forEach(x => document.documentElement.classList.toggle(`lt-${x.id}`, myMarkise === x.id)); }, [myMarkise]);
 
+  // „Mein Monat“: am Monatsanfang merken, wie viele Fragen gemeistert sind (nur im eigenen Fortschritt)
+  useEffect(() => {
+    if (!username || username.toLowerCase() === 'admin' || !cloudConnected || isSyncing) return;
+    const k = username.toLowerCase();
+    const prog = (cloudData.progress || {})[k];
+    if (!prog) return;
+    const snap = neuerMonatSnap(prog._monatSnap, correctIdSet(prog).size);
+    if (!snap) return;
+    mutateCloudData((curr) => { if (curr.progress[k]) curr.progress[k]._monatSnap = snap; return curr; });
+  }, [username, cloudConnected, isSyncing, cloudData.progress?.[username.toLowerCase()]?._monatSnap?.mo]);
+
   // Wochenrückblick: Wer in der Woche davor noch nichts gemacht hat, bekommt keinen leeren Rückblick
   useEffect(() => {
     if (!username || username.toLowerCase() === 'admin' || !cloudConnected) return;
@@ -1778,7 +1790,7 @@ export default function App() {
     setToast('Der Ausbilder hat auf deine Idee geantwortet. Du findest die Antwort im Menü unter „Idee einreichen“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ideeNeuKey]);
-  if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont, darkMode }} />;
+  if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }} />;
 
   const overallPercent = getUserMasteryPercent(username);
   const myRank = getRankByPercentage(overallPercent);
@@ -2188,7 +2200,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2225,7 +2237,7 @@ export default function App() {
   );
 
   return (
-    <div className={darkMode ? 'lt-root lt-dark' : `lt-root${myProg._theme ? ` lt-${String(myProg._theme).replace('th_', 'th-')}` : ''}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, paddingBottom: '56px', display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
+    <div className={`lt-root${myProg._theme ? ` lt-${String(myProg._theme).replace('th_', 'th-')}` : ''}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, paddingBottom: '56px', display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
       <style>{LT_CSS}</style>
       {bootWait && !cloudConnected && (typeof navigator === 'undefined' || navigator.onLine) && <div className="lt-boot" role="status"><img src={HINKEL_KUEKEN} alt="" className="lt-loaded lt-boot-kueken" style={{ height: '110px', width: 'auto' }} /><div className="lt-boot-bar" aria-hidden="true"><i /></div><strong style={{ fontSize: '18px', color: LT.brown }}>Frische Daten werden geholt …</strong></div>}
 
@@ -2305,6 +2317,7 @@ export default function App() {
             <button role="menuitem" onClick={() => { toggleBigFont(); }} aria-pressed={bigFont}><span style={{ width: '24px', fontWeight: 800 }}>A+</span>{bigFont ? 'Normale Schrift' : 'Größere Schrift'}</button>
             {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('statistik'); }}><LtIcon paths={ICON.medal} size={22} />Meine Statistik</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('monat'); }}><LtIcon paths={ICON.calendar} size={22} />Mein Monat</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
@@ -2390,6 +2403,8 @@ export default function App() {
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
         {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'kundenstimmen' && <KundenstimmenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} produkte={Array.from(new Set(SHOP_PRODUCTS.map((p: any) => String(p.name)))).sort()} />}
+        {activeTab === 'monat' && <MeinMonat username={username} scores={cloudData.scores || []} tage={myDays} snap={myProg._monatSnap} gemeistertJetzt={masteredNow}
+          tipp={fehlerDue > 0 ? `In deinem Fehler-Stapel warten ${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'}, damit startest du am besten.` : weakestCat ? `Nimm dir „${weakestCat.c}“ vor, da hast du erst ${weakestCat.p} % geschafft.` : ''} />}
         {activeTab === 'geburtstag' && <GeburtstagSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
         {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} />}

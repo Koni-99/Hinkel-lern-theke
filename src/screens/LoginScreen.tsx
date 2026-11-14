@@ -36,13 +36,12 @@ export type LoginScreenProps = {
   finishLogin: (clean: string) => void;
   bigFont: boolean;
   toggleBigFont: () => void;
-  darkMode: boolean;
 };
 
-export function LoginScreen({ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont, darkMode }: LoginScreenProps) {
+export function LoginScreen({ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }: LoginScreenProps) {
   const isAdminLogin = tempUsername.trim().toLowerCase() === 'admin';
   return (
-    <div className={darkMode ? 'lt-root lt-dark' : 'lt-root'} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
+    <div className="lt-root" style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
       <style>{LT_CSS}</style>
       <div style={{ width: '100%' }}>
         <div className="lt-awning" style={{ backgroundColor: LT.yellow, backgroundImage: 'linear-gradient(180deg, rgba(75,42,20,0.16) 0px, rgba(75,42,20,0) 22px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

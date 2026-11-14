@@ -5,10 +5,6 @@ import { dc } from './daten/data';
 
 /** Stylesheet für Hover-Effekte und die automatische Handy-Ansicht. kueken = Küken-Bild für Platzhalter. */
 export const buildLtCss = (kueken: string): string => `
-.lt-dark [style*="background-color: rgb(255, 199, 44)"],.lt-dark .lt-band{color:#2B170A}
-.lt-dark [style*="background-color: rgb(255, 199, 44)"] *:not(button):not(svg):not(path),.lt-dark .lt-band *:not(button):not(svg):not(path){color:#2B170A !important}
-.lt-dark input,.lt-dark textarea,.lt-dark select{color:#FFF4E4}
-.lt-dark input::placeholder,.lt-dark textarea::placeholder{color:#CDB79E}
 .lt-root{font-family:'Atkinson Hyperlegible',Verdana,system-ui,sans-serif}
 .lt-root button{font-family:inherit}
 .lt-card{transition:transform .2s ease,box-shadow .2s ease}
@@ -242,7 +238,6 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-receipt .lt-rc-stamp{position:absolute;right:14px;top:205px;padding:5px 10px;border:3px solid #D92D20 !important;border-radius:8px !important;color:#D92D20 !important;background:rgba(255,255,255,.6) !important;font-weight:700;font-size:16px;letter-spacing:.08em;transform:rotate(12deg);animation:ltStampIn .6s cubic-bezier(.16,1,.3,1) 1.2s both;--sr:12deg;z-index:2}
 .lt-receipt .lt-rc-stamp.ok{border-color:#2F7A3E !important;color:#2F7A3E !important}
 
-.lt-dark .lt-receipt{background:#2B2420 !important}
 .lt-rc-mono{font-family:'Courier Prime','Courier New',Courier,ui-monospace,monospace}
 .lt-rc-line{border-top:2px dashed rgba(75,42,20,.35);margin:10px 0}
 .lt-rc-barcode{height:34px;width:70%;margin:10px auto 4px;background:repeating-linear-gradient(90deg,#3A2414 0 2px,transparent 2px 4px,#3A2414 4px 7px,transparent 7px 8px,#3A2414 8px 9px,transparent 9px 12px)}

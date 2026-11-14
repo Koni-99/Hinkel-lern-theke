@@ -68,6 +68,16 @@ async function device({ user = '', admin = false, cloud = false, backup = null, 
   await settle(page, 2500);
   return { ctx, page, errors };
 }
+/** App-Dateien kurz übersetzen und laden (für Rechen-Prüfungen ohne Browser) */
+function kompiliere(dateien) {
+  const path = require('path'), os = require('os'), fs = require('fs');
+  const root = path.resolve(__dirname, '..'), out = fs.mkdtempSync(path.join(root, 'node_modules', '.lt-tsc-')); // im Projekt, damit react gefunden wird
+  require('child_process').execFileSync(path.join(root, 'node_modules/.bin/tsc'), [...dateien, '--ignoreConfig', '--outDir', out, '--module', 'commonjs', '--target', 'es2020', '--skipLibCheck', '--esModuleInterop', '--jsx', 'react-jsx', '--rootDir', 'src'], { cwd: root });
+  process.on('exit', () => { try { fs.rmSync(out, { recursive: true, force: true }); } catch {} });
+  const res = {};
+  dateien.forEach((f) => { const rel = f.replace(/^src\//, '').replace(/\.tsx?$/, ''); res[rel.replace(/\//g, '_')] = require(path.join(out, rel + '.js')); });
+  return res;
+}
 /** Codes aller Hör-Lernen-Texte, genau wie die App sie berechnet (App-Code kurz übersetzen) */
 function stimmeKeys() {
   const path = require('path'), os = require('os'), fs = require('fs');
@@ -163,7 +173,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Mein Monat', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -178,6 +188,27 @@ async function offlineTests() {
     ok('Einführung: 7 Seiten mit „Wo finde ich was?“ und „Gemeinsam im Team“', seiten === 7 && titel.some((t) => t.includes('Wo finde ich was?')) && titel.some((t) => t.includes('Gemeinsam im Team')), `${seiten} Seiten`);
     ok('Hilfe: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }
+  // Mein Monat: Seite geht auf (Menü) und die Rechnung stimmt
+  {
+    const d = await device({ user: 'Anna' });
+    await click(d.page.getByRole('button', { name: 'Menü' }).first());
+    await click(d.page.getByRole('menuitem', { name: 'Mein Monat' }).first()); await settle(d.page);
+    ok('Mein Monat: Seite mit Monatsauswahl', (await d.page.getByRole('heading', { name: 'Mein Monat' }).count()) > 0 && (await d.page.getByRole('button', { name: /dieser Monat/ }).count()) > 0);
+    ok('Mein Monat: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+    const M = kompiliere(['src/hilfen/meinMonat.ts']).hilfen_meinMonat;
+    const heute = new Date(); const tt = (tag, mo = 0) => { const x = new Date(heute.getFullYear(), heute.getMonth() - mo, tag); return `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}.${String(x.getFullYear()).slice(2)}`; };
+    const mk = `${heute.getFullYear()}-${String(heute.getMonth() + 1).padStart(2, '0')}`;
+    const scores = [
+      { username: 'Anna', score: 100, date: tt(1), category: 'Quiz: Fachwissen' }, { username: 'Anna', score: 50, date: tt(1), category: 'Bilderquiz' },
+      { username: 'Anna', score: 30, date: tt(2), category: 'Quiz: Service' }, { username: 'Ben', score: 500, date: tt(1), category: 'Quiz' },
+      { username: 'Anna', score: 80, date: tt(5, 1), category: 'Quiz' }, { username: 'Anna', score: 999, date: tt(1), category: 'Bonus vom Ausbilder' },
+    ];
+    const r = M.monatsDaten({ mo: mk, ich: 'anna', scores, tage: [`${mk}-01`, `${mk}-02`], snap: { mo: mk, m: 10 }, gemeistertJetzt: 14 });
+    ok('Mein Monat: Rechnung (Punkte, Platz, Tage, Lieblings-Spiel, neu gemeistert)', r.punkte === 180 && r.punkteVormonat === 80 && r.platz === 2 && r.mitspieler === 2 && r.lerntage === 2 && r.lieblingsSpiel === 'Quiz' && r.neuGemeistert === 4 && r.runden === 3 && r.besterTag && r.besterTag.punkte === 150, JSON.stringify(r));
+    const s1 = M.neuerMonatSnap({ mo: '2020-01', m: 3 }, 9); const s2 = M.neuerMonatSnap({ mo: mk, m: 3 }, 9);
+    ok('Mein Monat: Monats-Stand nur einmal pro Monat', s1 && s1.mo === mk && s1.m === 9 && !s1.vorher && s2 === null);
   }
   // Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)
   {
