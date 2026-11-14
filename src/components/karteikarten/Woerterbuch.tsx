@@ -3,6 +3,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { DICT_ALL, DICT_CATS, speakEnglish } from './daten';
+import { LtIcon, ICON } from '../../basis/symbole';
 
 export type WoerterbuchProps = {
   dictCat: string;
@@ -34,10 +35,10 @@ export function Woerterbuch({ dictCat, setDictCat, filteredDictionary, dictLette
           fontWeight: "700",
         }}
       >
-        🇬🇧 Englisch für die Theke
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}><LtIcon paths={ICON.globe} size={24} />Englisch für die Theke</span>
       </h3>
       <p style={{ fontSize: "16px", color: dc('#6B4A30'), margin: "0 0 14px" }}>
-        {DICT_ALL.length} Begriffe und Sätze für Gäste aus aller Welt, dazu alle unsere Produkte. Tippe auf 🔊, dann wird es auf Englisch vorgelesen.
+        {DICT_ALL.length} Begriffe und Sätze für Gäste aus aller Welt, dazu alle unsere Produkte. Tippe auf den Lautsprecher, dann wird es auf Englisch vorgelesen. Unter „Das sagen Kunden“ steht, was Gäste oft fragen.
       </p>
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
         {DICT_CATS.map((c) => {
@@ -59,10 +60,10 @@ export function Woerterbuch({ dictCat, setDictCat, filteredDictionary, dictLette
             <div key={`${idx}-${item.de}`} id={first ? `dict-${dictLetterOf(item.de)}` : undefined} className="fc-item lt-tilt" style={{ animationDelay: `${Math.min(idx, 14) * 0.03}s`, scrollMarginTop: "12px", backgroundColor: dc('#FFFBF2'), padding: "12px 14px", borderRadius: "12px", border: `2px solid ${dc('#F1E3C8')}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: "17px", fontWeight: 700, color: dc('#2B170A') }}>{item.de}</div>
-                <div style={{ fontSize: "17px", color: dc('#2F4F8A'), fontWeight: 700, marginTop: "3px" }}>🇬🇧 {item.en}</div>
+                <div style={{ fontSize: "17px", color: dc('#2F4F8A'), fontWeight: 700, marginTop: "3px" }}>{item.en}</div>
                 <span style={{ display: "inline-block", marginTop: "6px", fontSize: "13px", backgroundColor: dc('#FFF0C2'), color: dc('#8A5A00'), padding: "2px 8px", borderRadius: "999px", fontWeight: 700 }}>{item.cat}</span>
               </div>
-              <button onClick={() => speakEnglish(item.say || item.en)} aria-label={`Auf Englisch vorlesen: ${item.en}`} className="lt-speak" style={{ flex: "0 0 auto", width: "48px", height: "48px", borderRadius: "50%", border: `2px solid ${dc('#F1E3C8')}`, backgroundColor: dc('#FFFFFF'), fontSize: "20px", cursor: "pointer" }}>🔊</button>
+              <button onClick={() => speakEnglish(item.say || item.en)} aria-label={`Auf Englisch vorlesen: ${item.en}`} className="lt-speak" style={{ flex: "0 0 auto", width: "48px", height: "48px", borderRadius: "50%", border: `2px solid ${dc('#F1E3C8')}`, backgroundColor: dc('#FFFFFF'), fontSize: "20px", cursor: "pointer" }}><LtIcon paths={ICON.speaker} size={22} /></button>
             </div>
           );
         })}

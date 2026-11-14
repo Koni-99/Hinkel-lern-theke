@@ -4,17 +4,22 @@ import { BAKERY_DICTIONARY, DICTIONARY_EXTRA } from '../../daten/data';
 import { SHOP_PRODUCTS, ShopProduct } from '../../daten/shopProducts';
 
 // ───────── Englisch-Wörterbuch: Produkte automatisch aus dem Sortiment ─────────
-export const EN_BREAD: Record<string, string> = { schwarzbrot: "dark wholegrain rye bread", roggen: "rye bread", roggenmisch: "rye bread with some wheat", weizenmisch: "wheat bread with some rye", weizen: "light wheat bread", stuten: "sweet milk loaf", dinkel: "spelt bread", spezial: "special bread" };
+export const EN_BREAD: Record<string, string> = { schwarzbrot: "dark wholegrain rye bread", roggen: "rye bread", roggenmisch: "rye and wheat bread", weizenmisch: "wheat and rye bread", weizen: "light wheat bread", stuten: "sweet milk loaf", dinkel: "spelt bread", spezial: "special bread" };
 
-export const EN_GROUP: Record<string, string> = { "Brot": "bread", "Brötchen": "bread roll", "Kleingebäck": "small savoury bake", "Feingebäck": "sweet pastry", "Kuchen": "cake", "Stuten & Brioche": "sweet loaf", "Weihnachtsgebäck": "Christmas treat", "Saisongebäck": "seasonal pastry", "Herzhafte Snacks": "savoury snack", "Backmischung": "baking mix", "Sonstiges": "bakery product" };
+export const EN_GROUP: Record<string, string> = { "Brot": "bread", "Brötchen": "bread roll", "Kleingebäck": "small sweet bake", "Feingebäck": "sweet pastry", "Kuchen": "cake", "Stuten & Brioche": "sweet loaf", "Weihnachtsgebäck": "Christmas treat", "Saisongebäck": "seasonal pastry", "Herzhafte Snacks": "savoury snack", "Backmischung": "baking mix", "Sonstiges": "bakery product" };
 
-export const EN_WORDS: [RegExp, string][] = [[/walnu/i, "walnuts"], [/haselnu/i, "hazelnuts"], [/mandel/i, "almonds"], [/pistazie/i, "pistachios"], [/sonnenblumen/i, "sunflower seeds"], [/kürbiskern/i, "pumpkin seeds"], [/leinsa/i, "linseed"], [/chia/i, "chia seeds"], [/sesam/i, "sesame"], [/mohn/i, "poppy seeds"], [/kümmel/i, "caraway"], [/rosine/i, "raisins"], [/cranberr/i, "cranberries"], [/marzipan/i, "marzipan"], [/zimt/i, "cinnamon"], [/honig/i, "honey"], [/schoko|kuvertüre|kakao/i, "chocolate"], [/quark/i, "quark"], [/käse|gouda/i, "cheese"], [/zwiebel/i, "onion"], [/olive/i, "olives"], [/tomate/i, "tomatoes"], [/speck|schinken/i, "bacon"], [/spinat/i, "spinach"], [/senf/i, "mustard"], [/peperoni|chili/i, "chili"], [/apfel/i, "apple"], [/himbeer/i, "raspberries"], [/kirsch/i, "cherries"], [/kokos/i, "coconut"], [/pudding/i, "custard"], [/hafer/i, "oats"], [/buchweizen/i, "buckwheat"], [/kartoffel/i, "potato"], [/lakritz/i, "liquorice"], [/ananas/i, "pineapple"], [/butter/i, "butter"]];
+export const EN_WORDS: [RegExp, string][] = [[/walnu/i, "walnuts"], [/haselnu/i, "hazelnuts"], [/mandel/i, "almonds"], [/pistazie/i, "pistachios"], [/sonnenblumen/i, "sunflower seeds"], [/kürbiskern/i, "pumpkin seeds"], [/leinsa/i, "linseed"], [/chia/i, "chia seeds"], [/sesam/i, "sesame"], [/mohn/i, "poppy seeds"], [/kümmel/i, "caraway"], [/rosine/i, "raisins"], [/cranberr/i, "cranberries"], [/marzipan/i, "marzipan"], [/zimt/i, "cinnamon"], [/honig/i, "honey"], [/schoko|kuvertüre|kakao/i, "chocolate"], [/quark/i, "quark"], [/käse|gouda/i, "cheese"], [/zwiebel/i, "onion"], [/olive/i, "olives"], [/tomate/i, "tomatoes"], [/speck|schinken/i, "bacon"], [/spinat/i, "spinach"], [/senf/i, "mustard"], [/peperoni|chili/i, "chili"], [/apfel/i, "apple"], [/himbeer/i, "raspberries"], [/kirsch/i, "cherries"], [/kokos/i, "coconut"], [/pudding/i, "custard"], [/konfitüre|marmelade/i, "jam"], [/hafer/i, "oats"], [/buchweizen/i, "buckwheat"], [/kartoffel/i, "potato"], [/lakritz/i, "liquorice"], [/ananas/i, "pineapple"], [/nuss|nüsse/i, "nuts"], [/butter/i, "butter"]];
 
 export function productEnglish(p: ShopProduct): string {
   const base = p.breadType ? EN_BREAD[p.breadType] : EN_GROUP[p.group] || "bakery product";
-  const src = `${p.name} ${p.shortIngredients || ""}`;
+  // Was im Namen steckt, zuerst (z. B. „Bratapfelkuchen“ → apple); „ohne Schokolade“ zählt nicht
+  const ohne = (t: string) => t.replace(/ohne\s+\S+/gi, '');
   const extras: string[] = [];
-  EN_WORDS.forEach(([re, w]) => { if (re.test(src) && !extras.includes(w) && extras.length < 3 && !base.includes(w)) extras.push(w); });
+  [ohne(p.name), ohne(p.shortIngredients || "")].forEach((src) => EN_WORDS.forEach(([re, w]) => {
+    if (!re.test(src) || extras.includes(w) || extras.length >= 3 || base.includes(w)) return;
+    if (w === "nuts" && extras.some((x) => x.endsWith("nuts"))) return; // schon eine bestimmte Nuss genannt
+    extras.push(w);
+  }));
   return `${base.charAt(0).toUpperCase()}${base.slice(1)}${extras.length ? ` with ${extras.length > 1 ? `${extras.slice(0, -1).join(", ")} and ${extras[extras.length - 1]}` : extras[0]}` : ""}${p.vegan ? " (vegan)" : ""}`;
 }
 
@@ -27,7 +32,7 @@ export const DICT_ALL: { de: string; en: string; cat: string; say?: string }[] =
   return out.sort((a, b) => a.de.localeCompare(b.de, "de"));
 })();
 
-export const DICT_ORDER = ["Bedienung", "Unsere Produkte", "Allergene", "Fachbegriffe", "Zutaten & Teig", "Brot & Mehl", "Brötchen & Gebäck", "Tage & Zeiten"];
+export const DICT_ORDER = ["Bedienung", "Das sagen Kunden", "Bezahlen", "Unsere Produkte", "Allergene", "Fachbegriffe", "Zutaten & Teig", "Brot & Mehl", "Brötchen & Gebäck", "Zahlen & Mengen", "Tage & Zeiten"];
 
 export const DICT_CATS = ["Alle", ...Array.from(new Set(DICT_ALL.map(d => d.cat))).sort((a, b) => { const r = (x: string) => { const i = DICT_ORDER.indexOf(x); return i < 0 ? 99 : i; }; return r(a) - r(b); })];
 

@@ -238,6 +238,25 @@ async function offlineTests() {
     }
     ok('Nachschlagen: Karteikarten und Filter ohne Fehler', failed.length === 0, failed.join('; '));
   }
+  // Englisch-Wörterbuch: neue Bereiche für den Verkauf
+  {
+    const d = await device({ user: 'Anna' });
+    await click(nav(d.page).nth(3)); await settle(d.page);
+    let gefunden = false;
+    const n = await d.page.locator('main button:visible').count();
+    for (let e = 0; e < n && !gefunden; e++) {
+      await click(nav(d.page).nth(3)); await settle(d.page, 400);
+      await click(d.page.locator('main button:visible').nth(e)); await settle(d.page, 400);
+      const tab = d.page.getByRole('button', { name: 'Wörterbuch Englisch' });
+      if (await tab.count()) { await click(tab.first()); await settle(d.page, 400); gefunden = true; }
+    }
+    const bereiche = ['Das sagen Kunden', 'Bezahlen', 'Zahlen & Mengen'];
+    const fehlt = [];
+    for (const b of bereiche) if (!(await d.page.getByRole('button', { name: new RegExp('^' + b.replace('&', '\\&')) }).count())) fehlt.push(b);
+    ok('Wörterbuch: Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“', gefunden && fehlt.length === 0, gefunden ? fehlt.join(', ') : 'Wörterbuch nicht gefunden');
+    ok('Wörterbuch: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)
   {
     const d = await device({ user: 'Anna' });

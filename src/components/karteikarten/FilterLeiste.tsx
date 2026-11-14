@@ -202,15 +202,15 @@ export function FilterLeiste({ questions, favorites, setFilterMode, filterMode, 
               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {(area === "produkt"
                   ? [
-                      { id: "profiles", label: `🥖 Steckbriefe (${filteredProfiles.length})` },
-                      { id: "guides", label: "🔪 Schnitt & Allergene" },
-                      { id: "pcards", label: "📇 Lernkarten" },
+                      { id: "profiles", label: `Steckbriefe (${filteredProfiles.length})` },
+                      { id: "guides", label: "Schnitt & Allergene" },
+                      { id: "pcards", label: "Lernkarten" },
                     ]
                   : [
-                      { id: "fach", label: "📚 Wissen kompakt" },
-                      { id: "dictionary", label: "📖 Wörterbuch 🇬🇧" },
-                      { id: "lexicon", label: `❓ Fragen (${filteredCards.length})` },
-                      { id: "cards", label: "📇 Lernkarten" },
+                      { id: "fach", label: "Wissen kompakt" },
+                      { id: "dictionary", label: "Wörterbuch Englisch" },
+                      { id: "lexicon", label: `Fragen (${filteredCards.length})` },
+                      { id: "cards", label: "Lernkarten" },
                     ]
                 ).map((tab) => {
                   const active = displayStyle === tab.id;

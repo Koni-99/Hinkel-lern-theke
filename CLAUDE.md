@@ -77,6 +77,7 @@ Mehr zum Aufbau: `README.md`.
 - 170: Geburtstage (freiwillig, Menü → „Mein Geburtstag“, Karte + Gratulieren), Ideen-Box (Menü, anonym möglich, Ausbilder antwortet), Kundenstimmen (Lob/Kritik/Wunsch, Nachschlagen + Menü). Ausbilder-Reiter heißt jetzt „Rückmeldungen“ (Kundenfragen, Tipps, Ideen, Kundenstimmen, Lob). Logik: `src/hilfen/rueckmeldungen.ts`
 - 171: Hilfe für Neue (`src/ui/hilfe.tsx`): Einführung 7 Seiten (neu „Wo finde ich was?“, „Gemeinsam im Team“), Hilfe-Seite mit „Wo finde ich was?“ oben + Themen zu allen neuen Funktionen. Neue Funktionen künftig auch dort erklären!
 - 172: Hilfe-Seite und Einführung ohne Emojis (alles `LtIcon`)
+- 173: Englisch-Wörterbuch (`src/daten/data.ts` DICTIONARY_EXTRA, Produkte automatisch in `karteikarten/daten.tsx`): neue Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“, mehr Verkaufssätze, Übersetzungen korrigiert (z. B. „ohne Schokolade“ zählte als Schokolade), Wörterbuch-Seite ohne Emojis (`ICON.speaker`)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.
