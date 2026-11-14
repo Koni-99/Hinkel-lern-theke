@@ -8,6 +8,15 @@ import { SpeakButton } from '../../games/spielBasis';
 import { getProductEmoji, Profile } from './daten';
 import { KollegenTipps } from './KollegenTipps';
 import { MeineNotiz } from './MeineNotiz';
+import { LtIcon, ICON } from '../../basis/symbole';
+
+// Allergene als farbige Kästchen: jede Allergen-Gruppe hat ihre eigene Farbe, damit man sie an der Theke sofort erkennt
+const ALLERGEN_STIL: Record<string, { bg: string; ink: string; icon?: string[] }> = {
+  Gluten: { bg: '#FCE9C2', ink: '#7A4A00', icon: ICON.leaf }, Milch: { bg: '#DDE6F7', ink: '#2F4F8A', icon: ICON.drop }, Eier: { bg: '#FFF0B3', ink: '#6E5200', icon: ICON.egg },
+  'Schalenfrüchte': { bg: '#EADBCB', ink: '#6B3F1D' }, Erdnüsse: { bg: '#EADBCB', ink: '#6B3F1D' }, Soja: { bg: '#E1EEDC', ink: '#2F5D3A' }, Sesam: { bg: '#F3E6D0', ink: '#7A5530' },
+  Senf: { bg: '#FFF3B0', ink: '#6E5F00' }, Sellerie: { bg: '#DDEFD9', ink: '#2F6A3A' }, Lupinen: { bg: '#EDE3F3', ink: '#5B3A75' },
+};
+const teileAllergen = (a: string) => { const m = /^([^(]+?)\s*(?:\((.*)\))?$/.exec(a.trim()); return { kopf: (m ? m[1] : a).trim(), teil: m && m[2] ? m[2] : '' }; };
 import type { TippEintrag } from '../../hilfen/kollegen';
 
 export type SteckbriefDetailProps = {
@@ -52,7 +61,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
 
         <div style={{ padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
           {images[productImageKey(prod.name)] && (
-            <img src={images[productImageKey(prod.name)]} alt={prod.name} style={{ width: "100%", maxWidth: "320px", alignSelf: "center", aspectRatio: "1 / 1", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}` }} />
+            <img src={images[productImageKey(prod.name)]} alt={prod.name} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}` }} />
           )}
           {(facts.length > 0 || sp?.vegan) && (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -71,24 +80,27 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
           {sp && (
             <>
               <div style={{ alignSelf: "flex-start" }}><SpeakButton text={`${sp.name}. ${sp.description || ""} Im Verkauf sagen: ${sp.shortIngredients}. Allergene: ${sp.allergens.join(", ") || "keine"}.${sp.price ? ` Preis: ${sp.price}.` : ""}`} label="Steckbrief vorlesen" /></div>
-              {sp.description && <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.55 }}>{sp.description}</p>}
               <div style={{ padding: "16px 18px", borderRadius: "18px", backgroundColor: TH.tintYellow }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Im Verkauf sagen</div>
                 <div style={{ fontSize: "20px", fontWeight: 700, lineHeight: 1.45, marginTop: "4px" }}>{sp.shortIngredients}</div>
               </div>
-              <div style={{ padding: "16px 18px", borderRadius: "18px", backgroundColor: TH.tintPeach }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: TH.red, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Allergene</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: TH.red, textTransform: "uppercase", letterSpacing: "1px" }}>Allergene</div>
                 {sp.allergens.length > 0 ? (
-                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                    {sp.allergens.map((a) => (
-                      <span key={a} style={{ fontSize: "17px", fontWeight: 700, color: TH.red, backgroundColor: TH.white, padding: "4px 12px", borderRadius: "999px" }}>{a}</span>
-                    ))}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "8px" }}>
+                    {sp.allergens.map((a) => { const { kopf, teil } = teileAllergen(a); const st = ALLERGEN_STIL[kopf] || { bg: TH.tintPeach, ink: TH.red }; return (
+                      <div key={a} className="lt-allergen" style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "12px 14px", borderRadius: "16px", backgroundColor: dc(st.bg), color: st.ink, border: `2px solid ${st.ink}22` }}>
+                        {st.icon && <span aria-hidden="true" style={{ flex: "0 0 auto", marginTop: "1px" }}><LtIcon paths={st.icon} size={20} /></span>}
+                        <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: "18px", fontWeight: 800, lineHeight: 1.2 }}>{kopf}</span>{teil && <span style={{ display: "block", fontSize: "15px", fontWeight: 700, marginTop: "2px" }}>{teil}</span>}</span>
+                      </div>
+                    ); })}
                   </div>
                 ) : (
-                  <div style={{ fontSize: "18px", fontWeight: 700, color: TH.green }}>{sp.allergenNote ? "Keine Allergene enthalten" : "Keine Allergene"}</div>
+                  <div style={{ padding: "12px 14px", borderRadius: "16px", backgroundColor: TH.tintSage, fontSize: "18px", fontWeight: 700, color: TH.green }}>{sp.allergenNote ? "Keine Allergene enthalten" : "Keine Allergene"}</div>
                 )}
-                {sp.allergenNote && <div style={{ fontSize: "16px", color: TH.red, marginTop: "8px", lineHeight: 1.45 }}>{sp.allergenNote}</div>}
+                {sp.allergenNote && <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "14px", backgroundColor: TH.tintPeach, fontSize: "16px", color: TH.red, lineHeight: 1.45 }}><LtIcon paths={ICON.flag} size={18} />{sp.allergenNote}</div>}
               </div>
+              {sp.description && <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.55 }}>{sp.description}</p>}
               {sp.flour && <div style={{ fontSize: "17px", lineHeight: 1.45 }}><strong>Mehl:</strong> {sp.flour}</div>}
               {sp.note && <div style={{ fontSize: "17px", lineHeight: 1.45, color: TH.brown }}>{sp.note}</div>}
               <details style={{ backgroundColor: TH.white, border: `2px solid ${TH.line}`, borderRadius: "16px", padding: "12px 16px" }}>
