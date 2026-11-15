@@ -192,7 +192,10 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
       ...sample(Array.from(chWrong), 3).map(w => ({ text: `${pre}${euro(w)} zurück.`, correct: false, why: `${euro(given)} − ${euro(base)} = ${euro(change)}.` })),
     ]);
   };
-  if (payRoll < 0.15) {
+  if (core.zahltMit && core.zahltMit > total) {
+    // Szenario mit festem Geldschein (z. B. 200 Euro): genau damit wird bezahlt
+    steps.push({ topic: 'Rückgeld', customer: [pick([`Hier, die ${noteText(core.zahltMit)}.`, `So, bitte, ${noteText(core.zahltMit)}.`])], options: changeOpts(core.zahltMit - total, core.zahltMit, total, 'Danke, und ') });
+  } else if (payRoll < 0.15) {
     // Kartenzahlung
     steps.push({
       topic: 'Kartenzahlung',

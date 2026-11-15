@@ -116,7 +116,7 @@ export function scHurry(): Core | null {
     basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
     steps: [{
       topic: 'Eiliger Kunde',
-      customer: [pick([`Entschuldigung, ich hab’s furchtbar eilig, mein Bus kommt gleich! Ein ${x.name}, bitte.`, `Ganz schnell bitte, ich muss zur Arbeit: ${x.name}!`])],
+      customer: [pick([`Entschuldigung, ich hab’s furchtbar eilig, mein Bus kommt gleich! Einmal ${x.name}, bitte.`, `Ganz schnell bitte, ich muss zur Arbeit: ${x.name}!`])],
       options: opts([
         { text: `Klar, kommt sofort.`, correct: true },
         { text: `Oh, kennen Sie eigentlich schon unser ganzes Sortiment? Da gibt es neben ${x.name} noch ganz viel anderes …`, correct: false, why: 'Eilige Kunden zügig bedienen, keine langen Erklärungen jetzt.' },
@@ -198,7 +198,7 @@ export function scRude(): Core | null {
     basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
     steps: [{
       topic: 'Unhöflicher Kunde',
-      customer: [pick([`Na endlich! Ich stehe hier schon ewig. ${x.name}, aber zack zack!`, `Können Sie mal aufpassen? Ich will ein ${x.name}, und zwar jetzt!`])],
+      customer: [pick([`Na endlich! Ich stehe hier schon ewig. ${x.name}, aber zack zack!`, `Können Sie mal aufpassen? Ich will ${x.name}, und zwar jetzt!`])],
       options: opts([
         { text: `Entschuldigung, dass Sie warten mussten. Kommt sofort.`, correct: true },
         { text: 'So redet man aber nicht mit mir, dann warten Sie eben noch.', correct: false, why: 'Ruhig und freundlich bleiben, nicht auf den Ton einsteigen.' },
@@ -218,7 +218,7 @@ export function scHaggle(): Core | null {
     basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
     steps: [{
       topic: 'Rabatt verlangen',
-      customer: [`Ein ${x.name} bitte. Aber geben Sie mir das doch für die Hälfte, ist ja eh bald Feierabend, oder?`],
+      customer: [`Einmal ${x.name}, bitte. Aber geben Sie mir das doch für die Hälfte, ist ja eh bald Feierabend, oder?`],
       options: opts([
         { text: 'Das darf ich leider nicht, die Preise sind fest. Aber das Brot ist von heute früh.', correct: true },
         { text: 'Na gut, weil Sie es sind, aber nichts verraten.', correct: false, why: 'Eigenmächtig Rabatt geben ist nicht erlaubt. Freundlich bei den festen Preisen bleiben.' },
@@ -256,9 +256,11 @@ export function scBigNote(): Core | null {
     bread: x,
     persona: pick([{ name: 'Herr Engel', title: 'Herr Engel', who: 'hat nur einen großen Schein' }, { name: 'Frau Pohl', title: 'Frau Pohl', who: 'kommt gerade von der Bank' }]),
     basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
+    zahltMit: 20000, // bezahlt am Ende auch wirklich mit dem 200-Euro-Schein
+    sliceIntro: [pick(['Super, danke!', 'Okay, danke.'])],
     steps: [{
       topic: 'Großer Geldschein',
-      customer: [`Ein ${x.name}. Ich habe leider nur einen 200-Euro-Schein, geht das?`],
+      customer: [`Einmal ${x.name}. Ich habe leider nur einen 200-Euro-Schein, geht das?`],
       options: opts([
         { text: 'Moment, ich schau kurz, ob ich genug Wechselgeld habe. (Schein prüfen: fühlen, sehen, kippen.)', correct: true },
         { text: 'Klar, her damit. (Ohne Prüfen in die Kasse legen.)', correct: false, why: 'Große Scheine immer prüfen: Fühlen, Sehen, Kippen. Und vorher ans Wechselgeld denken.' },

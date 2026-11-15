@@ -98,7 +98,7 @@ export function timeGreeting() {
   return { std: 'Guten Abend', wrong: 'Guten Morgen', customer: ['Guten Abend!', 'Hallo, noch geöffnet?', 'Abend!'] };
 }
 
-export type Core = { steps: SimStep[]; basket: BasketLine[]; bread?: ShopItem; sliceIntro?: string[]; forceRoll?: boolean; extraWrongTotals?: number[]; persona?: Persona };
+export type Core = { steps: SimStep[]; basket: BasketLine[]; bread?: ShopItem; sliceIntro?: string[]; forceRoll?: boolean; extraWrongTotals?: number[]; persona?: Persona; zahltMit?: number };
 
 /** Antwort-Optionen mischen */
 export const opts = (list: SimOpt[]) => shuffleArray(list);
