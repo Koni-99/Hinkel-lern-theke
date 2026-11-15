@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 190;
+const APP_VERSION: number = 191;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -226,10 +226,10 @@ export default function App() {
       reader.onload = () => {
         const img = new Image();
         img.onload = () => {
-          const sc = Math.min(1, 900 / Math.max(img.width, img.height));
+          const sc = Math.min(1, 1400 / Math.max(img.width, img.height)); // v191: schärfer (vorher 900)
           const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
           const ctx = c.getContext('2d'); if (!ctx) return resolve('');
-          ctx.drawImage(img, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.8));
+          ctx.imageSmoothingQuality = 'high'; ctx.drawImage(img, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.88));
         };
         img.onerror = () => resolve('');
         img.src = String(reader.result || '');

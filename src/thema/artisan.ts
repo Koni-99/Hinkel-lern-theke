@@ -99,6 +99,10 @@ ${B} .lt-hdr-logo{isolation:isolate}
 ${B} .lt-hdr-logo::before{content:"";position:absolute;inset:-9px -20px;z-index:-1;border-radius:26px;background:radial-gradient(120% 120% at 30% 12%,#FFF0B3,#FFC72C 42%,#D9972B 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(140,84,10,.4),0 16px 34px -12px #000,0 0 54px -6px rgba(234,179,8,.75)}
 /* v190: weicher Schatten ohne Versatz (vorher stand die kleine Schrift doppelt, etwas tiefer) */
 ${B} .lt-logo{filter:drop-shadow(0 1px 2px rgba(75,42,20,.28)) !important}
+/* v191: Tablet und PC: Ähren-Kopf groß, damit man die Ähren und das Licht richtig sieht */
+@media (min-width:561px){${B} .lt-awning:not(.lt-awning-sm),${M} .lt-awning:not(.lt-awning-sm){height:250px}${B} .lt-awning:not(.lt-awning-sm) .lt-logo,${M} .lt-awning:not(.lt-awning-sm) .lt-logo{height:128px}${B} .lt-awning.lt-awning-sm,${M} .lt-awning.lt-awning-sm{height:130px}${B} .lt-awning-sm .lt-logo,${M} .lt-awning-sm .lt-logo{height:76px}${B} .lt-b-ebene,${M} .lt-b-ebene{zoom:1.25}}
+/* v191: Menüleiste links am PC etwas tiefer, damit sie nicht in den großen Kopf ragt */
+@media (min-width:1051px) and (min-height:640px){html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-aehren:not([class*="lt-th-"])>.lt-bottomnav,html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-mitaehren:not([class*="lt-th-"])>.lt-bottomnav{top:calc(50% + 70px);max-height:calc(100% - 160px)}}
 /* v190: goldener Logo-Knopf am Handy kleiner */
 @media (max-width:560px){${B} .lt-awning:not(.lt-awning-sm) .lt-logo{height:100px}${B} .lt-hdr-logo::before{inset:-7px -14px;border-radius:20px}}
 html.lt-noanim .lt-b-aehre,html.lt-noanim .lt-b-staub{animation:none}
