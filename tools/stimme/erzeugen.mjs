@@ -9,7 +9,14 @@
 //   --stimme de-DE-Chirp3-HD-Aoede                  andere Stimme wählen
 //
 // Schlüssel: Umgebungsvariable GOOGLE_TTS_KEY, oder er wird vom Netzwerk-Proxy eingefügt (Claude-Umgebung).
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+
+// In der Claude-Umgebung fügt der Netzwerk-Vermittler den Schlüssel ein. Node schickt fetch() nur mit
+// NODE_USE_ENV_PROXY=1 über ihn, darum das Werkzeug in diesem Fall einmal mit dieser Einstellung neu starten.
+if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY && !process.env.GOOGLE_TTS_KEY) {
+  const r = spawnSync(process.execPath, ['--no-warnings', ...process.argv.slice(1)], { stdio: 'inherit', env: { ...process.env, NODE_USE_ENV_PROXY: '1' } });
+  process.exit(r.status ?? 1);
+}
 import { mkdirSync, existsSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -52,8 +59,8 @@ async function sprechen(text, stimme = STIMME) {
 
 if (MUSTER) {
   mkdirSync(MUSTER, { recursive: true });
-  const probe = 'Ein Kunde möchte ein saftiges Brot ohne Weizen. Antwort: Unser reines Roggenbrot, frisch gebacken mit Natursauerteig.';
-  for (const s of ['de-DE-Chirp3-HD-Aoede', 'de-DE-Chirp3-HD-Kore', 'de-DE-Chirp3-HD-Charon', 'de-DE-Chirp3-HD-Puck', 'de-DE-Neural2-G']) {
+  const probe = 'Auf welche Schnittstärke werden unsere Schwarzbrote an der Brotschneidemaschine geschnitten? ... Die Antwort: auf fünfeinhalb Millimeter. Schwarzbrot schneiden wir besonders dünn, weil es so saftig und kompakt ist.';
+  for (const s of ['de-DE-Chirp3-HD-Aoede', 'de-DE-Chirp3-HD-Kore', 'de-DE-Chirp3-HD-Leda', 'de-DE-Chirp3-HD-Achernar', 'de-DE-Chirp3-HD-Charon', 'de-DE-Chirp3-HD-Puck', 'de-DE-Chirp3-HD-Orus', 'de-DE-Chirp3-HD-Enceladus']) {
     try { writeFileSync(path.join(MUSTER, `${s}.mp3`), await sprechen(probe, s)); console.log('Hörprobe:', s); }
     catch (e) { console.log('Nicht verfügbar:', s, String(e.message).slice(0, 120)); }
   }
