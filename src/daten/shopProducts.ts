@@ -1081,7 +1081,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Mini-Stollen ist der kleine Bruder unseres Christstollens: gleiches überliefertes Familienrezept, gleiche Sorgfalt, nur im handlichen Format. Wie der große Stollen wird er von Hand gefertigt und mit viel Zeit hergestellt. Der Teig ruht vor dem Backen lange, damit sich Aromen und Struktur gut entwickeln. Nach dem Backen reift auch jeder Mini-Stollen über viele Tage, bis er seinen vollen Geschmack hat. Dafür braucht es Erfahrung, Geduld und Sorgfalt, ganz gleich, wie groß der Stollen ist. Wir verwenden ausschließlich hochwertige Zutaten wie gute Butter, geröstete Mandeln und aromatische Sultaninen. Für den rheinischen Akzent legen wir die Mandeln in Altbier und die Rosinen in Düsseldorfer Killepitsch ein. Das ist eine traditionelle Veredelung mit lokaler Handschrift. Jeder Mini-Stollen wird von Hand geformt, gebacken und mit Butter und Zucker veredelt, ganz im Sinne klassischer Stollenherstellung. Er wird ohne Marzipan gebacken und eignet sich für kleinere Haushalte, zum Probieren, als Mitbringsel oder als Geschenk.',
     shortIngredients: 'Stollenteig mit Butter, Rosinen (in Killepitsch), Mandeln (in Altbier), Zitronat & Orangeat',
     fullIngredients:
-      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
+      'WEIZENMEHL, Rosinen, BUTTER, MANDELN, Wasser, Zucker, Schumacher Altbier (Wasser, GERSTENRÖSTMALZ, Hopfen, Hefe), Ethylalkohol, Hefe, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, Christstollen-Aroma, Salz, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Zitronenschale (Zitronenschale, Zucker, Dextrose), Orangenschale (Orangenschale, Zucker, Dextrose)',
     allergens: ['Gluten (Weizen, Gerste)', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -2043,5 +2043,41 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     flour: '70 % Roggen, 30 % Weizen',
     breadType: 'roggenmisch',
     vegan: true
-  }
+  },
+  // ── Version 207: aus dem Online-Shop ergänzt (ohne Preis und Gewicht, die sind im Laden anders) ──
+  {
+    name: 'Kappeskopp',
+    group: 'Brot',
+    description:
+      'Ein Baguette für die Kohlzeit: Wir backen es direkt auf einem Wirsingblatt, das sich beim Backen an die Kruste legt und ihm sein besonderes Aussehen gibt. Im Teig stecken feine Streifen Wirsing und Stückchen Kartoffel, ein Schuss Traubensaft rundet ihn ab. Die Kruste wird kräftig und rösch, die Krume bleibt saftig und offenporig. Schmeckt zu Suppe und Eintopf oder einfach mit gesalzener Butter. Gibt es nur, solange der Wirsing Saison hat.',
+    shortIngredients: 'Weizenteig mit Wirsing, Rotkohl, Kartoffel und etwas Traubensaft, auf einem Wirsingblatt gebacken',
+    fullIngredients:
+      'WEIZENMEHL, Wasser, Wirsing, Rotkohl, Traubensaft, Kartoffel, Salz, Malzbackmittel (WEIZENMEHL, Hefe, Salz, Dextrose, Rapsöl, Ascorbinsäure), Hefe',
+    allergens: ['Gluten (Weizen)'],
+    note: 'Saisonbrot: gibt es nur, solange der Wirsing Saison hat.',
+    flour: '100 % Weizen',
+    breadType: 'weizen'
+  },
+  {
+    name: 'Zimtmonde',
+    group: 'Weihnachtsgebäck',
+    description:
+      'Unsere Zimtmonde sind die fruchtig feine Variante der klassischen Zimtsterne. Gefertigt aus einer saftigen Masse mit Mandeln, Haselnüssen und Marzipan, verfeinert mit einer dezenten Note Kirschwasser, bringen sie winterliches Aroma und eine feine Tiefe in den Geschmack. Hinweis: 100 Gramm entsprechen ca. 5-6 Stück.',
+    shortIngredients: 'Mandel-Haselnuss-Masse mit Marzipan, Zimt und etwas Kirschwasser',
+    fullIngredients:
+      'Zucker, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), MANDELN, Wasser, Eiweißpulver (Zucker, HÜHNEREIWEIßPULVER, Natrium-Carboxymethylcellulose, Johannisbrotkernmehl, Monokaliumphosphat, Salz), HASELNÜSSE, Zimt, Kirschwasser 40 % Vol., Zitronenpulver (Reismehl, Zucker, Fruktose, Saflorkonzentrat, Alpha-Tocopherol, MILCH (SPUR), EIER (SPUR), SOJA (SPUREN))',
+    allergens: ['Eier', 'Schalenfrüchte (Mandeln, Haselnüsse)'],
+    allergenNote: 'Eier aus der Zutatenliste ergänzt (Hühnereiweißpulver), im Shop fehlt das bei den Allergenen. Kann Spuren von Milch und Soja enthalten.'
+  },
+  {
+    name: 'Tigertatze',
+    group: 'Feingebäck',
+    description:
+      'Unsere Tigertatze ist der kleine Bruder der Bärentatze, mit einem entscheidenden Unterschied. Zwischen dem buttrigen Spritzgebäck und der Zartbitterschokolade versteckt sich eine feine Schicht zartschmelzender Nougatcreme. Beim Reinbeißen zeigt sich das volle Aroma: oben knuspriges Spritzgebäck, darunter sanftes Nougat und abschließend eine knackige Schokoladenschicht.',
+    shortIngredients: 'Buttriges Spritzgebäck mit Nougatcreme und Zartbitterschokolade',
+    fullIngredients:
+      'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, NATÜRLICHES BOURBON VANILLEAROMA',
+    allergens: ['Gluten (Weizen)', 'Milch', 'Eier'],
+    allergenNote: 'Achtung: In der Zutatenliste aus dem Shop fehlen die Nougatcreme und die Zartbitterschokolade. Nougat enthält meist Haselnüsse, Schokolade oft Soja. Bei Allergien bitte in der Backstube nachfragen.'
+  },
 ];
