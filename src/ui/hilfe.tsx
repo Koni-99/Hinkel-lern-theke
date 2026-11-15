@@ -86,7 +86,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Schatzkammer', 'dort bezahlst du mit Punkten statt mit Trinkgeld')}
         {ort('Joker', 'helfen im Quiz oder im Battle, kaufst du im Laden')}
         {ort('Rubbellos', 'im Laden kaufen, auf der Startseite freirubbeln')}
-        {ort('Abzeichen', 'für besondere Erfolge, siehst du im Abzeichen-Album')}
+        {ort('Abzeichen', 'für besondere Erfolge, als Sticker in deinem Stickerheft')}
         {ort('Krone', 'für die meisten Punkte in einem Monat')}
       </>, 0)}
       {box(boxIcon(ICON.sparkle), 'Punkte', <>
@@ -119,7 +119,8 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       {box(boxIcon(ICON.wheel), 'Glücksrad', <div>Einmal pro Woche (ab Montag) darfst du drehen. Zu gewinnen gibt es Joker, Trinkgeld und Extra-Punkte. Mit dem Joker „Extra-Dreh“ drehst du zusätzlich.</div>, 4)}
       {box(boxIcon(ICON.repeat), 'Fehler-Stapel', <div>Jede Frage, die du falsch beantwortest, landet hier. Sie kommt am nächsten Tag wieder, danach nach 3, nach 7 und nach 14 Tagen. Hast du sie dabei jedes Mal richtig, ist sie gelernt und raus. So lernst du genau das, was noch nicht sitzt.</div>, 5)}
       {box(boxIcon(ICON.flame), 'Lern-Serie und Serien-Bonus', <><div>Jeder Tag, an dem du etwas lernst oder spielst, verlängert deine Serie. Sonntags ist die Bäckerei zu, ein Sonntag ohne Lernen unterbricht die Serie deshalb nicht. Lässt du einen anderen Tag aus, fängt sie wieder bei 1 an.</div><div>Je länger deine Serie, desto mehr Punkte bekommst du:</div>{row('Tag 1', '×1,0')}{row('Tag 2', '×1,1')}{row('Tag 3', '×1,2')}{row('Tag 4', '×1,3')}{row('Tag 5', '×1,4')}{row('ab Tag 6', '×1,5')}</>, 6)}
-      {box(boxIcon(ICON.medal), 'Abzeichen', <div>Für besondere Leistungen gibt es Abzeichen, zum Beispiel für Serien, viele richtige Antworten oder alle Produkte im Bilderquiz. Ein paar sind geheim. Alle siehst du im Abzeichen-Album unter „Dein Fortschritt“ auf der Startseite.</div>, 7)}
+      {box(boxIcon(ICON.medal), 'Abzeichen', <div>Für besondere Leistungen gibt es Abzeichen, zum Beispiel für Serien, viele richtige Antworten oder alle Produkte im Bilderquiz. Ein paar sind geheim. Sie kommen als Sticker in dein Stickerheft (Startseite → „Dein Fortschritt“): Neue Sticker werden beim Öffnen eingeklebt, mit den Knöpfen oder durch Wischen blätterst du um.</div>, 7)}
+      {box(boxIcon(ICON.dice), 'Lernpfad', <div>Unter Lernen → „Lernpfad“ ziehst du mit deiner Spielfigur über ein Spielbrett mit 24 Feldern. Die Farbe des Feldes zeigt den Bereich: blau Fachwissen, gelb Sortiment, grün Service, rot Hygiene. Pro Feld 5 Fragen, ab 4 richtigen ziehst du weiter. Goldene Sterne sind Meilensteine, am Ende wirst du Brotmeister.</div>, 7)}
       {box(boxIcon(ICON.shield), 'Hinkel-Meister', <div>Wer 100 % aller Fragen gemeistert hat, wird Hinkel-Meister: goldener Rahmen um die Punktekarte, ein Meister-Zeichen vor dem Namen in der Bestenliste und die Meister-Runde unter Lernen mit 15 schweren Fragen und dreifachen Punkten, so oft man will. Ab 90 % zeigt die App, wie viele Fragen noch fehlen.</div>, 8)}
       {box(boxIcon(ICON.plus), 'Neu im Sortiment', <div>Legt der Ausbilder ein neues Produkt an, erscheint es sofort in den Steckbriefen und in den Spielen. Drei Wochen lang gibt es auf der Startseite die Kachel „Neu im Sortiment“ mit einem kurzen Quiz dazu.</div>, 8)}
       {box(boxIcon(ICON.crown), 'Bestenliste und Monatsmeister', <div>In der Bestenliste siehst du Gesamtpunkte, den aktuellen Monat und mehr. Wer am Monatsende vorne liegt, wird Monatsmeister, bekommt eine Krone, 2,00 € Trinkgeld und kommt in die Hall of Fame.</div>, 8)}

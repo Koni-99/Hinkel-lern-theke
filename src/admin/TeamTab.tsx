@@ -51,6 +51,25 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
       <div style={cardStyle}><p style={{ margin: 0, fontSize: '18px', color: TH.muted }}>Noch keine Mitarbeiter angemeldet.</p></div>
     ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* ── Lange nicht da: seit über zwei Wochen nicht gelernt (gezielt ansprechen) ── */}
+        {(() => {
+          const grenze = new Date(); grenze.setDate(grenze.getDate() - 14);
+          const gk = `${grenze.getFullYear()}-${String(grenze.getMonth() + 1).padStart(2, '0')}-${String(grenze.getDate()).padStart(2, '0')}`;
+          const zuletzt = (k: string) => { const d: string[] = Array.isArray(cloudProgress[k]?._days) ? cloudProgress[k]._days : []; return d.length ? [...d].sort().slice(-1)[0] : ''; };
+          const weg = allKnownUserKeys.filter((k) => { const l = zuletzt(k); return !l || l < gk; }).sort((a, b) => zuletzt(a).localeCompare(zuletzt(b)));
+          const nameVon = (k: string) => cloudLastSeen[k]?.displayName || cloudProgress[k]?._displayName || k;
+          return (
+            <div style={{ ...cardStyle, padding: '16px 18px', backgroundColor: weg.length ? TH.tintPeach : TH.tintSage, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ fontWeight: 800, fontSize: '18px' }}>Lange nicht da {weg.length ? `(${weg.length})` : ''}</div>
+              <div style={{ fontSize: '15px', color: TH.muted }}>Seit über zwei Wochen nicht gelernt. Vielleicht kurz ansprechen.</div>
+              {weg.length === 0 ? <div style={{ fontSize: '16px', fontWeight: 700, color: TH.green }}>Alle waren in den letzten zwei Wochen da.</div> : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {weg.map((k) => <span key={k} style={{ padding: '4px 12px', borderRadius: '999px', backgroundColor: dc('#FFFFFF'), fontSize: '15px' }}><strong>{nameVon(k)}</strong> · {zuletzt(k) ? `zuletzt ${zuletzt(k).split('-').reverse().join('.')}` : 'noch nie'}</span>)}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {/* ── Ganzes Team: offene Stolpersteine aller Mitarbeiter zusammen (Version 151) ── */}
         {(() => {
           const open: Record<number, { users: string[]; w: number }> = {};

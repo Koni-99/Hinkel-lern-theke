@@ -30,7 +30,10 @@ export function FlashcardView({
   onTipp,
   meineNotizen = {},
   onNotiz,
+  onFoto,
 }: {
+  /** Nur für den Ausbilder: Foto im Steckbrief aufnehmen oder austauschen */
+  onFoto?: (name: string, file: File) => Promise<string>;
   meineNotizen?: Record<string, string>;
   onNotiz?: (produkt: string, text: string) => void;
   kollegenTipps?: TippEintrag[];
@@ -367,7 +370,7 @@ export function FlashcardView({
       )}
 
       {/* ── Steckbrief-Detail ── */}
-      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp, meineNotizen, onNotiz }} />}
+      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp, meineNotizen, onNotiz, onFoto }} />}
     </div>
   );
 }

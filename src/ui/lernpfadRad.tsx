@@ -1,7 +1,6 @@
 // ═══ Lernpfad und Glücksrad ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
-import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, PageHead, PrizeBag, ConfettiOverlay } from './basis';
 
 // ───────────────────────── Lernpfad (Brettspiel) ─────────────────────────
@@ -15,9 +14,6 @@ export function buildPfad(cats: string[]): PfadFeld[] {
 export const catIcon = (c: string) => /fach/i.test(c) ? '📚' : /sortiment|ware/i.test(c) ? '🥖' : /service|verkauf/i.test(c) ? '🤝' : /hygiene|sicher|recht/i.test(c) ? '🧼' : '❓';
 
 export function LernpfadView({ felder, done, avatar, onPlay, lastResult }: { felder: PfadFeld[]; done: number; avatar: string; onPlay: (i: number) => void; lastResult?: string }) {
-  const perRow = 4;
-  const rows: PfadFeld[][] = [];
-  for (let i = 0; i < felder.length; i += perRow) rows.push(felder.slice(i, i + perRow));
   const finished = done >= felder.length;
   const [roll, setRoll] = useState<number | null>(null);
   const play = (i: number) => {
@@ -46,30 +42,80 @@ export function LernpfadView({ felder, done, avatar, onPlay, lastResult }: { fel
         </div>
         {!finished && <button onClick={() => play(done)} style={{ ...btnPrimary, flex: '1 1 140px' }}>Würfeln</button>}
       </div>
-      <div style={{ ...cardStyle, padding: '26px 16px 22px', backgroundImage: `radial-gradient(${dc('#F1E3C8')} 1.5px, transparent 1.5px)`, backgroundSize: '18px 18px' }}>
-        {rows.map((row, ri) => {
-          const items = ri % 2 ? [...row].reverse() : row;
-          return (
-            <div key={ri} style={{ maxWidth: '520px', margin: '0 auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${perRow}, 1fr)`, gap: '10px', position: 'relative' }}>
-                {items.map(f => {
-                  const i = f.no - 1; const isDone = i < done; const isCur = i === done; const locked = i > done;
-                  return (
-                    <button key={f.no} onClick={() => isCur && play(i)} disabled={!isCur} className={isCur ? 'lt-tilt lt-pfad-cur' : isDone ? 'lt-pfad-done' : undefined}
-                      style={{ animationDelay: isDone ? `${Math.min(i, 20) * 0.04}s` : undefined, position: 'relative', aspectRatio: '1 / 1', borderRadius: f.milestone ? '24px' : '50%', border: `3px solid ${isDone ? TH.green : isCur ? dc('#E8B500') : TH.line}`, backgroundColor: isDone ? TH.tintSage : isCur ? TH.yellow : f.milestone ? TH.tintPeach : TH.white, color: TH.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px', cursor: isCur ? 'pointer' : 'default', opacity: locked && !f.milestone ? 0.75 : 1, boxShadow: isCur ? '0 10px 24px -8px rgba(232,181,0,.8)' : 'none' }}>
-                      {isCur && <span className="lt-pfad-fig" aria-hidden="true" style={{ position: 'absolute', top: '-18px', fontSize: '30px' }}>{avatar}</span>}
-                      <span style={{ fontSize: f.milestone ? '30px' : '24px', lineHeight: 1 }} aria-hidden="true">{isDone ? (f.milestone ? f.milestone.icon : '✓') : f.milestone ? f.milestone.icon : catIcon(f.cat)}</span>
-                      <span style={{ fontSize: '13px', fontWeight: 800 }}>{f.milestone && isDone ? f.milestone.title : `Feld ${f.no}`}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {ri < rows.length - 1 && <div aria-hidden="true" style={{ display: 'flex', justifyContent: ri % 2 ? 'flex-start' : 'flex-end', padding: '2px 10%' }}><span className={(ri + 1) * perRow <= done ? 'lt-march lt-march-done' : 'lt-march'} style={{ display: 'block', width: '5px', height: '24px', borderRadius: '3px' }} /></div>}
-            </div>
-          );
-        })}
+      {/* Spielbrett: geschwungene Straße, Felder in den Farben der Bereiche, Spielfigur auf dem aktuellen Feld */}
+      {(() => {
+        const W = 360, spalten = 4, reihen = Math.ceil(felder.length / spalten), dy = 92, oben = 74;
+        const xs = [52, 138, 222, 308];
+        const pos = felder.map((_f, i) => { const r = Math.floor(i / spalten), c = i % spalten; return { x: r % 2 ? xs[spalten - 1 - c] : xs[c], y: oben + r * dy }; });
+        const H = oben + (reihen - 1) * dy + 78;
+        // Straße: gerade Stücke in der Reihe, runde Kurven an den Seiten
+        let d = `M ${pos[0].x - 40} ${pos[0].y}`;
+        pos.forEach((p, i) => {
+          if (i === 0) { d += ` L ${p.x} ${p.y}`; return; }
+          const q = pos[i - 1];
+          if (q.y === p.y) d += ` L ${p.x} ${p.y}`;
+          else { const rechts = q.x > W / 2; const bx = rechts ? q.x + 44 : q.x - 44; d += ` C ${bx} ${q.y}, ${bx} ${p.y}, ${p.x} ${p.y}`; }
+        });
+        const last = pos[pos.length - 1]; d += ` L ${last.x + (last.x > W / 2 ? 34 : -34)} ${last.y}`;
+        const farbe = (c: string) => /fach/i.test(c) ? { bg: '#DDE6F7', rand: '#2F4F8A' } : /sortiment|ware/i.test(c) ? { bg: '#FCE9C2', rand: '#B7791F' } : /service|verkauf/i.test(c) ? { bg: '#E1EEDC', rand: '#2F6A3A' } : { bg: '#FCE1D2', rand: '#B4532A' };
+        const icon = (c: string) => /fach/i.test(c) ? ['M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2z', 'M20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2z'] : /sortiment|ware/i.test(c) ? ['M5 11a6 4 0 0 1 14 0v8H5z', 'M9 11v8', 'M15 11v8'] : /service|verkauf/i.test(c) ? ['M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z'] : ['M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z'];
+        const cur = Math.min(done, felder.length - 1);
+        return (
+          <div className="lt-brett" style={{ ...cardStyle, padding: '10px', background: 'linear-gradient(160deg,#8A5A2B,#5A3519)', boxShadow: '0 14px 30px -14px rgba(31,20,12,.6), inset 0 2px 0 rgba(255,236,200,.25)' }}>
+            <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`Spielbrett, du stehst auf Feld ${done + 1} von ${felder.length}`} style={{ display: 'block', borderRadius: '16px', background: 'radial-gradient(circle at 30% 20%,#FFFBF0,#F6EAD2)' }}>
+              <defs>
+                <pattern id="ltBrettPunkte" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#E6D3AE" /></pattern>
+                <radialGradient id="ltBrettGold" cx="35%" cy="30%" r="75%"><stop offset="0" stopColor="#FFF3C4" /><stop offset=".55" stopColor="#FFC72C" /><stop offset="1" stopColor="#C9971C" /></radialGradient>
+              </defs>
+              <rect x="0" y="0" width={W} height={H} fill="url(#ltBrettPunkte)" />
+              {/* Straße */}
+              <path d={d} fill="none" stroke="#C9971C" strokeWidth="40" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke="#F6D57A" strokeWidth="34" strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeDasharray="7 9" strokeLinecap="round" opacity=".9" />
+              {/* Start und Ziel */}
+              <g transform={`translate(${pos[0].x} ${pos[0].y - 44})`}><rect x="-26" y="-12" width="52" height="22" rx="6" fill="#1F140C" /><text x="0" y="4" textAnchor="middle" fontSize="12" fontWeight="800" fill="#FFD86B">START</text></g>
+              <g transform={`translate(${last.x} ${last.y + 44})`}><rect x="-24" y="-11" width="48" height="22" rx="6" fill="#1F140C" /><text x="0" y="5" textAnchor="middle" fontSize="12" fontWeight="800" fill="#FFD86B">ZIEL</text></g>
+              {/* Felder */}
+              {felder.map((f, i) => {
+                const p = pos[i]; const isDone = i < done; const isCur = i === done; const fb = farbe(f.cat);
+                const r = f.milestone ? 27 : 22;
+                return (
+                  <g key={f.no} transform={`translate(${p.x} ${p.y})`} onClick={() => isCur && play(i)} style={{ cursor: isCur ? 'pointer' : 'default' }} role={isCur ? 'button' : undefined} aria-label={isCur ? `Feld ${f.no} spielen` : undefined} className={isCur ? 'lt-brett-cur' : undefined}>
+                    {isCur && <circle r={r + 9} fill="none" stroke="#FFC72C" strokeWidth="4" className="lt-brett-puls" />}
+                    {f.milestone
+                      ? <><polygon points={Array.from({ length: 16 }, (_, k) => { const a = (Math.PI * 2 * k) / 16 - Math.PI / 2; const rr = k % 2 ? r * 0.78 : r; return `${(Math.cos(a) * rr).toFixed(1)},${(Math.sin(a) * rr).toFixed(1)}`; }).join(' ')} fill={isDone ? 'url(#ltBrettGold)' : '#FFF3C4'} stroke="#8A5A00" strokeWidth="2.5" />
+                          <text y="9" textAnchor="middle" fontSize="24">{f.milestone.icon}</text></>
+                      : <><circle r={r} fill={isDone ? '#2F7A3E' : fb.bg} stroke={isDone ? '#1F5A2B' : fb.rand} strokeWidth="3" />
+                          <circle r={r - 5} fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="1.5" />
+                          {isDone
+                            ? <path d="M-9 0 l6 6 l12 -13" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                            : <g transform="translate(-10 -11) scale(.85)" fill="none" stroke={fb.rand} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" opacity={i > done ? 0.55 : 1}>{icon(f.cat).map((pd, k) => <path key={k} d={pd} />)}</g>}</>}
+                    <text y={r + 15} textAnchor="middle" fontSize="11" fontWeight="800" fill="#6B4A30">{f.no}</text>
+                  </g>
+                );
+              })}
+              {/* Spielfigur mit deinem Zeichen */}
+              {!finished && (
+                <g transform={`translate(${pos[cur].x} ${pos[cur].y - 30})`} style={{ pointerEvents: 'none' }}>
+                  <g className="lt-brett-figur">
+                    <ellipse cx="0" cy="26" rx="13" ry="4" fill="rgba(31,20,12,.25)" />
+                    <path d="M-11 22 Q0 14 11 22 L8 6 Q0 -2 -8 6 Z" fill="#D92D20" stroke="#7A1A12" strokeWidth="1.5" />
+                    <circle cx="0" cy="-2" r="9" fill="#D92D20" stroke="#7A1A12" strokeWidth="1.5" />
+                    <circle cx="-3" cy="-5" r="2.5" fill="rgba(255,255,255,.6)" />
+                    <text x="0" y="-16" textAnchor="middle" fontSize="20">{avatar}</text>
+                  </g>
+                </g>
+              )}
+            </svg>
+          </div>
+        );
+      })()}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px 14px', fontSize: '14px', color: TH.brown }}>
+        {[['Fachwissen', '#DDE6F7', '#2F4F8A'], ['Sortiment', '#FCE9C2', '#B7791F'], ['Service', '#E1EEDC', '#2F6A3A'], ['Hygiene', '#FCE1D2', '#B4532A']].map(([t, bg, rd]) => (
+          <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><span style={{ width: '14px', height: '14px', borderRadius: '50%', backgroundColor: bg, border: `2.5px solid ${rd}` }} />{t}</span>
+        ))}
+        <span style={{ width: '100%', textAlign: 'center', color: TH.muted }}>Ab Feld 9 wird es gemischt, ab Feld 17 schwer. Goldene Sterne sind Meilensteine.</span>
       </div>
-      <div style={{ fontSize: '15px', color: TH.muted, textAlign: 'center' }}>📚 Fachwissen · 🥖 Sortiment · 🤝 Service · 🧼 Hygiene. Ab Feld 9 wird es gemischt, ab Feld 17 schwer.</div>
     </div>
   );
 }

@@ -173,7 +173,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -373,6 +373,12 @@ async function offlineTests() {
     ok('Ausbilder: Liste „Produkte ohne Foto“ mit Foto-Knöpfen', (await d.page.getByRole('heading', { name: 'Produkte ohne Foto' }).count()) > 0 && (await d.page.locator('input[aria-label^="Foto für "]').count()) > 5);
     const mf = await d.page.evaluate(async () => { const m = await (await fetch('manifest.json')).json(); const r = await Promise.all(m.icons.map((i) => fetch(i.src).then((x) => x.ok && (x.headers.get('content-type') || '').includes('png')))); return m.icons.length >= 3 && r.every(Boolean); });
     ok('App-Symbol: Manifest mit Symbolen, alle abrufbar', mf);
+    // Ausbilder: Foto-Knopf direkt im Steckbrief
+    await click(d.page.locator('[aria-label="Hauptmenü"] button:visible', { hasText: /Nachschlagen/ }).first().or(nav(d.page).nth(3))); await settle(d.page, 600);
+    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    const kachel = d.page.locator('.lt-foto-raster button').first();
+    if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
+    ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
     await d.ctx.close();
   }
 }

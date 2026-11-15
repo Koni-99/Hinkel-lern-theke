@@ -1,5 +1,6 @@
 // ═══ Karteikarten: Steckbrief-Detail (aufgeklappte Karte) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { TH, productImageKey, ProductImages } from '../../ui/basis';
@@ -31,9 +32,12 @@ export type SteckbriefDetailProps = {
   onTipp?: (produkt: string, text: string) => void;
   meineNotizen?: Record<string, string>;
   onNotiz?: (produkt: string, text: string) => void;
+  onFoto?: (name: string, file: File) => Promise<string>;
 };
 
-export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz }: SteckbriefDetailProps) {
+export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz, onFoto }: SteckbriefDetailProps) {
+  const [fotoMsg, setFotoMsg] = useState('');
+  const [fotoBusy, setFotoBusy] = useState(false);
   if (!openProfile) return null; // wie die Bedingung in components/FlashcardView.tsx
   const prod = openProfile;
   const idx = filteredProfiles.indexOf(prod);
@@ -62,6 +66,15 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
         <div style={{ padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
           {images[productImageKey(prod.name)] && (
             <img src={images[productImageKey(prod.name)]} alt={prod.name} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}` }} />
+          )}
+          {onFoto && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", padding: "10px 12px", borderRadius: "14px", backgroundColor: TH.tintYellow }}>
+              <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", minHeight: "46px", padding: "0 16px", borderRadius: "999px", backgroundColor: TH.brown, color: dc('#FFF6E0'), fontSize: "16px", fontWeight: 700, cursor: fotoBusy ? "wait" : "pointer" }}>
+                <LtIcon paths={ICON.camera} size={20} />{fotoBusy ? "Lädt …" : images[productImageKey(prod.name)] ? "Foto austauschen" : "Foto hinzufügen"}
+                <input type="file" accept="image/*" disabled={fotoBusy} aria-label={`Foto für ${prod.name}`} style={{ display: "none" }} onChange={async (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; setFotoBusy(true); setFotoMsg(""); setFotoMsg(await onFoto(sp ? sp.name : prod.name, f)); setFotoBusy(false); }} />
+              </label>
+              <span style={{ fontSize: "14px", color: TH.brown }}>{fotoMsg || "Nur für Ausbilder sichtbar. Am Handy kannst du direkt fotografieren."}</span>
+            </div>
           )}
           {(facts.length > 0 || sp?.vegan) && (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>

@@ -170,6 +170,12 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-hdr-pills{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
 .lt-pill{position:relative;display:flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border:none;border-radius:999px;background:#1F140C;color:#FFD86B;font-size:16px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 6px 14px -8px rgba(31,20,12,.7)}
 .lt-pill-round{width:42px;padding:0;justify-content:center}
+/* Lernpfad-Spielbrett: Figur hüpft leicht, aktuelles Feld pulsiert */
+.lt-brett-figur{animation:ltFigurHuepf 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}
+@keyframes ltFigurHuepf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.lt-brett-puls{animation:ltBrettPuls 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes ltBrettPuls{0%,100%{opacity:.4;transform:scale(.92)}50%{opacity:1;transform:scale(1.06)}}
+@media (prefers-reduced-motion: reduce){.lt-brett-figur,.lt-brett-puls{animation:none}}
 /* Theken-Ansturm am Handy: weniger Rand, damit die 8 Fotos größer sind und trotzdem auf eine Seite passen */
 @media (max-width:560px){.lt-root .lt-ansturm-card{padding:12px !important}.lt-root .lt-ansturm-card .lt-ansturm-grid{gap:5px !important}}
 /* Kleiner Offline-Hinweis neben der Punkte-Anzeige (statt Balken unter der Markise) */

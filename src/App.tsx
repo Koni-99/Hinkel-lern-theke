@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 184;
+const APP_VERSION: number = 185;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -2488,7 +2488,7 @@ export default function App() {
         {activeTab === 'flashcards' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <PageHead title="Spickzettel" subtitle="Produktkenntnis und Fachwissen, alles zum Nachsehen." onBack={() => setActiveTab('nachschlagen')} backLabel="Zurück zu Nachschlagen" />
-            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} meineNotizen={meineNotizen(cloudData.progress, (username || '').toLowerCase())} onNotiz={isAdmin ? undefined : (produkt: string, text: string) => mutateCloudData(notizSpeichern(username.toLowerCase(), username, produkt, text))} /></div>
+            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} onFoto={isAdmin ? uploadProductPhoto : undefined} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} meineNotizen={meineNotizen(cloudData.progress, (username || '').toLowerCase())} onNotiz={isAdmin ? undefined : (produkt: string, text: string) => mutateCloudData(notizSpeichern(username.toLowerCase(), username, produkt, text))} /></div>
           </div>
         )}
         {activeTab === 'scoreboard' && overtaken && (

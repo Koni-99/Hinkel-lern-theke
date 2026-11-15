@@ -93,34 +93,97 @@ export function ScratchCard({ prize, onRevealed }: { prize: LosPrize; onRevealed
 }
 
 // ───────── Abzeichen-Album (Buch zum Blättern) ─────────
-export function BadgeAlbumView({ badges, perPage = 6 }: { badges: Badge[]; perPage?: number }) {
+/** Abzeichen als Stickerheft: Papierseiten mit Spiralbindung, Blättern wie im Buch, neue Sticker werden „eingeklebt“.
+ *  Welche Sticker man im Heft schon gesehen hat, merkt sich das Gerät (nur für die Einklebe-Animation). */
+const STICKER_CSS = `
+.lt-heft{position:relative;perspective:1600px}
+.lt-heft-seite{position:relative;min-height:100%;padding:18px 16px 14px 34px;border-radius:6px 18px 18px 6px;background:#FFFCF4;
+  background-image:repeating-linear-gradient(0deg,rgba(75,42,20,.045) 0 1px,transparent 1px 28px),linear-gradient(90deg,rgba(75,42,20,.10),rgba(75,42,20,0) 22px);
+  box-shadow:0 1px 2px rgba(31,20,12,.06),0 14px 26px -16px rgba(31,20,12,.45),inset -6px 0 10px -8px rgba(75,42,20,.25)}
+.lt-heft-spirale{position:absolute;left:8px;top:14px;bottom:14px;width:14px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none}
+.lt-heft-spirale i{display:block;width:14px;height:8px;border-radius:5px;background:linear-gradient(180deg,#9AA3AD,#5E6670);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+.lt-heft-blatt{position:absolute;inset:0;z-index:5;transform-style:preserve-3d;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-origin:left center}
+.lt-heft-blatt.vor{animation:ltBlattVor .7s cubic-bezier(.45,.05,.3,1) forwards}
+.lt-heft-blatt.zurueck{animation:ltBlattZurueck .7s cubic-bezier(.45,.05,.3,1) forwards}
+.lt-heft-blatt::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,0),rgba(0,0,0,.18));animation:ltBlattSchatten .7s ease forwards}
+@keyframes ltBlattVor{from{transform:rotateY(0)}to{transform:rotateY(-178deg)}}
+@keyframes ltBlattZurueck{from{transform:rotateY(-178deg)}to{transform:rotateY(0)}}
+@keyframes ltBlattSchatten{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+.lt-heft-raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:16px 12px}
+.lt-sticker{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.lt-sticker-bild{position:relative;width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;line-height:1;
+  background:radial-gradient(circle at 35% 30%,#FFF6D6,#FFC72C 70%,#E0A400);border:5px solid #FFFFFF;box-shadow:0 3px 0 rgba(0,0,0,.06),0 8px 14px -6px rgba(31,20,12,.45);overflow:hidden}
+.lt-sticker-bild::after{content:"";position:absolute;top:-30%;left:-60%;width:45%;height:160%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.65),rgba(255,255,255,0));transform:rotate(20deg);animation:ltStickerGlanz 4.5s ease-in-out infinite;animation-delay:var(--gd,0s)}
+@keyframes ltStickerGlanz{0%,70%{left:-60%}100%{left:130%}}
+.lt-sticker-leer .lt-sticker-bild{background:transparent;border:3px dashed #D9C4A0;box-shadow:none;filter:grayscale(1);opacity:.45}
+.lt-sticker-leer .lt-sticker-bild::after{display:none}
+.lt-sticker-neu .lt-sticker-bild{animation:ltEinkleben .95s cubic-bezier(.2,1.2,.3,1) both;animation-delay:var(--nd,0s)}
+.lt-sticker-neu .lt-sticker-bild::before{content:"";position:absolute;right:-2px;top:-2px;width:24px;height:24px;background:linear-gradient(225deg,#FFFFFF 50%,rgba(0,0,0,.12) 50%);border-radius:0 50% 0 0;animation:ltEcke .9s ease both;animation-delay:calc(var(--nd,0s) + .7s)}
+@keyframes ltEinkleben{0%{transform:translate(40px,-120px) rotate(-35deg) scale(1.35);opacity:0;box-shadow:0 30px 30px -10px rgba(31,20,12,.35)}
+  55%{transform:translate(0,-6px) rotate(6deg) scale(1.12);opacity:1}75%{transform:translate(0,2px) rotate(var(--rot)) scale(.94)}100%{transform:rotate(var(--rot)) scale(1)}}
+@keyframes ltEcke{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.2)}}
+@media (prefers-reduced-motion: reduce){.lt-heft-blatt,.lt-sticker-neu .lt-sticker-bild,.lt-sticker-bild::after{animation:none !important}.lt-heft-blatt{display:none}}
+html.lt-noanim .lt-heft-blatt{display:none}
+`;
+
+export function BadgeAlbumView({ badges, perPage = 6, eigen = true }: { badges: Badge[]; perPage?: number; eigen?: boolean }) {
   const pages = Math.max(1, Math.ceil(badges.length / perPage));
   const [page, setPage] = useState(0);
-  const [dir, setDir] = useState<'l' | 'r'>('r');
-  const [turns, setTurns] = useState(0);
-  const go = (d: number) => { const n = page + d; if (n < 0 || n >= pages) return; setDir(d > 0 ? 'r' : 'l'); setPage(n); setTurns(t => t + 1); };
-  const items = badges.slice(page * perPage, page * perPage + perPage);
+  const [blatt, setBlatt] = useState<{ von: number; dir: 'vor' | 'zurueck'; k: number } | null>(null);
   const startX = useRef<number | null>(null);
-  return (
-    <div style={{ perspective: '1400px' }}>
-      <div key={page} className={`lt-flip-${dir}`} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { if (startX.current == null) return; const dx = e.changedTouches[0].clientX - startX.current; startX.current = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}
-        style={{ position: 'relative', padding: '20px 18px 14px', borderRadius: '24px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', transformOrigin: dir === 'r' ? 'left center' : 'right center', transformStyle: 'preserve-3d' }}>
-        {turns > 0 && <span key={'leaf' + turns} className={`lt-leaf lt-leaf-${dir}`} aria-hidden="true" />}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '12px' }}>
-          {items.map((b, i) => (
-            <div key={b.id} title={b.desc} className={b.ok ? 'lt-shine' : undefined} style={{ ['--shd' as any]: `${i * 0.7}s`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', padding: '14px 8px', borderRadius: '16px', textAlign: 'center', border: b.ok ? '1px solid #F1E3C8' : '1.5px dashed #E3D6BE', backgroundColor: b.ok ? '#FFFBF0' : 'transparent', transform: `rotate(${0 * i}deg)` }}>
-              <span style={{ width: '62px', height: '62px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '34px', lineHeight: 1, backgroundColor: b.ok ? '#1F140C' : '#F6EFE2', boxShadow: b.ok ? '0 0 0 3px #FFC72C, 0 8px 16px -8px rgba(31,20,12,.6)' : 'none', color: '#B8A68C' }}>{b.ok ? b.icon : <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1z" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>}</span>
-              <span style={{ fontSize: '15px', fontWeight: 700, color: b.ok ? '#2B170A' : TH.muted }}>{b.title}</span>
-              <span style={{ fontSize: '13px', color: TH.muted, lineHeight: 1.3 }}>{b.desc}</span>
-            </div>
-          ))}
+  const SCHLUESSEL = 'lt_heft_gesehen';
+  const [gesehen, setGesehen] = useState<string[]>(() => { if (!eigen) return badges.map((b) => b.id); try { return JSON.parse(localStorage.getItem(SCHLUESSEL) || '[]'); } catch { return []; } });
+  const go = (d: number) => {
+    const n = page + d; if (n < 0 || n >= pages || blatt) return;
+    setBlatt({ von: page, dir: d > 0 ? 'vor' : 'zurueck', k: Date.now() }); setPage(n);
+    window.setTimeout(() => setBlatt(null), 720);
+  };
+  // Neu verdiente Sticker der sichtbaren Seite nach dem Einkleben als „gesehen“ merken
+  useEffect(() => {
+    if (!eigen || blatt) return;
+    const neu = badges.slice(page * perPage, page * perPage + perPage).filter((b) => b.ok && !gesehen.includes(b.id)).map((b) => b.id);
+    if (!neu.length) return;
+    const t = window.setTimeout(() => { const g = [...gesehen, ...neu]; setGesehen(g); try { localStorage.setItem(SCHLUESSEL, JSON.stringify(g)); } catch { /* egal */ } }, 2600);
+    return () => window.clearTimeout(t);
+  }, [page, blatt, badges.map((b) => b.id + (b.ok ? 1 : 0)).join()]);
+  const drehung = (id: string) => { let h = 0; for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0; return ((h % 13) - 6); };
+  const seite = (n: number, animiert: boolean) => {
+    const items = badges.slice(n * perPage, n * perPage + perPage);
+    let neuIdx = 0;
+    return (
+      <div className="lt-heft-seite">
+        <span className="lt-heft-spirale" aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <i key={i} />)}</span>
+        <div className="lt-heft-raster">
+          {items.map((b, i) => {
+            const neu = animiert && eigen && b.ok && !gesehen.includes(b.id);
+            const st: any = { ['--rot']: `${drehung(b.id)}deg`, ['--gd']: `${i * 0.7}s`, ['--nd']: `${(neu ? neuIdx++ : 0) * 0.35}s` };
+            return (
+              <div key={b.id} title={b.desc} className={`lt-sticker${b.ok ? '' : ' lt-sticker-leer'}${neu ? ' lt-sticker-neu' : ''}`} style={st}>
+                <span className="lt-sticker-bild" style={{ transform: b.ok && !neu ? `rotate(${drehung(b.id)}deg)` : undefined }} aria-hidden="true">{b.icon}</span>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: b.ok ? '#2B170A' : TH.muted }}>{b.title}</span>
+                <span style={{ fontSize: '13px', color: TH.muted, lineHeight: 1.3 }}>{b.desc}</span>
+              </div>
+            );
+          })}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '14px' }} aria-label={`Seite ${page + 1} von ${pages}`}>{Array.from({ length: pages }, (_, k) => <span key={k} style={{ width: k === page ? '22px' : '8px', height: '8px', borderRadius: '8px', backgroundColor: k === page ? '#1F140C' : '#E3D6BE', transition: 'width .3s ease' }} />)}</div>
+        <div style={{ textAlign: 'right', marginTop: '10px', fontSize: '13px', color: TH.muted, fontFamily: "'Courier Prime', ui-monospace, monospace" }}>Seite {n + 1} von {pages}</div>
+      </div>
+    );
+  };
+  return (
+    <div className="lt-heft">
+      <style>{STICKER_CSS}</style>
+      <div style={{ position: 'relative' }}
+        onTouchStart={(e) => { startX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => { if (startX.current == null) return; const dx = e.changedTouches[0].clientX - startX.current; startX.current = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+        {/* Unten liegt immer die Seite, die man am Ende sieht; das umblätternde Blatt liegt darüber */}
+        {blatt && blatt.dir === 'zurueck' ? seite(blatt.von, false) : seite(page, !blatt)}
+        {blatt && <div key={blatt.k} className={`lt-heft-blatt ${blatt.dir}`} aria-hidden="true">{seite(blatt.dir === 'vor' ? blatt.von : page, false)}</div>}
       </div>
       {pages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', gap: '10px' }}>
-          <button onClick={() => go(-1)} disabled={page === 0} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '16px', fontWeight: 700, cursor: page === 0 ? 'default' : 'pointer', opacity: page === 0 ? 0.3 : 1 }}>‹ Zurück</button>
-          <button onClick={() => go(1)} disabled={page >= pages - 1} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '16px', fontWeight: 700, cursor: page >= pages - 1 ? 'default' : 'pointer', opacity: page >= pages - 1 ? 0.3 : 1 }}>Weiter ›</button>
+          <button onClick={() => go(-1)} disabled={page === 0} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '16px', fontWeight: 700, cursor: page === 0 ? 'default' : 'pointer', opacity: page === 0 ? 0.35 : 1 }}>‹ Zurückblättern</button>
+          <button onClick={() => go(1)} disabled={page >= pages - 1} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '16px', fontWeight: 700, cursor: page >= pages - 1 ? 'default' : 'pointer', opacity: page >= pages - 1 ? 0.35 : 1 }}>Umblättern ›</button>
         </div>
       )}
     </div>
@@ -191,7 +254,7 @@ export function ProfileView({ d, onBack, onPraise }: { d: ProfileData; onBack: (
       </div>
       <section style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <h2 style={{ margin: 0, fontFamily: TH.serif, fontSize: '28px' }}>Abzeichen <span style={{ fontSize: '18px', color: TH.muted, fontWeight: 600 }}>{earned.length} von {d.badges.length}</span></h2>
-        <BadgeAlbumView badges={d.badges} />
+        <BadgeAlbumView badges={d.badges} eigen={false} />
       </section>
     </div>
   );
