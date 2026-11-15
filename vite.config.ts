@@ -30,7 +30,17 @@ export default defineConfig({
     outDir: 'build',
     // Auch ältere Handys (Safari 14, Chrome 87 …) sollen die App öffnen können
     target: ['es2020', 'chrome87', 'edge88', 'firefox78', 'safari14'],
-    // Die Hauptdatei ist groß (Logo und Küken stecken als Bild im Code), das war vorher auch so
     chunkSizeWarningLimit: 1600,
+    // Selten Geändertes in eigene Dateien: Bei einer neuen App-Version muss das Handy nur das Neue laden
+    // (der Service Worker übernimmt unveränderte Dateien vom Gerät, siehe sw-template.js)
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (/node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react';
+          if (/src[\\/]daten[\\/]questions\.ts$/.test(id)) return 'fragen';
+          return undefined;
+        },
+      },
+    },
   },
 });

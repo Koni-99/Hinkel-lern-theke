@@ -16,7 +16,12 @@ const INDEX = new URL('index.html', SCOPE).href;
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll(FILES.map((f) => new URL(f, SCOPE).href)))
+      // App-Dateien (assets/…) ändern sich nie: schon gespeicherte aus der alten Version übernehmen, nur Neues laden
+      .then((c) => Promise.all(FILES.map((f) => {
+        const u = new URL(f, SCOPE).href;
+        return (f.startsWith('assets/') ? caches.match(u) : Promise.resolve(undefined))
+          .then((alt) => (alt ? c.put(u, alt) : c.add(u)));
+      })))
       .then(() => self.skipWaiting())
   );
 });

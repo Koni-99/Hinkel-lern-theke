@@ -123,6 +123,8 @@ Mehr zum Aufbau: `README.md`.
 
 - 208: Theken-Simulator: 3 neue Situationen (`scAbholung` Vorbestellung abholen, `scFalscheWare` falsche Ware in der Tüte, `scSaisonAllergen` Allergene bei Saisongebäck in `szenarienAlltag.tsx`), Allergie-Antworten natürlicher („Da ist leider … drin“). **Zuhören** (Schalter vor dem Start, localStorage `lt_theke_hoeren`): Kundensätze werden per Handy-Stimme gesprochen (Klammern weggelassen), Blase verdeckt (`.lt-hoer-zu`) bis Antippen/Antwort, Knopf „Nochmal hören“. Hilfe-Thema „Theken-Simulator“
 
+- 209: **Schnellere Updates**: Hauptdatei 1,1 MB → 528 KB, Quizfragen (`fragen-*.js`) und React (`react-*.js`) eigene Dateien (`manualChunks` in `vite.config.ts`). Service Worker übernimmt beim Update unveränderte `assets/`-Dateien aus dem alten Speicher (`caches.match` statt `addAll`), lädt nur Neues (geprüft: vorher 29 Dateien, jetzt 0 unveränderte). Logo/Küken sind nur 34 KB, nicht ausgelagert
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
