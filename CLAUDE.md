@@ -141,5 +141,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 217: **Vorlesen mit natürlicher Stimme** (Frau 4 Achernar, Satz für Satz, einmalig erzeugt): Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi, Allergene-Training. Texte zentral in `src/hilfen/vorlesen.ts` (App + Erzeuger `tools/stimme/saetze.mjs` gleich), Dateien `public/stimme/saetze/<satzKey>.mp3` (2438 Sätze, 123k Zeichen). `SpeakButton natuerlich` → `sprichSaetze()`; Lernkarten `SpeakButton hoerKey` → spielt die Hör-Lernen-Antwortdatei (keine neuen Kosten). Gemeinsamer Abspieler `spieleFolge()` in `spielBasis.tsx`. Allergen-Daten ausgelagert nach `games/allergenDaten.ts` (Werkzeug kann fotos.ts mit import.meta nicht übersetzen). Quiz-/Advent-/Alternativen-Vorlesen und Ausbilder-Nachricht bleiben Handy-Stimme. Diesen Monat insgesamt ~400k Zeichen erzeugt; Nutzer soll Google-Abrechnung (0 €) prüfen
 
+- 218: Natürliche Stimme auch im **Quiz, Adventskalender, Alternativen-Jäger** (Nutzer: „Mach einfach“). Vor der Antwort `quizVorherText` / `altVorherText` (Buchstaben/Nummern als eigene Sätze „A.“, „1.“, damit Mischen egal ist), nach der Antwort Quiz/Advent → Hör-Lernen-Antwortdatei (`hoerKey`). Alternativen-Erklärung geteilt („X ist ein Roggenbrot. Das ist ganz anders als Y.“), alle Sätze über `alternativenTexte()`. 5826 Sätze insgesamt (302k Zeichen). November gesamt ~580k Zeichen einmalig erzeugt. `public/stimme` jetzt 212 MB. Nur Ausbilder-Nachricht bleibt Handy-Stimme
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
