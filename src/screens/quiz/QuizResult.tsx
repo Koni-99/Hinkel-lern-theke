@@ -1,6 +1,8 @@
 // ═══ Quiz: Auswertung nach der Runde ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { DAILY_FACTS } from '../../basis/fakten';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getExamEvaluation } from '../../hilfen/pruefung';
@@ -11,6 +13,17 @@ import { ReportLink } from '../../ui/melden';
 import { LT, BTN_YELLOW } from '../../basis/marke';
 import { LtIcon, ICON } from '../../basis/symbole';
 import type { Question } from '../../daten/questions';
+
+// Wissens-Pause (Version 198): nach jeder Quizrunde ein kurzer Fakt aus der Backstube
+function WissensPause() {
+  const [fakt] = useState(() => DAILY_FACTS[Math.floor(Math.random() * DAILY_FACTS.length)]);
+  return (
+    <div className="lt-wissenspause" style={{ width: '100%', maxWidth: '520px', boxSizing: 'border-box', padding: '12px 14px', borderTop: '1px dashed rgba(0,0,0,.25)', textAlign: 'left' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 800, letterSpacing: '.08em' }}><LtIcon paths={ICON.bulb} size={16} />Wissens-Pause</div>
+      <div style={{ fontSize: '15px', lineHeight: 1.45, marginTop: '4px', textTransform: 'none' }}>{fakt}</div>
+    </div>
+  );
+}
 
 export type QuizResultProps = {
   fetchCloudData: (customUrl?: string | undefined) => Promise<CloudPayload | null>;
@@ -91,6 +104,7 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
         {!isExamMode && !isAdmin && isNewcomer && (
           <div style={{ fontSize: '15px', color: LT.muted }}>In deiner ersten Woche gibt es für falsche Antworten keine Minuspunkte.</div>
         )}
+        {!isExamMode && <WissensPause />}
         {!isExamMode && !isAdmin && masteryStart && (() => {
           const now = masteredState();
           const plus = Math.max(0, now.ids.size - masteryStart.ids);

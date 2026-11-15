@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 197;
+const APP_VERSION: number = 198;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -13,7 +13,7 @@ const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaege
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
-import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, meineNotizen, notizSpeichern } from './hilfen/team';
+import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, lobVon, meineNotizen, notizSpeichern } from './hilfen/team';
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
@@ -548,6 +548,10 @@ export default function App() {
   const [selectedMulti, setSelectedMulti] = useState<number[]>([]);
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
+  // Version 198: Glücksfrage nach 5 richtigen in Folge (dreifache Punkte, kein Abzug) und Comeback-Bonus (Frage aus dem Fehler-Stapel richtig: doppelte Punkte)
+  const [gluecksIdx, setGluecksIdx] = useState(-1);
+  const [quizBonus, setQuizBonus] = useState<'' | 'comeback' | 'glueck' | 'beides'>('');
+  useEffect(() => { setGluecksIdx(-1); setQuizBonus(''); }, [quizList]);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongQuestions, setWrongQuestions] = useState<any[]>([]);
   const [quizFinished, setQuizFinished] = useState(false);
@@ -1397,9 +1401,22 @@ export default function App() {
       const isMeisterR = currentQuizCategory === 'Meister-Runde';
       const easyPoints = isMeisterR ? 30 : isExpert ? 20 : isDaily ? 15 : 10;
       const hardPoints = isMeisterR ? 60 : isExpert ? 40 : isDaily ? 30 : 20;
-      if (isCorrect) { newScore += (currentQ.level === 'easy' ? easyPoints : hardPoints); setCorrectCount(prev => prev + 1); }
+      const glueck = currentIndex === gluecksIdx;
+      const fe = (myProg._fehler || {})[currentQ.id];
+      const comeback = isCorrect && !!fe && String(fe.d) <= dayKey(new Date());
+      if (isCorrect) {
+        let pts = currentQ.level === 'easy' ? easyPoints : hardPoints;
+        if (comeback) pts *= 2;
+        if (glueck) pts *= 3;
+        newScore += pts; setCorrectCount(prev => prev + 1);
+        setQuizBonus(comeback && glueck ? 'beides' : comeback ? 'comeback' : glueck ? 'glueck' : '');
+        // 5, 10, 15 … richtige in Folge: die nächste Frage wird eine Glücksfrage
+        const lauf = quizRun + 1;
+        if (lauf % 5 === 0 && currentIndex + 1 < quizList.length) setGluecksIdx(currentIndex + 1);
+      }
       else {
-        if (!isNewcomer) newScore -= (currentQ.level === 'easy' ? 10 : 15);
+        setQuizBonus('');
+        if (!isNewcomer && !glueck) newScore -= (currentQ.level === 'easy' ? 10 : 15);
         if (!wrongQuestions.some(q => q.id === currentQ.id)) setWrongQuestions(prev => [...prev, currentQ]);
       }
     }
@@ -1844,7 +1861,7 @@ export default function App() {
     if (!lobNeuKey || !cloudConnected) return;
     mutateCloudData(lobPunkteGutschreiben(username.toLowerCase(), username, lobNeu));
     const l = lobNeu[0];
-    setToast(lobNeu.length === 1 ? `${l.vonName} hat dich gelobt: „${l.t}“ (+10 Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * 10} Punkte)`);
+    setToast(lobNeu.length === 1 ? `${lobVon(l)} hat dich gelobt: „${l.t}“ (+10 Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * 10} Punkte)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lobNeuKey, cloudConnected]);
   // Hinweis, wenn der Ausbilder eine eigene Idee beantwortet hat (pro Antwort nur einmal)
@@ -2442,7 +2459,7 @@ export default function App() {
         {activeTab === 'quiz' && currentQuizCategory !== null && selectedLevel === null && <QuizLevels {...{ questions, isAdmin, currentQuizCategory, setCurrentQuizCategory, selectedSubfilter, setSelectedSubfilter, onlyNew, toggleOnlyNew, quizPool, launchQuizWithLevel, overallPercent, myProg }} />}
 
         {/* ═════════ FRAGE ═════════ */}
-        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg }} />}
+        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} />}
 
         {/* ═════════ AUSWERTUNG ═════════ */}
         {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}

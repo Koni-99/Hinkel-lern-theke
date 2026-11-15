@@ -5,7 +5,7 @@ import { dc } from '../daten/data';
 import { LT } from '../basis/marke';
 import { LtIcon, ICON } from '../basis/symbole';
 import { CloudPayload } from '../types';
-import { alleLobs, heuteSchonGelobt, lobSchicken, LOB_MAX, LOB_PUNKTE } from '../hilfen/team';
+import { alleLobs, heuteSchonGelobt, lobSchicken, lobVon, LOB_MAX, LOB_PUNKTE } from '../hilfen/team';
 
 export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setToast }: {
   cloudData: CloudPayload; username: string; kollegen: { key: string; name: string }[];
@@ -15,6 +15,7 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
   const [offen, setOffen] = useState(false);
   const [an, setAn] = useState('');
   const [text, setText] = useState('');
+  const [anonym, setAnonym] = useState(false);
   const woche = Date.now() - 7 * 86400000;
   const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= woche);
   const schonHeute = heuteSchonGelobt(cloudData.progress, me);
@@ -23,9 +24,9 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
   const senden = () => {
     const ziel = andere.find((k) => k.key === an);
     if (!ziel || !text.trim()) return;
-    mutateCloudData(lobSchicken(me, username, ziel.key, ziel.name, text));
-    setToast(`Dein Lob an ${ziel.name} ist verschickt. ${ziel.name} bekommt ${LOB_PUNKTE} Punkte.`);
-    setText(''); setAn(''); setOffen(false);
+    mutateCloudData(lobSchicken(me, username, ziel.key, ziel.name, text, Date.now(), anonym));
+    setToast(`Dein ${anonym ? 'anonymes Danke' : 'Lob'} an ${ziel.name} ist verschickt. ${ziel.name} bekommt ${LOB_PUNKTE} Punkte.`);
+    setText(''); setAn(''); setAnonym(false); setOffen(false);
   };
   const feld = { width: '100%', boxSizing: 'border-box' as const, minHeight: '50px', padding: '10px 14px', borderRadius: '14px', border: `2px solid ${LT.line}`, fontSize: '17px', fontFamily: 'inherit', backgroundColor: dc('#FFFFFF'), color: LT.ink };
   return (
@@ -35,10 +36,10 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
         <span style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>Lob der Woche</span>
       </div>
       {lobs.length === 0 ? (
-        <span style={{ fontSize: '17px', color: LT.muted }}>Diese Woche noch kein Lob. Wer hat dir geholfen? Sag Danke!</span>
+        <span style={{ fontSize: '17px', color: LT.muted }}>Diese Woche noch kein Lob. Wer hat dir geholfen? Sag Danke, gern auch anonym!</span>
       ) : lobs.slice(0, 6).map((l) => (
         <div key={`${l.von}_${l.id}`} style={{ padding: '12px 14px', borderRadius: '16px', backgroundColor: LT.cream, fontSize: '17px', lineHeight: 1.45 }}>
-          <strong>{l.vonName}</strong> an <strong>{l.anName}</strong>: „{l.t}“
+          <strong>{lobVon(l)}</strong> an <strong>{l.anName}</strong>: „{l.t}“
         </div>
       ))}
       {lobs.length > 6 && <span style={{ fontSize: '15px', color: LT.muted }}>… und {lobs.length - 6} weitere diese Woche</span>}
@@ -51,6 +52,10 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
             {andere.map((k) => <option key={k.key} value={k.key}>{k.name}</option>)}
           </select>
           <textarea value={text} onChange={(e) => setText(e.target.value.slice(0, LOB_MAX))} rows={2} placeholder="z. B. Danke, dass du heute für mich eingesprungen bist!" aria-label="Dein Lob" style={{ ...feld, resize: 'vertical' }} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '16px', cursor: 'pointer' }}>
+            <input type="checkbox" checked={anonym} onChange={(e) => setAnonym(e.target.checked)} style={{ width: '22px', height: '22px', accentColor: LT.brown }} />
+            Anonym danken (dein Name wird nicht angezeigt)
+          </label>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
             <button type="button" onClick={senden} disabled={!an || !text.trim()} style={{ minHeight: '50px', padding: '0 20px', borderRadius: '14px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '17px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: an && text.trim() ? 1 : 0.5 }}>Lob verschicken</button>
             <button type="button" onClick={() => setOffen(false)} style={{ minHeight: '50px', padding: '0 16px', borderRadius: '14px', border: `2px solid ${LT.line}`, backgroundColor: 'transparent', color: LT.ink, fontSize: '16px', cursor: 'pointer', fontFamily: 'inherit' }}>Abbrechen</button>

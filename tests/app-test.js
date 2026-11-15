@@ -202,12 +202,54 @@ async function offlineTests() {
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }
+  // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
+  {
+    const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
+    const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
+    const d = await device({ user: 'Anna' });
+    await clearPopups(d.page);
+    // Küken-Geheimnis: Küken neben „Wusstest du?“ antippen
+    await click(d.page.locator('.lt-fact-kueken').first()); await d.page.waitForTimeout(300);
+    ok('Startseite: Küken antippen zeigt ein Küken-Geheimnis', (await d.page.locator('.lt-fact-from', { hasText: 'Küken-Geheimnis' }).count()) > 0);
+    await click(nav(d.page).nth(1)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible').first()); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible').first()); await settle(d.page);
+    let lauf = 0, glueck = false, beantwortet = 0;
+    for (let i = 0; i < 40 && !glueck; i++) {
+      const opts = d.page.locator('button.lt-qopt:visible');
+      if (!(await opts.count())) break;
+      if (lauf >= 5 && (await d.page.locator('.lt-gluecksfrage').count())) { glueck = true; break; }
+      const frage = (await d.page.locator('.lt-frage').first().innerText()).trim();
+      const ziel = richtig.get(frage);
+      const texte = await opts.allInnerTexts();
+      const idx = ziel ? texte.findIndex((t) => t.replace(/^[A-D]\s*/, '').trim() === String(ziel).trim() || t.includes(String(ziel))) : -1;
+      await click(opts.nth(idx >= 0 ? idx : 0)); await settle(d.page, 250); beantwortet++;
+      lauf = (await d.page.locator('.lt-qcard.lt-ans-ok').count()) ? lauf + 1 : 0;
+      const next = d.page.locator('button.lt-sticky-next:visible');
+      if (!(await next.count())) break;
+      await click(next.first()); await settle(d.page, 250);
+    }
+    ok('Quiz: nach 5 richtigen in Folge kommt eine Glücksfrage', glueck, `${beantwortet} beantwortet, Lauf ${lauf}`);
+    // Runde zu Ende spielen: Kassenbon mit Wissens-Pause
+    for (let i = 0; i < 40; i++) {
+      const opts = d.page.locator('button.lt-qopt:visible');
+      if (!(await opts.count())) break;
+      await click(opts.first()); await settle(d.page, 250);
+      const next = d.page.locator('button.lt-sticky-next:visible');
+      if (!(await next.count())) break;
+      await click(next.first()); await settle(d.page, 250);
+    }
+    await settle(d.page, 800);
+    ok('Quiz: Kassenbon zeigt eine Wissens-Pause', (await d.page.locator('.lt-wissenspause').count()) > 0);
+    ok('Quiz-Extras: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Hilfe für Neue: Orientierung und neue Funktionen erklärt, Einführung mit 7 Seiten
   {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -530,11 +572,14 @@ async function cloudTests() {
   // Lob von Kollegen: der Gelobte bekommt die Punkte genau einmal
   {
     await db('PATCH', '/progress/ben', { _displayName: 'Ben', _kollegenLob: { l1: { an: 'anna', anName: 'Anna', t: 'Danke für die Hilfe!', ts: Date.now() } } });
+    await db('PATCH', '/progress/carla', { _displayName: 'Carla', _kollegenLob: { l2: { an: 'anna', anName: 'Anna', t: 'Heimlich danke!', ts: Date.now() - 1000, anonym: true } } });
     const A = await device({ cloud: true, user: 'Anna' });
     let pkt = [];
-    for (let i = 0; i < 60 && pkt.length === 0; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (!pkt.length) await sleep(100); }
-    ok('Lob: Gelobte bekommt 10 Punkte', pkt.length === 1 && pkt[0].score === 10, `${pkt.length} Einträge`);
+    for (let i = 0; i < 60 && pkt.length < 2; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (pkt.length < 2) await sleep(100); }
+    ok('Lob: Gelobte bekommt je Lob 10 Punkte (2 Lobe, eins davon anonym)', pkt.length === 2 && pkt.every((x) => x.score === 10), `${pkt.length} Einträge`);
     ok('Lob: Karte „Lob der Woche“ zeigt das Lob', (await A.page.getByText('Danke für die Hilfe!', { exact: false }).count()) > 0);
+    const anonymZeile = await A.page.locator('section[aria-label="Lob der Woche"] div', { hasText: 'Heimlich danke!' }).first().innerText().catch(() => '');
+    ok('Lob: anonymes Danke zeigt „Ein Kollege“ statt Namen', /Ein Kollege/.test(anonymZeile) && !/Carla/.test(anonymZeile), anonymZeile);
     ok('Lob: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }

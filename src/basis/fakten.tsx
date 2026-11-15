@@ -28,6 +28,22 @@ export const DAILY_FACTS = [
   'Weizenmehl Type 550 ist heller als Type 1050, die Zahl zeigt den Mineralstoffgehalt.',
 ];
 
+/** Küken-Geheimnisse (Version 198): wer das Küken antippt, bekommt einen Profi-Kniff aus Backstube und Verkauf */
+export const KUEKEN_GEHEIMNISSE = [
+  'Klopf mal von unten auf ein Brot: klingt es hohl, ist es richtig durchgebacken.',
+  'Angeschnittenes Brot mit der Schnittfläche nach unten aufs Brett legen, dann trocknet es langsamer aus.',
+  'Brötchen vom Vortag werden wieder knusprig: kurz mit Wasser besprühen und ein paar Minuten in den heißen Ofen.',
+  'Brot gehört nicht in den Kühlschrank, dort wird es schneller altbacken. Besser in den Brotkasten.',
+  'Wer Brot einfrieren will, schneidet es vorher in Scheiben. Dann taut man nur so viel auf, wie man braucht.',
+  'Ein Croissant hat viele hauchdünne Butterschichten. Darum blättert es so schön, wenn man reinbeißt.',
+  'Sauerteig lebt: Er wird immer wieder mit Mehl und Wasser gefüttert, damit er kräftig bleibt.',
+  'Der Duft von frischem Brot kommt vor allem aus der Kruste. Dort bräunen Zucker und Eiweiß beim Backen.',
+  'Ein Kunde ist unsicher? Erzähl, wie du das Produkt selbst am liebsten isst. Das überzeugt mehr als jede Liste.',
+  'Lächeln hört man sogar am Telefon. An der Theke sieht man es sowieso.',
+  'Bei Allergien nie raten: lieber einmal mehr in die Zutatenliste schauen oder in der Backstube nachfragen.',
+  'Den Namen des Stammkunden kennen? Ein „Guten Morgen, Frau Müller“ macht den ganzen Tag schöner.',
+];
+
 /** Das Küken erzählt bei jedem Öffnen der App einen anderen Fakt */
 export let FACT_SESSION_I: number | null = null;
 
@@ -40,7 +56,8 @@ export function KuekenFact() {
     }
     return FACT_SESSION_I;
   });
-  const text = DAILY_FACTS[i];
+  const [geheim, setGeheim] = useState<number | null>(null);
+  const text = geheim !== null ? KUEKEN_GEHEIMNISSE[geheim] : DAILY_FACTS[i];
   const [shown, setShown] = useState('');
   const [talk, setTalk] = useState(false);
   useEffect(() => {
@@ -50,12 +67,13 @@ export function KuekenFact() {
     const start = setTimeout(function step() { k++; setShown(text.slice(0, k)); if (k < text.length) t = setTimeout(step, 26); else setTalk(false); }, 500);
     return () => { clearTimeout(start); clearTimeout(t); };
   }, [text]);
-  const next = () => { const n = (i + 1) % DAILY_FACTS.length; FACT_SESSION_I = n; try { localStorage.setItem('lt_fact_i', String(n)); } catch { /* egal */ } setI(n); };
+  const next = () => { setGeheim(null); const n = (i + 1) % DAILY_FACTS.length; FACT_SESSION_I = n; try { localStorage.setItem('lt_fact_i', String(n)); } catch { /* egal */ } setI(n); };
+  const geheimnis = () => setGeheim((g) => { let n = Math.floor(Math.random() * KUEKEN_GEHEIMNISSE.length); if (n === g) n = (n + 1) % KUEKEN_GEHEIMNISSE.length; return n; });
   return (
     <section className="lt-fact" aria-label="Wusstest du?">
-      <img src={HINKEL_KUEKEN} alt="Küken: tippen für noch einen Fakt" onClick={next} className={`lt-loaded lt-fact-kueken${talk ? ' lt-talk' : ''}`} />
+      <img src={HINKEL_KUEKEN} alt="Küken antippen: Küken-Geheimnis" title="Tipp mich an: Küken-Geheimnis" onClick={geheimnis} className={`lt-loaded lt-fact-kueken${talk ? ' lt-talk' : ''}`} />
       <div className="lt-fact-bubble">
-        <div className="lt-fact-from"><LtIcon paths={ICON.bulb} size={15} width={2.2} />Wusstest du?</div>
+        <div className="lt-fact-from">{geheim !== null ? <><LtIcon paths={ICON.sparkle} size={15} width={2.2} />Küken-Geheimnis</> : <><LtIcon paths={ICON.bulb} size={15} width={2.2} />Wusstest du?</>}</div>
         <div className="lt-fact-text" aria-live="polite">{shown}<span style={{ visibility: 'hidden' }}>{text.slice(shown.length)}</span></div>
         <button className="lt-fact-more" onClick={next}>Noch einer</button>
       </div>

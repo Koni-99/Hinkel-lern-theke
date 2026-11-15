@@ -88,7 +88,7 @@ export const abstimmen = (userKey: string, name: string, id: string, wahl: numbe
 // Der Absender speichert das Lob in seinem Fortschritt (_kollegenLob). Der Gelobte schreibt sich die
 // Punkte selbst gut, sobald seine App das Lob sieht (_lobGutgeschrieben). So schreibt niemand für andere.
 // (Nicht verwechseln mit _lob: das ist das Lob vom Ausbilder, das als Pop-up erscheint.)
-export type KLob = { an: string; anName: string; t: string; ts: number };
+export type KLob = { an: string; anName: string; t: string; ts: number; anonym?: boolean };
 export type KLobEintrag = KLob & { id: string; von: string; vonName: string };
 export const LOB_PUNKTE = 10;
 export const LOB_MAX = 140;
@@ -109,13 +109,16 @@ export function alleLobs(progress: CloudPayload['progress'] | undefined): KLobEi
 export const heuteSchonGelobt = (progress: CloudPayload['progress'] | undefined, userKey: string, now = Date.now()) =>
   alleLobs(progress).some((l) => l.von === userKey && tagVon(l.ts) === tagVon(now));
 
-export const lobSchicken = (userKey: string, name: string, an: string, anName: string, text: string, now = Date.now()): Upd => (curr) => {
+/** Name des Absenders, wie Kollegen ihn sehen (anonymes Danke: „Ein Kollege“, Version 198) */
+export const lobVon = (l: KLobEintrag) => (l.anonym ? 'Ein Kollege' : l.vonName);
+
+export const lobSchicken = (userKey: string, name: string, an: string, anName: string, text: string, now = Date.now(), anonym = false): Upd => (curr) => {
   const t = text.trim().slice(0, LOB_MAX);
   if (!t || !an || an === userKey || heuteSchonGelobt(curr.progress, userKey, now)) return curr;
   const pr = prOf(curr, userKey, name);
   // nur die letzten 30 eigenen Lobe behalten
   const alt = Object.entries(pr._kollegenLob || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 29);
-  pr._kollegenLob = { ...Object.fromEntries(alt), [`l${now}`]: { an, anName, t, ts: now } };
+  pr._kollegenLob = { ...Object.fromEntries(alt), [`l${now}`]: anonym ? { an, anName, t, ts: now, anonym: true } : { an, anName, t, ts: now } };
   return curr;
 };
 /** Noch nicht gutgeschriebene Lobe an mich */

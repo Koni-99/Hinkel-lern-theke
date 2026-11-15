@@ -9,7 +9,7 @@ import { TH, cardStyle, btnPrimary } from '../../ui/basis';
 import { AnswerFx, GameProgress } from '../../ui/antwortFx';
 import { ReportContext } from '../../ui/melden';
 import { HINKEL_KUEKEN, LT, BTN_YELLOW } from '../../basis/marke';
-import { LtIcon } from '../../basis/symbole';
+import { LtIcon, ICON } from '../../basis/symbole';
 
 export type QuizQuestionProps = {
   username: string;
@@ -50,9 +50,13 @@ export type QuizQuestionProps = {
   submitMultiAnswer: () => void;
   setToast: Dispatch<SetStateAction<string>>;
   myProg: Record<string, any>;
+  /** Version 198: diese Frage ist eine Glücksfrage (nach 5 richtigen in Folge) */
+  gluecksfrage?: boolean;
+  /** Bonus der letzten Antwort */
+  quizBonus?: '' | 'comeback' | 'glueck' | 'beides';
 };
 
-export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg }: QuizQuestionProps) {
+export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg, gluecksfrage, quizBonus }: QuizQuestionProps) {
   const currentQ = quizList[currentIndex];
   const requiredIndices: number[] = currentQ.correctMulti || [currentQ.correct];
   const isMulti = requiredIndices.length > 1;
@@ -81,6 +85,17 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
           const text = lastDelta !== null ? `${lastDelta > 0 ? '+' : ''}${lastDelta} Punkte` : ok ? '✓ richtig' : '✗ falsch';
           return <AnswerFx fx={{ k: currentIndex + 1, ok, text, streak: quizRun, pts: lastDelta !== null && lastDelta > 0 ? lastDelta : ok ? 0 : undefined }} />;
         })()}
+        {gluecksfrage && !examSim && (
+          <div className="lt-gluecksfrage" role="status" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', background: 'linear-gradient(180deg,#FFE27A,#FFC72C)', color: '#2B170A', fontSize: '16px', fontWeight: 700, lineHeight: 1.35 }}>
+            <LtIcon paths={ICON.sparkle} size={22} />
+            <span><strong style={{ display: 'block', fontSize: '17px' }}>Glücksfrage!</strong>5 richtig in Folge: diese Frage zählt dreifach, falsch gibt keinen Abzug.</span>
+          </div>
+        )}
+        {isAnswered && !examSim && (quizBonus === 'comeback' || quizBonus === 'beides') && (
+          <div className="lt-comeback" role="status" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontSize: '16px', fontWeight: 700 }}>
+            <LtIcon paths={ICON.repeat} size={20} />Comeback-Bonus: eine Frage aus deinem Fehler-Stapel geschafft, doppelte Punkte!
+          </div>
+        )}
         {isMulti && (
           <div style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: '12px', backgroundColor: TH.tintBlue, fontSize: '16px', fontWeight: 700 }}>Mehrere Antworten richtig, alle antippen, dann „Antwort prüfen“</div>
         )}

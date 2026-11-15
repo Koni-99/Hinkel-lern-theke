@@ -134,7 +134,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Verkaufstipps:</strong> In jedem Produkt-Steckbrief kannst du einen Tipp für die Kollegen hinterlassen, zum Beispiel „passt super zu Frischkäse“.</div>
       </>, 11)}
       {box(boxIcon(ICON.heart), 'Lob, Umfragen und wichtige Nachrichten', <>
-        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 10 Punkte.</div>
+        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 10 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“.</div>
         <div><strong>Umfragen:</strong> Stellt der Ausbilder eine Frage ans Team, erscheint sie auf der Startseite. Einfach antippen und abstimmen.</div>
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>
       </>, 12)}
@@ -150,6 +150,12 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       {box(boxIcon(ICON.globe), 'Englisch für die Theke', <div>Unter Nachschlagen → Fachwissen → „Wörterbuch Englisch“ findest du Sätze für Gäste aus aller Welt: Bedienung, Bezahlen, Zahlen und Mengen, Allergene und alle unsere Produkte. Unter „Das sagen Kunden“ steht, was Gäste oft fragen, mit der deutschen Bedeutung. Tippe auf den Lautsprecher, dann wird es auf Englisch vorgelesen.</div>, 15)}
       {box(boxIcon(ICON.calendar), 'Mein Monat', <div>Im Menü unter „Mein Monat“ siehst du, wie dein Monat lief: Punkte (auch im Vergleich zum Vormonat), dein Platz im Team, an wie vielen Tagen du gelernt hast, wie viele Fragen du neu gemeistert hast und was du am liebsten gemacht hast. Dazu gibt es einen Tipp, was du als Nächstes üben kannst. Das siehst nur du.</div>, 15)}
       {box(boxIcon(ICON.sun), 'Aussehen: hell oder dunkel', <div>Im Menü unter „Aussehen“ suchst du dir aus, wie die Lern-Theke bei dir aussieht. <strong>Farben:</strong> „Hell“ ist das gewohnte Aussehen. „Backstube bei Nacht“ ist dunkel mit Gold, beim Umschalten lädt die Seite kurz neu. Kassenbons, Lern-Bon, Bestenliste und Tageskarte bleiben auch dann helles Papier, damit man alles gut lesen kann. <strong>Kopf der Seite:</strong> „Goldene Ähren“ (dunkle Bühne mit leuchtenden Ähren, so startet die App), die gelbe Markise (zeigt auf Wunsch das Wetter) oder die Markise mit goldenen Ähren. Das gilt nur auf deinem Gerät, Punkte und Fortschritt bleiben gleich. Hast du im Laden eine eigene Markise oder Farbe gekauft, bleibt die.</div>, 15)}
+      {box(boxIcon(ICON.sparkle), 'Extras im Quiz', <>
+        <div><strong>Glücksfrage:</strong> Hast du 5 Fragen hintereinander richtig, wird die nächste eine Glücksfrage. Sie zählt dreifach, und falsch gibt es keinen Abzug.</div>
+        <div><strong>Comeback-Bonus:</strong> Schaffst du eine Frage, die in deinem Fehler-Stapel fällig war, gibt es doppelte Punkte.</div>
+        <div><strong>Wissens-Pause:</strong> Auf dem Kassenbon nach jeder Runde steht ein kurzer Fakt aus der Backstube.</div>
+        <div><strong>Küken-Geheimnis:</strong> Tipp auf der Startseite auf das Küken neben „Wusstest du?“. Es verrät dir einen Profi-Kniff aus Backstube und Verkauf.</div>
+      </>, 15)}
       {box(boxIcon(ICON.globe), 'Ohne Internet', <div>Die Lern-Theke geht auch ohne Internet auf, zum Beispiel im Keller oder bei schlechtem Empfang. Punkte werden gespeichert und hochgeladen, sobald du wieder Netz hast. Solange steht oben neben deinen Punkten ein kleines „Offline“ (am Handy ein orangener Punkt). Antippen erklärt es.</div>, 15)}
       {box(boxIcon(ICON.phone), 'App aufs Handy und größere Schrift', <><div>So legst du die Lern-Theke wie eine App auf dein Handy oder Tablet. Sie bekommt dann ein eigenes Hinkel-Symbol auf dem Startbildschirm. Im Menü (oben rechts, drei Striche) machst du mit „Größere Schrift“ alles größer.</div><button onClick={onInstall} style={{ ...btnSecondary, alignSelf: 'flex-start' }}>Anleitung zeigen</button></>, 11)}
     </div>
