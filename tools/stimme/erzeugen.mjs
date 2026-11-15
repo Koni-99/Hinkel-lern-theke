@@ -26,7 +26,10 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../.
 const ZIEL = path.join(ROOT, 'public/stimme');
 const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : d; };
-const STIMME = opt('--stimme', 'de-DE-Chirp3-HD-Aoede');
+// Gemischt (Wunsch des Nutzers): Frau 4 Achernar, Mann 10 Iapetus, Frau 10 Laomedeia, Mann 18 Studio-B.
+// Jede Frage bekommt der Reihe nach eine der Stimmen, Frage und Antwort in derselben Stimme.
+const STIMMEN = opt('--stimme', 'de-DE-Chirp3-HD-Achernar,de-DE-Chirp3-HD-Iapetus,de-DE-Chirp3-HD-Laomedeia,de-DE-Studio-B').split(',');
+const STIMME = STIMMEN[0];
 const NUR = Number(opt('--nur', '0')) || 0;
 const MUSTER = opt('--muster', '');
 
@@ -67,17 +70,25 @@ if (MUSTER) {
   process.exit(0);
 }
 
-const texte = new Map();
-[...(Q.questions || []), ...(Q.examQuestions || [])].forEach((q) => { const t = hoerTexte(q); [t.frage, t.antwort].forEach((x) => { if (x) texte.set(stimmeKey(x), x); }); });
+const texte = new Map(); // code → [Text, Stimme]
+[...(Q.questions || []), ...(Q.examQuestions || [])].forEach((q, i) => {
+  const t = hoerTexte(q); const stimme = STIMMEN[i % STIMMEN.length];
+  [t.frage, t.antwort].forEach((x) => { if (x && !texte.has(stimmeKey(x))) texte.set(stimmeKey(x), [x, stimme]); });
+});
+if (args.includes('--zaehlen')) {
+  const z = {}; for (const [, [t, st]] of texte) z[st] = (z[st] || 0) + t.length;
+  console.log(texte.size, 'Texte, Zeichen je Stimme:', z, 'zusammen', Object.values(z).reduce((a, b) => a + b, 0));
+  process.exit(0);
+}
 mkdirSync(ZIEL, { recursive: true });
 const fehlend = [...texte].filter(([k]) => !existsSync(path.join(ZIEL, `${k}.mp3`)));
 const auftrag = NUR ? fehlend.slice(0, NUR) : fehlend;
-console.log(`${texte.size} Texte, ${texte.size - fehlend.length} schon vorhanden, erzeuge jetzt ${auftrag.length} (Stimme ${STIMME})`);
+console.log(`${texte.size} Texte, ${texte.size - fehlend.length} schon vorhanden, erzeuge jetzt ${auftrag.length} (Stimmen ${STIMMEN.join(', ')})`);
 let fertig = 0, zeichen = 0;
 const arbeiter = Array.from({ length: 4 }, async () => {
   while (auftrag.length) {
-    const [k, t] = auftrag.shift();
-    writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t));
+    const [k, [t, stimme]] = auftrag.shift();
+    writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, stimme));
     fertig++; zeichen += t.length;
     if (fertig % 50 === 0) console.log(`  ${fertig} fertig …`);
   }

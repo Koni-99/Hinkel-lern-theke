@@ -144,7 +144,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>
       </>, 12)}
       {box(boxIcon(ICON.headphones), 'Hör-Lernen und eigene Notizen', <>
-        <div><strong>Hör-Lernen:</strong> Unter Lernen → „Hör-Lernen“. Die App liest dir eine Frage vor, lässt dir kurz Zeit zum Nachdenken und sagt dann die Antwort. Gut für unterwegs, mit Kopfhörern. Tempo und Thema kannst du einstellen.</div>
+        <div><strong>Hör-Lernen:</strong> Unter Lernen → „Hör-Lernen“. Die App liest dir eine Frage vor, lässt dir kurz Zeit zum Nachdenken und sagt dann die Antwort. Gut für unterwegs, mit Kopfhörern. Tempo und Thema kannst du einstellen. Gesprochen wird mit natürlichen Stimmen, zwei Frauen und zwei Männer im Wechsel. Nur bei Fragen, die der Ausbilder neu angelegt hat, liest die Handy-Stimme.</div>
         <div><strong>Eigene Notiz:</strong> In jedem Produkt-Steckbrief kannst du dir eine Notiz schreiben, zum Beispiel eine Eselsbrücke. Sie ist nur für dich gedacht.</div>
       </>, 13)}
       {box(boxIcon(ICON.pencil), 'Ideen-Box, Kundenstimmen, Geburtstag', <>
