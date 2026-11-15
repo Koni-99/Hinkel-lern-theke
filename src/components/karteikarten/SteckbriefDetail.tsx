@@ -10,6 +10,7 @@ import { getProductEmoji, Profile } from './daten';
 import { KollegenTipps } from './KollegenTipps';
 import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
+import { getSalesTip } from '../../hilfen/produkte';
 
 // Allergene als farbige Kästchen: jede Allergen-Gruppe hat ihre eigene Farbe, damit man sie an der Theke sofort erkennt
 const ALLERGEN_STIL: Record<string, { bg: string; ink: string; icon?: string[] }> = {
@@ -114,6 +115,9 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
                 {sp.allergenNote && <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "14px", backgroundColor: TH.tintPeach, fontSize: "16px", color: TH.red, lineHeight: 1.45 }}><LtIcon paths={ICON.flag} size={18} />{sp.allergenNote}</div>}
               </div>
               {sp.description && <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.55 }}>{sp.description}</p>}
+              <div style={{ marginTop: "12px", padding: "12px 14px", borderRadius: "14px", backgroundColor: TH.tintSage, fontSize: "17px", fontWeight: 700, color: TH.green }}>
+                {getSalesTip(sp)}
+              </div>
               {sp.flour && <div style={{ fontSize: "17px", lineHeight: 1.45 }}><strong>Mehl:</strong> {sp.flour}</div>}
               {sp.note && <div style={{ fontSize: "17px", lineHeight: 1.45, color: TH.brown }}>{sp.note}</div>}
               <details style={{ backgroundColor: TH.white, border: `2px solid ${TH.line}`, borderRadius: "16px", padding: "12px 16px" }}>

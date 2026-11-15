@@ -69,6 +69,35 @@ export const priceText = (cents: number) => (cents / 100).toFixed(2).replace('.'
 
 export const centsOf = (s?: string) => { const m = (s || '').match(/(\d+),(\d\d)/); return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : 0; };
 
+/** Generiert automatisch einen Verkaufstipp aus der Produktbeschreibung oder der Gruppe */
+export function getSalesTip(product: ShopProduct): string {
+  const desc = product.description;
+
+  // Stufe 1: Extraktion aus der Beschreibung
+  const triggers = [
+    /(?:perfekt|ideal) (?:zu|für) (.+?)[.!]/i,
+    /(?:besonders gut geeignet|passt (?:wunderbar|hervorragend) zu) (.+?)[.!]/i
+  ];
+  for (const trigger of triggers) {
+    const match = desc.match(trigger);
+    if (match && match[1]) {
+      return `Tipp: Passt ${match[0].charAt(0).toLowerCase() + match[0].slice(1)}`;
+    }
+  }
+
+  // Stufe 2: Fallback nach Gruppe
+  const groupTips: Record<string, string> = {
+    'Brot': 'Ein wunderbares Brot – ideal für das tägliche Frühstück.',
+    'Brötchen': 'Ein frisches Brötchen – perfekt für einen guten Start in den Tag.',
+    'Feingebäck': 'Ein feiner Genuss – perfekt als kleine Belohnung für den Nachmittag.',
+    'Kuchen': 'Ein Stück Kuchen – ideal für die gemütliche Kaffeepause.',
+  };
+  if (groupTips[product.group]) return `Tipp: ${groupTips[product.group]}`;
+
+  // Stufe 3: Allgemeiner Allrounder
+  return 'Tipp: Dieses Produkt ist bei unseren Kunden sehr beliebt. Haben Sie es schon einmal selbst probiert?';
+}
+
 /** Quizfragen zu korrigierten Produkten anpassen (Preis, Kurz-Zutaten, Allergene, Alternativen) */
 export function patchProductQuestion<T extends Question>(q: T): T {
   const name = q.product;
