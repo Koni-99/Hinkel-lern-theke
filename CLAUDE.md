@@ -5,6 +5,7 @@ React 19 + TypeScript 6, gebaut mit Vite 8. Daten in Firebase Realtime Database.
 Mehr zum Aufbau: `README.md`.
 
 ## Mit dem Nutzer
+- **Hinkel verkauft KEINE Getränke, KEINE Torten, KEINE belegten Sachen.** Verkaufs-/Zusatzverkauf-Tipps nur mit eigenen Backwaren.
 - **Immer Deutsch.** Kurz und einfach, keine Fachwörter ohne Erklärung. Er programmiert nicht selbst.
 - Vor größeren Änderungen 2–3 Vorschläge machen, eine Empfehlung nennen, dann fragen.
 - Nach jeder Version sagen: was neu ist, was geprüft wurde, was er selbst testen soll.
@@ -111,6 +112,7 @@ Mehr zum Aufbau: `README.md`.
 - 197: App selbst durchgesehen: Neu laden auf „Profil“ gab leere Seite → jetzt Bestenliste. Zufallsfoto nur noch in Spielen (`spielBilder` = `mitZufallsFotos`, Quiz Battle, Bilderquiz, Allergene, Preisduell, Schneiden, Ansturm), sonst immer das Hauptfoto (Startseite, Steckbriefe)
 - 198: Ideen aus einer Tablet-Sitzung (nicht übernommen, selbst neu gebaut): **Glücksfrage** (nach 5/10/15 richtigen in Folge: nächste Frage dreifach, kein Abzug, `gluecksIdx` in App.tsx, Banner `.lt-gluecksfrage`), **Comeback-Bonus** (fällige Fehler-Stapel-Frage richtig: doppelte Punkte), **Wissens-Pause** (Fakt auf dem Quiz-Kassenbon, `WissensPause` in `QuizResult.tsx`), **Küken-Geheimnis** (Küken in „Wusstest du?“ antippen, `KUEKEN_GEHEIMNISSE` in `basis/fakten.tsx`, keine neue Karte), **anonym danken** im Kollegen-Lob (`anonym: true` im `_kollegenLob`, Anzeige `lobVon`). Punkteerhöhung für Quizfragen bewusst NICHT gemacht (Bestenliste fair)
 - 199: **Mehr Punkte überall ×1,5** (Nutzer wählte 1,5-fach, Schatzkammer-Preise bleiben): `PUNKTE_FAKTOR` in `hilfen/allgemein.ts`, angewendet in `saveScoreToLeaderboard` (alle Spiele/Quiz/Rubbellos/Glücksrad, Toast + Kassenbon-Zeile „Punkte-Bonus ×1,5“), Battle-Sieg `BATTLE_SIEG` = 38 (Niederlage weiter −25), `TEAM_REWARD` 75, `LOB_PUNKTE` 15. Alte Punkte bleiben. Bonus vom Ausbilder bleibt wie eingegeben
+- 200: Zusatzverkauf-Tipps neu (`ZUSATZ_TIPPS` in `hilfen/produkte.ts`): nur eigene Backwaren, mehrere Tipps pro Gruppe (fest nach Produktname), keine Auszüge mehr aus der Beschreibung (waren Bruchstücke wie „perfekt zu deftigem Belag passt“)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.

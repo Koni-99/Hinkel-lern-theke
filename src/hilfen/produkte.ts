@@ -69,24 +69,60 @@ export const priceText = (cents: number) => (cents / 100).toFixed(2).replace('.'
 
 export const centsOf = (s?: string) => { const m = (s || '').match(/(\d+),(\d\d)/); return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : 0; };
 
-/** Tipp für den Zusatzverkauf im Steckbrief (Überschrift setzt der Steckbrief): aus der Beschreibung („perfekt zu …“),
- *  sonst passend zur Gruppe, was man dem Kunden noch anbieten kann. Ohne Gedankenstriche (Wunsch des Nutzers) */
+/** Tipp für den Zusatzverkauf im Steckbrief (Überschrift setzt der Steckbrief).
+ *  Wichtig (Wunsch des Nutzers, Version 200): Hinkel verkauft KEINE Getränke, KEINE Torten und KEINE belegten Sachen.
+ *  Deshalb nur eigene Backwaren anbieten. Pro Gruppe mehrere Tipps, welcher kommt, hängt fest vom Produktnamen ab.
+ *  Ohne Gedankenstriche (Wunsch des Nutzers). */
+export const ZUSATZ_TIPPS: Record<string, string[]> = {
+  'Brot': [
+    'Frag, ob noch frische Brötchen fürs Frühstück dazu sollen.',
+    'Frag, ob für den Sonntag noch ein Stuten oder etwas Süßes dazu darf.',
+    'Biete an, das Brot gleich zu schneiden, und frag, ob noch ein kleines Brot für später mit soll.',
+  ],
+  'Brötchen': [
+    'Frag, ob noch etwas Süßes dazu darf, zum Beispiel ein Croissant oder eine Schnecke.',
+    'Frag, ob es für die ganze Familie noch ein paar Brötchen mehr sein dürfen.',
+    'Frag, ob für den nächsten Tag gleich ein Brot mit soll.',
+  ],
+  'Kleingebäck': [
+    'Frag, ob noch ein süßes Teilchen für später dazu darf.',
+    'Frag, ob es für die Kollegen oder die Familie gleich ein paar Stück mehr sein dürfen.',
+  ],
+  'Feingebäck': [
+    'Frag, ob es gleich ein paar Stück mehr sein dürfen, zum Beispiel für die Familie oder die Kollegen.',
+    'Frag, ob noch eine andere Sorte zum Probieren dazu darf.',
+  ],
+  'Kuchen': [
+    'Frag, ob es noch ein Stück mehr sein darf, zum Beispiel für Besuch am Nachmittag.',
+    'Frag, ob noch eine zweite Sorte dazu darf, dann ist für jeden etwas dabei.',
+  ],
+  'Stuten & Brioche': [
+    'Zum Sonntagsfrühstück passen noch frische Brötchen dazu.',
+    'Frag, ob noch ein Brot für die Woche mit soll.',
+  ],
+  'Herzhafte Snacks': [
+    'Frag, ob für später noch etwas Süßes dazu darf, zum Beispiel eine Schnecke.',
+    'Frag, ob für die Kollegen noch ein, zwei Stück mehr mit sollen.',
+  ],
+  'Weihnachtsgebäck': [
+    'Ein schönes Mitbringsel. Frag, ob es zum Verschenken noch eine zweite Packung sein darf.',
+    'Frag, ob noch eine andere Sorte dazu darf, dann gibt es einen bunten Teller.',
+  ],
+  'Saisongebäck': [
+    'Gibt es nur eine Zeit lang. Frag, ob gleich eins mehr für die Familie mit soll.',
+  ],
+  'Backmischung': [
+    'Frag, ob für die Zeit bis zum Selberbacken noch ein frisches Brot mit soll.',
+  ],
+};
+const TIPP_STANDARD = 'Frag, ob noch etwas dazu darf, zum Beispiel ein paar Brötchen oder ein süßes Teilchen.';
+
 export function getSalesTip(product: ShopProduct): string {
-  const desc = product.description || '';
-  const m = desc.match(/\b((?:perfekt|ideal|besonders gut geeignet|passt (?:wunderbar|hervorragend|gut|prima)) (?:zu|für|als) [^.!]+)[.!]/i);
-  if (m) return `${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}. Das kannst du dem Kunden gleich mit anbieten.`;
-  const groupTips: Record<string, string> = {
-    'Brot': 'Frag, ob noch frische Brötchen fürs Frühstück dazu sollen.',
-    'Brötchen': 'Frag, ob noch etwas Süßes dazu darf, zum Beispiel ein Croissant.',
-    'Kleingebäck': 'Frag, ob noch ein Kaffee oder ein süßes Teilchen dazu darf.',
-    'Feingebäck': 'Frag, ob noch ein Kaffee dazu darf.',
-    'Kuchen': 'Frag, ob es für die Kaffeetafel noch ein Stück mehr sein darf.',
-    'Stuten & Brioche': 'Zum Sonntagsfrühstück passen noch frische Brötchen dazu.',
-    'Herzhafte Snacks': 'Frag, ob noch ein Getränk oder etwas Süßes für danach dazu darf.',
-    'Weihnachtsgebäck': 'Ein schönes Mitbringsel. Frag, ob es zum Verschenken noch eine zweite Packung sein darf.',
-    'Saisongebäck': 'Gibt es nur eine Zeit lang. Frag, ob gleich eins mehr für die Familie mit soll.',
-  };
-  return groupTips[product.group] || 'Frag, ob noch etwas dazu darf, zum Beispiel ein Brötchen oder ein süßes Teilchen.';
+  const liste = ZUSATZ_TIPPS[product.group];
+  if (!liste || !liste.length) return TIPP_STANDARD;
+  let h = 0;
+  for (const ch of product.name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return liste[h % liste.length];
 }
 
 /** Quizfragen zu korrigierten Produkten anpassen (Preis, Kurz-Zutaten, Allergene, Alternativen) */

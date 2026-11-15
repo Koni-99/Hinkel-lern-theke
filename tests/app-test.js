@@ -202,6 +202,14 @@ async function offlineTests() {
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }
+  // Zusatzverkauf-Tipps: Hinkel verkauft keine Getränke, Torten oder belegten Sachen (Version 200)
+  {
+    const M = kompiliere(['src/hilfen/produkte.ts', 'src/daten/shopProducts.ts']);
+    const P = M.hilfen_produkte, S = M.daten_shopProducts;
+    const verboten = /kaffee|getränk|tee\b|torte|belegt|saft|cappuccino/i;
+    const schlecht = (S.SHOP_PRODUCTS || []).map((p) => P.getSalesTip(p)).filter((t) => verboten.test(t) || /–/.test(t));
+    ok('Zusatzverkauf-Tipps nur mit eigenen Backwaren (keine Getränke, Torten, belegten Sachen)', (S.SHOP_PRODUCTS || []).length > 100 && schlecht.length === 0, schlecht.slice(0, 3).join(' | '));
+  }
   // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
   {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
