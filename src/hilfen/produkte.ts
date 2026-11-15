@@ -69,27 +69,24 @@ export const priceText = (cents: number) => (cents / 100).toFixed(2).replace('.'
 
 export const centsOf = (s?: string) => { const m = (s || '').match(/(\d+),(\d\d)/); return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : 0; };
 
-/** Verkaufstipp für den Steckbrief: aus der Beschreibung („perfekt zu …“), sonst passend zur Gruppe. Ohne Gedankenstriche (Wunsch des Nutzers) */
+/** Tipp für den Zusatzverkauf im Steckbrief (Überschrift setzt der Steckbrief): aus der Beschreibung („perfekt zu …“),
+ *  sonst passend zur Gruppe, was man dem Kunden noch anbieten kann. Ohne Gedankenstriche (Wunsch des Nutzers) */
 export function getSalesTip(product: ShopProduct): string {
   const desc = product.description || '';
-  // 1. Aus der Beschreibung: „perfekt zu Suppe.“ → „Tipp: Perfekt zu Suppe.“
   const m = desc.match(/\b((?:perfekt|ideal|besonders gut geeignet|passt (?:wunderbar|hervorragend|gut|prima)) (?:zu|für|als) [^.!]+)[.!]/i);
-  if (m) return `Tipp: ${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}.`;
-  // 2. Passend zur Gruppe
+  if (m) return `${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}. Das kannst du dem Kunden gleich mit anbieten.`;
   const groupTips: Record<string, string> = {
-    'Brot': 'Frag ruhig, ob du es schneiden sollst. Viele Kunden freuen sich darüber.',
-    'Brötchen': 'Perfekt zum Frühstück. Frag, ob noch etwas Süßes dazu passt.',
-    'Kleingebäck': 'Ein schneller Snack für unterwegs. Passt gut zu einem Kaffee.',
-    'Feingebäck': 'Eine kleine Belohnung für zwischendurch. Passt gut zu einem Kaffee.',
-    'Kuchen': 'Ideal für die Kaffeepause. Frag, ob es mehrere Stücke sein dürfen.',
-    'Stuten & Brioche': 'Schmeckt am Sonntag zum Frühstück, gern mit Butter und Marmelade.',
-    'Herzhafte Snacks': 'Ideal für die Mittagspause, satt machend und schnell gegessen.',
-    'Weihnachtsgebäck': 'Ein schönes Mitbringsel in der Adventszeit.',
-    'Saisongebäck': 'Gibt es nur eine Zeit lang. Sag das den Kunden ruhig dazu.',
+    'Brot': 'Frag, ob noch frische Brötchen fürs Frühstück dazu sollen.',
+    'Brötchen': 'Frag, ob noch etwas Süßes dazu darf, zum Beispiel ein Croissant.',
+    'Kleingebäck': 'Frag, ob noch ein Kaffee oder ein süßes Teilchen dazu darf.',
+    'Feingebäck': 'Frag, ob noch ein Kaffee dazu darf.',
+    'Kuchen': 'Frag, ob es für die Kaffeetafel noch ein Stück mehr sein darf.',
+    'Stuten & Brioche': 'Zum Sonntagsfrühstück passen noch frische Brötchen dazu.',
+    'Herzhafte Snacks': 'Frag, ob noch ein Getränk oder etwas Süßes für danach dazu darf.',
+    'Weihnachtsgebäck': 'Ein schönes Mitbringsel. Frag, ob es zum Verschenken noch eine zweite Packung sein darf.',
+    'Saisongebäck': 'Gibt es nur eine Zeit lang. Frag, ob gleich eins mehr für die Familie mit soll.',
   };
-  if (groupTips[product.group]) return `Tipp: ${groupTips[product.group]}`;
-  // 3. Für alles andere
-  return 'Tipp: Bei unseren Kunden sehr beliebt. Haben Sie es schon einmal probiert?';
+  return groupTips[product.group] || 'Frag, ob noch etwas dazu darf, zum Beispiel ein Brötchen oder ein süßes Teilchen.';
 }
 
 /** Quizfragen zu korrigierten Produkten anpassen (Preis, Kurz-Zutaten, Allergene, Alternativen) */
