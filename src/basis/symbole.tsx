@@ -112,7 +112,7 @@ export const ICON = {
 export const GAME_ICON: Record<string, string[]> = {
   'Theken-Simulator': ICON.bell, 'Welches Brot ist das?': ICON.camera, 'Allergene-Training': ICON.shield, 'Quiz Battle': ICON.swords,
   Kassenblitz: ICON.coins, 'Theken-Ansturm': ICON.users, 'Tüten-Blitz': ICON.bag, 'Alternativen-Jäger': ICON.swap,
-  'Teurer oder billiger?': ICON.scale, 'Schneide-Profi': ICON.knife, Adventskalender: ICON.calendar,
+  'Teurer oder billiger?': ICON.scale, 'Telefon-Bestellung': ICON.phone, 'Schneide-Profi': ICON.knife, Adventskalender: ICON.calendar,
 };
 
 export const MENU_ICON: Record<string, string[]> = {

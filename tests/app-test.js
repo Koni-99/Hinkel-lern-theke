@@ -496,6 +496,45 @@ async function offlineTests() {
     ok('Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
+  {
+    const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
+    const fehler = [];
+    for (let i = 0; i < 200; i++) {
+      const b = T.neueBestellung();
+      const satz = b.text.join(' ');
+      if (/–/.test(satz)) fehler.push('Gedankenstrich: ' + satz);
+      if (b.tag === 5 && b.zeit > 15 * 60) fehler.push('Samstag zu spät: ' + satz);
+      if (!b.positionen.every((p) => b.auswahl.includes(p.name))) fehler.push('Bestelltes fehlt auf dem Zettel');
+      if (b.auswahl.length !== 8 || new Set(b.auswahl).size !== 8) fehler.push('Zettel hat nicht 8 verschiedene Waren');
+      if (!satz.includes(b.name)) fehler.push('Name fehlt im Anruf');
+      // alles richtig ausgefüllt → alles grün; eine Menge falsch → genau ein Fehler
+      const z = { name: b.name.toLowerCase(), tag: b.tag, zeit: b.zeit, mengen: Object.fromEntries(b.positionen.map((p) => [p.name, p.menge])), geschnitten: Object.fromEntries(b.positionen.filter((p) => p.geschnitten).map((p) => [p.name, true])) };
+      if (!T.pruefe(b, z).every((r) => r.ok)) fehler.push('Richtiger Zettel nicht erkannt: ' + JSON.stringify(T.pruefe(b, z).filter((r) => !r.ok)));
+      const z2 = { ...z, mengen: { ...z.mengen, [b.positionen[0].name]: b.positionen[0].menge + 1 } };
+      if (T.pruefe(b, z2).filter((r) => !r.ok).length !== 1) fehler.push('Falsche Menge nicht genau einmal erkannt');
+    }
+    ok('Telefon-Bestellung: 200 Anrufe sinnvoll, Prüfung stimmt', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+    ok('Telefon-Bestellung: Name tolerant (Krueger = Krüger, ein Tippfehler)', T.nameStimmt('krueger', 'Krüger') && T.nameStimmt('Schmiz', 'Schmitz') && !T.nameStimmt('Weber', 'Becker'));
+    ok('Telefon-Bestellung: Uhrzeit wie gesprochen', T.zeitGesprochen(8 * 60 + 30) === 'um halb neun' && T.zeitGesprochen(15 * 60 + 45) === 'um Viertel vor vier');
+    const d = await device({ user: 'Anna' });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Telefon-Bestellung' }).first()); await settle(d.page, 1200);
+    await click(d.page.getByRole('button', { name: 'Anruf annehmen' })); await settle(d.page, 800);
+    const zettel = d.page.locator('.lt-bestellzettel');
+    ok('Telefon-Bestellung: Bestellzettel mit 8 Waren', (await zettel.count()) > 0 && (await d.page.locator('.lt-zettel-zeile').count()) === 8);
+    const lesen = d.page.getByRole('button', { name: 'Text lesen' });
+    if (await lesen.count()) { await click(lesen); await settle(d.page, 300); }
+    const text = await d.page.locator('.lt-telefon-text').innerText().catch(() => '');
+    ok('Telefon-Bestellung: Anruf als Text lesbar', text.length > 30, text.slice(0, 80));
+    await d.page.getByLabel('Name des Kunden').fill('Test');
+    await click(d.page.getByRole('button', { name: /mehr$/ }).first()); await settle(d.page, 200);
+    await click(d.page.getByRole('button', { name: 'Bestellung prüfen' })); await settle(d.page, 500);
+    ok('Telefon-Bestellung: Prüfung zeigt richtig/falsch', (await d.page.locator('.lt-telefon-ergebnis').count()) > 0 && (await d.page.getByText(/richtig: /).count()) > 0);
+    ok('Telefon-Bestellung: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 212: Was wird genutzt? (nur Summen, keine Namen) und Erinnerung an die Sicherung
   {
     const N = kompiliere(['src/hilfen/nutzung.ts']).hilfen_nutzung;

@@ -164,6 +164,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div>Unter Spielen → „Theken-Simulator“ bedienst du einen Kunden von der Begrüßung bis zum Abschied. Die Gespräche sind wie an der echten Theke: Die meisten Kunden kennst du nicht, nur Stammkunden haben einen Namen. „Sonst noch was?“ und der Preis kommen in jedem Gespräch.</div>
         <div>Es gibt viele Situationen, zum Beispiel Allergien, Reklamation, Kartenzahlung, eine Vorbestellung abholen, falsche Ware in der Tüte oder Fragen zu Saisongebäck.</div>
         <div><strong>Zuhören:</strong> Schaltest du vor dem Start „Zuhören“ ein, spricht der Kunde laut. Seinen Satz siehst du erst, wenn du antippst oder antwortest. Mit „Nochmal hören“ wiederholt er ihn. Ton am Handy einschalten!</div>
+        <div><strong>Telefon-Bestellung:</strong> Unter Spielen ruft ein Kunde an und bestellt vor. Du füllst den Bestellzettel aus: Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. Wer nur zuhört und den Text nicht liest, bekommt einen Extra-Bonus.</div>
       </>, 2)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>
         <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>
