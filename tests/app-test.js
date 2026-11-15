@@ -292,7 +292,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -411,6 +411,31 @@ async function offlineTests() {
       await d.ctx.close();
     }
     ok(`Spiele: alle ${games.length} öffnen und laufen ohne Fehler`, games.length >= 8 && failed.length === 0, failed.join('; '));
+  }
+  // Theken-Simulator (Version 208): neue Situationen und Zuhören (Kunde spricht, Text verdeckt bis antippen)
+  {
+    const G = kompiliere(['src/games/theke/gespraech.tsx']).games_theke_gespraech;
+    const neu = ['Vorbestellung abholen', 'Falsche Ware bekommen', 'Allergene bei Saisonware'];
+    const fehlt = neu.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
+    ok('Theken-Simulator: neue Situationen (Abholung, falsche Ware, Saison-Allergene)', fehlt.length === 0, fehlt.join(', '));
+    const d = await device({ user: 'Anna' });
+    await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
+    await d.page.reload(); await settle(d.page); await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Simulator' }).first()); await settle(d.page, 1200);
+    const schalter = d.page.locator('button.lt-hoeren-schalter');
+    ok('Theken-Simulator: Schalter „Zuhören“ da', (await schalter.count()) > 0);
+    if (await schalter.count()) {
+      await click(schalter); await settle(d.page, 300);
+      await click(d.page.getByRole('button', { name: 'Ersten Kunden bedienen' })); await settle(d.page, 1200);
+      const zu = d.page.locator('button.lt-hoer-zu');
+      const gesagt = await d.page.evaluate(() => window.__gesagt.length);
+      ok('Zuhören: Kunde spricht, Satz verdeckt', (await zu.count()) > 0 && gesagt > 0, `verdeckt ${await zu.count()}, gesprochen ${gesagt}`);
+      if (await zu.count()) { await click(zu.first()); await settle(d.page, 300); }
+      ok('Zuhören: Antippen zeigt den Satz', (await zu.count()) === 0 && (await d.page.getByRole('button', { name: 'Nochmal hören' }).count()) > 0);
+    }
+    ok('Theken-Simulator mit Zuhören: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
   }
   // Nachschlagen und Karteikarten
   {

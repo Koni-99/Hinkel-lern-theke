@@ -190,13 +190,13 @@ export function scAllergenCheck(): Core | null {
     topic: 'Allergene prüfen',
     customer: [pick([`Ist in ${p.name} ${t.label} drin? ${pick(t.says)}`, `${pick(t.says)} Kann ich ${p.name} nehmen?`])],
     options: opts(contains ? [
-      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label}. Das würde ich nicht nehmen.`, correct: true },
-      { text: `Nein, keine Sorge, da ${t.verb} ${t.neg} drin. Das können Sie nehmen.`, correct: false, why: `${p.name} enthält ${t.label} (Allergene: ${allergenText(p)}).` },
+      { text: `Da ${t.verb} leider ${t.label} drin, das würde ich nicht nehmen.`, correct: true },
+      { text: `Da ${t.verb} ${t.neg} drin, das können Sie nehmen.`, correct: false, why: `${p.name} enthält ${t.label} (Allergene: ${allergenText(p)}).` },
       { text: `In ${p.name} ${t.verb} nur ganz wenig ${t.label} drin, das macht bei einer Allergie bestimmt nichts.`, correct: false, why: `Bei Allergien gibt es kein „ein bisschen“, ${p.name} enthält ${t.label}.` },
       { text: `Das weiß ich bei ${p.name} leider nicht genau, probieren Sie es doch einfach mal aus.`, correct: false, why: 'Bei Allergie-Fragen immer in den Spickzettel schauen, niemals raten!' },
     ] : [
-      { text: `Nein, keine Sorge, da ${t.verb} ${t.neg} drin. Das können Sie nehmen.`, correct: true },
-      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label}. Das würde ich nicht nehmen.`, correct: false, why: `${p.name} ist ohne ${t.label} (Allergene: ${allergenText(p)}).` },
+      { text: `Da ${t.verb} ${t.neg} drin, das können Sie nehmen.`, correct: true },
+      { text: `Da ${t.verb} leider ${t.label} drin, das würde ich nicht nehmen.`, correct: false, why: `${p.name} ist ohne ${t.label} (Allergene: ${allergenText(p)}).` },
       { text: `In ${p.name} ${t.verb} nur ganz wenig ${t.label} drin, das macht bei einer Allergie bestimmt nichts.`, correct: false, why: `${p.name} enthält gar ${t.neg}, und „ein bisschen“ gibt es bei Allergien nicht.` },
       { text: `Das weiß ich bei ${p.name} leider nicht genau, probieren Sie es doch einfach mal aus.`, correct: false, why: 'Bei Allergie-Fragen immer in den Spickzettel schauen, niemals raten!' },
     ]),

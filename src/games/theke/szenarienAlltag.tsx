@@ -1,6 +1,7 @@
 // ═══ Theken-Simulator: Alltags-Situationen und Liste aller Situationen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
-import { pick, sample, closeByName, parseCents, BREADS, Core, opts, evenOpts } from './basis';
+import { pick, sample, closeByName, parseCents, BREADS, ROLLS, Core, opts, evenOpts, ALLERGY_TARGETS, hasAllergen, allergenText } from './basis';
+import { SHOP_PRODUCTS } from '../../daten/shopProducts';
 import { scAllergyBread, scVeganBread, scTaste, scSoldOut, scIngredients, scFlour, scPrice, scAllergenCheck, scSweets, scComplaint, scPreorder, scBrunch, scGrill, scPriceObjection, scKids, scOfficeOrder, scPocketMoney, scEnglish } from './szenarienVerkauf';
 
 // ── Noch mehr Situationen aus dem Theken-Alltag ──
@@ -293,6 +294,81 @@ export function scDrunkLoud(): Core | null {
   };
 }
 
+
+// ── Version 208: weitere echte Situationen ──
+
+/** Kunde holt eine Vorbestellung ab */
+export function scAbholung(): Core | null {
+  if (!ROLLS.length) return null;
+  const r = pick(ROLLS);
+  const n = pick([10, 12, 15, 20, 25, 30]);
+  const name = pick(['Müller', 'Schmitz', 'Yildiz', 'Becker', 'Hoffmann', 'Wagner']);
+  return {
+    basket: [{ name: r.name, qty: n, cents: parseCents(r.price) }],
+    steps: [{
+      topic: 'Vorbestellung abholen',
+      customer: [pick([`Hallo, ich hab was vorbestellt. Auf ${name}.`, `Ich wollte meine Bestellung abholen, auf den Namen ${name}.`])],
+      options: opts([
+        { text: `Moment, ich schau kurz nach. (In der Bestell-Liste nachsehen.) Ja, hier: ${n} ${r.name}. Passt das so?`, correct: true },
+        { text: 'Davon weiß ich nichts, da müssen Sie morgen nochmal kommen.', correct: false, why: 'Erst in der Bestell-Liste nachsehen, statt den Kunden wegzuschicken.' },
+        { text: `(Irgendeine Tüte aus dem Regal nehmen und rübergeben.)`, correct: false, why: 'Immer Name und Bestellung prüfen, sonst bekommt jemand die falsche Tüte.' },
+        { text: 'Bestellungen macht meine Kollegin, die ist heute nicht da.', correct: false, why: 'Jeder kann nachsehen: Bestell-Liste prüfen und die Ware raussuchen.' },
+      ]),
+      afterWrong: 'Hm, ich hab das aber wirklich bestellt …',
+    }],
+    sliceIntro: [pick(['Ja, genau, danke!', 'Super, das passt.'])],
+  };
+}
+
+/** Kunde hat die falsche Ware in der Tüte */
+export function scFalscheWare(): Core | null {
+  if (BREADS.length < 3) return null;
+  const [gewollt, bekommen, dazu] = sample(BREADS, 3);
+  return {
+    bread: dazu,
+    basket: [{ name: dazu.name, qty: 1, cents: parseCents(dazu.price) }],
+    steps: [{
+      topic: 'Falsche Ware bekommen',
+      customer: [pick([`Entschuldigung, ich war vorhin hier. Ich wollte ${gewollt.name}, in der Tüte ist aber ${bekommen.name}.`, `Ich hab gerade gesehen: Das ist gar nicht ${gewollt.name}, das ist ${bekommen.name}.`])],
+      options: opts([
+        { text: `Oh, das tut mir leid! Ich tausch Ihnen das sofort um. (${gewollt.name} einpacken.)`, correct: true },
+        { text: 'Das haben Sie aber so bestellt, da kann ich nichts machen.', correct: false, why: 'Fehler passieren. Freundlich entschuldigen und sofort umtauschen.' },
+        { text: 'Umtausch geht nur mit Bon. Ohne Bon nicht.', correct: false, why: 'Bei einer Verwechslung einfach umtauschen, der Kunde hat ja schon bezahlt.' },
+        { text: 'Das schmeckt doch auch, behalten Sie das ruhig.', correct: false, why: 'Der Kunde wollte etwas anderes: entschuldigen und das Richtige geben.' },
+      ]),
+      afterWrong: 'Na ja, ich wollte aber wirklich das andere …',
+    }],
+    sliceIntro: [pick([`Danke! Und wenn ich schon mal da bin: einmal ${dazu.name}, bitte.`, `Super, danke. Dann nehm ich noch ${dazu.name} mit.`])],
+  };
+}
+
+/** Kunde fragt nach Allergenen bei Saison- oder Weihnachtsgebäck */
+export function scSaisonAllergen(): Core | null {
+  const t = pick(ALLERGY_TARGETS);
+  const saison = SHOP_PRODUCTS.filter((p) => (p.group === 'Weihnachtsgebäck' || p.group === 'Saisongebäck') && !p.allergenNote);
+  if (!saison.length || !BREADS.length) return null;
+  const p = pick(saison);
+  const drin = hasAllergen(p as any, t.key);
+  const brot = pick(BREADS);
+  return {
+    bread: brot,
+    basket: [{ name: brot.name, qty: 1, cents: parseCents(brot.price) }],
+    steps: [{
+      topic: 'Allergene bei Saisonware',
+      learn: { product: p.name, kind: 'allergene' },
+      customer: [pick([`Ist in ${p.name} was mit ${t.label} drin? ${pick(t.says)}`, `${pick(t.says)} Kann ich ${p.name} nehmen?`])],
+      options: opts([
+        { text: drin ? `Da ${t.verb} leider ${t.label} drin, das würde ich nicht nehmen.` : `Da ${t.verb} ${t.neg} drin, das können Sie nehmen.`, correct: true },
+        { text: drin ? `Da ${t.verb} ${t.neg} drin, das können Sie nehmen.` : `Da ${t.verb} leider ${t.label} drin, das würde ich nicht nehmen.`, correct: false, why: `${p.name}: Allergene ${allergenText(p as any)}.` },
+        { text: 'Das ist ja nur Weihnachtsgebäck, da ist bestimmt nichts Schlimmes drin.', correct: false, why: 'Auch bei Saisonware immer im Spickzettel nachsehen, nie raten.' },
+        { text: 'Weiß ich nicht genau. Probieren Sie einfach ein kleines Stück.', correct: false, why: 'Bei Allergien nie probieren lassen: im Spickzettel nachsehen.' },
+      ]),
+      afterWrong: 'Hm, sind Sie sicher? Dann lass ich das lieber.',
+    }],
+    sliceIntro: [pick([`Gut zu wissen, danke. Dann nur ${brot.name}, bitte.`, `Okay, danke. Dann nehm ich heute nur ${brot.name}.`])],
+  };
+}
+
 export const SCENARIOS: { fn: () => Core | null; topics: string[]; weight: number }[] = [
   { fn: scAllergyBread, topics: ['Allergie'], weight: 3 },
   { fn: scAllergenCheck, topics: ['Allergene prüfen', 'Alternative ohne Allergen'], weight: 3 },
@@ -325,4 +401,7 @@ export const SCENARIOS: { fn: () => Core | null; topics: string[]; weight: numbe
   { fn: scTouch, topics: ['Ware anfassen'], weight: 1 },
   { fn: scBigNote, topics: ['Großer Geldschein'], weight: 1 },
   { fn: scDrunkLoud, topics: ['Kunde blockiert die Schlange'], weight: 1 },
+  { fn: scAbholung, topics: ['Vorbestellung abholen'], weight: 1 },
+  { fn: scFalscheWare, topics: ['Falsche Ware bekommen'], weight: 1 },
+  { fn: scSaisonAllergen, topics: ['Allergene bei Saisonware'], weight: 1 },
 ];

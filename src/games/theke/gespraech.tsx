@@ -138,7 +138,7 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   const rollQty = rnd(2, 6);
   if (askMore) steps.push({
     topic: 'Zusatzverkauf',
-    customer: [steps[steps.length - 1]?.topic === 'Schnitt' || steps[steps.length - 1]?.topic === 'Smalltalk' ? pick(['Danke.', 'Super, danke.', 'Prima.', 'Danke schön.']) : pick(['Gut, dann nehm ich das.', 'Okay, das nehm ich.', 'Prima, dann das.'])],
+    customer: [steps[steps.length - 1]?.topic === 'Schnitt' || steps[steps.length - 1]?.topic === 'Smalltalk' ? pick(['Danke.', 'Super, danke.', 'Prima.', 'Danke schön.']) : core.sliceIntro && core.sliceIntro[0] && !/schneid|cut/i.test(core.sliceIntro[0]) && !steps.some((x) => x.topic === 'Schnitt') ? core.sliceIntro[0] : pick(['Gut, dann nehm ich das.', 'Okay, das nehm ich.', 'Prima, dann das.'])],
     options: opts([
       { text: pick(['Darf’s sonst noch was sein?', 'Sonst noch etwas?', 'Kann ich Ihnen sonst noch was geben?', ...(addRoll ? [`Noch ein paar ${roll.name} dazu?`] : []), 'Darf es noch etwas sein?']), correct: true },
       ...sample([

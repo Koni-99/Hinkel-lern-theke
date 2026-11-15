@@ -6,9 +6,13 @@ import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, ConfettiOverlay } from '../../ui/basis';
 import { ReportLink, ReportContext } from '../../ui/melden';
 import { scrollToPlay } from '../../ui/belohnungen';
-import { OnLearn, LearnHint, SpeakButton, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
+import { OnLearn, LearnHint, SpeakButton, canSpeak, speakText, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
 import { SimOpt, Conversation, ChatMsg, pick } from './basis';
+import { LtIcon, ICON } from '../../basis/symbole';
+
+/** Was der Kunde laut sagt: Regieanweisungen in Klammern weglassen */
+const gesprochen = (t: string) => t.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
 import { buildConversation } from './gespraech';
 
 export type ThekeStats = Record<string, { ok: number; bad: number }>;
@@ -110,6 +114,12 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
   const [thFx, setThFx] = useState<AnswerFxState>(null);
   const [thRun, setThRun] = useState(0);
   const [focus, setFocus] = useState<string | undefined>(undefined);
+  // Zuhören: Kunde spricht laut, der Text bleibt verdeckt, bis man antippt oder antwortet (pro Gerät gemerkt)
+  const [hoeren, setHoeren] = useState<boolean>(() => { try { return localStorage.getItem('lt_theke_hoeren') === '1'; } catch { return false; } });
+  const [offenBis, setOffenBis] = useState(0);
+  const gesprochenRef = useRef(0);
+  const toggleHoeren = () => setHoeren(v => { const n = !v; try { localStorage.setItem('lt_theke_hoeren', n ? '1' : '0'); } catch {} if (!n) stopSpeaking(); return n; });
+  useEffect(() => () => { stopSpeaking(); }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [messages, busy, phase]);
 
@@ -126,6 +136,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
     setConv(c);
     setStepIdx(0);
     setCorrect(0);
+    gesprochenRef.current = 0; setOffenBis(0);
     setMessages(c.steps[0].customer.map(t => ({ from: 'customer' as const, text: t })));
     setBusy(false);
     setPhase('chat'); scrollToPlay();
@@ -153,6 +164,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
     const run = o.correct ? thRun + 1 : 0;
     setThRun(run);
     setThFx({ k: Date.now(), ok: o.correct, text: o.correct ? '💬 +10 Punkte' : '✗ Nicht ganz', streak: run, pts: o.correct ? 10 : undefined });
+    setOffenBis(messages.length);
     const newCorrect = correct + (o.correct ? 1 : 0);
     setCorrect(newCorrect);
     setBusy(true);
@@ -193,6 +205,14 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
       }
     }, o.correct ? 900 : 1600);
   };
+
+  // Neue Kundensätze im Zuhör-Modus laut sprechen
+  useEffect(() => {
+    if (!hoeren || phase === 'menu' || !canSpeak()) { gesprochenRef.current = messages.length; return; }
+    const neu = messages.slice(gesprochenRef.current).filter(m => m.from === 'customer').map(m => gesprochen(m.text)).filter(Boolean);
+    gesprochenRef.current = messages.length;
+    if (neu.length) speakText(neu.join(' '));
+  }, [messages, hoeren, phase]);
 
   const total = conv ? conv.steps.length : 0;
   const step = conv && phase === 'chat' ? conv.steps[stepIdx] : null;
@@ -235,6 +255,15 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
           startLabel="Ersten Kunden bedienen"
           onStart={() => startConversation()}
         />
+      )}
+      {phase === 'menu' && canSpeak() && (
+        <button type="button" onClick={toggleHoeren} aria-pressed={hoeren} className="lt-hoeren-schalter" style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px', textAlign: 'left', cursor: 'pointer', border: `2px solid ${hoeren ? TH.brown : TH.line}`, backgroundColor: hoeren ? TH.tintYellow : TH.white, color: TH.ink }}>
+          <span style={{ flex: '0 0 auto', display: 'inline-flex' }}><LtIcon paths={ICON.headphones} size={30} /></span>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: 'block', fontWeight: 700, fontSize: '18px' }}>Zuhören: {hoeren ? 'an' : 'aus'}</span>
+            <span style={{ display: 'block', fontSize: '15px', color: TH.muted }}>Der Kunde spricht laut, wie an der echten Theke. Lesen kannst du erst, wenn du antippst.</span>
+          </span>
+        </button>
       )}
       {phase === 'menu' && <OnlyNewToggle on={onlyNew} onToggle={toggleOnlyNew} label="Nur neue Beratungen" done={knownTheke.length} unit="Beratungen gemeistert" />}
       {phase === 'menu' && onLearn && <LearnHint text="Fragt dich ein Kunde nach Zutaten, Preis oder Mehl oder willst du ein Brot schneiden, wird bei einer richtigen Antwort die passende Frage im Bereich „Sortiment & Warenkunde“ abgehakt, genau so, als hättest du sie im Quiz beantwortet." />}
@@ -281,9 +310,15 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
               return (
                 <div key={i} className="lt-msg" style={{ display: 'flex', flexDirection: 'column', alignItems: isSeller ? 'flex-end' : 'flex-start' }}>
                   <span style={{ fontSize: '14px', fontWeight: 700, color: TH.muted, margin: isSeller ? '0 8px 3px 0' : '0 0 3px 8px' }}>{isSeller ? 'Du' : conv.persona.name}</span>
+                  {!isSeller && hoeren && phase === 'chat' && i >= offenBis ? (
+                    <button type="button" className="lt-hoer-zu" onClick={() => setOffenBis(messages.length)} style={{ maxWidth: '82%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px', borderRadius: '20px 20px 20px 6px', backgroundColor: TH.white, border: `2px dashed ${TH.line}`, color: TH.muted, fontSize: '17px', lineHeight: 1.4, cursor: 'pointer', textAlign: 'left' }}>
+                      <LtIcon paths={ICON.headphones} size={22} />Gut zuhören. Antippen zum Lesen
+                    </button>
+                  ) : (
                   <div style={{ maxWidth: '82%', padding: '12px 16px', borderRadius: isSeller ? '20px 20px 6px 20px' : '20px 20px 20px 6px', backgroundColor: isSeller ? TH.yellow : TH.white, border: isSeller ? 'none' : `2px solid ${TH.line}`, fontSize: '18px', lineHeight: 1.45 }}>
                     {m.text}
                   </div>
+                  )}
                 </div>
               );
             })}
@@ -309,7 +344,9 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '16px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Deine Antwort · {step.topic}</div>
-                <SpeakButton small text={`${conv.persona.title} sagt: ${step.customer.map(t => t.replace(/^\(|\)$/g, '')).join(' ')}. Deine Antworten: ${step.options.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />
+                {hoeren && canSpeak() ? (
+                  <button type="button" onClick={() => speakText(step.customer.map(gesprochen).filter(Boolean).join(' '))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={ICON.repeat} size={18} />Nochmal hören</button>
+                ) : <SpeakButton small text={`${conv.persona.title} sagt: ${step.customer.map(t => t.replace(/^\(|\)$/g, '')).join(' ')}. Deine Antworten: ${step.options.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />}
               </div>
               {step.options.map((o, i) => (
                 <button key={i} onClick={() => choose(o)} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '60px', padding: '12px 16px', borderRadius: '16px', border: `3px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '18px', lineHeight: 1.4, textAlign: 'left', cursor: 'pointer' }}>
