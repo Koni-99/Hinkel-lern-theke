@@ -56,10 +56,13 @@ if (args.includes('--zaehlen')) process.exit(0);
 
 async function sprechen(text, stimme) {
   for (let versuch = 1; versuch <= 10; versuch++) {
-    const res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input: { text }, voice: { languageCode: 'de-DE', name: stimme }, audioConfig: { audioEncoding: 'MP3' } }),
-    });
+    let res;
+    try {
+      res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: { text }, voice: { languageCode: 'de-DE', name: stimme }, audioConfig: { audioEncoding: 'MP3' } }),
+      });
+    } catch { await new Promise((r) => setTimeout(r, 5000 * versuch)); continue; } // Verbindung kurz weg: nochmal
     if (res.ok) return Buffer.from((await res.json()).audioContent, 'base64');
     // Google erlaubt nur eine gewisse Zahl Anfragen pro Minute: dann geduldig warten
     if (res.status === 429 || res.status >= 500) { await new Promise((r) => setTimeout(r, 8000 * versuch)); continue; }
@@ -77,7 +80,8 @@ await Promise.all(Array.from({ length: 3 }, async () => {
   while (auftrag.length) {
     const [k, t, st] = auftrag.shift();
     await new Promise((r) => setTimeout(r, 600)); // höchstens etwa 250 Anfragen pro Minute
-    writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, st));
+    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, st)); }
+    catch (e) { console.log('Übersprungen:', t, String(e.message).slice(0, 120)); continue; }
     if (++fertig % 200 === 0) console.log(`  ${fertig} fertig …`);
   }
 }));
