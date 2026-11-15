@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 211;
+const APP_VERSION: number = 212;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -17,6 +17,7 @@ import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, 
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
+import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
 import { UmfrageKarten } from './screens/UmfrageKarten';
@@ -1705,6 +1706,22 @@ export default function App() {
     if (!snap) return;
     mutateCloudData((curr) => { if (curr.progress[k]) curr.progress[k]._monatSnap = snap; return curr; });
   }, [username, cloudConnected, isSyncing, cloudData.progress?.[username.toLowerCase()]?._monatSnap?.mo]);
+
+  // Was wird genutzt? Geöffnete Seiten im Gerät mitzählen, gesammelt höchstens alle 10 Minuten hochladen
+  useEffect(() => { if (username && username.toLowerCase() !== 'admin') zaehleSeite(activeTab); }, [activeTab, username]);
+  const nutzungHochRef = useRef(Date.now() - 8 * 60 * 1000); // erstes Hochladen nach ca. 2 Minuten
+  useEffect(() => {
+    if (!username || username.toLowerCase() === 'admin') return;
+    const k = username.toLowerCase();
+    const t = window.setInterval(() => {
+      if (!cloudConnected || Date.now() - nutzungHochRef.current < 10 * 60 * 1000 || !hatOffeneNutzung()) return;
+      nutzungHochRef.current = Date.now();
+      const dazu = offeneNutzung();
+      leereNutzung(dazu);
+      mutateCloudData((curr) => { if (curr.progress[k]) curr.progress[k]._nutzung = addiereNutzung(curr.progress[k]._nutzung, dazu); return curr; });
+    }, 30 * 1000);
+    return () => window.clearInterval(t);
+  }, [username, cloudConnected]);
 
   // Wochenrückblick: Wer in der Woche davor noch nichts gemacht hat, bekommt keinen leeren Rückblick
   useEffect(() => {

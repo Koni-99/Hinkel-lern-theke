@@ -7,7 +7,7 @@ const path = require('path');
 
 const [dir = 'build', port = '5055', prefix = ''] = process.argv.slice(2);
 const root = path.resolve(dir);
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.map': 'application/json', '.txt': 'text/plain' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.ico': 'image/x-icon', '.svg': 'image/svg+xml', '.map': 'application/json', '.txt': 'text/plain', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg' };
 
 http.createServer((req, res) => {
   let url = decodeURIComponent(req.url.split('?')[0]);

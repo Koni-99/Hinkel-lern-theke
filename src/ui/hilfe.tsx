@@ -165,6 +165,11 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div>Es gibt viele Situationen, zum Beispiel Allergien, Reklamation, Kartenzahlung, eine Vorbestellung abholen, falsche Ware in der Tüte oder Fragen zu Saisongebäck.</div>
         <div><strong>Zuhören:</strong> Schaltest du vor dem Start „Zuhören“ ein, spricht der Kunde laut. Seinen Satz siehst du erst, wenn du antippst oder antwortest. Mit „Nochmal hören“ wiederholt er ihn. Ton am Handy einschalten!</div>
       </>, 2)}
+      {box(boxIcon(ICON.lock), 'Was die App speichert', <>
+        <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>
+        <div>Der Ausbilder sieht deinen Lernstand, damit er dir gezielt helfen kann. Außerdem zählt die App, wie oft Seiten und Spiele geöffnet werden. Der Ausbilder sieht davon nur die Summe für das ganze Team, ohne Namen. So weiß er, was ihr wirklich nutzt.</div>
+        <div>Der Ausbilder sichert die Daten regelmäßig, damit nichts verloren geht.</div>
+      </>, 4)}
       {box(boxIcon(ICON.globe), 'Ohne Internet', <div>Die Lern-Theke geht auch ohne Internet auf, zum Beispiel im Keller oder bei schlechtem Empfang. Punkte werden gespeichert und hochgeladen, sobald du wieder Netz hast. Solange steht oben neben deinen Punkten ein kleines „Offline“ (am Handy ein orangener Punkt). Antippen erklärt es.</div>, 15)}
       {box(boxIcon(ICON.phone), 'App aufs Handy und größere Schrift', <><div>So legst du die Lern-Theke wie eine App auf dein Handy oder Tablet. Sie bekommt dann ein eigenes Hinkel-Symbol auf dem Startbildschirm. Im Menü (oben rechts, drei Striche) machst du mit „Größere Schrift“ alles größer.</div><button onClick={onInstall} style={{ ...btnSecondary, alignSelf: 'flex-start' }}>Anleitung zeigen</button></>, 11)}
     </div>

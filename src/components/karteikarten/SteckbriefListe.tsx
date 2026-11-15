@@ -1,6 +1,7 @@
 // ═══ Karteikarten: Produkt-Steckbriefe (Liste) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
+import { kleinesFoto } from '../../daten/fotos';
 import { dc } from '../../daten/data';
 import { TH, cardStyle, productImageKey, ProductImages } from '../../ui/basis';
 import { groupColor, getProductEmoji, Profile } from './daten';
@@ -32,7 +33,7 @@ export function SteckbriefListe({ favorites, images, setOpenProfileKey, filtered
             return (
               <button key={key} onClick={() => setOpenProfileKey(key)} aria-label={`Steckbrief ${prod.name}`} className="lt-card fc-item" style={{ animationDelay: `${Math.min(pi, 14) * 0.035}s`, position: "relative", display: "flex", flexDirection: "column", padding: 0, borderRadius: "20px", border: `2px solid ${TH.line}`, backgroundColor: dc('#FFFFFF'), overflow: "hidden", cursor: "pointer", textAlign: "left", color: TH.ink, fontFamily: "inherit" }}>
                 {bild ? (
-                  <img src={bild} alt="" loading="lazy" style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block" }} />
+                  <img src={kleinesFoto(bild)} alt="" loading="lazy" decoding="async" style={{ width: "100%", aspectRatio: "1 / 1", objectFit: "cover", display: "block" }} />
                 ) : (
                   <span aria-hidden="true" style={{ width: "100%", aspectRatio: "1 / 1", backgroundColor: TH.tintYellow, borderBottom: `4px solid ${groupColor(prod.group)}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "54px" }}>
                     {getProductEmoji(prod.name, prod.group)}

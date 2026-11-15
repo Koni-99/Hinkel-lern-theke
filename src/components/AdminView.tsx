@@ -22,6 +22,7 @@ import { EinstellungenTab } from '../admin/EinstellungenTab';
 import { AuswertungSchwachstellen } from '../admin/AuswertungSchwachstellen';
 import { AuswertungWoche } from '../admin/AuswertungWoche';
 import { AuswertungUeberblick } from '../admin/AuswertungUeberblick';
+import { AuswertungNutzung } from '../admin/AuswertungNutzung';
 import { MeldungenTab } from '../admin/MeldungenTab';
 import { InhalteTab } from '../admin/InhalteTab';
 import { NachrichtTab } from '../admin/NachrichtTab';
@@ -99,6 +100,8 @@ export function AdminView({
       document.body.appendChild(a); a.click(); a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 2000);
       setBackupMsg('Sicherung heruntergeladen. Du findest sie in deinen Downloads.');
+      // merken, wann zuletzt gesichert wurde (für die Erinnerung oben im Ausbilder-Bereich)
+      mutateCloudData((curr) => { curr.progress = curr.progress || {}; curr.progress.admin = { ...(curr.progress.admin || {}), _letzteSicherung: Date.now() }; return curr; });
     } catch { setBackupMsg('Fehler: Die Sicherung konnte nicht erstellt werden.'); }
   };
   const restoreBackup = (file?: File | null) => {
@@ -761,6 +764,21 @@ export function AdminView({
                 </div>
               );
             })()}
+      {(() => {
+        const letzte = Number((cloudData.progress?.admin || {})._letzteSicherung) || 0;
+        const tage = letzte ? Math.floor((Date.now() - letzte) / 86400000) : -1;
+        if (tage >= 0 && tage < 7) return null;
+        return (
+          <div className="lt-sicherung-erinnerung" style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', border: `2px solid ${TH.brown}`, backgroundColor: TH.tintYellow }}>
+            <span style={{ flex: '1 1 240px' }}>
+              <span style={{ display: 'block', fontWeight: 700, fontSize: '18px' }}>{tage < 0 ? 'Noch keine Sicherung gemacht' : `Letzte Sicherung vor ${tage} Tagen`}</span>
+              <span style={{ display: 'block', fontSize: '16px', color: TH.muted }}>Einmal pro Woche alle Daten als Datei sichern. Geht etwas verloren, sind Punkte und Lernstand des Teams damit nicht weg.</span>
+            </span>
+            <button type="button" onClick={downloadBackup} style={btnPrimary}>Jetzt sichern</button>
+            {backupMsg && <span style={{ flexBasis: '100%', fontWeight: 700, color: backupMsg.startsWith('Fehler') ? TH.red : TH.green }}>{backupMsg}</span>}
+          </div>
+        );
+      })()}
       <div role="tablist" aria-label="Ausbilder-Bereiche" style={{ display: 'flex', gap: '6px', padding: '6px', borderRadius: '18px', backgroundColor: dc('#F4EADB'), overflowX: 'auto' }}>
         {tabs.map(t => {
           const active = adminTab === t.id;
@@ -789,6 +807,8 @@ export function AdminView({
       {adminTab === 'stats' && <AuswertungUeberblick {...{ allKnownUserKeys, allQById, startFix, renderFixEditor, hiddenMap, hideQuestion, qStats, smallBtn, sectionTitle, weekInfo, nameOf }} />}
 
       {adminTab === 'stats' && <AuswertungWoche {...{ allKnownUserKeys, smallBtn, sectionTitle, wStart, weekInfo, nameOf, copyReport }} />}
+
+      {adminTab === 'stats' && <AuswertungNutzung progress={cloudData.progress} sectionTitle={sectionTitle} />}
 
       {adminTab === 'stats' && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} />}
 

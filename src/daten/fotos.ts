@@ -25,3 +25,11 @@ const ZUFALL_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, u
 export const mitShopFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ohneEigene(FOTO_MAP) });
 /** Für Spiele: wie mitShopFotos, aber mit zufälligem Shop-Foto */
 export const mitZufallsFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ohneEigene(ZUFALL_MAP) });
+/** Für Listen und Raster: kleines Vorschaubild (360px, public/fotos/klein, auch für -2/-3/-4) statt des großen Shop-Fotos.
+ *  Andere Bilder (Ausbilder-Foto, Datenbank) bleiben, wie sie sind. */
+const KLEIN_RE = /\/fotos\/([a-z0-9]+)(-\d)?\.jpg$/;
+export const kleinesFoto = (src?: string): string | undefined => {
+  if (!src) return src;
+  const m = src.match(KLEIN_RE);
+  return m && SHOP_FOTOS.includes(m[1]) ? `${BASIS}fotos/klein/${m[1]}${m[2] || ''}.jpg` : src;
+};

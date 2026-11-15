@@ -1,6 +1,7 @@
 // ═══ Startseite ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { useState, useEffect, useRef } from 'react';
+import { kleinesFoto } from '../daten/fotos';
 import type { ReactNode, Dispatch, SetStateAction } from 'react';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { PinboardMessage, ScoreEntry } from '../types';
@@ -386,7 +387,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               {(fullBakingSchedule[selectedBakeDay]?.items || []).map((item: any, idx: number) => (
                 <div key={idx} className="lt-bake-row" style={{ display: 'flex', alignItems: 'center', gap: '12px', backgroundColor: '#FBF6EC', padding: '8px 12px 8px 8px', borderRadius: '14px', animationDelay: `${Math.min(idx, 10) * 0.04}s` }}>
                   {(() => { const img = bakeImg(String(item.name || '')); return img
-                    ? <img src={img} alt="" loading="lazy" className="lt-loaded" style={{ flex: '0 0 56px', width: '56px', height: '56px', objectFit: 'cover', borderRadius: '12px', backgroundColor: dc('#FFFFFF') }} />
+                    ? <img src={kleinesFoto(img)} alt="" loading="lazy" className="lt-loaded" style={{ flex: '0 0 56px', width: '56px', height: '56px', objectFit: 'cover', borderRadius: '12px', backgroundColor: dc('#FFFFFF') }} />
                     : <span aria-hidden="true" style={{ flex: '0 0 56px', height: '56px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.bread} size={26} width={1.8} /></span>; })()}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>

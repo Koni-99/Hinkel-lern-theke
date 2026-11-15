@@ -1,6 +1,7 @@
 // ═══ Spiel: Theken-Ansturm ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
+import { kleinesFoto } from '../daten/fotos';
 import { shuffleArray } from '../hilfen/allgemein';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { TH, cardStyle, PageHead, StatChip, GameIntro, GameResult, productImageKey, ProductImages, ConfettiOverlay } from '../ui/basis';
@@ -99,7 +100,7 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
               const done = packed.includes(p.name);
               return (
                 <button key={p.name} onClick={() => tap(p.name)} disabled={done} style={{ padding: '2px', borderRadius: '13px', border: `3px solid ${wrongName === p.name ? TH.red : done ? TH.green : TH.line}`, backgroundColor: done ? TH.tintSage : TH.white, cursor: done ? 'default' : 'pointer', opacity: done ? 0.55 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                  {images[productImageKey(p.name)] ? <img src={images[productImageKey(p.name)]} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '9px', display: 'block' }} /> : <span style={{ fontSize: '44px', lineHeight: 1.4 }}>🥖</span>}
+                  {images[productImageKey(p.name)] ? <img src={kleinesFoto(images[productImageKey(p.name)])} alt="" decoding="async" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '9px', display: 'block' }} /> : <span style={{ fontSize: '44px', lineHeight: 1.4 }}>🥖</span>}
                   {/* Name nur ohne Foto zeigen: so muss man die Ware am Bild erkennen */}
                   {(!images[productImageKey(p.name)] || done || wrongName === p.name) && <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: 1.2, color: wrongName === p.name ? TH.red : undefined }}>{p.name}</span>}
                 </button>

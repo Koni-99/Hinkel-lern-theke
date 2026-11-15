@@ -1,6 +1,7 @@
 // ═══ Spiel: Allergene-Training ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
+import { kleinesFoto } from '../daten/fotos';
 import { dc } from '../daten/data';
 import { shuffleArray } from '../hilfen/allgemein';
 import { focusShuffle, noteResult } from '../focus';
@@ -166,7 +167,7 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
                 const img = images[productImageKey(o.name)];
                 return (
                   <button key={o.name} className={chosen ? (isRight ? 'lt-correct' : isChosen ? 'lt-wrong' : undefined) : undefined} onClick={() => choose(o.name)} disabled={!!chosen} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '64px', padding: '8px 14px', borderRadius: '16px', border: `3px solid ${border}`, backgroundColor: bg, color: TH.ink, textAlign: 'left', cursor: chosen ? 'default' : 'pointer' }}>
-                    {img && <img src={img} alt="" style={{ flex: '0 0 48px', width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px' }} />}
+                    {img && <img src={kleinesFoto(img)} alt="" style={{ flex: '0 0 48px', width: '48px', height: '48px', objectFit: 'cover', borderRadius: '12px' }} />}
                     <span style={{ flex: 1 }}>
                       <span style={{ display: 'block', fontSize: '19px', fontWeight: 700 }}>{o.name}</span>
                       {chosen && <span style={{ display: 'block', fontSize: '15px', color: TH.muted, marginTop: '2px' }}>Allergene: {o.allergens.join(', ')}</span>}

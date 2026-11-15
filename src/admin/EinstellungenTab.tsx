@@ -41,12 +41,12 @@ export function EinstellungenTab({ cloudData, setCloudUrl, cloudConnected, setCl
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button type="button" onClick={downloadBackup} style={btnPrimary}>Sicherung herunterladen</button>
           <label style={{ ...btnSecondary, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            ↩️ Sicherung wiederherstellen
+            Sicherung wiederherstellen
             <input type="file" accept=".json,application/json" onChange={(e) => { restoreBackup(e.target.files && e.target.files[0]); e.target.value = ''; }} style={{ display: 'none' }} />
           </label>
         </div>
         {backupMsg && <div style={{ marginTop: '10px', fontWeight: 700, color: backupMsg.startsWith('Fehler') ? TH.red : TH.green }}>{backupMsg}</div>}
-        <div style={{ fontSize: '15px', color: TH.muted, marginTop: '10px' }}>Tipp: Einmal im Monat eine Sicherung herunterladen und gut aufheben. Beim Wiederherstellen wird der aktuelle Stand durch die Sicherung ersetzt.</div>
+        <div style={{ fontSize: '15px', color: TH.muted, marginTop: '10px' }}>Tipp: Einmal pro Woche eine Sicherung herunterladen (oben im Ausbilder-Bereich erinnert die App daran) und gut aufheben. Beim Wiederherstellen wird der aktuelle Stand durch die Sicherung ersetzt.</div>
       </div>
       <div style={cardStyle}>
         {sectionTitle('Produktfotos', 'Die Fotos für Steckbriefe, Bilderquiz und Allergene-Training. Einmal hochladen, dann sehen alle Mitarbeiter sie.')}

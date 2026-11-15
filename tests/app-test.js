@@ -267,6 +267,8 @@ async function offlineTests() {
       const genau = ziel ? texte.findIndex((t) => t.replace(/^[A-D]\s*/, '').trim() === String(ziel).trim()) : -1;
       const idx = genau >= 0 ? genau : ziel ? texte.findIndex((t) => t.includes(String(ziel))) : -1;
       await click(opts.nth(idx >= 0 ? idx : 0)); await settle(d.page, 250); beantwortet++;
+      // warten, bis die Antwort ausgewertet ist (bei voll ausgelastetem Rechner dauert das länger)
+      await d.page.locator('.lt-qcard.lt-ans-ok, .lt-qcard.lt-ans-bad').first().waitFor({ timeout: 5000 }).catch(() => {});
       lauf = (await d.page.locator('.lt-qcard.lt-ans-ok').count()) ? lauf + 1 : 0;
       const next = d.page.locator('button.lt-sticky-next:visible');
       if (!(await next.count())) break;
@@ -293,7 +295,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -494,6 +496,33 @@ async function offlineTests() {
     ok('Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 212: Was wird genutzt? (nur Summen, keine Namen) und Erinnerung an die Sicherung
+  {
+    const N = kompiliere(['src/hilfen/nutzung.ts']).hilfen_nutzung;
+    const m = N.monatJetzt();
+    const sum = N.addiereNutzung({ [m]: { quiz: 2 } }, { [m]: { quiz: 3, theke: 1 } });
+    ok('Nutzung: Zählungen werden addiert', sum[m].quiz === 5 && sum[m].theke === 1, JSON.stringify(sum));
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const namen = Object.keys(probe.progress || {}).filter((k) => k !== 'admin');
+    namen.forEach((k, i) => { probe.progress[k]._nutzung = { [m]: { theke: 5 + i, quiz: 2 } }; });
+    const team = N.teamNutzung(probe.progress, m);
+    ok('Nutzung: Team-Summe ohne Namen', team[0] && team[0].seite === 'theke' && team[0].personen === namen.length, JSON.stringify(team.slice(0, 2)));
+    const d = await device({ admin: true, backup: probe });
+    await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
+    for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
+    const erinnerung = d.page.locator('.lt-sicherung-erinnerung');
+    ok('Sicherung: Erinnerung oben im Ausbilder-Bereich', (await erinnerung.count()) > 0);
+    if (await erinnerung.count()) {
+      const [dl] = await Promise.all([d.page.waitForEvent('download', { timeout: 5000 }).catch(() => null), click(erinnerung.getByRole('button', { name: 'Jetzt sichern' }))]);
+      await settle(d.page, 600);
+      ok('Sicherung: „Jetzt sichern“ lädt Datei herunter, Erinnerung verschwindet', !!dl && /lern-theke-sicherung/.test(dl.suggestedFilename()) && (await erinnerung.count()) === 0, dl ? dl.suggestedFilename() : 'kein Download');
+    }
+    await click(d.page.getByRole('tab', { name: 'Auswertung' })); await settle(d.page, 500);
+    const box = d.page.locator('.lt-nutzung');
+    ok('Ausbilder: „Was wird genutzt?“ zeigt Theken-Simulator oben', (await box.count()) > 0 && (await box.locator('.lt-nutzung-zeile').first().innerText()).includes('Theken-Simulator'));
+    ok('Nutzung und Sicherung: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Ausbilder-Bereich: alle Reiter mit Beispieldaten
   {
     const d = await device({ admin: true, backup: SAMPLE });
@@ -534,6 +563,10 @@ async function offlineTests() {
     await click(d.page.locator('[aria-label="Hauptmenü"] button:visible', { hasText: /Nachschlagen/ }).first().or(nav(d.page).nth(3))); await settle(d.page, 600);
     await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
     const kachel = d.page.locator('.lt-foto-raster button').first();
+    // Version 212: Raster zeigt kleine Vorschaubilder (schnell auf alten Handys), die Datei gibt es wirklich
+    const vorschau = await d.page.locator('.lt-foto-raster img').first().getAttribute('src').catch(() => '');
+    const vorschauOk = /\/fotos\/klein\//.test(vorschau || '') && (await d.page.evaluate(async (u) => { const r = await fetch(u); return r.ok && (r.headers.get('content-type') || '').includes('jpeg'); }, vorschau));
+    ok('Foto-Raster: kleine Vorschaubilder', vorschauOk, vorschau);
     if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
     ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
     await d.ctx.close();
