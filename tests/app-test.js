@@ -202,14 +202,6 @@ async function offlineTests() {
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }
-  // Zusatzverkauf-Tipps: Hinkel verkauft keine Getränke, Torten oder belegten Sachen (Version 200)
-  {
-    const M = kompiliere(['src/hilfen/produkte.ts', 'src/daten/shopProducts.ts']);
-    const P = M.hilfen_produkte, S = M.daten_shopProducts;
-    const verboten = /kaffee|getränk|tee\b|torte|belegt|saft|cappuccino/i;
-    const schlecht = (S.SHOP_PRODUCTS || []).map((p) => P.getSalesTip(p)).filter((t) => verboten.test(t) || /–/.test(t));
-    ok('Zusatzverkauf-Tipps nur mit eigenen Backwaren (keine Getränke, Torten, belegten Sachen)', (S.SHOP_PRODUCTS || []).length > 100 && schlecht.length === 0, schlecht.slice(0, 3).join(' | '));
-  }
   // Keine Gedankenstriche in sichtbaren Texten (Wunsch des Nutzers) und am PC keine große Lücke auf der Startseite (Version 201)
   {
     const d = await device({ user: 'Anna', viewport: { width: 1300, height: 900 } });

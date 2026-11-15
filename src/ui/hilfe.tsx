@@ -92,7 +92,6 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Krone', 'für die meisten Punkte in einem Monat')}
         {ort('Glücksfrage', 'kommt nach 5 richtigen in Folge, zählt dreifach, kein Abzug')}
         {ort('Punkte-Bonus ×1,5', 'auf alle Punkte, steht auf dem Kassenbon')}
-        {ort('Zusatzverkauf', 'grüner Tipp im Steckbrief: was du dem Kunden noch anbieten kannst')}
         {ort('Küken-Geheimnis', 'Küken neben „Wusstest du?“ antippen')}
       </>, 0)}
       {box(boxIcon(ICON.sparkle), 'Punkte', <>
@@ -133,7 +132,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       {box(boxIcon(ICON.crown), 'Bestenliste und Monatsmeister', <div>In der Bestenliste siehst du Gesamtpunkte, den aktuellen Monat und mehr. Wer am Monatsende vorne liegt, wird Monatsmeister, bekommt eine Krone, 2,00 € Trinkgeld und kommt in die Hall of Fame.</div>, 8)}
       {box(boxIcon(ICON.checklist), 'Erste Woche', <div>Neue Kolleginnen und Kollegen bekommen einen Plan für die ersten 5 Tage. Vieles hakt sich beim Üben von selbst ab, den Rest hakst du selbst ab.</div>, 9)}
       {box(boxIcon(ICON.flag), 'Fehler gefunden?', <div>Unter jeder Frage gibt es „Fehler melden“. Dein Ausbilder sieht die Meldung und korrigiert die Frage.</div>, 10)}
-      {box(boxIcon(ICON.bread), 'Steckbriefe der Produkte', <div>Unter Nachschlagen → Produktkenntnis siehst du alle Produkte als Fotos nebeneinander. Antippen öffnet den Steckbrief: großes Foto, Preis, was du im Verkauf sagst und die Allergene. Die Allergene stehen als farbige Kästchen da, damit du sie an der Theke sofort siehst: Gluten gelb, Milch blau, Eier hellgelb, Nüsse braun. Unter der Beschreibung steht ein grüner „Tipp für den Zusatzverkauf“: was du dem Kunden zu diesem Produkt noch anbieten kannst. Viele Produkte haben mehrere Fotos aus unserem Online-Shop: zur Seite wischen oder die Pfeile antippen. In den Spielen kommt zur Abwechslung mal das eine, mal das andere Foto. Steht ein roter Hinweis darunter, bitte bei Allergikern besonders vorsichtig sein. Ganz unten steht die vollständige Zutatenliste.</div>, 11)}
+      {box(boxIcon(ICON.bread), 'Steckbriefe der Produkte', <div>Unter Nachschlagen → Produktkenntnis siehst du alle Produkte als Fotos nebeneinander. Antippen öffnet den Steckbrief: großes Foto, Preis, was du im Verkauf sagst und die Allergene. Die Allergene stehen als farbige Kästchen da, damit du sie an der Theke sofort siehst: Gluten gelb, Milch blau, Eier hellgelb, Nüsse braun. Viele Produkte haben mehrere Fotos aus unserem Online-Shop: zur Seite wischen oder die Pfeile antippen. In den Spielen kommt zur Abwechslung mal das eine, mal das andere Foto. Steht ein roter Hinweis darunter, bitte bei Allergikern besonders vorsichtig sein. Ganz unten steht die vollständige Zutatenliste.</div>, 11)}
       {box(boxIcon(ICON.chat), 'Kundenfragen und Verkaufstipps', <>
         <div><strong>Kundenfragen:</strong> Unter Nachschlagen → „Das hat ein Kunde gefragt“. Wenn dich ein Kunde etwas fragt, das du nicht wusstest, schreib es dort hinein. Der Ausbilder antwortet, danach sehen alle Frage und Antwort und lernen mit.</div>
         <div><strong>Verkaufstipps:</strong> In jedem Produkt-Steckbrief kannst du einen Tipp für die Kollegen hinterlassen, zum Beispiel „passt super zu Frischkäse“.</div>

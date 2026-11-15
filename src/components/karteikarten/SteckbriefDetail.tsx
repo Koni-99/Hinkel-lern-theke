@@ -10,7 +10,6 @@ import { getProductEmoji, Profile } from './daten';
 import { KollegenTipps } from './KollegenTipps';
 import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
-import { getSalesTip } from '../../hilfen/produkte';
 import { alleFotos } from '../../daten/fotos';
 
 
@@ -142,11 +141,6 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
                 {sp.allergenNote && <div style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "10px 14px", borderRadius: "14px", backgroundColor: TH.tintPeach, fontSize: "16px", color: TH.red, lineHeight: 1.45 }}><LtIcon paths={ICON.flag} size={18} />{sp.allergenNote}</div>}
               </div>
               {sp.description && <p style={{ margin: 0, fontSize: "18px", lineHeight: 1.55 }}>{sp.description}</p>}
-              <div style={{ marginTop: "12px", padding: "12px 14px", borderRadius: "14px", backgroundColor: TH.tintSage, color: TH.green, display: "flex", gap: "10px", alignItems: "flex-start" }}>
-                <span aria-hidden="true" style={{ display: "inline-flex", marginTop: "2px" }}><LtIcon paths={ICON.basket} size={22} /></span>
-                <span><span style={{ display: "block", fontSize: "13px", fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" }}>Tipp für den Zusatzverkauf</span>
-                <span style={{ display: "block", fontSize: "17px", fontWeight: 700, lineHeight: 1.4 }}>{getSalesTip(sp)}</span></span>
-              </div>
               {sp.flour && <div style={{ fontSize: "17px", lineHeight: 1.45 }}><strong>Mehl:</strong> {sp.flour}</div>}
               {sp.note && <div style={{ fontSize: "17px", lineHeight: 1.45, color: TH.brown }}>{sp.note}</div>}
               <details style={{ backgroundColor: TH.white, border: `2px solid ${TH.line}`, borderRadius: "16px", padding: "12px 16px" }}>
