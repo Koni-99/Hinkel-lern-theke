@@ -13,7 +13,10 @@ const BASIS = (import.meta as any).env?.BASE_URL || '/';
 const url = (k: string, n: number) => `${BASIS}fotos/${k}${n > 1 ? `-${n}` : ''}.jpg`;
 /** Alle Shop-Fotos eines Produkts (leer, wenn es keins im Shop gibt) – für die Galerie im Steckbrief */
 export const alleFotos = (k: string): string[] => (SHOP_FOTOS.includes(k) ? Array.from({ length: FOTO_ANZAHL[k] || 1 }, (_, i) => url(k, i + 1)) : []);
-// Zur Abwechslung zeigen Spiele und Listen bei jedem App-Start zufällig eins der Fotos
-const FOTO_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, url(k, 1 + Math.floor(Math.random() * (FOTO_ANZAHL[k] || 1)))]));
-/** Fotos aus der Datenbank + Shop-Fotos (Shop-Fotos gewinnen) */
+const FOTO_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, url(k, 1)]));
+// Zur Abwechslung zeigen die Spiele bei jedem App-Start zufällig eins der Fotos (Startseite, Steckbriefe usw. immer das Hauptfoto)
+const ZUFALL_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, url(k, 1 + Math.floor(Math.random() * (FOTO_ANZAHL[k] || 1)))]));
+/** Fotos aus der Datenbank + Shop-Hauptfotos (Shop-Fotos gewinnen) */
 export const mitShopFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...FOTO_MAP });
+/** Für Spiele: wie mitShopFotos, aber mit zufälligem Shop-Foto */
+export const mitZufallsFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ZUFALL_MAP });

@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 196;
+const APP_VERSION: number = 197;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -53,7 +53,7 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
-import { mitShopFotos } from './daten/fotos';
+import { mitShopFotos, mitZufallsFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
@@ -169,6 +169,7 @@ export default function App() {
   const imagesUrl = (() => { const u = formatEndpointUrl(cloudUrl); return /hinkel_app\.json$/.test(u) ? u.replace(/hinkel_app\.json$/, 'hinkel_bilder') : ''; })();
   const [productImages, setProductImagesRoh] = useState<ProductImages>(() => mitShopFotos({}));
   const setProductImages = (b: ProductImages) => setProductImagesRoh(mitShopFotos(b));
+  const spielBilder = useMemo(() => mitZufallsFotos(productImages), [productImages]); // Spiele: zufälliges Shop-Foto zur Abwechslung
   const imagesVersionRef = useRef<number>(0);
   const cacheImages = (version: number, images: ProductImages) => {
     imagesVersionRef.current = version;
@@ -414,7 +415,8 @@ export default function App() {
   }, [team.reached, team.lastReached, team.week, cloudConnected, username, isAdmin, focusWeakKey, JSON.stringify(focusProg._teamWon || [])]);
 
   // Beim Neuladen auf der gleichen Seite bleiben (gilt nur für diesen Tab/dieses Fenster, siehe sessionStorage)
-  const [activeTab, setActiveTab] = useState<string>(() => { try { return sessionStorage.getItem('lt_seite') || 'home'; } catch { return 'home'; } });
+  // Neu laden bleibt auf der Seite. Ausnahme „profil“: welches Profil offen war, ist nach dem Neuladen weg, dann zur Bestenliste (Fehler bis 196: leere Seite)
+  const [activeTab, setActiveTab] = useState<string>(() => { try { const t = sessionStorage.getItem('lt_seite') || 'home'; return t === 'profil' ? 'scoreboard' : t; } catch { return 'home'; } });
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
   const [obDay, setObDay] = useState<number | null>(null);
@@ -631,7 +633,7 @@ export default function App() {
   const createBattleChallenge = (opponentKey: string, opponentName: string, stake = 0) => {
     const battleId = `battle_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     // 3 Wissensfragen + 2 Foto-Fragen (wenn die Produktfotos geladen sind)
-    const photo = buildPhotoBattleQuestions(productImages, 2);
+    const photo = buildPhotoBattleQuestions(spielBilder, 2);
     const selected = shuffleArray([...shuffleArray(allFlashcards).slice(0, 5 - photo.length).map(q => shuffleQuestionOptions(q)), ...photo]);
     mutateCloudData((curr) => {
       if (!curr.battles) curr.battles = {};
@@ -2445,12 +2447,12 @@ export default function App() {
         {/* ═════════ AUSWERTUNG ═════════ */}
         {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
 
-        {activeTab === 'bilderquiz' && <BilderQuizView images={productImages} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
-        {activeTab === 'allergene' && <AllergenTrainerView images={productImages} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
+        {activeTab === 'bilderquiz' && <BilderQuizView images={spielBilder} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
+        {activeTab === 'allergene' && <AllergenTrainerView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && <EinarbeitungSeite {...{ activeTab, setActiveTab, obDay, setObDay, toggleOnboarding, onboarding, appWeek, goOnboardingTarget }} />}
         {activeTab === 'kassenblitz' && <KassenblitzView onSaveScore={saveScoreToLeaderboard} />}
-        {activeTab === 'preisduell' && <PreisDuellView images={productImages} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
-        {activeTab === 'schneiden' && <SchneideProfiView images={productImages} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
+        {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
+        {activeTab === 'schneiden' && <SchneideProfiView images={spielBilder} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'advent' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {isAdmin && (
@@ -2465,7 +2467,7 @@ export default function App() {
         {activeTab === 'tueten' && <TuetenBlitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'alternativen' && <AlternativenJaegerView onSaveScore={saveScoreToLeaderboard} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'pfad' && <LernpfadView felder={PFAD} done={Number(myProg._pfad) || 0} avatar={myProg._avatar || '🥨'} onPlay={launchPfad} lastResult={pfadMsg} />}
-        {activeTab === 'ansturm' && <ThekenAnsturmView images={productImages} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
+        {activeTab === 'ansturm' && <ThekenAnsturmView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
         {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
@@ -2500,7 +2502,7 @@ export default function App() {
             timeJokers={isAdmin ? 0 : Number(myProg._jokersTime) || 0} onTimeJoker={applyTimeJoker}
             createBattleChallenge={createBattleChallenge} acceptBattleChallenge={acceptBattleChallenge}
             handleBattleAnswer={handleBattleAnswer}
-            images={productImages} tombstones={cloudData.tombstones}
+            images={spielBilder} tombstones={cloudData.tombstones}
           />
         )}
         {activeTab === 'flashcards' && (

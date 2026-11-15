@@ -108,6 +108,7 @@ Mehr zum Aufbau: `README.md`.
 - 194: Verkaufstipp im Steckbrief heißt jetzt „Tipp für den Zusatzverkauf“ (Überschrift + Korb-Symbol), Texte nach Gruppe sagen, was man noch anbieten kann
 - 195: **Standard für alle: helles Design + Kopf „Goldene Ähren“** (`kopfGespeichert` gibt 'aehren', wenn nichts gewählt). Wer selbst etwas gewählt hat, behält es
 - 196: Anmeldeseite immer mit gelber Markise (`modusKlassen('markise')` in `LoginScreen.tsx`), nach dem Anmelden der gewählte Kopf (Standard Ähren) als Wow-Effekt
+- 197: App selbst durchgesehen: Neu laden auf „Profil“ gab leere Seite → jetzt Bestenliste. Zufallsfoto nur noch in Spielen (`spielBilder` = `mitZufallsFotos`, Quiz Battle, Bilderquiz, Allergene, Preisduell, Schneiden, Ansturm), sonst immer das Hauptfoto (Startseite, Steckbriefe)
 
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.
