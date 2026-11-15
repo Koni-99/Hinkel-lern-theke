@@ -1,6 +1,9 @@
 // ═══ Marke: Cloud-Adresse, Logo, Küken, Farben (LT), Design ═══
 // Vorher in appBasis.tsx. Inhalt unverändert übernommen.
 import { dc } from '../daten/data';
+import { themaCss, schriftArt } from '../thema/farben';
+import { NACHT } from '../thema/modus';
+import { ARTISAN_CSS } from '../thema/artisan';
 import { CloudPayload } from '../types';
 import { buildLtCss } from '../theke-design';
 import { registerBagLogo, registerKueken } from '../ui/basis';
@@ -28,7 +31,7 @@ export const LT = {
   muted: dc('#6B4A30'),
   cream: dc('#FFFBF2'),
   line: dc('#F1E3C8'),
-  serif: "'Bricolage Grotesque', 'Atkinson Hyperlegible', Verdana, sans-serif",
+  serif: "'Fraunces', 'Plus Jakarta Sans', Georgia, serif",
 };
 
 /** Gelber Hauptknopf wie „Weiter lernen“ (mit Kante unten) */
@@ -40,6 +43,6 @@ registerBagLogo(HINKEL_LOGO);
 registerKueken(HINKEL_KUEKEN);
 
 // Design steht in src/theke-design.ts
-export const LT_CSS = buildLtCss(HINKEL_KUEKEN);
+export const LT_CSS = (NACHT ? themaCss(buildLtCss(HINKEL_KUEKEN)) : schriftArt(buildLtCss(HINKEL_KUEKEN))) + ARTISAN_CSS;
 
 export const TAB_ORDER = (t: string) => t === 'home' ? 0 : t === 'quiz' ? 1 : (t === 'nachschlagen' || t === 'flashcards') ? 3 : t === 'scoreboard' ? 4 : t === 'admin' ? 5 : t === 'einarbeitung' ? 0.5 : 2;

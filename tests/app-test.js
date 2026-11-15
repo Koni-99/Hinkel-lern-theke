@@ -168,12 +168,34 @@ async function offlineTests() {
     ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Aussehen (Version 187): hell ist Standard, „Backstube bei Nacht“ und Kopf mit Ähren wählbar
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    const wurzel = () => d.page.evaluate(() => ({ root: document.querySelector('.lt-root')?.className || '', html: document.documentElement.className, bg: getComputedStyle(document.body).backgroundColor }));
+    let w = await wurzel();
+    ok('Aussehen: Standard ist hell mit Markise', !/lt-dark|lt-kopf-/.test(w.root) && !/lt-nacht/.test(w.html), w.root);
+    await click(d.page.getByRole('button', { name: 'Menü' }).first());
+    await click(d.page.getByRole('menuitem', { name: 'Aussehen' }).first()); await d.page.waitForTimeout(300);
+    await click(d.page.locator('[aria-label="Aussehen"] button', { hasText: /^Goldene Ähren/ }).first()); await d.page.waitForTimeout(200);
+    w = await wurzel();
+    const buehne = await d.page.evaluate(() => { const b = document.querySelector('.lt-awning .lt-buehne'); return b ? getComputedStyle(b).display : 'fehlt'; });
+    ok('Aussehen: Kopf „Goldene Ähren“ zeigt die Bühne', /lt-kopf-aehren/.test(w.root) && buehne === 'block', w.root + ' ' + buehne);
+    await click(d.page.locator('[aria-label="Aussehen"] button', { hasText: 'Markise mit Ähren' }).first()); await d.page.waitForTimeout(200);
+    w = await wurzel();
+    ok('Aussehen: Kopf „Markise mit Ähren“', /lt-kopf-mitaehren/.test(w.root), w.root);
+    await Promise.all([d.page.waitForEvent('load'), click(d.page.locator('[aria-label="Aussehen"] button', { hasText: 'Backstube bei Nacht' }).first())]);
+    await settle(d.page); await d.page.waitForTimeout(800);
+    w = await wurzel();
+    ok('Aussehen: „Backstube bei Nacht“ macht die App dunkel, Kopf bleibt', /lt-dark/.test(w.root) && /lt-nacht/.test(w.html) && /lt-kopf-mitaehren/.test(w.root) && w.bg === 'rgb(20, 16, 12)', JSON.stringify(w));
+    await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
+    await d.ctx.close().catch(() => {});
+  }
   // Hilfe für Neue: Orientierung und neue Funktionen erklärt, Einführung mit 7 Seiten
   {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));

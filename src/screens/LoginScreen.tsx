@@ -7,6 +7,8 @@ import { formatEndpointUrl, sanitizeUsername } from '../hilfen/allgemein';
 import { checkPin, PIN_MAX } from '../hilfen/pin';
 import { adminSignIn } from '../hilfen/anmeldung';
 import { HINKEL_LOGO, LT, LT_CSS } from '../basis/marke';
+import { Buehne } from '../thema/buehne';
+import { kopfGespeichert, modusKlassen } from '../thema/modus';
 import { PinSetupForm } from '../basis/pinForm';
 
 export type LoginScreenProps = {
@@ -41,13 +43,14 @@ export type LoginScreenProps = {
 export function LoginScreen({ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }: LoginScreenProps) {
   const isAdminLogin = tempUsername.trim().toLowerCase() === 'admin';
   return (
-    <div className="lt-root" style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
+    <div className={`lt-root${modusKlassen(kopfGespeichert())}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
       <style>{LT_CSS}</style>
       <div style={{ width: '100%' }}>
         <div className="lt-awning" style={{ backgroundColor: LT.yellow, backgroundImage: 'linear-gradient(180deg, rgba(75,42,20,0.16) 0px, rgba(75,42,20,0) 22px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Buehne />
           <img className="lt-logo" onClick={(e) => { const el = e.currentTarget; el.classList.remove('lt-spin'); void el.offsetWidth; el.classList.add('lt-spin'); }} src={HINKEL_LOGO} alt="Bäckerei Hinkel, Die Bäckerei der Brotfreunde" style={{ width: 'auto', display: 'block' }} />
         </div>
-        <div aria-hidden="true" style={{ height: '20px', backgroundImage: `radial-gradient(circle at 20px 0px, ${LT.yellow} 20px, rgba(0,0,0,0) 20.5px)`, backgroundSize: '40px 20px', backgroundRepeat: 'repeat-x', filter: 'drop-shadow(0 4px 0 rgba(75,42,20,0.12))' }} />
+        <div aria-hidden="true" className="lt-login-rand" style={{ height: '20px', backgroundImage: `radial-gradient(circle at 20px 0px, ${LT.yellow} 20px, rgba(0,0,0,0) 20.5px)`, backgroundSize: '40px 20px', backgroundRepeat: 'repeat-x', filter: 'drop-shadow(0 4px 0 rgba(75,42,20,0.12))' }} />
       </div>
 
       <div style={{ width: '92%', maxWidth: '460px', marginTop: '36px', marginBottom: '40px', backgroundColor: dc('#FFFFFF'), border: `2px solid ${LT.line}`, borderRadius: '28px', padding: '32px 28px', boxSizing: 'border-box', boxShadow: '0 20px 40px -18px rgba(75,42,20,0.25)' }}>

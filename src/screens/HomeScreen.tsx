@@ -127,32 +127,8 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
     
       <KuekenFact />
     
-      {(() => {
-        const pct = Math.min(100, Math.round((team.points / Math.max(1, team.goal)) * 100));
-        const mine = team.players.has(userKeyLower);
-        return (
-          <section aria-labelledby="lt-team-h" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '18px', borderRadius: '22px', backgroundColor: team.reached ? dc('#E3F4EA') : dc('#FFFFFF'), border: `2px solid ${team.reached ? dc('#1F7A4D') : LT.line}` }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>Team-Challenge</h2>
-              <span style={{ fontSize: '15px', color: LT.muted, fontWeight: 700 }}>{team.reached ? 'Geschafft!' : team.daysLeft === 1 ? 'Noch heute' : `Noch ${team.daysLeft} Tage`}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
-              {team.reached
-                ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte.`
-                : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte.`}
-            </p>
-            <div role="progressbar" aria-label="Fortschritt Team-Challenge" aria-valuemin={0} aria-valuemax={team.goal} aria-valuenow={Math.min(team.points, team.goal)} style={{ height: '16px', borderRadius: '999px', backgroundColor: dc('#F1E3C8'), overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', backgroundColor: team.reached ? dc('#1F7A4D') : LT.yellow, transition: 'width .6s ease' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', fontSize: '15px', fontVariantNumeric: 'tabular-nums' }}>
-              <span><strong>{team.points.toLocaleString('de-DE')}</strong> von {team.goal.toLocaleString('de-DE')} Punkten · {team.players.size} {team.players.size === 1 ? 'Person spielt' : 'Personen spielen'} mit</span>
-              {!isAdmin && <span style={{ color: mine ? dc('#1F7A4D') : LT.muted, fontWeight: 700 }}>{mine ? '✓ Du bist dabei' : 'Spiel eine Runde, dann bist du dabei'}</span>}
-            </div>
-            {team.lastPoints > 0 && <div style={{ fontSize: '14px', color: LT.muted }}>Letzte Woche: {team.lastPoints.toLocaleString('de-DE')} von {team.lastGoal.toLocaleString('de-DE')} Punkten {team.lastReached ? '✓ geschafft' : ''}</div>}
-          </section>
-        );
-      })()}
-    
+      {/* Hauptspalte (am PC links). Am Handy und Tablet zählt nur die Reihenfolge, siehe theke-design.ts */}
+      <div className="lt-home-main">
       {(() => {
         const pd = productOfTheDay(productImages);
         if (!pd) return null;
@@ -355,7 +331,60 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
         })()}
         {simpleStart && <button onClick={showFullStart} style={{ alignSelf: 'flex-start', minHeight: '44px', padding: '0 16px', borderRadius: '999px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.brown, fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>Deine erste Woche: wir zeigen dir erst das Wichtigste. Alles anzeigen ›</button>}
       </section>
-    
+
+      {/* Einarbeitung „Meine erste Woche“ */}
+      {showErsteWoche && (
+        <button onClick={() => setActiveTab('einarbeitung')} className="lt-card lt-firstweek" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '18px', padding: '22px 26px', borderRadius: '26px', border: 'none', backgroundColor: TH.tintBlue, color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
+          <span style={{ flex: '0 0 64px', height: '64px', borderRadius: '20px', backgroundColor: '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }}><span style={{ color: '#FFD86B', display: 'flex' }} aria-hidden="true"><LtIcon paths={ICON.checklist} size={30} width={1.9} /></span></span>
+          <span style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Meine erste Woche bei Hinkel</span>
+            <span style={{ fontSize: '17px', color: LT.brown }}>{onboardingComplete ? 'Alles geschafft, hol dir deinen Theken-Führerschein!' : `Tag ${(ONBOARDING_DAYS.find(d => d.ids.some(id => !onboarding.items.find(i => i.id === id)?.done)) || ONBOARDING_DAYS[4]).no} von 5 · ${onboarding.done} von ${onboarding.total} Schritten geschafft`}</span>
+            <span style={{ height: '10px', backgroundColor: dc('#FFFFFF'), borderRadius: '999px', overflow: 'hidden' }}><span className="lt-fill" style={{ display: 'block', width: `${Math.round((onboarding.done / onboarding.total) * 100)}%`, height: '100%', backgroundColor: dc('#2F4F8A'), borderRadius: '999px', animationDelay: '.2s' }} /></span>
+          </span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: dc('#2F4F8A') }}>Öffnen ›</span>
+        </button>
+      )}
+      {showAppWeek && (
+        <button onClick={() => setActiveTab('appwoche')} className="lt-card lt-firstweek" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '18px', padding: '22px 26px', borderRadius: '26px', border: 'none', backgroundColor: TH.tintSage, color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
+          <span style={{ flex: '0 0 64px', height: '64px', borderRadius: '20px', backgroundColor: '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }}><span style={{ color: '#FFD86B', display: 'flex' }} aria-hidden="true"><LtIcon paths={ICON.phone} size={30} width={1.9} /></span></span>
+          <span style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Meine erste Woche mit der App</span>
+            <span style={{ fontSize: '17px', color: LT.brown }}>{`Tag ${(APP_WEEK_DAYS.find(d => d.ids.some(id => !appWeek.items.find(i => i.id === id)?.done)) || APP_WEEK_DAYS[3]).no} von 4 · ${appWeek.done} von ${appWeek.total} Schritten geschafft, lerne die App in Ruhe kennen`}</span>
+            <span style={{ height: '10px', backgroundColor: dc('#FFFFFF'), borderRadius: '999px', overflow: 'hidden' }}><span className="lt-fill" style={{ display: 'block', width: `${Math.round((appWeek.done / appWeek.total) * 100)}%`, height: '100%', backgroundColor: dc('#2F5D3A'), borderRadius: '999px', animationDelay: '.2s' }} /></span>
+          </span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: dc('#2F5D3A') }}>Öffnen ›</span>
+        </button>
+      )}
+      </div>
+
+      {/* Seitenspalte (am PC rechts) */}
+      <div className="lt-home-side">
+      {(() => {
+        const pct = Math.min(100, Math.round((team.points / Math.max(1, team.goal)) * 100));
+        const mine = team.players.has(userKeyLower);
+        return (
+          <section className="lt-teamgoal" aria-labelledby="lt-team-h" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '18px', borderRadius: '22px', backgroundColor: team.reached ? dc('#E3F4EA') : dc('#FFFFFF'), border: `2px solid ${team.reached ? dc('#1F7A4D') : LT.line}` }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>Team-Challenge</h2>
+              <span style={{ fontSize: '15px', color: LT.muted, fontWeight: 700 }}>{team.reached ? 'Geschafft!' : team.daysLeft === 1 ? 'Noch heute' : `Noch ${team.daysLeft} Tage`}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
+              {team.reached
+                ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte.`
+                : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte.`}
+            </p>
+            <div role="progressbar" aria-label="Fortschritt Team-Challenge" aria-valuemin={0} aria-valuemax={team.goal} aria-valuenow={Math.min(team.points, team.goal)} style={{ height: '16px', borderRadius: '999px', backgroundColor: dc('#F1E3C8'), overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', backgroundColor: team.reached ? dc('#1F7A4D') : LT.yellow, transition: 'width .6s ease' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', fontSize: '15px', fontVariantNumeric: 'tabular-nums' }}>
+              <span><strong>{team.points.toLocaleString('de-DE')}</strong> von {team.goal.toLocaleString('de-DE')} Punkten · {team.players.size} {team.players.size === 1 ? 'Person spielt' : 'Personen spielen'} mit</span>
+              {!isAdmin && <span style={{ color: mine ? dc('#1F7A4D') : LT.muted, fontWeight: 700 }}>{mine ? '✓ Du bist dabei' : 'Spiel eine Runde, dann bist du dabei'}</span>}
+            </div>
+            {team.lastPoints > 0 && <div style={{ fontSize: '14px', color: LT.muted }}>Letzte Woche: {team.lastPoints.toLocaleString('de-DE')} von {team.lastGoal.toLocaleString('de-DE')} Punkten {team.lastReached ? '✓ geschafft' : ''}</div>}
+          </section>
+        );
+      })()}
+
       {/* Brotkorb wie im Prototyp, darunter die Ausbilder-Tafel */}
       {!isAdmin && (() => {
         const n = Math.floor(masteredNow / 10);
@@ -432,7 +461,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
         const now = new Date();
         const bonTime = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         return (
-          <>
+          <div className="lt-statbon">
             <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '30px' }}>Deine Statistik</h2>
               <div className="lt-st">
@@ -499,33 +528,11 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
             </section>
               </div>
             </details>
-          </>
+          </div>
         );
       })()}
     
-      {/* Einarbeitung „Meine erste Woche“ */}
-      {showErsteWoche && (
-        <button onClick={() => setActiveTab('einarbeitung')} className="lt-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '18px', padding: '22px 26px', borderRadius: '26px', border: 'none', backgroundColor: TH.tintBlue, color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-          <span style={{ flex: '0 0 64px', height: '64px', borderRadius: '20px', backgroundColor: '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }}><span style={{ color: '#FFD86B', display: 'flex' }} aria-hidden="true"><LtIcon paths={ICON.checklist} size={30} width={1.9} /></span></span>
-          <span style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Meine erste Woche bei Hinkel</span>
-            <span style={{ fontSize: '17px', color: LT.brown }}>{onboardingComplete ? 'Alles geschafft, hol dir deinen Theken-Führerschein!' : `Tag ${(ONBOARDING_DAYS.find(d => d.ids.some(id => !onboarding.items.find(i => i.id === id)?.done)) || ONBOARDING_DAYS[4]).no} von 5 · ${onboarding.done} von ${onboarding.total} Schritten geschafft`}</span>
-            <span style={{ height: '10px', backgroundColor: dc('#FFFFFF'), borderRadius: '999px', overflow: 'hidden' }}><span className="lt-fill" style={{ display: 'block', width: `${Math.round((onboarding.done / onboarding.total) * 100)}%`, height: '100%', backgroundColor: dc('#2F4F8A'), borderRadius: '999px', animationDelay: '.2s' }} /></span>
-          </span>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: dc('#2F4F8A') }}>Öffnen ›</span>
-        </button>
-      )}
-      {showAppWeek && (
-        <button onClick={() => setActiveTab('appwoche')} className="lt-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '18px', padding: '22px 26px', borderRadius: '26px', border: 'none', backgroundColor: TH.tintSage, color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-          <span style={{ flex: '0 0 64px', height: '64px', borderRadius: '20px', backgroundColor: '#1F140C', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }}><span style={{ color: '#FFD86B', display: 'flex' }} aria-hidden="true"><LtIcon paths={ICON.phone} size={30} width={1.9} /></span></span>
-          <span style={{ flex: '1 1 240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <span style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.05 }}>Meine erste Woche mit der App</span>
-            <span style={{ fontSize: '17px', color: LT.brown }}>{`Tag ${(APP_WEEK_DAYS.find(d => d.ids.some(id => !appWeek.items.find(i => i.id === id)?.done)) || APP_WEEK_DAYS[3]).no} von 4 · ${appWeek.done} von ${appWeek.total} Schritten geschafft, lerne die App in Ruhe kennen`}</span>
-            <span style={{ height: '10px', backgroundColor: dc('#FFFFFF'), borderRadius: '999px', overflow: 'hidden' }}><span className="lt-fill" style={{ display: 'block', width: `${Math.round((appWeek.done / appWeek.total) * 100)}%`, height: '100%', backgroundColor: dc('#2F5D3A'), borderRadius: '999px', animationDelay: '.2s' }} /></span>
-          </span>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: dc('#2F5D3A') }}>Öffnen ›</span>
-        </button>
-      )}
+      </div>
     
       {/* Drei Hauptkarten */}
       <div className="lt-maincards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
@@ -551,7 +558,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
       </div>
     
     
-      <details className="lt-fold" style={{ ...cardStyle, padding: '0' }}>
+      <details className="lt-fold lt-home-fold" style={{ ...cardStyle, padding: '0' }}>
         <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '12px', padding: '18px 22px', minHeight: '60px' }}>
           <span style={{ flex: 1 }}>
             <span style={{ display: 'block', fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.1 }}>Dein Fortschritt</span>

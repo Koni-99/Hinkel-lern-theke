@@ -85,7 +85,7 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
           <div style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: '12px', backgroundColor: TH.tintBlue, fontSize: '16px', fontWeight: 700 }}>Mehrere Antworten richtig, alle antippen, dann „Antwort prüfen“</div>
         )}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <h2 style={{ margin: 0, flex: '1 1 240px', minWidth: 0, fontFamily: LT.serif, fontSize: '25px', lineHeight: 1.22, color: LT.ink, overflowWrap: 'break-word', textWrap: 'balance' as any }}>{currentQ.question}</h2>
+          <h2 className="lt-frage" style={{ margin: 0, flex: '1 1 240px', minWidth: 0, fontFamily: LT.serif, fontSize: '25px', lineHeight: 1.22, color: LT.ink, overflowWrap: 'break-word', textWrap: 'balance' as any }}>{currentQ.question}</h2>
           <SpeakButton small text={isAnswered && !examSim ? `Richtig ist: ${getRightAnswerText(currentQ)}. ${currentQ.explanation || ''}` : `${currentQ.question} ${currentQ.options.map((o: string, i: number) => `${String.fromCharCode(65 + i)}: ${o}`).join('. ')}`} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

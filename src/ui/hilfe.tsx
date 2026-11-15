@@ -10,7 +10,7 @@ const boxIcon = (paths: string[]) => <LtIcon paths={paths} size={28} />;
 // ───────────────────────── Kurze Einführung für Neue ─────────────────────────
 export const INTRO_SLIDES = [
   { icon: bigIcon(ICON.bread), anim: 'lt-emo-shake', title: 'Willkommen in der Lern-Theke!', text: 'Hier lernst du alles, was du an der Theke brauchst: unsere Produkte, Allergene, Beratung und Hygiene. In kleinen Häppchen, wann immer du Zeit hast.', bg: '#FFF0C2' },
-  { icon: bigIcon(ICON.home), anim: 'lt-emo-bob', title: 'Wo finde ich was?', text: 'Unten am Handy (am Computer oben) sind die Hauptseiten: Start, Lernen, Spielen, Nachschlagen und die Bestenliste. Oben rechts hinter den drei Strichen ist das Menü: dort findest du deine Statistik, „Mein Monat“, die Ideen-Box, Kundenstimmen, deinen Geburtstag und die Hilfe „So funktioniert die Lern-Theke“.', bg: '#F6E7C8' },
+  { icon: bigIcon(ICON.home), anim: 'lt-emo-bob', title: 'Wo finde ich was?', text: 'Unten am Handy und Tablet (am Computer links) sind die Hauptseiten: Start, Lernen, Spielen, Nachschlagen und die Bestenliste. Oben rechts hinter den drei Strichen ist das Menü: dort findest du deine Statistik, „Mein Monat“, die Ideen-Box, Kundenstimmen, deinen Geburtstag und die Hilfe „So funktioniert die Lern-Theke“.', bg: '#F6E7C8' },
   { icon: bigIcon(ICON.book), anim: 'lt-emo-bob', title: 'Lernen', text: 'Du beantwortest Fragen und siehst nach jeder Antwort die Erklärung. Was du falsch hattest, kommt in deinen Fehler-Stapel und taucht später noch einmal auf. So bleibt es hängen.', bg: '#DDE6F7' },
   { icon: bigIcon(ICON.game), anim: 'lt-dice-idle', title: 'Spielen', text: 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr. Viele Spiele zählen auch fürs Lernen: richtig beantwortet ist richtig beantwortet.', bg: '#E1EEDC' },
   { icon: bigIcon(ICON.sparkle), anim: 'lt-emo-twinkle', title: 'Punkte und Stufen', text: 'Für richtige Antworten gibt es Punkte. Damit steigst du Stufe für Stufe auf, vom Neuling bis zur Hinkel-Ikone. In deiner ersten Woche gibt es keine Minuspunkte.', bg: '#FCE1D2' },
@@ -68,6 +68,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <span aria-hidden="true" style={{ fontSize: '22px' }}>›</span>
       </button>
       {box(boxIcon(ICON.home), 'Wo finde ich was?', <>
+        {ort('Hauptseiten', 'am Handy und Tablet unten, am Computer als Leiste links')}
         {ort('Start', 'Tages-Challenge, Lob der Woche, Umfragen, Geburtstage')}
         {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Hör-Lernen')}
         {ort('Spielen', 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr')}
@@ -75,7 +76,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
         {ort('Neu laden', 'du bleibst auf der Seite, auf der du gerade warst')}
-        {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Idee einreichen, Kundenstimme, Geburtstag, Hilfe, größere Schrift')}
+        {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Idee einreichen, Kundenstimme, Geburtstag, Aussehen, Hilfe, größere Schrift')}
         <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
       </>, 0, true)}
       {box(boxIcon(ICON.bulb), 'Was ist was? Kurz erklärt', <>
@@ -148,6 +149,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       </>, 14)}
       {box(boxIcon(ICON.globe), 'Englisch für die Theke', <div>Unter Nachschlagen → Fachwissen → „Wörterbuch Englisch“ findest du Sätze für Gäste aus aller Welt: Bedienung, Bezahlen, Zahlen und Mengen, Allergene und alle unsere Produkte. Unter „Das sagen Kunden“ steht, was Gäste oft fragen, mit der deutschen Bedeutung. Tippe auf den Lautsprecher, dann wird es auf Englisch vorgelesen.</div>, 15)}
       {box(boxIcon(ICON.calendar), 'Mein Monat', <div>Im Menü unter „Mein Monat“ siehst du, wie dein Monat lief: Punkte (auch im Vergleich zum Vormonat), dein Platz im Team, an wie vielen Tagen du gelernt hast, wie viele Fragen du neu gemeistert hast und was du am liebsten gemacht hast. Dazu gibt es einen Tipp, was du als Nächstes üben kannst. Das siehst nur du.</div>, 15)}
+      {box(boxIcon(ICON.sun), 'Aussehen: hell oder dunkel', <div>Im Menü unter „Aussehen“ suchst du dir aus, wie die Lern-Theke bei dir aussieht. <strong>Farben:</strong> „Hell“ ist das gewohnte Aussehen. „Backstube bei Nacht“ ist dunkel mit Gold, beim Umschalten lädt die Seite kurz neu. <strong>Kopf der Seite:</strong> die gelbe Markise (zeigt auf Wunsch das Wetter), die Markise mit goldenen Ähren oder eine dunkle Bühne mit leuchtenden Ähren. Das gilt nur auf deinem Gerät, Punkte und Fortschritt bleiben gleich. Hast du im Laden eine eigene Markise oder Farbe gekauft, bleibt die.</div>, 15)}
       {box(boxIcon(ICON.globe), 'Ohne Internet', <div>Die Lern-Theke geht auch ohne Internet auf, zum Beispiel im Keller oder bei schlechtem Empfang. Punkte werden gespeichert und hochgeladen, sobald du wieder Netz hast. Solange steht oben neben deinen Punkten ein kleines „Offline“ (am Handy ein orangener Punkt). Antippen erklärt es.</div>, 15)}
       {box(boxIcon(ICON.phone), 'App aufs Handy und größere Schrift', <><div>So legst du die Lern-Theke wie eine App auf dein Handy oder Tablet. Sie bekommt dann ein eigenes Hinkel-Symbol auf dem Startbildschirm. Im Menü (oben rechts, drei Striche) machst du mit „Größere Schrift“ alles größer.</div><button onClick={onInstall} style={{ ...btnSecondary, alignSelf: 'flex-start' }}>Anleitung zeigen</button></>, 11)}
     </div>

@@ -4,6 +4,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 /** Erzeugt sw.js mit der Liste aller App-Dateien, damit die App auch ohne Internet aufgeht (siehe sw-template.js) */
 function offlineServiceWorker(): Plugin {
@@ -22,7 +23,9 @@ function offlineServiceWorker(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), offlineServiceWorker()],
+  // Jedes Element läuft durch src/thema/jsx-runtime.ts: neue Schrift, im Design „Backstube bei Nacht“ auch dunkle Farben
+  plugins: [react({ jsxImportSource: '@thema' }), offlineServiceWorker()],
+  resolve: { alias: { '@thema': fileURLToPath(new URL('./src/thema', import.meta.url)) } },
   build: {
     outDir: 'build',
     // Auch ältere Handys (Safari 14, Chrome 87 …) sollen die App öffnen können

@@ -20,7 +20,9 @@
       .lt-start span { font-size: 18px; font-weight: 700; letter-spacing: .04em; }
       @keyframes ltStartWippen { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       @media (prefers-reduced-motion: reduce) { .lt-start img { animation: none } }
+      html.lt-nacht, html.lt-nacht body, html.lt-nacht .lt-start { background: #14100C; color: #FDE68A; }
     </style>
+    <script>try { if (localStorage.getItem('lt_design') === 'nacht') document.documentElement.classList.add('lt-nacht'); } catch (e) {}</script>
   </head>
   <body>
     <noscript>JavaScript ist nötig.</noscript>

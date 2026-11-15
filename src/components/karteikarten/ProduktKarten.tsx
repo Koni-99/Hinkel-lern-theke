@@ -71,7 +71,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
               aria-label={pcFlipped ? "Karte zurückdrehen" : "Karte umdrehen"}
               onClick={() => setPcFlipped(!pcFlipped)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPcFlipped(!pcFlipped); } }}
-              style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .6s cubic-bezier(.2,.8,.2,1)", transform: pcFlipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
+              style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .8s cubic-bezier(.34,1.42,.5,1)", transform: pcFlipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
             >
               {/* Vorderseite */}
               <div aria-hidden={pcFlipped} className="lt-paper" style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", backgroundColor: TH.white, borderRadius: "24px", border: `2px solid ${TH.line}`, boxShadow: "0 14px 30px -10px rgba(69,26,3,.18)", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", boxSizing: "border-box", textAlign: "center" }}>

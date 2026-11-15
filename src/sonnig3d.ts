@@ -1,6 +1,6 @@
 // Sonnige Theke: 3D-Neigen mit Glanzlicht für die großen Karten auf der Startseite.
 // Läuft ohne Änderungen an App.tsx; aus bei "Animationen ausschalten", reduzierter Bewegung.
-const SELECTOR = ".lt-hero-cta, .lt-herocard";
+const SELECTOR = ".lt-hero-cta, .lt-herocard, .lt-card, .lt-tile, .lt-maincard, .lt-pod, .lt-tilt";
 const MAX_DEG = 7;
 
 function calm(): boolean {
@@ -32,6 +32,7 @@ function reset(el: HTMLElement | null) {
 }
 
 function onMove(e: PointerEvent) {
+  if (e.pointerType === "touch") return; // am Handy kein Kippen: dort drückt sich der Knopf ein
   const el = (e.target as Element | null)?.closest?.(
     SELECTOR
   ) as HTMLElement | null;
@@ -47,10 +48,11 @@ function onMove(e: PointerEvent) {
   g.style.setProperty("--gx", `${Math.round(x * 100)}%`);
   g.style.setProperty("--gy", `${Math.round(y * 100)}%`);
   el.classList.add("lt-tilting");
-  el.style.transform = `perspective(900px) rotateX(${(
+  const grad = r.width > 620 ? 2.5 : r.width > 380 ? 5 : MAX_DEG; // große Karten kippen weniger
+  el.style.transform = `perspective(1000px) rotateX(${(
     (0.5 - y) *
-    MAX_DEG
-  ).toFixed(2)}deg) rotateY(${((x - 0.5) * MAX_DEG).toFixed(2)}deg)`;
+    grad
+  ).toFixed(2)}deg) rotateY(${((x - 0.5) * grad).toFixed(2)}deg)`;
 }
 
 function onLeave() {

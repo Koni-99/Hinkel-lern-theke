@@ -625,7 +625,7 @@ html.lt-pt_mk_nacht .lt-awning-edge{background-image:none !important;background-
 @media (prefers-reduced-motion:reduce){.lt-root *{animation:none !important;transition:none !important}}
 /* Das Glücksrad dreht sich immer, auch wenn Animationen ausgeschaltet sind, sonst sieht man keinen Dreh */
 html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim .lt-root svg.lt-wheel-spin{transition:transform 4.2s cubic-bezier(.15,.85,.2,1) !important}
-@media (max-width:1050px){.lt-home-greet{display:contents !important}.lt-home>*{order:2}.lt-home-greet>div:first-child{order:0}.lt-home .lt-fact{order:0}.lt-home .lt-pod{order:1}.lt-home .lt-hero-wrap{order:1}.lt-home .lt-bake{order:1}.lt-home .lt-team{order:1}.lt-home .lt-herocard{order:2}.lt-hide-tab{display:none !important}.lt-only-tab{display:inline !important}.lt-headbtns>button{white-space:nowrap}.lt-herocard{flex:1 1 100% !important;max-width:none !important}}
+@media (max-width:1179px){.lt-home-greet{display:contents !important}.lt-home>*{order:2}.lt-home-greet>div:first-child{order:0}.lt-home .lt-fact{order:0}.lt-home .lt-pod{order:1}.lt-home .lt-hero-wrap{order:1}.lt-home .lt-bake{order:1}.lt-home .lt-team{order:1}.lt-home .lt-herocard{order:2}.lt-hide-tab{display:none !important}.lt-only-tab{display:inline !important}.lt-headbtns>button{white-space:nowrap}.lt-herocard{flex:1 1 100% !important;max-width:none !important}}
 @media (max-width:700px){
   .lt-root .lt-awning.lt-awning-sm{height:70px}.lt-root .lt-awning-sm .lt-logo{height:52px}
   .lt-dupnav{display:none !important}
@@ -709,4 +709,55 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
 .lt-bon-stamp{position:absolute;right:20px;bottom:64px;padding:4px 8px;border:2px solid #D92D20;border-radius:6px;background:rgba(255,255,255,.85);color:#D92D20;font-weight:700;font-size:13px;letter-spacing:.06em;transform:rotate(12deg)}
 .lt-bon-prog{height:12px;margin:4px 0 2px;border:1.5px solid #1F140C;padding:1.5px}
 .lt-bon-prog i{display:block;height:100%;background:repeating-linear-gradient(90deg,#1F140C 0 6px,transparent 6px 8px)}
+
+/* ═══ v178: schön auf Handy, Tablet und PC ═══ */
+/* Die Startseite hat zwei Hüllen (Haupt- und Seitenspalte). Am Handy und Tablet zählen sie nicht,
+   dort bleibt die Reihenfolge wie bisher. Erst am PC werden daraus zwei Spalten. */
+.lt-home-main,.lt-home-side,.lt-statbon{display:contents}
+.lt-nav-lbl{display:none}
+@media (max-width:1179px){
+  .lt-home-main>*,.lt-home-side>*,.lt-statbon>*{order:2}
+  .lt-home .lt-teamgoal{order:1}
+  .lt-home .lt-firstweek{order:3}
+  .lt-home>.lt-maincards,.lt-home>.lt-home-fold,.lt-home>.lt-foot{order:4}
+}
+/* Tablet: Menü unten mit Beschriftung, Statistik und Lern-Bon nebeneinander */
+@media (min-width:640px) and (max-width:1050px){
+  .lt-bottomnav{max-width:700px}
+  .lt-bottomnav button{flex-direction:column;gap:3px;min-height:62px;padding:0 2px}
+  .lt-nav-lbl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;line-height:1.15}
+}
+@media (min-width:701px) and (max-width:1050px){
+  .lt-root.lt-shell{padding-bottom:124px !important}
+}
+@media (min-width:760px) and (max-width:1179px){
+  .lt-statbon{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+  .lt-statbon>section:only-child{grid-column:1/-1}
+}
+@media (min-width:701px){.lt-root .lt-offbar{width:92% !important}}
+/* PC und Tablet quer: Menü als Leiste links, mit Beschriftung */
+@media (min-width:1051px){
+  .lt-root .lt-sticky-next{bottom:20px}
+  .lt-root.lt-shell{padding-left:128px;padding-bottom:48px !important;box-sizing:border-box}
+  .lt-shell>.lt-awnwrap{width:calc(100% + 128px) !important;margin-left:-128px;flex:0 0 auto}
+  .lt-shell>.lt-awnwrap .lt-hdr-row{--w:min(1100px,(100% - 128px) * .92);width:var(--w);max-width:none;margin-left:calc(128px + (100% - 128px - var(--w)) / 2);margin-right:auto;padding:0}
+  .lt-shell>.lt-bottomnav{left:14px;top:50%;bottom:auto;transform:translateY(-50%);width:104px;max-width:none;max-height:calc(100% - 28px);overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;gap:4px;border-radius:28px;box-shadow:0 18px 36px -14px rgba(31,20,12,.6)}
+  .lt-shell>.lt-bottomnav::-webkit-scrollbar{display:none}
+  .lt-shell>.lt-bottomnav button{flex:0 0 66px;flex-direction:column;gap:4px;min-height:66px;padding:0 2px}
+  .lt-shell>.lt-bottomnav .lt-nav-ind{top:8px;bottom:auto;left:8px;width:calc(100% - 16px) !important;height:66px;transform:translateY(calc(var(--i,0) * 70px)) !important}
+  .lt-shell .lt-nav-lbl{display:block;font-size:12px;font-weight:700;line-height:1.15;white-space:nowrap}
+}
+/* PC: Startseite in zwei Spalten. Links das Lernen, rechts Team, Brotkorb und Statistik */
+@media (min-width:1180px){
+  .lt-root .lt-home{display:grid !important;grid-template-columns:minmax(0,1.62fr) minmax(0,1fr);column-gap:30px;row-gap:26px;align-items:start}
+  .lt-home>*{grid-column:1/-1;min-width:0}
+  .lt-home>.lt-home-greet{grid-column:1;align-self:center;margin-bottom:0 !important}
+  .lt-home>.lt-fact{grid-column:2;align-self:center}
+  .lt-home>.lt-home-main,.lt-home>.lt-home-side{display:flex;flex-direction:column;gap:22px}
+  .lt-home>.lt-home-main{grid-column:1}
+  .lt-home>.lt-home-side{grid-column:2}
+  .lt-home-side .lt-statbon{display:flex;flex-direction:column;gap:22px}
+  .lt-home-side h2{font-size:26px !important}
+  .lt-h1{font-size:56px}
+}
 `;

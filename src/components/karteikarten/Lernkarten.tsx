@@ -37,7 +37,7 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
           aria-label={flipped ? "Karte zurückdrehen" : "Karte umdrehen"}
           onClick={() => setFlipped(!flipped)}
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); } }}
-          style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .6s cubic-bezier(.2,.8,.2,1)", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
+          style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .8s cubic-bezier(.34,1.42,.5,1)", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
         >
           {[false, true].map((back) => (
             <div

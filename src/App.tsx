@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 186;
+const APP_VERSION: number = 187;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -52,6 +52,9 @@ import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from '
 import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
+import { Buehne } from './thema/buehne';
+import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
+import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
 import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
@@ -417,6 +420,9 @@ export default function App() {
   const [spickView, setSpickView] = useState<'dictionary' | undefined>(undefined);
 
   // Größere Schrift (A+), wird pro Gerät gemerkt
+  const [kopf, setKopfState] = useState<Kopf>(kopfGespeichert);
+  const setKopf = (k: Kopf) => { kopfSetzen(k); setKopfState(k); };
+  const [showAussehen, setShowAussehen] = useState(false);
   const [bigFont, setBigFont] = useState<boolean>(() => { try { return localStorage.getItem('hinkel_big_font') === '1'; } catch { return false; } });
   const toggleBigFont = () => {
     setBigFont(prev => {
@@ -428,7 +434,7 @@ export default function App() {
 
   // Hell / Dunkel: wird pro Gerät gemerkt, die App lädt danach kurz neu
   useEffect(() => {
-    try { document.documentElement.style.backgroundColor = LT.cream; document.body.style.backgroundColor = LT.cream; } catch {}
+    try { const grund = NACHT ? '#14100C' : LT.cream; document.documentElement.style.backgroundColor = grund; document.body.style.backgroundColor = grund; } catch {}
   }, []);
 
   // „Auf den Startbildschirm“: Anleitung + direkter Installieren-Knopf, wo der Browser es anbietet
@@ -523,7 +529,7 @@ export default function App() {
     const link = document.createElement('link');
     link.id = 'lt-fonts';
     link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Courier+Prime:wght@400;700&family=Fredoka:wght@600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Caveat:wght@600&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Plus+Jakarta+Sans:wght@400..800&family=Atkinson+Hyperlegible:wght@400;700&family=Courier+Prime:wght@400;700&family=Fredoka:wght@600&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Caveat:wght@600&display=swap';
     document.head.appendChild(link);
   }, []);
 
@@ -2296,16 +2302,17 @@ export default function App() {
   );
 
   return (
-    <div className={`lt-root${myProg._theme ? ` lt-${String(myProg._theme).replace('th_', 'th-')}` : ''}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, paddingBottom: '56px', display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
+    <div className={`lt-root lt-shell${modusKlassen(kopf)}${myProg._theme ? ` lt-${String(myProg._theme).replace('th_', 'th-')}` : ''}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, paddingBottom: '56px', display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
       <style>{LT_CSS}</style>
       {bootWait && !cloudConnected && (typeof navigator === 'undefined' || navigator.onLine) && <div className="lt-boot" role="status"><img src={HINKEL_KUEKEN} alt="" className="lt-loaded lt-boot-kueken" style={{ height: '110px', width: 'auto' }} /><div className="lt-boot-bar" aria-hidden="true"><i /></div><strong style={{ fontSize: '18px', color: LT.brown }}>Frische Daten werden geholt …</strong></div>}
 
       {/* ── Gelbe Markise mit Logo ── */}
-      <div style={{ width: '100%' }}>
+      <div className="lt-awnwrap" style={{ width: '100%' }}>
         <div className={`${activeTab === 'home' ? 'lt-awning' : 'lt-awning lt-awning-sm'}${skySky ? ' lt-wx-on' : ''}`} style={{ position: 'relative', overflow: 'hidden', backgroundColor: LT.yellow, backgroundImage: 'linear-gradient(180deg, rgba(75,42,20,0.12) 0px, rgba(75,42,20,0) 18px)', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 'env(safe-area-inset-top)' }}>
           {skySky && <>
             <span aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: skySky.bg, pointerEvents: 'none' }} />
           </>}
+          <Buehne />
           {skyOn && weather && (() => {
             const c = weather.code;
             const rain = (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95;
@@ -2385,6 +2392,7 @@ export default function App() {
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
+            <button role="menuitem" onClick={() => { setHdrMenu(false); setShowAussehen(true); }}><LtIcon paths={ICON.sun} size={22} />Aussehen</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); if (isAdmin) adminSignOut(); setUsername(''); setTempUsername(''); setAdminPinInput(''); setPinError(false); resetLogin(); setActiveTab('home'); localStorage.removeItem('hinkel_username'); }} style={{ color: '#B42318' }}><LtIcon paths={ICON.logout} size={22} />Abmelden</button>
           </div>
@@ -2555,13 +2563,14 @@ export default function App() {
       {/* ── Menüleiste unten (Handy) ── */}
       {(() => { const dock = navItems; const ai = dock.findIndex(n => n.active); return (
       <nav className="lt-bottomnav" aria-label="Hauptmenü" style={{ gridTemplateColumns: `repeat(${dock.length}, minmax(0, 1fr))` }}>
-        <span className="lt-nav-ind" aria-hidden="true" style={{ width: `calc((100% - 16px) / ${dock.length})`, transform: `translateX(${Math.max(0, ai) * 100}%)`, opacity: ai < 0 ? 0 : 1 }} />
+        <span className="lt-nav-ind" aria-hidden="true" style={{ width: `calc((100% - 16px) / ${dock.length})`, transform: `translateX(${Math.max(0, ai) * 100}%)`, opacity: ai < 0 ? 0 : 1, ['--i' as string]: Math.max(0, ai) } as React.CSSProperties} />
         {dock.map(item => (
           <button key={item.id} onClick={item.action} className={item.active ? 'lt-on lt-nav-pop' : undefined} title={item.label} aria-current={item.active ? 'page' : undefined} aria-label={item.id === 'spielen' && duelInvites > 0 ? `Spielen, ${duelInvites === 1 ? 'eine Einladung' : `${duelInvites} Einladungen`} zum Duell` : item.id === 'scoreboard' && overtaken ? 'Bestenliste, du wurdest überholt' : item.label}>
             {item.id === 'spielen' && duelInvites > 0
               ? <span style={{ position: 'relative', display: 'inline-flex' }}><DuelSwords size={36} /><DuelBadge n={duelInvites} /></span>
               : item.id === 'scoreboard' && overtaken ? <span style={{ position: 'relative', display: 'inline-flex' }}><LtIcon paths={item.icon} size={25} width={item.active ? 2.4 : 2} /><span className="lt-dot-pulse" aria-hidden="true" style={{ position: 'absolute', top: '-3px', right: '-5px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#D92D20' }} /></span>
               : <LtIcon paths={item.icon} size={25} width={item.active ? 2.4 : 2} />}
+            <span className="lt-nav-lbl" aria-hidden="true">{item.label}</span>
           </button>
         ))}
       </nav>); })()}
@@ -2570,6 +2579,7 @@ export default function App() {
       {showTipShop && !isAdmin && <TipShop prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
 
       {/* ── Anleitung: App auf den Startbildschirm ── */}
+      {showAussehen && <Aussehen kopf={kopf} setKopf={setKopf} schliessen={() => setShowAussehen(false)} />}
       {showInstallHelp && <InstallHilfe {...{ setShowInstallHelp, hideInstall, canInstallDirect, isAppleDevice, installDirect }} />}
 
       {/* ── Pop-up: Wochenrückblick ── */}

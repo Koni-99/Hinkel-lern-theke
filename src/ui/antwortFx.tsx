@@ -2,6 +2,8 @@
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useEffect } from 'react';
 import { dc } from '../daten/data';
+import { goldFunken } from '../thema/funken';
+import { NACHT } from '../thema/modus';
 import { TH } from './basis';
 
 // ───────────────────────── Rückmeldung nach einer Antwort ─────────────────────────
@@ -34,6 +36,7 @@ export const comboMultFor = (run: number) => Math.min(2, 1 + 0.2 * Math.floor(ru
 /** Jede Antwort zählt einzeln: Punkte dieser Antwort × Combo-Faktor */
 export function comboRegister(ok: boolean, pts?: number) {
   if (!ok) { comboRun = 0; return; }
+  if (NACHT) goldFunken(comboRun >= 2 ? 26 : 18); // Goldfunken nur im dunklen Design
   comboRun++; comboHits++;
   const m = comboMultFor(comboRun);
   comboMultSum += m;
