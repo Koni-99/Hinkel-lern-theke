@@ -170,6 +170,8 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-hdr-pills{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
 .lt-pill{position:relative;display:flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border:none;border-radius:999px;background:#1F140C;color:#FFD86B;font-size:16px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 6px 14px -8px rgba(31,20,12,.7)}
 .lt-pill-round{width:42px;padding:0;justify-content:center}
+/* Theken-Ansturm am Handy: weniger Rand, damit die 8 Fotos größer sind und trotzdem auf eine Seite passen */
+@media (max-width:560px){.lt-root .lt-ansturm-card{padding:12px !important}.lt-root .lt-ansturm-card .lt-ansturm-grid{gap:5px !important}}
 /* Kleiner Offline-Hinweis neben der Punkte-Anzeige (statt Balken unter der Markise) */
 .lt-offline{order:3;display:inline-flex;flex:0 0 auto;align-items:center;gap:6px;min-height:28px;padding:0 10px;border:none;border-radius:999px;background:rgba(31,20,12,.72);color:#FFF3C4;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit}
 @media (max-width:420px){.lt-offline{padding:0 9px;min-height:30px}.lt-offline-txt{display:none}}

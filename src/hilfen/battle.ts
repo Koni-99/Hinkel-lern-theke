@@ -2,6 +2,8 @@
 // Vorher in utils.ts. Inhalt unverändert übernommen.
 import { BattleEntry, CloudPayload, Tombstones } from '../types';
 import { BATTLE_POINTS } from './allgemein';
+/** Zeit pro Frage im Quiz Battle (Sekunden) */
+export const BATTLE_SEKUNDEN = 40;
 
 // ───────────────────────── Quiz Battle ─────────────────────────
 

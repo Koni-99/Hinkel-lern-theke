@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 182;
+const APP_VERSION: number = 183;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -18,12 +18,13 @@ import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
 import { neuerMonatSnap } from './hilfen/meinMonat';
+import { zurueckVerbraucht } from './hilfen/zurueck';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
 import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
 import { shuffleQuestionOptions } from './hilfen/pruefung';
 import { hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT } from './hilfen/anmeldung';
-import { settleBattle, awardBattlePoints, battleWinnerSide } from './hilfen/battle';
+import { settleBattle, awardBattlePoints, battleWinnerSide, BATTLE_SEKUNDEN } from './hilfen/battle';
 import { applyProductFixes, patchProductQuestion, registerNewProducts } from './hilfen/produkte';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
@@ -477,7 +478,8 @@ export default function App() {
       el.style.transform = `perspective(800px) rotateX(${(-py * max).toFixed(2)}deg) rotateY(${(px * max).toFixed(2)}deg) ${press ? 'scale(.98)' : 'translateY(-3px)'}`;
     };
     const reset = (el: HTMLElement | null) => { if (!el) return; el.style.transform = ''; window.setTimeout(() => { if (el !== cur) el.classList.remove('lt-tilt3d'); }, 380); };
-    const onDown = (e: PointerEvent) => { const el = (e.target as HTMLElement)?.closest?.(SEL) as HTMLElement | null; if (!el || (el as HTMLButtonElement).disabled) return; cur = el; tilt(el, e.clientX, e.clientY, true); };
+    // Beim Antippen am Handy nicht mehr kippen (weniger Bewegung beim Knopfdruck, Wunsch 15.11.2026); mit Maus bleibt das sanfte Kippen beim Drüberfahren
+    const onDown = (e: PointerEvent) => { if (e.pointerType === 'touch') return; const el = (e.target as HTMLElement)?.closest?.(SEL) as HTMLElement | null; if (!el || (el as HTMLButtonElement).disabled) return; cur = el; tilt(el, e.clientX, e.clientY, true); };
     const onMove = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return;
       const el = (e.target as HTMLElement)?.closest?.(SEL) as HTMLElement | null;
@@ -590,7 +592,7 @@ export default function App() {
   const [battleQuestions, setBattleQuestions] = useState<any[]>([]);
   const [battleIndex, setBattleIndex] = useState(0);
   const [battleCorrects, setBattleCorrects] = useState(0);
-  const [battleTimeLeft, setBattleTimeLeft] = useState(15);
+  const [battleTimeLeft, setBattleTimeLeft] = useState(BATTLE_SEKUNDEN);
   const battleTimerRef = useRef<any>(null);
   // Zeitmessung fürs Battle: Start der aktuellen Frage und Summe aller Fragen (ms)
   const battleQStartRef = useRef<number>(0);
@@ -631,7 +633,7 @@ export default function App() {
   };
 
   const acceptBattleChallenge = (battle: any) => {
-    setActiveBattleId(battle.id); setBattleQuestions(battle.questions); setBattleIndex(0); setBattleCorrects(0); setBattleTimeLeft(15); setIsAnswered(false); setSelectedAnswer(null); setBattleState('playing');
+    setActiveBattleId(battle.id); setBattleQuestions(battle.questions); setBattleIndex(0); setBattleCorrects(0); setBattleTimeLeft(BATTLE_SEKUNDEN); setIsAnswered(false); setSelectedAnswer(null); setBattleState('playing');
     battleElapsedRef.current = 0; battleQStartRef.current = Date.now(); setBattleElapsed(0);
   };
 
@@ -655,7 +657,7 @@ export default function App() {
 
   const nextBattleQuestion = (totalCorrect: number) => {
     if (battleIndex + 1 < battleQuestions.length) {
-      setBattleIndex(prev => prev + 1); setBattleTimeLeft(15); setSelectedAnswer(null); setIsAnswered(false);
+      setBattleIndex(prev => prev + 1); setBattleTimeLeft(BATTLE_SEKUNDEN); setSelectedAnswer(null); setIsAnswered(false);
       battleQStartRef.current = Date.now();
     } else {
       const currentUsrKey = username.toLowerCase();
@@ -1548,6 +1550,32 @@ export default function App() {
   useEffect(() => { if (Array.isArray(cloudFav) && JSON.stringify(cloudFav) !== JSON.stringify(favorites)) setFavorites(cloudFav); // eslint-disable-next-line
   }, [JSON.stringify(cloudFav || null)]);
 
+  // ── Zurück-Taste des Handys: eine Seite zurück statt App schließen (siehe hilfen/zurueck.ts) ──
+  const seitenStapel = useRef<{ tab: string; cat: string | null; level: string | null }[]>([]);
+  const ausZurueck = useRef(false);
+  const seitenKey = `${activeTab}|${activeTab === 'quiz' ? `${currentQuizCategory ?? ''}|${selectedLevel ?? ''}` : ''}`;
+  useEffect(() => {
+    if (!username) { seitenStapel.current = []; return; }
+    const jetzt = { tab: activeTab, cat: currentQuizCategory, level: selectedLevel };
+    if (ausZurueck.current) { ausZurueck.current = false; return; }
+    if (!seitenStapel.current.length) { seitenStapel.current = [jetzt]; try { history.replaceState({ ltSeite: 0 }, ''); } catch {} return; }
+    seitenStapel.current.push(jetzt);
+    try { history.pushState({ ltSeite: seitenStapel.current.length - 1 }, ''); } catch {}
+  }, [seitenKey, username]);
+  useEffect(() => {
+    const onPop = () => {
+      if (zurueckVerbraucht()) return; // aufgeklapptes Fenster geschlossen oder eigener Rücksprung
+      const st = seitenStapel.current;
+      if (st.length <= 1) return; // erste Seite: Browser/Handy entscheidet (App verlassen)
+      st.pop();
+      const vorher = st[st.length - 1];
+      ausZurueck.current = true;
+      setActiveTab(vorher.tab); setCurrentQuizCategory(vorher.cat); setSelectedLevel(vorher.level);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   // ── Punkte-Zähler, Seitenrichtung, App-Symbol und Foto-Platzhalter ──
   const scoreTarget = username ? (cloudData.scores || []).filter(s => s.username?.toLowerCase() === username.toLowerCase()).reduce((sum, s) => sum + (Number(s.score) || 0), 0) : 0;
   const shownScore = useCountUp(scoreTarget);
@@ -1557,25 +1585,7 @@ export default function App() {
   const [resOpen, setResOpen] = useState<number | null>(null);
   const [bootWait, setBootWait] = useState(true);
   const [stampPrize, setStampPrize] = useState<{ icon: string; text: string } | null>(null);
-  useEffect(() => {
-    const onDown = (e: PointerEvent) => {
-      try {
-        if ((window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || document.documentElement.classList.contains('lt-noanim')) return;
-        const el = (e.target as HTMLElement)?.closest?.('button') as HTMLElement | null;
-        if (!el || el.offsetHeight < 50 || el.closest('.lt-bag')) return;
-        for (let i = 0; i < 9; i++) {
-          const d = document.createElement('span'); d.className = 'lt-flour';
-          const a = Math.random() * Math.PI * 2, r = 18 + Math.random() * 30;
-          d.style.left = (e.clientX - 3) + 'px'; d.style.top = (e.clientY - 3) + 'px';
-          d.style.setProperty('--fx', Math.cos(a) * r + 'px'); d.style.setProperty('--fy', (Math.sin(a) * r - 14) + 'px');
-          const sz = 3 + Math.random() * 5; d.style.width = sz + 'px'; d.style.height = sz + 'px';
-          document.body.appendChild(d); window.setTimeout(() => d.remove(), 800);
-        }
-      } catch { /* egal */ }
-    };
-    window.addEventListener('pointerdown', onDown, { passive: true });
-    return () => window.removeEventListener('pointerdown', onDown);
-  }, []);
+  // (Mehlstaub-Wölkchen bei jedem Knopfdruck entfernt am 15.11.2026: zu viel Bewegung)
   // Nach dem Start still vorladen, was erst später gebraucht wird (dann öffnen sich die Seiten ohne „Wird geladen“)
   useEffect(() => {
     const t = window.setTimeout(() => {

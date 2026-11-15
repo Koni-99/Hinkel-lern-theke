@@ -2,6 +2,8 @@
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState, CSSProperties } from 'react';
 import { TH, btnPrimary, ConfettiOverlay } from './basis';
+import { ShopIcon3D } from '../basis/laden';
+import { LtIcon } from '../basis/symbole';
 
 // ───────────────────────── Monatsmeister ─────────────────────────
 export const MONTHS_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -93,7 +95,8 @@ export function OsterEi({ tab, onFind }: { tab: string; onFind: (tab: string) =>
 }
 
 // ───────────────────────── Anmelde-Belohnung ─────────────────────────
-export const LOGIN_REWARDS = [20, 30, 40, 50, 60, 80, 100];
+// Trinkgeld fürs tägliche Vorbeischauen (Cent), Tag 1 bis 7. Am 15.11.2026 leicht erhöht (vorher 20 bis 100)
+export const LOGIN_REWARDS = [30, 40, 50, 60, 80, 100, 150];
 
 export function LoginRewardDialog({ day, onClaim, onClose, claimedAlready = false }: { day: number; onClaim: () => void; onClose: () => void; claimedAlready?: boolean }) {
   const [claimed, setClaimed] = useState(claimedAlready);
@@ -101,7 +104,7 @@ export function LoginRewardDialog({ day, onClaim, onClose, claimedAlready = fals
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 105, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <ConfettiOverlay active={claimed} />
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Anmelde-Belohnung" style={{ width: '100%', maxWidth: '560px', backgroundColor: TH.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)', padding: '26px 22px', display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'center' }}>
-        <div className="lt-emo-bob" style={{ fontSize: '54px', lineHeight: 1 }} aria-hidden="true">🎁</div>
+        <div className="lt-emo-bob" style={{ display: 'flex', justifyContent: 'center' }} aria-hidden="true"><ShopIcon3D k="coin" size={64} /></div>
         <div style={{ fontFamily: TH.serif, fontSize: '32px', lineHeight: 1.1 }}>Schön, dass du da bist!</div>
         <div style={{ fontSize: '17px', color: TH.brown }}>Jeden Tag gibt es eine Belohnung. Komm an 7 Arbeitstagen hintereinander (sonntags ist zu, das zählt nicht), dann wartet am 7. Tag ein Joker.</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
@@ -110,7 +113,8 @@ export function LoginRewardDialog({ day, onClaim, onClose, claimedAlready = fals
             return (
               <div key={n} className={today ? (claimed ? 'lt-login-got' : 'lt-login-today') : undefined} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', padding: '8px 2px', borderRadius: '14px', backgroundColor: past || (today && claimed) ? TH.tintSage : today ? TH.yellow : TH.white, border: `2px solid ${today ? TH.brown : TH.line}`, opacity: n > day ? 0.7 : 1 }}>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: TH.muted }}>Tag {n}</span>
-                <span style={{ fontSize: '22px', lineHeight: 1.2 }} aria-hidden="true">{past || (today && claimed) ? '✅' : n === 7 ? '🃏' : '🪙'}</span>
+                {/* Gleiche Bilder auf allen Handys (vorher Emojis: Android goldene, iPhone silberne Münzen) */}
+                <span style={{ height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: TH.green }} aria-hidden="true">{past || (today && claimed) ? <LtIcon paths={['M20 6 9 17l-5-5']} size={24} width={3} /> : <ShopIcon3D k={n === 7 ? 'j_5050' : 'coin'} size={28} />}</span>
                 <span style={{ fontSize: '12px', fontWeight: 800 }}>{(c / 100).toFixed(2).replace('.', ',')} €</span>
               </div>
             );

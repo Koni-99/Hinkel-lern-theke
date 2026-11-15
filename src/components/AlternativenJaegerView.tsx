@@ -7,6 +7,9 @@ import { ReportContext } from '../ui/melden';
 import { scrollToPlay } from '../ui/belohnungen';
 import { LearnHint, OnLearn, OnlyNewToggle, KnownMap, OnKnown, SpeakButton } from '../games/spielBasis';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
+
+/** Zeit pro Kunde (Sekunden), am 15.11.2026 von 20 auf 30 erhöht */
+const ALT_SEKUNDEN = 30;
 import { fixedAltProducts } from '../hilfen/produkte';
 
 
@@ -207,7 +210,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'result'>('menu');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(ALT_SEKUNDEN);
   const [selectedOpt, setSelectedOpt] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledScenarios, setShuffledScenarios] = useState<Scenario[]>([]);
@@ -247,7 +250,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
     setLearnedNow(false);
     setFx(null);
     setRun(0);
-    setTimeLeft(20);
+    setTimeLeft(ALT_SEKUNDEN);
     setShuffledScenarios(picked);
     setCurrentIndex(0);
     setScore(0);
@@ -267,7 +270,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
     let earned = 0;
 
     if (chosen && chosen.isBest) {
-      earned = 30 + (timeLeft * 2);
+      earned = 30 + Math.round(timeLeft * 40 / ALT_SEKUNDEN); // höchstens 70 wie früher, auch mit mehr Zeit
       setScore(prev => prev + earned);
       triggerFeedback('correct');
     } else {
@@ -286,7 +289,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
     setTimeout(() => {
       if (currentIndex + 1 < shuffledScenarios.length) {
         setCurrentIndex(prev => prev + 1);
-        setTimeLeft(20);
+        setTimeLeft(ALT_SEKUNDEN);
         setSelectedOpt(null);
         setIsAnswered(false);
       } else {
@@ -308,7 +311,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
       {gameState === 'menu' && (
         <GameIntro
           title="Bereit für die Beratung?"
-          text="Pro Runde kommen 6 Kunden. Du hast jeweils 20 Sekunden, um die passendste Alternative zu wählen. Je schneller, desto mehr Punkte."
+          text={`Pro Runde kommen 6 Kunden. Du hast jeweils ${ALT_SEKUNDEN} Sekunden, um die passendste Alternative zu wählen. Je schneller, desto mehr Punkte.`}
           startLabel="6er-Runde starten"
           onStart={() => startTraining(6)}
         />

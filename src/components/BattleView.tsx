@@ -6,6 +6,7 @@ import { Tombstones } from "../types";
 import { GameProgress, AnswerFx } from '../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, StatChip, ProductImages, ConfettiOverlay } from '../ui/basis';
 import { ReportLink, ReportContext } from '../ui/melden';
+import { BATTLE_SEKUNDEN } from '../hilfen/battle';
 import { Swords3D } from '../ui/hilfe';
 
 export function BattleView({
@@ -109,7 +110,7 @@ export function BattleView({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "12px", flexWrap: "wrap" }}>
         <PageHead
           title="Quiz Battle"
-          subtitle={`Fordere Kollegen heraus: 5 gemischte Fragen, auch mit Produktfotos, 15 Sekunden pro Frage. Bei gleich vielen richtigen Antworten gewinnt, wer schneller war. Sieg +${BATTLE_POINTS} Punkte, Niederlage −${BATTLE_POINTS} Punkte.`}
+          subtitle={`Fordere Kollegen heraus: 5 gemischte Fragen, auch mit Produktfotos, ${BATTLE_SEKUNDEN} Sekunden pro Frage. Bei gleich vielen richtigen Antworten gewinnt, wer schneller war. Sieg +${BATTLE_POINTS} Punkte, Niederlage −${BATTLE_POINTS} Punkte.`}
         />
         {battleState === "menu" && (
           <button onClick={() => fetchCloudData()} style={{ ...btnSecondary, minHeight: "48px", fontSize: "16px" }}>Aktualisieren</button>
@@ -239,7 +240,7 @@ export function BattleView({
               )}
             </div>
             <div style={{ height: "10px", backgroundColor: dc('#F4EADB'), borderRadius: "999px", overflow: "hidden" }}>
-              <div style={{ width: `${Math.min(100, (battleTimeLeft / 15) * 100)}%`, height: "100%", backgroundColor: battleTimeLeft <= 5 ? TH.red : TH.yellow, transition: "width 0.95s linear" }} />
+              <div style={{ width: `${Math.min(100, (battleTimeLeft / BATTLE_SEKUNDEN) * 100)}%`, height: "100%", backgroundColor: battleTimeLeft <= 5 ? TH.red : TH.yellow, transition: "width 0.95s linear" }} />
             </div>
             <div key={battleIndex} className="lt-pop-in" style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: "18px", padding: "28px", position: "relative" }}>
               <AnswerFx fx={isAnswered ? { k: battleIndex, ok: selectedAnswer === currentQ.correct, text: selectedAnswer === null ? "⏱️ Zeit um" : selectedAnswer === currentQ.correct ? "⚔️ Treffer!" : "✗ Daneben" } : null} />

@@ -73,6 +73,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Spielen', 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr')}
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
+        {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
         {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Idee einreichen, Kundenstimme, Geburtstag, Hilfe, größere Schrift')}
         <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
       </>, 0, true)}
@@ -106,7 +107,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       {box(boxIcon(ICON.coins), 'Trinkgeld und Laden', <>
         <div>Trinkgeld kommt so in deine Kasse:</div>
         {row('Theken-Simulator: freundlich, richtig rausgeben, gut beraten', 'bis 6,00 € am Tag')}
-        {row('Anmelde-Belohnung, 7 Tage hintereinander', '0,20 € bis 1,00 €')}
+        {row('Anmelde-Belohnung, 7 Tage hintereinander', '0,30 € bis 1,50 €')}
         {row('Glücksrad, einmal pro Woche', 'mit Glück')}
         <div>Oben rechts beim Trinkgeld (z. B. „0,00 €“) öffnest du den <strong>Trinkgeld-Laden</strong>. Dort kaufst du Zeichen für deinen Namen, Bewegungen, Titel, Farben und Joker. Jeden Tag gibt es ein Angebot zum halben Preis. Gekauftes gehört dir für immer.</div>
       </>, 2)}

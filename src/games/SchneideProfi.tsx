@@ -34,15 +34,35 @@ export function buildSliceRounds(count = 10, skip: string[] = []): ShopProduct[]
   return shuffleArray(picked).slice(0, count);
 }
 
-/** Kleines Brot mit Scheiben im richtigen Abstand */
+/** Angeschnittenes Brot mit drei abgeschnittenen Scheiben in der richtigen Dicke (5,5 / 9 / 12 mm), darüber ein Maß */
 export function SliceLoaf({ mm, highlight }: { mm: number; highlight?: boolean }) {
-  const gap = mm * 3.2;
-  const count = Math.floor(150 / gap) + 1;
-  const lines = Array.from({ length: count }, (_, i) => 20 + i * gap + (150 - (count - 1) * gap) / 2);
+  const w = mm * 1.75; // Scheibendicke im Bild
+  const id = `sl${String(mm).replace('.', '')}${highlight ? 'h' : ''}`;
+  const x0 = 112; // erste Scheibe
+  const scheiben = [0, 1, 2].map((i) => ({ x: x0 + i * (w + 6), r: i * 5 }));
   return (
-    <svg viewBox="0 0 190 70" width="100%" style={{ maxWidth: '190px', display: 'block' }} aria-hidden="true">
-      <path d="M8 62 Q8 14 60 10 L130 10 Q182 14 182 62 Z" fill={highlight ? dc('#E9B872') : dc('#D9B48A')} stroke={dc('#8A5A2B')} strokeWidth="2.5" />
-      {lines.filter(x => x < 176).map((x, i) => <line key={i} x1={x} y1={14} x2={x} y2={60} stroke={dc('#FFF6E0')} strokeWidth="2.2" />)}
+    <svg viewBox="0 0 200 92" width="100%" style={{ maxWidth: '200px', display: 'block' }} aria-hidden="true">
+      <defs>
+        <linearGradient id={`${id}k`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={highlight ? '#C98A3A' : '#B87A3E'} /><stop offset="1" stopColor="#7A4A22" /></linearGradient>
+        <radialGradient id={`${id}c`} cx="45%" cy="40%" r="70%"><stop offset="0" stopColor="#FBEBC6" /><stop offset="1" stopColor="#E9CB8E" /></radialGradient>
+        <pattern id={`${id}p`} width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="1.5" cy="1.5" r=".8" fill="#C9A26A" /><circle cx="4.5" cy="4.2" r=".6" fill="#C9A26A" /></pattern>
+      </defs>
+      {/* Laib (Seitenansicht) mit Schnittfläche */}
+      <path d="M8 84 L8 44 Q8 16 38 14 L96 14 Q104 15 104 30 L104 84 Z" fill={`url(#${id}k)`} />
+      <path d="M18 24 Q30 18 44 19 M52 18 Q66 16 78 18" stroke="rgba(255,236,200,.45)" strokeWidth="2.2" fill="none" strokeLinecap="round" />
+      <rect x="98" y="15" width="8" height="69" rx="4" fill={`url(#${id}c)`} stroke="#7A4A22" strokeWidth="2" />
+      {/* abgeschnittene Scheiben */}
+      {scheiben.map((sc, i) => (
+        <g key={i} transform={`rotate(${sc.r} ${sc.x + w / 2} 84)`}>
+          <rect x={sc.x} y={16} width={w} height={68} rx={Math.min(w / 2, 7)} fill={`url(#${id}c)`} stroke="#7A4A22" strokeWidth="2.4" />
+          <rect x={sc.x + 1.5} y={18} width={Math.max(1, w - 3)} height={64} rx={Math.min(w / 2, 6)} fill={`url(#${id}p)`} opacity=".9" />
+        </g>
+      ))}
+      {/* Maß über der ersten Scheibe */}
+      <g stroke={highlight ? '#1F7A4D' : '#4B2A14'} strokeWidth="1.8" strokeLinecap="round">
+        <line x1={x0} y1={7} x2={x0 + w} y2={7} /><line x1={x0} y1={3} x2={x0} y2={11} /><line x1={x0 + w} y1={3} x2={x0 + w} y2={11} />
+      </g>
+      <line x1="4" y1="86" x2="196" y2="86" stroke="#D9C4A0" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -99,16 +119,18 @@ export function SchneideProfiView({ images, best = 0, onSaveScore, onFinished, o
       {state === 'menu' && (
         <div className="lt-pop-in" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Merke dir die drei Stärken</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
             {[
               { mm: 5.5, t: '5,5 mm', d: 'Vollkornschwarzbrot' },
               { mm: 9, t: '9 mm', d: 'Roggen-, Misch-, Dinkel- und Spezialbrote' },
               { mm: 12, t: '12 mm', d: 'Weizenbrote und Stuten' },
             ].map(s => (
-              <div key={s.t} style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.cream, border: `2px solid ${TH.line}`, display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'center', textAlign: 'center' }}>
-                <SliceLoaf mm={s.mm} />
-                <div style={{ fontFamily: TH.serif, fontSize: '26px' }}>{s.t}</div>
-                <div style={{ fontSize: '16px', color: TH.brown }}>{s.d}</div>
+              <div key={s.t} style={{ padding: '12px 14px', borderRadius: '16px', backgroundColor: TH.cream, border: `2px solid ${TH.line}`, display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ flex: '0 0 46%', maxWidth: '200px' }}><SliceLoaf mm={s.mm} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: TH.serif, fontSize: '26px', lineHeight: 1.1 }}>{s.t}</div>
+                  <div style={{ fontSize: '15px', color: TH.brown, marginTop: '2px', lineHeight: 1.35 }}>{s.d}</div>
+                </div>
               </div>
             ))}
           </div>

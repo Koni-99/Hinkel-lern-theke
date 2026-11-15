@@ -77,14 +77,14 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
       <PageHead title="Theken-Ansturm" subtitle="Die Schlange wird länger. Pack jede Bestellung, bevor der Kunde ungeduldig wird." />
       {state === 'menu' && <GameIntro title="So geht's" text="Der Kunde sagt, was er möchte. Erkenne die Ware am Foto und tippe sie an, bis alles in der Tüte ist. Den Namen siehst du erst nach dem Antippen. Falsches Produkt kostet Geduld. Drei verärgerte Kunden und das Spiel ist vorbei." hint="Je schneller du bist, desto mehr Bonuspunkte." startLabel="Theke öffnen" onStart={start} />}
       {state === 'play' && (
-        <div id="lt-game-card" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div id="lt-game-card" className="lt-ansturm-card" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
             <StatChip label="Punkte" value={String(score)} />
             <StatChip label="Bedient" value={String(served)} />
             <StatChip label="Verärgert" value={`${lost} / 3`} />
           </div>
           <div className="lt-ansturm-order" style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <span key={served + '-' + lost} className="lt-pop-in" style={{ fontSize: '54px', lineHeight: 1 }}>{patience <= 0 ? '😠' : patience < 0.3 ? '😤' : face}</span>
+            <span key={served + '-' + lost} className="lt-pop-in" style={{ fontSize: '46px', lineHeight: 1 }}>{patience <= 0 ? '😠' : patience < 0.3 ? '😤' : face}</span>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <div style={{ padding: '12px 14px', borderRadius: '16px', backgroundColor: '#F4EADB', fontSize: '17px', lineHeight: 1.4 }}>
                 Ich hätte gern: {order.map((o, i) => <span key={o} style={{ display: 'inline-block', marginRight: '6px' }}><b style={{ textDecoration: packed.includes(o) ? 'line-through' : 'none', opacity: packed.includes(o) ? 0.5 : 1 }}>{o}</b>{i < order.length - 2 ? ',' : i === order.length - 2 ? ' und' : '.'}</span>)}
@@ -94,12 +94,12 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
               </div>
             </div>
           </div>
-          <div className="lt-ansturm-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '10px' }}>
+          <div className="lt-ansturm-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '6px' }}>
             {shelf.map(p => {
               const done = packed.includes(p.name);
               return (
-                <button key={p.name} onClick={() => tap(p.name)} disabled={done} style={{ padding: '6px', borderRadius: '14px', border: `3px solid ${wrongName === p.name ? TH.red : done ? TH.green : TH.line}`, backgroundColor: done ? TH.tintSage : TH.white, cursor: done ? 'default' : 'pointer', opacity: done ? 0.55 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                  {images[productImageKey(p.name)] ? <img src={images[productImageKey(p.name)]} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '10px' }} /> : <span style={{ fontSize: '44px', lineHeight: 1.4 }}>🥖</span>}
+                <button key={p.name} onClick={() => tap(p.name)} disabled={done} style={{ padding: '2px', borderRadius: '13px', border: `3px solid ${wrongName === p.name ? TH.red : done ? TH.green : TH.line}`, backgroundColor: done ? TH.tintSage : TH.white, cursor: done ? 'default' : 'pointer', opacity: done ? 0.55 : 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  {images[productImageKey(p.name)] ? <img src={images[productImageKey(p.name)]} alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: '9px', display: 'block' }} /> : <span style={{ fontSize: '44px', lineHeight: 1.4 }}>🥖</span>}
                   {/* Name nur ohne Foto zeigen: so muss man die Ware am Bild erkennen */}
                   {(!images[productImageKey(p.name)] || done || wrongName === p.name) && <span style={{ fontSize: '13px', fontWeight: 700, lineHeight: 1.2, color: wrongName === p.name ? TH.red : undefined }}>{p.name}</span>}
                 </button>

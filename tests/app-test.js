@@ -189,6 +189,29 @@ async function offlineTests() {
     ok('Hilfe: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Zurück-Taste des Handys: eine Seite zurück, Steckbrief schließen, App nicht verlassen
+  {
+    const d = await device({ user: 'Anna' });
+    const titel = async () => (await d.page.locator('main h1').first().innerText().catch(() => '')).trim();
+    await click(nav(d.page).nth(1)); await settle(d.page, 500);
+    const lernen = await titel();
+    await click(nav(d.page).nth(3)); await settle(d.page, 500);
+    await d.page.goBack(); await settle(d.page, 600);
+    const zurueck1 = (await titel()) === lernen;
+    await click(nav(d.page).nth(3)); await settle(d.page, 500);
+    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    const karte = d.page.locator('.lt-foto-raster button').first();
+    let sheetZu = false;
+    if (await karte.count()) {
+      await click(karte); await settle(d.page, 500);
+      const auf = await d.page.locator('.fc-sheet').count();
+      await d.page.goBack(); await settle(d.page, 500);
+      sheetZu = auf > 0 && (await d.page.locator('.fc-sheet').count()) === 0 && (await d.page.locator('.lt-foto-raster').count()) > 0;
+    }
+    ok('Zurück-Taste: eine Seite zurück und Steckbrief schließen', zurueck1 && sheetZu, `Seite ${zurueck1}, Steckbrief ${sheetZu}`);
+    ok('Zurück-Taste: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Mein Monat: Seite geht auf (Menü) und die Rechnung stimmt
   {
     const d = await device({ user: 'Anna' });

@@ -35,7 +35,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
     allergene: { title: 'Allergene-Training', short: 'Kunden mit Allergien richtig beraten', time: '10 Kunden', best: myStats.allergenBest ? `Bestwert ${myStats.allergenBest}/10` : undefined, learn: true, action: () => setActiveTab('allergene') },
     theke: { title: 'Theken-Simulator', short: 'Ein ganzes Verkaufsgespräch: begrüßen, beraten, kassieren', time: 'Ein Gespräch', learn: true, action: () => setActiveTab('theke') },
     alt: { title: 'Alternativen-Jäger', short: 'Ausverkauft? Die beste Empfehlung finden', time: '6 Runden', learn: true, action: () => setActiveTab('alternativen') },
-    battle: { title: 'Quiz Battle', short: 'Kollegen herausfordern, 15 Sek. pro Frage', time: '5 Fragen', learn: true, duel: duelInvites, action: () => { setActiveTab('battle'); setBattleState('menu'); fetchCloudData(); } },
+    battle: { title: 'Quiz Battle', short: 'Kollegen herausfordern, 40 Sek. pro Frage', time: '5 Fragen', learn: true, duel: duelInvites, action: () => { setActiveTab('battle'); setBattleState('menu'); fetchCloudData(); } },
     advent: { title: 'Adventskalender', short: nowMonth === 10 ? 'Ab 1. Dezember jeden Tag ein Türchen' : 'Jeden Tag ein Türchen mit Extra-Punkten', time: adventOpenNow ? `${adventOpenNow} offen` : '1 Frage am Tag', learn: true, action: () => { setAdventPreview(false); setActiveTab('advent'); } },
   };
   const groups: { title: string; tint: string; ink: string; keys: string[] }[] = [

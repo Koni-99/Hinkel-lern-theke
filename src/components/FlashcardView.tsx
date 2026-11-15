@@ -14,6 +14,7 @@ import { Woerterbuch } from './karteikarten/Woerterbuch';
 import { FachKompakt } from './karteikarten/FachKompakt';
 import { SteckbriefListe } from './karteikarten/SteckbriefListe';
 import { ProduktKarten } from './karteikarten/ProduktKarten';
+import { useZurueckSchliesst } from '../hilfen/zurueck';
 import { FilterLeiste } from './karteikarten/FilterLeiste';
 
 export function FlashcardView({
@@ -63,6 +64,7 @@ export function FlashcardView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [openProfileKey, setOpenProfileKey] = useState<string | null>(null);
+  useZurueckSchliesst(openProfileKey !== null, () => setOpenProfileKey(null)); // Zurück-Taste schließt den Steckbrief
   const [pcGroup, setPcGroup] = useState<string>("Alle");
   const [pcIndex, setPcIndex] = useState(0);
   const [pcFlipped, setPcFlipped] = useState(false);
