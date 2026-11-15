@@ -189,6 +189,19 @@ async function offlineTests() {
     ok('Hilfe: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Trinkgeld-Laden: Antippen zeigt erst die Vorschau am Namen, gekauft wird erst mit „Kaufen“
+  {
+    const d = await device({ user: 'Anna' });
+    await click(d.page.locator('[title="Trinkgeld-Laden öffnen"]').first()); await settle(d.page, 600);
+    await click(d.page.locator('.lt-shelf .lt-shop-item').first()); await settle(d.page, 400);
+    const vorschau = await d.page.getByText('So sieht es bei dir aus').count() > 0;
+    if (process.env.SHOT2) await d.page.screenshot({ path: process.env.SHOT2 });
+    await click(d.page.getByRole('button', { name: 'Doch nicht' }).first()); await settle(d.page, 300);
+    const zu = await d.page.getByText('So sieht es bei dir aus').count() === 0;
+    ok('Laden: Vorschau am Namen vor dem Kauf', vorschau && zu, `Vorschau ${vorschau}, wieder zu ${zu}`);
+    ok('Laden: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Zurück-Taste des Handys: eine Seite zurück, Steckbrief schließen, App nicht verlassen
   {
     const d = await device({ user: 'Anna' });
@@ -387,6 +400,28 @@ async function cloudTests() {
     ok('Anmeldung: richtige PIN meldet an', (await B.page.evaluate(() => localStorage.getItem('hinkel_username'))) === 'Testi');
     ok('Anmeldung: keine Fehler', !A.errors.length && !B.errors.length, A.errors[0] || B.errors[0]);
     await A.ctx.close(); await B.ctx.close();
+  }
+  // Stufen-Feier: Kollegin mit genug Punkten für Stufe 3 sieht die Feier (andere Pop-ups vorher wegklicken)
+  {
+    await db('PATCH', '/progress', { lena: { _displayName: 'Lena', _role: 'verkauf', _intro: true, _levelSeen: 1 } });
+    await db('PATCH', '', { scores: [{ id: 'b1', username: 'Ben', score: 50, date: '12.11.26, 08:00', category: 'Quiz' }, { id: 'l1', username: 'Lena', score: 450, date: '12.11.26, 09:00', category: 'Quiz' }] });
+    const L = await device({ cloud: true, user: 'Lena' });
+    let gesehen = false;
+    for (let k = 0; k < 14 && !gesehen; k++) {
+      await sleep(700);
+      if (await L.page.locator('[aria-label="Neue Stufe erreicht"]').count()) { gesehen = true; break; }
+      const pinFelder = L.page.locator('input[placeholder="4 bis 6 Ziffern"]:visible');
+      if ((await pinFelder.count()) === 2) { await pinFelder.nth(0).fill('4711'); await pinFelder.nth(1).fill('4711'); await L.page.getByText('PIN speichern').click().catch(() => {}); continue; }
+      const o = L.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+      if (await o.count()) await o.last().click({ timeout: 2000 }).catch(() => {});
+    }
+    if (process.env.SHOT) { await sleep(gesehen ? 2600 : 0); await L.page.screenshot({ path: process.env.SHOT }); }
+    const titel = gesehen ? await L.page.locator('.lt-sf-titel').innerText().catch(() => '') : '';
+    if (gesehen) { await L.page.getByRole('button', { name: 'Weiter so!' }).click().catch(() => {}); await sleep(1500); }
+    const weg = gesehen && (await L.page.locator('[aria-label="Neue Stufe erreicht"]').count()) === 0;
+    ok('Stufen-Feier: erscheint mit neuem Titel und geht mit „Weiter so!“ zu', gesehen && titel.length > 2 && weg, `gesehen ${gesehen}, Titel „${titel}“, zu ${weg}`);
+    ok('Stufen-Feier: keine Fehler', L.errors.length === 0, L.errors[0]);
+    await L.ctx.close();
   }
   // Live-Updates: Änderung eines Kollegen kommt sofort an
   {

@@ -162,6 +162,8 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
   const [tab, setTab] = useState<ShopTab>('zeichen');
   const [bon, setBon] = useState<{ it: ShopItem; price: number; k: number } | null>(null);
   const [ring, setRing] = useState(0);
+  // Anprobieren: erst antippen = Vorschau oben am Namen, dann „Kaufen“ (verhindert Käufe aus Versehen)
+  const [vorschau, setVorschau] = useState<{ art: 'tip'; it: ShopItem } | { art: 'pts'; it: PtItem } | null>(null);
   const shown = useCountUp(balance, 700);
   const deal = dealOfDay();
   useEffect(() => { if (!bon) return; const t = window.setTimeout(() => setBon(null), 3200); return () => window.clearTimeout(t); }, [bon]);
@@ -179,12 +181,12 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
     const count = it.kind === 'joker' ? Number(prog[JOKER_FIELD[it.id]]) || 0 : 0;
     const click = () => {
       if (has) { onEquip(it.kind as 'avatar' | 'title' | 'theme' | 'effect', active ? null : (it.kind === 'avatar' ? it.icon : it.kind === 'theme' || it.kind === 'effect' ? it.id : it.label)); return; }
-      if (!afford) return;
-      onBuy(it); setBon({ it, price, k: Date.now() }); setRing(r => r + 1);
+      if (it.kind === 'joker') { if (!afford) return; onBuy(it); setBon({ it, price, k: Date.now() }); setRing(r => r + 1); return; } // Joker: keine Vorschau nötig
+      setVorschau({ art: 'tip', it });
     };
     const wide = it.kind === 'title' || it.kind === 'joker';
     return (
-      <button key={it.id} onClick={click} disabled={!has && !afford} className={!has && !afford ? 'lt-shop-item lt-shop-off' : 'lt-shop-item'} title={it.desc}
+      <button key={it.id} onClick={click} disabled={it.kind === 'joker' && !has && !afford} aria-pressed={vorschau?.it.id === it.id} className={!has && !afford ? 'lt-shop-item lt-shop-off' : 'lt-shop-item'} title={it.desc}
         style={{ animationDelay: `${i * 0.04}s`, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', padding: '16px 8px 12px', minHeight: wide ? '150px' : '150px', border: 'none', borderRadius: '20px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', outline: active ? '2.5px solid #FFC72C' : 'none', outlineOffset: '-2.5px', cursor: has || afford ? 'pointer' : 'not-allowed', color: LT.ink, gridColumn: wide ? 'span 2' : undefined }}>
         {isDeal && !has && <span className="lt-deal" style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 2, padding: '3px 8px', borderRadius: '999px', backgroundColor: '#D92D20', color: '#FFFFFF', fontSize: '12px', fontWeight: 800 }}>-50 %</span>}
         {count > 0 && <span style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, minWidth: '26px', height: '26px', padding: '0 6px', borderRadius: '13px', backgroundColor: TH.green, color: '#FFFFFF', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×{count}</span>}
@@ -221,6 +223,43 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
           <button onClick={onClose} aria-label="Laden verlassen" style={{ position: 'absolute', top: '-46px', right: '10px', zIndex: 3, width: '46px', height: '46px', borderRadius: '50%', border: 'none', backgroundColor: '#FFFFFF', fontSize: '20px', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,.25)' }}>✕</button>
         </div>
         <div className="lt-shop-scroll" style={{ overflowY: 'auto', padding: '0 16px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {vorschau && (() => {
+            const v = vorschau; const it: any = v.it;
+            const name = prog._displayName || 'Du';
+            const avatar = it.kind === 'avatar' ? it.icon : prog._avatar;
+            const fx = v.art === 'tip' && it.kind === 'effect' ? `lt-fx-${it.id.replace('fx_', '')}` : prog._effect ? `lt-fx-${String(prog._effect).replace('fx_', '')}` : 'lt-emo-bob';
+            const titel = v.art === 'tip' && it.kind === 'title' ? it.label : prog._title;
+            const nameKl = v.art === 'pts' && it.kind === 'namecolor' ? `lt-nc lt-nc-${it.id.replace('pt_nc_', '')}` : v.art === 'pts' && it.kind === 'gold' ? 'lt-goldname' : nameClassOf(prog);
+            const preis = v.art === 'tip' ? shopPrice(it) : it.price;
+            const kannKaufen = v.art === 'tip' ? balance >= preis : ptsBalance >= preis;
+            const kaufen = () => {
+              if (!kannKaufen) return;
+              if (v.art === 'tip') { onBuy(it); setBon({ it, price: preis, k: Date.now() }); } else onBuyPts?.(it);
+              setRing(r => r + 1); setVorschau(null);
+            };
+            return (
+              <div className="lt-anprobe" role="region" aria-label="Vorschau" style={{ position: 'sticky', top: 0, zIndex: 4, padding: '14px 16px', borderRadius: '20px', backgroundColor: '#FFFBF2', border: '2px solid #FFC72C', boxShadow: '0 10px 24px -14px rgba(31,20,12,.5)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase', color: LT.brown }}>So sieht es bei dir aus</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1, display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    Hallo, {avatar && <span className={fx} style={{ display: 'inline-block', fontSize: '30px', lineHeight: 1 }}>{avatar}</span>}
+                    <span><span className={nameKl}>{name}</span>!</span>
+                  </span>
+                  {titel && <span style={{ padding: '4px 12px', borderRadius: '999px', backgroundColor: '#FFC72C', color: '#2B170A', fontSize: '14px', fontWeight: 800 }}>{titel}</span>}
+                  {v.art === 'tip' && it.kind === 'theme' && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 700 }}><span className="lt-shop-ball" style={{ ['--c' as any]: themeSwatch[it.id] || LT.yellow, width: '26px', height: '26px' }} />Farbe der App</span>}
+                  {v.art === 'pts' && it.kind === 'frame' && <span className="lt-schatz-bon">{it.icon} {String(name).toUpperCase().slice(0, 10)} {it.icon}</span>}
+                  {v.art === 'pts' && it.kind === 'markise' && <span className={`lt-mk-swatch lt-mk-sw-${it.id}`} style={{ width: '90px', height: '34px' }} />}
+                </div>
+                <div style={{ fontSize: '14px', color: LT.muted }}>{it.label}{it.desc ? ` · ${it.desc}` : ''}</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button type="button" onClick={kaufen} disabled={!kannKaufen} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: kannKaufen ? '#1F140C' : '#CBBBA4', color: kannKaufen ? '#FFD86B' : '#FFFFFF', fontSize: '16px', fontWeight: 800, cursor: kannKaufen ? 'pointer' : 'not-allowed', fontFamily: 'inherit' }}>
+                    {kannKaufen ? `Kaufen für ${v.art === 'tip' ? tipEuro(preis) : `${preis.toLocaleString('de-DE')} Punkte`}` : `Noch ${v.art === 'tip' ? tipEuro(preis - balance) : `${(preis - ptsBalance).toLocaleString('de-DE')} Punkte`} sparen`}
+                  </button>
+                  <button type="button" onClick={() => setVorschau(null)} style={{ minHeight: '46px', padding: '0 16px', borderRadius: '999px', border: '2px solid #E3D6BE', backgroundColor: '#FFFFFF', color: LT.ink, fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Doch nicht</button>
+                </div>
+              </div>
+            );
+          })()}
           {/* Tafel: Angebot des Tages */}
           <button className="lt-chalk" onClick={() => setTab(deal.kind === 'avatar' ? 'zeichen' : deal.kind === 'effect' ? 'bewegung' : deal.kind === 'title' ? 'titel' : deal.kind === 'theme' ? 'farben' : 'joker')}>
             <span className="lt-shop-pedestal" aria-hidden="true">{deal.kind === 'joker' ? <ShopIcon3D k={deal.id} size={50} /> : deal.kind === 'theme' ? <span className="lt-shop-ball" style={{ ['--c' as any]: '#FFC72C', width: '44px', height: '44px' }} /> : <span className="lt-shop-emo lt-emo-bob" style={{ fontSize: '42px' }}>{deal.icon}</span>}</span>
@@ -280,10 +319,10 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
                         )}
                         {it.kind === 'spruch' && pending && <span style={{ fontSize: '14px', fontWeight: 700, color: '#8A6A00' }}>Dein Spruch wartet auf Freigabe: „{prog._spruch.text}“</span>}
                         {it.kind === 'spruch' && prog._spruch && prog._spruch.status === 'no' && <span style={{ fontSize: '14px', color: LT.brown }}>Dein letzter Spruch wurde nicht freigegeben, die Punkte hast du zurück.</span>}
-                        <button disabled={(!has && !afford) || (it.kind === 'spruch' && (pending || spruch.trim().length < 3))}
-                          onClick={() => { if (has) { onEquipPts?.(it, !on); return; } if (it.kind === 'spruch') { onBuyPts?.(it, spruch.trim()); setSpruch(''); } else onBuyPts?.(it); setRing(r => r + 1); }}
+                        <button disabled={(it.kind === 'spruch' && (!afford || pending || spruch.trim().length < 3))}
+                          onClick={() => { if (has) { onEquipPts?.(it, !on); return; } if (it.kind === 'spruch') { onBuyPts?.(it, spruch.trim()); setSpruch(''); setRing(r => r + 1); } else setVorschau({ art: 'pts', it }); }}
                           style={{ minHeight: '44px', borderRadius: '999px', border: 'none', backgroundColor: on ? '#2F7A3E' : has ? '#FFFFFF' : '#1F140C', color: on ? '#FFFFFF' : has ? LT.ink : '#FFD86B', fontSize: '15px', fontWeight: 800, cursor: 'pointer', opacity: (!has && !afford) || (it.kind === 'spruch' && (pending || spruch.trim().length < 3)) ? 0.45 : 1, boxShadow: has ? 'inset 0 0 0 1.5px #E3D6BE' : 'none' }}>
-                          {on ? '✓ an (antippen zum Ablegen)' : has ? 'anlegen' : `${it.price.toLocaleString('de-DE')} Punkte`}
+                          {on ? '✓ an (antippen zum Ablegen)' : has ? 'anlegen' : it.kind === 'spruch' ? `${it.price.toLocaleString('de-DE')} Punkte` : `Anprobieren · ${it.price.toLocaleString('de-DE')} Punkte`}
                         </button>
                       </div>
                     );

@@ -99,7 +99,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Combo-Bonus:</strong> In jedem Spiel und Quiz zählt, wie viele richtige Antworten du am Stück hast. Alle 5 richtigen in Folge gibt es mehr: ab 5 ×1,2, ab 10 ×1,4, ab 15 ×1,6, ab 20 ×1,8, ab 25 höchstens ×2,0. Jede Antwort zählt einzeln mit dem Faktor, den du gerade hast. Eine falsche Antwort setzt die Combo zurück.</div>
       </>, 0)}
       {box(boxIcon(ICON.trophy), 'Stufen', <>
-        <div>Mit deinen Punkten steigst du auf. Es gibt {levels.length} Stufen:</div>
+        <div>Mit deinen Punkten steigst du auf, jeder Aufstieg wird mit einer kleinen Feier begrüßt. Es gibt {levels.length} Stufen:</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '6px' }}>
           {levels.map((l, i) => <div key={l.title} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '10px', backgroundColor: i % 2 ? TH.white : TH.tintYellow, fontSize: '15px' }}><span style={{ flex: 1 }}>{i + 1}. {l.title}</span><span style={{ color: TH.muted }}>{l.min.toLocaleString('de-DE')}</span></div>)}
         </div>
@@ -109,7 +109,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {row('Theken-Simulator: freundlich, richtig rausgeben, gut beraten', 'bis 6,00 € am Tag')}
         {row('Anmelde-Belohnung, 7 Tage hintereinander', '0,30 € bis 1,50 €')}
         {row('Glücksrad, einmal pro Woche', 'mit Glück')}
-        <div>Oben rechts beim Trinkgeld (z. B. „0,00 €“) öffnest du den <strong>Trinkgeld-Laden</strong>. Dort kaufst du Zeichen für deinen Namen, Bewegungen, Titel, Farben und Joker. Jeden Tag gibt es ein Angebot zum halben Preis. Gekauftes gehört dir für immer.</div>
+        <div>Oben rechts beim Trinkgeld (z. B. „0,00 €“) öffnest du den <strong>Trinkgeld-Laden</strong>. Dort kaufst du Zeichen für deinen Namen, Bewegungen, Titel, Farben und Joker. Antippen zeigt dir zuerst oben eine Vorschau, wie es an deinem Namen aussieht, gekauft wird erst mit „Kaufen“. Jeden Tag gibt es ein Angebot zum halben Preis. Gekauftes gehört dir für immer.</div>
       </>, 2)}
       {box(boxIcon(ICON.gift), 'Schatzkammer', <><div>Im Laden gibt es die Schatzkammer. Dort bezahlst du mit <strong>Punkten</strong>, nicht mit Trinkgeld: goldener Name, Bon-Rahmen, seltene Zeichen, eigene Markise und der „Spruch des Tages“, den der Ausbilder vorher freigibt.</div><div>Ausgegebene Punkte fehlen in der Gesamtwertung der Bestenliste. Deine Stufe, die Monatswertung und die Hall of Fame bleiben. Lohnt es sich, dafür ein paar Plätze abzurutschen? Das entscheidest du.</div><div>Im Quiz Battle kannst du außerdem einen <strong>Einsatz</strong> von 50, 100 oder 250 Punkten setzen: Wer gewinnt, bekommt ihn vom anderen.</div></>, 3)}
       {box(boxIcon(ICON.dice), 'Joker', <>
