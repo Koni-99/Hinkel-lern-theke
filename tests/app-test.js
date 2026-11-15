@@ -168,6 +168,13 @@ async function offlineTests() {
     ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Anmeldung immer mit gelber Markise (Version 196)
+  {
+    const d = await device({ viewport: { width: 390, height: 844 } });
+    const kl = await d.page.evaluate(() => document.querySelector('.lt-root')?.className || '');
+    ok('Anmeldung: gelbe Markise (ohne Ähren-Kopf)', !!kl && !/lt-kopf-/.test(kl), kl);
+    await d.ctx.close().catch(() => {});
+  }
   // Aussehen (Version 187): hell ist Standard, „Backstube bei Nacht“ und Kopf mit Ähren wählbar
   {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });

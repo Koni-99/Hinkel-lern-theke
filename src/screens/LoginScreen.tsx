@@ -8,7 +8,7 @@ import { checkPin, PIN_MAX } from '../hilfen/pin';
 import { adminSignIn } from '../hilfen/anmeldung';
 import { HINKEL_LOGO, LT, LT_CSS } from '../basis/marke';
 import { Buehne } from '../thema/buehne';
-import { kopfGespeichert, modusKlassen } from '../thema/modus';
+import { modusKlassen } from '../thema/modus';
 import { PinSetupForm } from '../basis/pinForm';
 
 export type LoginScreenProps = {
@@ -43,7 +43,7 @@ export type LoginScreenProps = {
 export function LoginScreen({ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }: LoginScreenProps) {
   const isAdminLogin = tempUsername.trim().toLowerCase() === 'admin';
   return (
-    <div className={`lt-root${modusKlassen(kopfGespeichert())}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
+    <div className={`lt-root${modusKlassen('markise') /* Anmeldung immer mit gelber Markise (Version 196), danach die Ähren als Wow-Effekt */}`} style={{ minHeight: '100vh', backgroundColor: LT.cream, color: LT.ink, display: 'flex', flexDirection: 'column', alignItems: 'center', zoom: bigFont ? 1.15 : 1 }}>
       <style>{LT_CSS}</style>
       <div style={{ width: '100%' }}>
         <div className="lt-awning" style={{ backgroundColor: LT.yellow, backgroundImage: 'linear-gradient(180deg, rgba(75,42,20,0.16) 0px, rgba(75,42,20,0) 22px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
