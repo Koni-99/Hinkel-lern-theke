@@ -100,9 +100,9 @@ ${B} .lt-hdr-logo::before{content:"";position:absolute;inset:-9px -20px;z-index:
 /* v190: weicher Schatten ohne Versatz (vorher stand die kleine Schrift doppelt, etwas tiefer) */
 ${B} .lt-logo{filter:drop-shadow(0 1px 2px rgba(75,42,20,.28)) !important}
 /* v191: Tablet und PC: Ähren-Kopf groß, damit man die Ähren und das Licht richtig sieht */
-@media (min-width:561px){${B} .lt-awning:not(.lt-awning-sm),${M} .lt-awning:not(.lt-awning-sm){height:250px}${B} .lt-awning:not(.lt-awning-sm) .lt-logo,${M} .lt-awning:not(.lt-awning-sm) .lt-logo{height:128px}${B} .lt-awning.lt-awning-sm,${M} .lt-awning.lt-awning-sm{height:130px}${B} .lt-awning-sm .lt-logo,${M} .lt-awning-sm .lt-logo{height:76px}${B} .lt-b-ebene,${M} .lt-b-ebene{zoom:1.25}}
+@media (min-width:561px){${B} .lt-awning:not(.lt-awning-sm),${M} .lt-awning:not(.lt-awning-sm){height:300px}${B} .lt-awning:not(.lt-awning-sm) .lt-logo,${M} .lt-awning:not(.lt-awning-sm) .lt-logo{height:150px}${B} .lt-awning.lt-awning-sm,${M} .lt-awning.lt-awning-sm{height:150px}${B} .lt-awning-sm .lt-logo,${M} .lt-awning-sm .lt-logo{height:86px}${B} .lt-b-ebene,${M} .lt-b-ebene{zoom:1.45}}
 /* v191: Menüleiste links am PC etwas tiefer, damit sie nicht in den großen Kopf ragt */
-@media (min-width:1051px) and (min-height:640px){html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-aehren:not([class*="lt-th-"])>.lt-bottomnav,html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-mitaehren:not([class*="lt-th-"])>.lt-bottomnav{top:calc(50% + 70px);max-height:calc(100% - 160px)}}
+@media (min-width:1051px) and (min-height:640px){html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-aehren:not([class*="lt-th-"])>.lt-bottomnav,html:not([class*="lt-pt_mk"]) .lt-shell.lt-kopf-mitaehren:not([class*="lt-th-"])>.lt-bottomnav{top:calc(50% + 90px);max-height:calc(100% - 200px)}}
 /* v190: goldener Logo-Knopf am Handy kleiner */
 @media (max-width:560px){${B} .lt-awning:not(.lt-awning-sm) .lt-logo{height:100px}${B} .lt-hdr-logo::before{inset:-7px -14px;border-radius:20px}}
 html.lt-noanim .lt-b-aehre,html.lt-noanim .lt-b-staub{animation:none}
