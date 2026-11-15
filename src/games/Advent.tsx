@@ -1,6 +1,8 @@
 // ═══ Adventskalender ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useEffect, useRef } from 'react';
+import { quizVorherText } from '../hilfen/vorlesen';
+import { hoerTexte, stimmeKey } from '../hilfen/stimme';
 import { dc } from '../daten/data';
 import { shuffleArray } from '../hilfen/allgemein';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
@@ -143,7 +145,7 @@ export function AdventView({ questions, done, onAnswer, preview = false }: { que
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <h2 style={{ margin: 0, fontSize: '23px', lineHeight: 1.4, fontWeight: 700 }}>{q.question}</h2>
-              <SpeakButton small text={chosen !== null || review ? `Richtig ist: ${rightText}. ${q.explanation || ''}` : `${q.question} ${opts.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />
+              <SpeakButton small {...(chosen !== null || review ? { hoerKey: stimmeKey(hoerTexte(q).antwort) } : { natuerlich: true })} text={chosen !== null || review ? `Richtig ist: ${rightText}. ${q.explanation || ''}` : quizVorherText(q.question, opts.map((o) => o.text))} />
             </div>
             {review ? (
               <div className="lt-expl" style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: TH.tintSage, fontSize: '18px', lineHeight: 1.5 }}>

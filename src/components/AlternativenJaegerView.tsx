@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { altVorherText } from '../hilfen/vorlesen';
 import { dc, ALT_MAP } from '../daten/data';
 import { focusShuffle, noteResult } from '../focus';
 import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';
@@ -189,12 +190,23 @@ function buildScenarios(): Scenario[] {
     customerWish: HAND_WISH[missing] || WISHES[i % WISHES.length](missing),
     options: [
       ...right.map(n => ({ text: `${n} empfehlen`, isBest: true, explanation: `Richtig! ${okText}` })),
-      ...wrong.map(w => ({ text: `${w.name} empfehlen`, isBest: false, explanation: `${w.name} ist ${me.breadType && w.breadType ? `ein ${typeText(w)}, ganz anders als ${missing}` : `nicht die beste Wahl`}. ${okText}` })),
+      ...wrong.map(w => ({ text: `${w.name} empfehlen`, isBest: false, explanation: `${w.name} ist ${me.breadType && w.breadType ? `ein ${typeText(w)}. Das ist ganz anders als ${missing}` : `nicht die beste Wahl`}. ${okText}` })),
     ],
   };
 });
 
   return [...HAND_KEEP, ...MAP_SCENARIOS];
+}
+
+/** Alle Sätze, die im Alternativen-Jäger vorgelesen werden können (für tools/stimme/saetze.mjs) */
+export function alternativenTexte(): string[] {
+  const t: string[] = [];
+  const sc = buildScenarios();
+  sc.forEach((s) => { t.push(altVorherText(s.missing, s.customerWish, [])); s.options.forEach((o) => t.push(o.explanation)); });
+  [1, 2, 3, 4].forEach((i) => t.push(`${i}.`));
+  SHOP_PRODUCTS.forEach((p) => { t.push(`${p.name} empfehlen.`, `${p.name} ist nicht die beste Wahl.`, `Das ist ganz anders als ${p.name}.`); if (p.breadType) t.push(`${p.name} ist ein ${typeText(p)}.`); });
+  HAND_SCENARIOS.forEach((s) => s.options.forEach((o) => t.push(`${o.text}.`, o.explanation)));
+  return t;
 }
 
 export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKnown }: { onSaveScore: (score: number, category: string) => void; onLearn?: OnLearn; known?: KnownMap; onKnown?: OnKnown }) {
@@ -341,7 +353,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
               <div style={{ alignSelf: 'flex-start', padding: '8px 14px', borderRadius: '12px', backgroundColor: TH.tintPeach, color: TH.red, fontSize: '17px', fontWeight: 700 }}>Ausverkauft: {scen.missing}</div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ fontFamily: TH.serif, fontSize: '28px', lineHeight: 1.3 }}>{scen.customerWish}</div>
-                <SpeakButton small text={isAnswered ? `${selectedOpt !== null && selectedOpt >= 0 ? scen.options[selectedOpt].explanation : (scen.options.find(o => o.isBest)?.explanation || '')}` : `${scen.missing} ist ausverkauft. Der Kunde sagt: ${scen.customerWish} ${scen.options.map((o, i) => `${i + 1}: ${o.text}`).join('. ')}`} />
+                <SpeakButton small natuerlich text={isAnswered ? `${selectedOpt !== null && selectedOpt >= 0 ? scen.options[selectedOpt].explanation : (scen.options.find(o => o.isBest)?.explanation || '')}` : altVorherText(scen.missing, scen.customerWish, scen.options.map((o) => o.text))} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {scen.options.map((opt, idx) => {

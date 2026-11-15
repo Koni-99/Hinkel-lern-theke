@@ -40,3 +40,8 @@ export const allergenVorher = (test: ATest, mode: 'safe' | 'contains', options: 
 export const allergenNachher = (test: ATest, mode: 'safe' | 'contains', answer: Prod, options: Prod[]) =>
   (mode === 'safe' ? `${answer.name} enthält laut Liste ${test.kein}, die anderen schon.` : `${answer.name} enthält ${test.label}, davon musst du abraten.`)
   + ' ' + options.map((o) => `${o.name}: ${(o.allergens || []).join(', ')}`).join('. ');
+
+/** Quiz und Adventskalender vor der Antwort: Frage, dann „A. …“, „B. …“ (Buchstabe als eigener Satz, damit die Reihenfolge egal ist) */
+export const quizVorherText = (frage: string, optionen: string[]) => `${frage} ${optionen.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}.`).join(' ')}`;
+/** Alternativen-Jäger vor der Antwort */
+export const altVorherText = (fehlt: string, wunsch: string, optionen: string[]) => `${fehlt} ist ausverkauft. Der Kunde sagt: ${wunsch} ${optionen.map((o, i) => `${i + 1}. ${o}.`).join(' ')}`;

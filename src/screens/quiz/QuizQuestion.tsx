@@ -1,6 +1,8 @@
 // ═══ Quiz: eine Frage ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
+import { quizVorherText } from '../../hilfen/vorlesen';
+import { hoerTexte, stimmeKey } from '../../hilfen/stimme';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getRightAnswerText } from '../../hilfen/allgemein';
@@ -101,7 +103,7 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
         )}
         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <h2 className="lt-frage" style={{ margin: 0, flex: '1 1 240px', minWidth: 0, fontFamily: LT.serif, fontSize: '25px', lineHeight: 1.22, color: LT.ink, overflowWrap: 'break-word', textWrap: 'balance' as any }}>{currentQ.question}</h2>
-          <SpeakButton small text={isAnswered && !examSim ? `Richtig ist: ${getRightAnswerText(currentQ)}. ${currentQ.explanation || ''}` : `${currentQ.question} ${currentQ.options.map((o: string, i: number) => `${String.fromCharCode(65 + i)}: ${o}`).join('. ')}`} />
+          <SpeakButton small {...(isAnswered && !examSim ? { hoerKey: stimmeKey(hoerTexte(currentQ).antwort) } : { natuerlich: true })} text={isAnswered && !examSim ? `Richtig ist: ${getRightAnswerText(currentQ)}. ${currentQ.explanation || ''}` : quizVorherText(currentQ.question, currentQ.options)} />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {currentIndex === 0 && !isAnswered && !isExamMode && !examSim && !isAdmin && !doubleOn && (Number(myProg._jokersDouble) || 0) > 0 && (

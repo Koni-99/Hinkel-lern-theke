@@ -18,7 +18,7 @@ const args = process.argv.slice(2);
 
 const tmp = path.join(ROOT, 'node_modules', `.lt-saetze-${process.pid}`);
 execFileSync(path.join(ROOT, 'node_modules/.bin/tsc'), [
-  'src/hilfen/vorlesen.ts', 'src/games/allergenDaten.ts', 'src/components/karteikarten/daten.tsx',
+  'src/hilfen/vorlesen.ts', 'src/games/allergenDaten.ts', 'src/components/karteikarten/daten.tsx', 'src/daten/questions.ts', 'src/components/AlternativenJaegerView.tsx',
   '--ignoreConfig', '--outDir', tmp, '--module', 'commonjs', '--target', 'es2020', '--skipLibCheck', '--esModuleInterop', '--jsx', 'react-jsx', '--rootDir', 'src',
 ], { cwd: ROOT, stdio: 'inherit' });
 const req = createRequire(import.meta.url);
@@ -26,6 +26,8 @@ const V = req(path.join(tmp, 'hilfen/vorlesen.js'));
 const A = req(path.join(tmp, 'games/allergenDaten.js'));
 const K = req(path.join(tmp, 'components/karteikarten/daten.js'));
 const { SHOP_PRODUCTS } = req(path.join(tmp, 'daten/shopProducts.js'));
+const Q = req(path.join(tmp, 'daten/questions.js'));
+const ALT = req(path.join(tmp, 'components/AlternativenJaegerView.js'));
 rmSync(tmp, { recursive: true, force: true });
 
 const saetze = new Map(); // code → Satz
@@ -49,6 +51,10 @@ for (const t of A.ALLERGEN_TESTS) {
   }
   [...withIt, ...without].forEach((p) => { [1, 2, 3, 4].forEach((i) => dazu(`${i}: ${p.name}`)); dazu(`${p.name}: ${p.allergens.join(', ')}`); });
 }
+// Quiz und Adventskalender vor der Antwort: Frage, Buchstaben, Antwort-Möglichkeiten
+for (const q of [...(Q.questions || []), ...(Q.examQuestions || [])]) dazu(V.quizVorherText(q.question, q.options));
+// Alternativen-Jäger (mehrmals, weil die falschen Antworten zufällig gewählt werden)
+for (let i = 0; i < 20; i++) ALT.alternativenTexte().forEach(dazu);
 const zeichen = [...saetze.values()].reduce((a, s) => a + s.length, 0);
 console.log(`${saetze.size} Sätze, ${zeichen} Zeichen (Stimme ${V.VORLESE_STIMME})`);
 if (args.includes('--zaehlen')) process.exit(0);
