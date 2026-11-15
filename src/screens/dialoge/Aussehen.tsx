@@ -45,7 +45,7 @@ export function Aussehen({ kopf, setKopf, schliessen }: AussehenProps) {
         {ueber('Kopf der Seite')}
         <Wahl an={kopf === 'markise'} titel="Markise" text="Gelbe Markise, zeigt auf Wunsch das Wetter." vorschau={fl('gelb')} onClick={() => setKopf('markise')} />
         <Wahl an={kopf === 'mitaehren'} titel="Markise mit Ähren" text="Markise und Wetter, dazu goldene Ähren." vorschau={fl('gelb', aehren('#A8741A'))} onClick={() => setKopf('mitaehren')} />
-        <Wahl an={kopf === 'aehren'} titel="Goldene Ähren" text="Dunkle Bühne mit leuchtenden Ähren." vorschau={fl('buehne', aehren('#EAB308'))} onClick={() => setKopf('aehren')} />
+        <Wahl an={kopf === 'aehren'} titel="Goldene Ähren" text="Dunkle Bühne mit leuchtenden Ähren (Standard)." vorschau={fl('buehne', aehren('#EAB308'))} onClick={() => setKopf('aehren')} />
         <button onClick={schliessen} style={{ marginTop: '6px', minHeight: '54px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '18px', fontWeight: 800, cursor: 'pointer' }}>Fertig</button>
       </div>
     </div>

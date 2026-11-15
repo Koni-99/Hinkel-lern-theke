@@ -173,9 +173,12 @@ async function offlineTests() {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     const wurzel = () => d.page.evaluate(() => ({ root: document.querySelector('.lt-root')?.className || '', html: document.documentElement.className, bg: getComputedStyle(document.body).backgroundColor }));
     let w = await wurzel();
-    ok('Aussehen: Standard ist hell mit Markise', !/lt-dark|lt-kopf-/.test(w.root) && !/lt-nacht/.test(w.html), w.root);
+    ok('Aussehen: Standard ist hell mit Goldenen Ähren', !/lt-dark/.test(w.root) && /lt-kopf-aehren/.test(w.root) && !/lt-nacht/.test(w.html), w.root);
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'Aussehen' }).first()); await d.page.waitForTimeout(300);
+    await click(d.page.locator('[aria-label="Aussehen"] button', { hasText: /^Markise\s*Gelbe/ }).first()); await d.page.waitForTimeout(200);
+    const markise = (await wurzel()).root;
+    ok('Aussehen: Kopf „Markise“ wählbar', !/lt-kopf-/.test(markise), markise);
     await click(d.page.locator('[aria-label="Aussehen"] button', { hasText: /^Goldene Ähren/ }).first()); await d.page.waitForTimeout(200);
     w = await wurzel();
     const buehne = await d.page.evaluate(() => { const b = document.querySelector('.lt-awning .lt-buehne'); return b ? getComputedStyle(b).display : 'fehlt'; });
