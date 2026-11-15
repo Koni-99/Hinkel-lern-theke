@@ -114,10 +114,10 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     group: 'Kuchen',
     price: '2,90 €',
     description:
-      'Unser Bratapfelkuchen vereint alles, was man an herbstlichem und winterlichem Gebäck liebt. Saftige Apfelstücke, aromatisch abgeschmeckt mit Zimt und einem Hauch Rum, treffen auf einen buttrigen Rührteig. Dazu kommen feines Marzipan und gehackte Mandeln, die dem Kuchen eine besonders weiche, aber zugleich leicht nussige Note verleihen. Ein runder, vollmundiger Geschmack.',
-    shortIngredients: 'Rührteig mit Äpfeln, Marzipan und Mandeln, mit Zimt und einem Hauch Rum',
+      'Unser Bratapfelkuchen vereint alles, was man an herbstlichem und winterlichem Gebäck liebt. Saftige Apfelstücke, aromatisch abgeschmeckt mit Zimt, treffen auf einen buttrigen Rührteig. Dazu kommen feines Marzipan und gehackte Mandeln, die dem Kuchen eine besonders weiche, aber zugleich leicht nussige Note verleihen. Ein runder, vollmundiger Geschmack.',
+    shortIngredients: 'Rührteig mit Äpfeln, Marzipan und Mandeln, mit Zimt',
     fullIngredients:
-      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Zucker, BUTTER, VOLLEI, MANDELN, WEIZENSTÄRKE, Wasser, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, EIGELB, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Rum 38% vol., Salz',
+      'Apfel (Apfel, Wasser, Zitronensäure, Ascorbinsäure), WEIZENMEHL, Zucker, BUTTER, VOLLEI, MANDELN, WEIZENSTÄRKE, Wasser, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), VOLLMILCHPULVER, EIGELB, Backpulver (Diphosphate, Natriumcarbonat, Calciumcarbonat, Maisstärke), Zimt, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {

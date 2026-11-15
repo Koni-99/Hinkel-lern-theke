@@ -264,7 +264,8 @@ async function offlineTests() {
       const frage = (await d.page.locator('.lt-frage').first().innerText()).trim();
       const ziel = richtig.get(frage);
       const texte = await opts.allInnerTexts();
-      const idx = ziel ? texte.findIndex((t) => t.replace(/^[A-D]\s*/, '').trim() === String(ziel).trim() || t.includes(String(ziel))) : -1;
+      const genau = ziel ? texte.findIndex((t) => t.replace(/^[A-D]\s*/, '').trim() === String(ziel).trim()) : -1;
+      const idx = genau >= 0 ? genau : ziel ? texte.findIndex((t) => t.includes(String(ziel))) : -1;
       await click(opts.nth(idx >= 0 ? idx : 0)); await settle(d.page, 250); beantwortet++;
       lauf = (await d.page.locator('.lt-qcard.lt-ans-ok').count()) ? lauf + 1 : 0;
       const next = d.page.locator('button.lt-sticky-next:visible');
@@ -429,6 +430,8 @@ async function offlineTests() {
       await click(schalter); await settle(d.page, 300);
       await click(d.page.getByRole('button', { name: 'Ersten Kunden bedienen' })); await settle(d.page, 1200);
       const zu = d.page.locator('button.lt-hoer-zu');
+      // Beginnt das Gespräch nur mit einer Beschreibung, gibt es noch nichts zu hören: erst antworten
+      for (let k = 0; k < 4 && !(await zu.count()); k++) { await click(d.page.locator('main button', { has: d.page.locator('span', { hasText: /^A$/ }) }).first()); await settle(d.page, 2200); }
       const gesagt = await d.page.evaluate(() => window.__gesagt.length);
       ok('Zuhören: Kunde spricht, Satz verdeckt', (await zu.count()) > 0 && gesagt > 0, `verdeckt ${await zu.count()}, gesprochen ${gesagt}`);
       if (await zu.count()) { await click(zu.first()); await settle(d.page, 300); }
