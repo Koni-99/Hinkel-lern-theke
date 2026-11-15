@@ -548,6 +548,10 @@ async function offlineTests() {
     const fehlt = [];
     for (const sp of P) for (const t of [V.steckbriefText(sp), V.bilderText(sp)]) V.saetze(t).forEach((x) => { if (!idx.has(V.satzKey(x))) fehlt.push(x); });
     ok('Natürliche Stimme: Steckbrief und Bilderquiz, alle Sätze vorhanden', fehlt.length === 0, fehlt.slice(0, 2).join(' | '));
+    const Qz = kompiliere(['src/daten/questions.ts']).daten_questions;
+    const fehltQ = [];
+    [...(Qz.questions || []), ...(Qz.examQuestions || [])].forEach((q) => V.saetze(V.quizVorherText(q.question, q.options)).forEach((x) => { if (!idx.has(V.satzKey(x))) fehltQ.push(x); }));
+    ok('Natürliche Stimme: Quiz vorlesen (Frage und Antwort-Möglichkeiten), alle Sätze vorhanden', fehltQ.length === 0, `${fehltQ.length} fehlen: ${fehltQ.slice(0, 2).join(' | ')}`);
     ok('Vorlesen: Sätze ohne Satzzeichen am Ende', V.saetze('Das ist Feinbrot. Warengruppe: Brot.').join('|') === 'Das ist Feinbrot|Warengruppe: Brot');
   }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
