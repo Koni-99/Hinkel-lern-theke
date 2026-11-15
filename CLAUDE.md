@@ -125,6 +125,8 @@ Mehr zum Aufbau: `README.md`.
 
 - 209: **Schnellere Updates**: Hauptdatei 1,1 MB → 528 KB, Quizfragen (`fragen-*.js`) und React (`react-*.js`) eigene Dateien (`manualChunks` in `vite.config.ts`). Service Worker übernimmt beim Update unveränderte `assets/`-Dateien aus dem alten Speicher (`caches.match` statt `addAll`), lädt nur Neues (geprüft: vorher 29 Dateien, jetzt 0 unveränderte). Logo/Küken sind nur 34 KB, nicht ausgelagert
 
+- 210: Quizfragen durchgesehen (958, Abgleich mit Produktdaten: Preise/Mehl/Schnitt/Vegan stimmen). Behoben: Roggenstange-Allergene (jetzt Gluten (Weizen, Roggen)), Urlaubsformular-Antworten verrieten die Lösung („Er“/„Es“), Tippfehler („as“, „gleichmässig“, Komma Sauerteig-Einwand). Offene Vorschläge beim Nutzer: siehe Antwort vom 15.11. (Torte/Getränke in Prüfungsfragen, belegte Brötchen #32, Stollen-Leitsätze #449, Vesperstange-Alternative #3596 mehrdeutig, Spaß-Antworten #29/#441, Kleines Schwarzwälder → Sternchen #4004)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - Natürliche Stimme für Hör-Lernen: App-Seite fertig (spielt `public/stimme/<code>.mp3`, sonst Handy-Stimme; Erzeuger `tools/stimme/erzeugen.mjs`). Pausiert: Piper-Stimmen gefielen nicht (Thorsten = beste Qualität, Stimme nicht gemocht), Google braucht hinterlegte Karte + Schlüssel (Network secret `texttospeech.googleapis.com`, Header `X-Goog-Api-Key`). Nutzer will beste Qualität → später Google.
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
