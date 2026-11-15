@@ -352,7 +352,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
         </div>
         {/* Kassenbon */}
         {bon && (
-          <div key={bon.k} className="lt-shopbon" role="status">
+          <div key={bon.k} className="lt-shopbon lt-papier" role="status">
             <div style={{ textAlign: 'center', fontWeight: 800, letterSpacing: '2px' }}>BÄCKEREI HINKEL</div>
             <div style={{ textAlign: 'center', fontSize: '12px' }}>Trinkgeld-Laden · Kassenbon</div>
             <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }} />

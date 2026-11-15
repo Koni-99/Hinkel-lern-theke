@@ -187,6 +187,8 @@ async function offlineTests() {
     await settle(d.page); await d.page.waitForTimeout(800);
     w = await wurzel();
     ok('Aussehen: „Backstube bei Nacht“ macht die App dunkel, Kopf bleibt', /lt-dark/.test(w.root) && /lt-nacht/.test(w.html) && /lt-kopf-mitaehren/.test(w.root) && w.bg === 'rgb(20, 16, 12)', JSON.stringify(w));
+    const papier = await d.page.evaluate(() => { const m = document.querySelector('.lt-menu.lt-papier'); return m ? getComputedStyle(m).backgroundColor : 'fehlt'; });
+    ok('Aussehen: Tageskarte bleibt nachts helles Papier', /rgb\(25[0-5], 25[0-5], 2[34]\d\)/.test(papier), papier);
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }

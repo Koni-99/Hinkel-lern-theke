@@ -19,6 +19,15 @@ html.lt-nacht,html.lt-nacht body{background:#14100C}
 .lt-dark .lt-h1{font-weight:700;background:linear-gradient(180deg,#FFF8E7 20%,#FDE68A 60%,#D9822B 115%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none !important;filter:drop-shadow(0 10px 26px rgba(234,179,8,.28))}
 /* Fehler aus Version 179: Zeichen und Name in der goldenen Begrüßung wurden durchsichtig (leerer Kreis) */
 .lt-dark .lt-h1 :where(.lt-frame-bronze,.lt-frame-silver,.lt-frame-gold,[class*="lt-emo"],[class*="lt-fx-"]){-webkit-text-fill-color:initial}
+/* Papier (Version 189): Kassenbons, Lern-Bon, Bestenliste und Tageskarte bleiben auch nachts helles Papier mit dunkler Schrift */
+.lt-nacht .lt-papier{--papier: ;--auf-hell: }
+.lt-nacht .lt-papier *{--auf-hell: }
+.lt-nacht .lt-papier,.lt-nacht .lt-papier .lt-rc-mono{color:#2A1A0E}
+.lt-nacht .lt-menu.lt-papier{background:#FFFDF6 !important;box-shadow:0 0 0 1px rgba(253,230,138,.25),0 20px 40px -20px #000 !important}
+.lt-nacht .lt-papier .lt-menu-row{color:#2A1A0E}
+.lt-nacht .lt-papier .lt-menu-row+.lt-menu-row{border-top-color:rgba(75,42,20,.1)}
+.lt-dark .lt-card.lt-tief.lt-papier{-webkit-backdrop-filter:none;backdrop-filter:none}
+.lt-nacht .lt-heute-balken{background-color:#FDE68A !important;box-shadow:0 0 14px rgba(234,179,8,.5) !important}
 .lt-dark ::selection{background:#EAB308;color:#14100C}
 
 /* Glas-Karten mit feinem Goldrand und warmem Lichtschein */
@@ -49,7 +58,8 @@ html.lt-nacht,html.lt-nacht body{background:#14100C}
 
 /* Menü: dunkles Glas */
 .lt-dark .lt-bottomnav{background:rgba(27,21,15,.78) !important;border:1px solid rgba(253,230,138,.18);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);box-shadow:0 22px 44px -16px #000,0 0 40px -18px rgba(234,179,8,.5) !important}
-.lt-dark .lt-nav-ind{background-image:linear-gradient(180deg,#FFDD6B,#DFA008);box-shadow:0 0 22px -4px rgba(234,179,8,.8)}
+/* Goldener Knopf unten: in beiden Designs (Wunsch des Nutzers, Version 189) */
+.lt-root:not([class*="lt-th-"]) .lt-nav-ind{background-image:linear-gradient(180deg,#FFDD6B,#DFA008);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 0 22px -4px rgba(234,179,8,.8)}
 
 /* Glanzlicht beim Kippen (PC) */
 .lt-dark .lt-glare{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;opacity:0;transition:opacity .3s;background:radial-gradient(520px circle at var(--gx,50%) var(--gy,0%),rgba(255,236,190,.2),rgba(255,236,190,.05) 35%,transparent 60%)}

@@ -292,7 +292,7 @@ export function ScoreboardView({
         </div>
 
         {/* ── Rechte Seite: der Bon ── */}
-        <div className="sb-bon" style={{ transform: "rotate(1.5deg)", filter: "drop-shadow(0 18px 24px rgba(75,42,20,0.22))" }}>
+        <div className="sb-bon lt-papier" style={{ transform: "rotate(1.5deg)", filter: "drop-shadow(0 18px 24px rgba(75,42,20,0.22))" }}>
           <div aria-hidden="true" style={{ height: "14px", backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(225deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: "20px 14px", backgroundRepeat: "repeat-x", backgroundPosition: "bottom left" }} />
           <div key={activeMode} className="sb-print" style={{ backgroundColor: dc('#FFFFFF'), padding: "22px 26px 26px", fontFamily: C.mono, lineHeight: 1.65 }}>
             <div style={{ textAlign: "center", fontWeight: 700, fontSize: "1.2em", letterSpacing: "2px" }}>BÄCKEREI HINKEL</div>

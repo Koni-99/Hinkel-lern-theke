@@ -104,7 +104,7 @@ export function GameIntro({ title, text, hint, startLabel, onStart }: { title: s
 export function GameResult({ title, big, text, reward, againLabel, onAgain, celebrate, stars }: { title: string; big: string; text: string; reward?: string | null; againLabel: string; onAgain: () => void; stars?: number; celebrate?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-    <div className="lt-receipt" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', padding: '26px 24px 44px', position: 'relative', overflow: 'hidden' }}>
+    <div className="lt-receipt lt-papier" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', textAlign: 'center', padding: '26px 24px 44px', position: 'relative', overflow: 'hidden' }}>
       <PretzelRain active={!!celebrate} />
       <ReceiptHead />
       <div style={{ fontSize: '16px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '2px' }}>{title}</div>

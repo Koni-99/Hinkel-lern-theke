@@ -11,8 +11,8 @@ export type Kontext = '' | 'hell' | 'tief';
 const FARB_RE = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-zA-Z])|rgba?\([^()]*\)/g;
 /** Seiten-Hintergründe: werden zum tiefsten Ton */
 const SEITE = new Set(['255,251,242', '250,246,240', '255,248,234']);
-/** CSS-Regeln der gekauften Sorten und Markisen bleiben, wie sie sind */
-export const PAPIER_RE = /(?:^|[\s.])(?:lt-th-|lt-mk-|lt-pt_mk)/;
+/** CSS-Regeln der gekauften Sorten und Markisen bleiben, wie sie sind. Ebenso alles „Papier“ (Kassenbons, Lern-Bon, Tageskarte, Version 189) */
+export const PAPIER_RE = /(?:^|[\s.])(?:lt-th-|lt-mk-|lt-pt_mk|lt-receipt|lt-rc-|lt-bon(?:-|(?![\w-]))|lt-menu(?:-row|(?![\w-]))|lt-shopbon|lt-papier)/;
 
 function lese(s: string): Farbe | null {
   s = s.trim().toLowerCase();
@@ -135,7 +135,8 @@ export function themaProps(props: any): any {
     if (typeof v !== 'string' || !FLAECHE.has(key)) continue;
     const r = flaecheWert(v);
     if (r.k) k = r.k;
-    if (r.c !== v) { setz(key, r.c); if (r.k === 'tief' && key !== 'backgroundImage') rand = true; }
+    // Auf Papier (.lt-papier setzt --papier) bleibt die Original-Farbe, sonst gilt die dunkle
+    if (r.c !== v) { setz(`--pf-${key}`, `var(--papier) ${v}`); setz(key, `var(--pf-${key}, ${r.c})`); if (r.k === 'tief' && key !== 'backgroundImage') rand = true; }
   }
   // Umgerechnete Flächen mit runden Ecken bekommen einen feinen Goldrand, damit sie sich vom Grund abheben
   if (rand && st.borderRadius && st.borderRadius !== '50%' && !st.border && !st.borderBottom && !st.borderTop) {

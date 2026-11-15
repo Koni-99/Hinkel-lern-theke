@@ -273,7 +273,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           };
           return (
             <>
-              <div className="lt-menu lt-tiles">
+              <div className="lt-menu lt-tiles lt-papier">
                 <div className="lt-rc-mono" aria-hidden="true" style={{ textAlign: 'center', fontSize: '13px', letterSpacing: '3px', color: LT.muted, padding: '4px 0 6px' }}>~ TAGESKARTE ~</div>
                 {menuItems.filter(t => t.key !== 'fakt' && (t as any).prog !== 1).map(t => (
                   <button key={t.key} onClick={t.action} className="lt-menu-row lt-tile">
@@ -496,7 +496,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               </summary>
               <div style={{ padding: '0 12px 18px' }}>
             <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-              <div className="lt-bon" style={{ position: 'relative', width: '100%', maxWidth: '380px', transform: 'rotate(-1.2deg)', filter: 'drop-shadow(0 18px 24px rgba(75,42,20,0.22))' }}>
+              <div className="lt-bon lt-papier" style={{ position: 'relative', width: '100%', maxWidth: '380px', transform: 'rotate(-1.2deg)', filter: 'drop-shadow(0 18px 24px rgba(75,42,20,0.22))' }}>
                 <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(225deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', backgroundPosition: 'bottom left' }} />
                 <div style={{ position: 'relative', backgroundColor: dc('#FFFFFF'), padding: '20px 22px 24px', fontFamily: "'Courier Prime', 'Courier New', monospace", lineHeight: 1.55, color: LT.ink, fontSize: '15px' }}>
                   <div style={{ textAlign: 'center', fontWeight: 700, fontSize: '1.2em', letterSpacing: '2px' }}>BÄCKEREI HINKEL</div>

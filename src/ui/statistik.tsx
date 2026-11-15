@@ -6,6 +6,9 @@ import { TH, cardStyle } from './basis';
 import { scoreDay } from './kalender';
 
 // ───────────────────────── Meine Statistik ─────────────────────────
+/** Kurze Zahl für die Balken, damit nichts übereinander liegt: 27370 → 27k, 4357 → 4,4k, 575 → 575 */
+const kurzZahl = (n: number) => n >= 10000 ? `${Math.round(n / 1000)}k` : n >= 1000 ? `${(n / 1000).toFixed(1).replace('.', ',').replace(',0', '')}k` : String(n);
+
 export type StatQ = { id: number; category: string; subgroup?: string };
 
 export const pctColor = (p: number) => (p >= 80 ? '#2F7D4A' : p >= 60 ? '#8DB33A' : p >= 40 ? '#E9A23B' : '#D9572B');
@@ -143,8 +146,8 @@ export function StatistikView({ name, avatar, avatarClass, levelTitle, levelIcon
             const isToday = i === days.length - 1;
             return (
               <div key={d.k} title={`${d.pts} Punkte`} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', minWidth: 0 }}>
-                {d.pts > 0 && <span style={{ fontSize: '11px', fontWeight: 700, color: TH.muted }}>{d.pts}</span>}
-                <div className="lt-col-grow" style={{ animationDelay: `${i * 0.04}s`, width: '100%', maxWidth: '34px', height: `${h}px`, borderRadius: '8px 8px 4px 4px', backgroundColor: d.pts > 0 ? (isToday ? '#1F140C' : TH.yellow) : TH.line, boxShadow: d.pts > 0 && !isToday ? 'inset 0 -3px 0 rgba(185,138,10,.35)' : 'none' }} />
+                {d.pts > 0 && <span style={{ fontSize: '11px', fontWeight: 700, color: TH.muted, whiteSpace: 'nowrap' }}>{kurzZahl(d.pts)}</span>}
+                <div className={`lt-col-grow${isToday && d.pts > 0 ? ' lt-heute-balken' : ''}`} style={{ animationDelay: `${i * 0.04}s`, width: '100%', maxWidth: '34px', height: `${h}px`, borderRadius: '8px 8px 4px 4px', backgroundColor: d.pts > 0 ? (isToday ? '#1F140C' : TH.yellow) : TH.line, boxShadow: d.pts > 0 && !isToday ? 'inset 0 -3px 0 rgba(185,138,10,.35)' : 'none' }} />
                 <span style={{ fontSize: '12px', fontWeight: isToday ? 800 : 500, color: isToday ? TH.ink : TH.muted }}>{d.label}</span>
                 <span aria-hidden="true" style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: learned.has(d.k) ? TH.green : 'transparent' }} />
               </div>
