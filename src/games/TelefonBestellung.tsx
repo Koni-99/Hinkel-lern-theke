@@ -6,11 +6,11 @@ import { useState, useEffect } from 'react';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
 import { scrollToPlay } from '../ui/belohnungen';
 import { LtIcon, ICON } from '../basis/symbole';
-import { canSpeak, speakText, stopSpeaking } from './spielBasis';
+import { canSpeak, sprichKunde, stopSpeaking } from './spielBasis';
 import { neueBestellung, pruefe, istBrot, TAGE, ZEITEN, zeitText, Bestellung, Zettel, Pruefung, STUFEN_RUNDE, gesehenLesen, gesehenMerken, sortiment } from './telefonLogik';
 
 const ANRUFE = STUFEN_RUNDE.length;
-const TEMPO = 1.0; // etwas ruhiger als sonst (1,15), am Telefon versteht man schlechter
+const TEMPO = 0.95; // etwas ruhiger, am Telefon versteht man schlechter
 const STUFE_NAME = { einfach: 'Einfach', mittel: 'Mittel', schwer: 'Schwer', kompliziert: 'Kompliziert' } as const;
 const leer = (): Zettel => ({ name: '', tag: null, zeit: null, mengen: {}, geschnitten: {} });
 
@@ -28,11 +28,12 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
   const alle = sortiment().length;
   useEffect(() => () => { stopSpeaking(); }, []);
 
-  const vorlesen = (x: Bestellung) => speakText(x.text.join(' '), undefined, TEMPO);
+  // Natürliche Stimme: abwechselnd eine Frau und ein Mann am Telefon
+  const vorlesen = (x: Bestellung, n = nr) => sprichKunde(x.text.join(' '), n % 2 === 0 ? 'frau' : 'mann', TEMPO);
   const anruf = (i: number) => {
     const x = neueBestellung(STUFEN_RUNDE[i], gesehen);
     setB(x); setZ(leer()); setGelesen(!stimme); setPruefung([]); setNr(i); setPhase('anruf');
-    if (stimme) window.setTimeout(() => vorlesen(x), 400);
+    if (stimme) window.setTimeout(() => vorlesen(x, i), 400);
     scrollToPlay();
   };
   const start = () => { setPunkte(0); setRunde(0); anruf(0); };

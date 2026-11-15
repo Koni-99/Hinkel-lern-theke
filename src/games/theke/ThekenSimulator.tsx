@@ -6,12 +6,14 @@ import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, ConfettiOverlay } from '../../ui/basis';
 import { ReportLink, ReportContext } from '../../ui/melden';
 import { scrollToPlay } from '../../ui/belohnungen';
-import { OnLearn, LearnHint, SpeakButton, canSpeak, speakText, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
+import { OnLearn, LearnHint, SpeakButton, canSpeak, sprichKunde, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
 import { SimOpt, Conversation, ChatMsg, pick } from './basis';
 import { LtIcon, ICON } from '../../basis/symbole';
 
 /** Was der Kunde laut sagt: Regieanweisungen in Klammern weglassen */
+/** Kundin oder Frau … spricht Frau 4, Kunde oder Herr … spricht Mann 10 */
+const kundenStimme = (p: { name: string; title: string }) => (/^(Frau|Kundin|Die )/.test(p.name) || /^Die /.test(p.title) ? 'frau' as const : 'mann' as const);
 const gesprochen = (t: string) => t.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
 import { buildConversation } from './gespraech';
 
@@ -211,7 +213,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
     if (!hoeren || phase === 'menu' || !canSpeak()) { gesprochenRef.current = messages.length; return; }
     const neu = messages.slice(gesprochenRef.current).filter(m => m.from === 'customer').map(m => gesprochen(m.text)).filter(Boolean);
     gesprochenRef.current = messages.length;
-    if (neu.length) speakText(neu.join(' '));
+    if (neu.length && conv) sprichKunde(neu.join(' '), kundenStimme(conv.persona));
   }, [messages, hoeren, phase]);
 
   const total = conv ? conv.steps.length : 0;
@@ -345,7 +347,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
                 <div style={{ fontSize: '16px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Deine Antwort · {step.topic}</div>
                 {hoeren && canSpeak() ? (
-                  <button type="button" onClick={() => speakText(step.customer.map(gesprochen).filter(Boolean).join(' '))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={ICON.repeat} size={18} />Nochmal hören</button>
+                  <button type="button" onClick={() => sprichKunde(step.customer.map(gesprochen).filter(Boolean).join(' '), kundenStimme(conv.persona))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={ICON.repeat} size={18} />Nochmal hören</button>
                 ) : <SpeakButton small text={`${conv.persona.title} sagt: ${step.customer.map(t => t.replace(/^\(|\)$/g, '')).join(' ')}. Deine Antworten: ${step.options.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />}
               </div>
               {step.options.map((o, i) => (

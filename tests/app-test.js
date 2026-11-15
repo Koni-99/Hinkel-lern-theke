@@ -431,6 +431,7 @@ async function offlineTests() {
     ok('Theken-Simulator: neue Situationen (Abholung, falsche Ware, Saison-Allergene)', fehlt.length === 0, fehlt.join(', '));
     const d = await device({ user: 'Anna' });
     await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
+    let bausteinAbrufe = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) bausteinAbrufe++; });
     await d.page.reload(); await settle(d.page); await clearPopups(d.page);
     await click(nav(d.page).nth(2)); await settle(d.page);
     await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Simulator' }).first()); await settle(d.page, 1200);
@@ -442,7 +443,8 @@ async function offlineTests() {
       const zu = d.page.locator('button.lt-hoer-zu');
       // Beginnt das Gespräch nur mit einer Beschreibung, gibt es noch nichts zu hören: erst antworten
       for (let k = 0; k < 4 && !(await zu.count()); k++) { await click(d.page.locator('main button', { has: d.page.locator('span', { hasText: /^A$/ }) }).first()); await settle(d.page, 2200); }
-      const gesagt = await d.page.evaluate(() => window.__gesagt.length);
+      await settle(d.page, 800);
+      const gesagt = (await d.page.evaluate(() => window.__gesagt.length)) + bausteinAbrufe; // Handy-Stimme oder natürliche Bausteine
       ok('Zuhören: Kunde spricht, Satz verdeckt', (await zu.count()) > 0 && gesagt > 0, `verdeckt ${await zu.count()}, gesprochen ${gesagt}`);
       if (await zu.count()) { await click(zu.first()); await settle(d.page, 300); }
       ok('Zuhören: Antippen zeigt den Satz', (await zu.count()) === 0 && (await d.page.getByRole('button', { name: 'Nochmal hören' }).count()) > 0);
@@ -518,6 +520,24 @@ async function offlineTests() {
     ok('Startseite: „heute gelernt“ aufklappen zeigt alle Namen', ['Claudia', 'Koni', 'Mia', 'Tom'].every((n) => liste.includes(n)), liste.replace(/\n/g, ' ').slice(0, 120) || 'keine Zeile (Tagesformat?)');
     ok('Startseite aufklappen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }
+  // Version 216: natürliche Kundenstimme aus Bausteinen (Theken-Simulator, Telefon): fast jeder Satz ist abgedeckt
+  {
+    const fs = require('fs'), path = require('path');
+    const M = kompiliere(['src/games/theke/gespraech.tsx', 'src/games/telefonLogik.ts', 'src/hilfen/bausteine.ts']);
+    const G = M.games_theke_gespraech, T = M.games_telefonLogik, B = M.hilfen_bausteine;
+    const idx = new Set(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/stimme/teile/index.json'), 'utf8')));
+    const abgedeckt = (text, st) => B.zerlege(text).every((t) => idx.has(B.teilKey(B.KUNDEN_STIMMEN[st], t)));
+    let saetze = 0, ok1 = 0;
+    for (let i = 0; i < 400; i++) {
+      const c = G.buildConversation();
+      for (const s of c.steps) { const t = s.customer.join(' '); if (!B.zerlege(t).length) continue; saetze++; if (abgedeckt(t, i % 2 ? 'frau' : 'mann')) ok1++; }
+    }
+    let anrufe = 0, ok2 = 0;
+    for (let i = 0; i < 300; i++) { const b = T.neueBestellung(T.STUFEN_RUNDE[i % 5], new Set()); anrufe++; if (abgedeckt(b.text.join(' '), i % 2 ? 'frau' : 'mann')) ok2++; }
+    ok('Natürliche Stimme: Theken-Simulator, mind. 97 % der Kundensätze aus Bausteinen', ok1 / saetze >= 0.97, `${ok1} von ${saetze}`);
+    ok('Natürliche Stimme: Telefon-Bestellung, mind. 99 % der Anrufe aus Bausteinen', ok2 / anrufe >= 0.99, `${ok2} von ${anrufe}`);
+    ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
   }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {

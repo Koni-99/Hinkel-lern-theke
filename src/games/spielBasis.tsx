@@ -5,6 +5,7 @@ import { dc } from '../daten/data';
 import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
 import { LtIcon, ICON } from '../basis/symbole';
 import type { ShopProduct } from './BilderQuiz';
+import { zerlege, teilKey, KUNDEN_STIMMEN, KundenStimme } from '../hilfen/bausteine';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */
 export const scrollToCard = () => window.setTimeout(() => {
@@ -68,6 +69,7 @@ if (canSpeak()) {
 }
 
 export function speakText(text: string, onEnd?: () => void, tempo = 1.15) {
+  stopTeile();
   if (!canSpeak()) return;
   const synth = window.speechSynthesis;
   synth.cancel();
@@ -84,7 +86,40 @@ export function speakText(text: string, onEnd?: () => void, tempo = 1.15) {
   synth.speak(u);
 }
 
-export function stopSpeaking() { if (canSpeak()) window.speechSynthesis.cancel(); }
+export function stopSpeaking() { stopTeile(); if (canSpeak()) window.speechSynthesis.cancel(); }
+
+// ───────── Natürliche Kundenstimme aus Bausteinen (Theken-Simulator, Telefon) ─────────
+// Siehe src/hilfen/bausteine.ts. Fehlt ein Baustein oder gibt es kein Internet, liest die Handy-Stimme.
+let teilIndex: Promise<Set<string>> | null = null;
+const ladeTeile = () => teilIndex || (teilIndex = fetch('stimme/teile/index.json').then((r) => (r.ok ? r.json() : [])).then((a: string[]) => new Set(Array.isArray(a) ? a : [])).catch(() => { teilIndex = null; return new Set<string>(); }));
+let teilAudio: HTMLAudioElement | null = null;
+let teilLauf = 0;
+export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause(); } catch {} } }
+/** Liest einen Kundensatz mit natürlicher Stimme (Frau oder Mann) vor, sonst mit der Handy-Stimme */
+export async function sprichKunde(text: string, stimme: KundenStimme, tempo = 1.0, onEnd?: () => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await Promise.race([ladeTeile(), new Promise<Set<string>>((r) => window.setTimeout(() => r(new Set()), 2000))]);
+  if (lauf !== teilLauf) return;
+  const name = KUNDEN_STIMMEN[stimme];
+  const teile = zerlege(text);
+  const keys = teile.map((t) => teilKey(name, t));
+  const handy = (rest: string) => { if (lauf === teilLauf) { speakText(rest, onEnd, tempo * 1.15); } };
+  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { handy(text); return; }
+  const a = teilAudio || (teilAudio = new Audio());
+  let i = 0;
+  const weiter = () => {
+    if (lauf !== teilLauf) return;
+    if (i >= keys.length) { onEnd?.(); return; }
+    const nr = i++;
+    a.onended = () => { window.setTimeout(weiter, 90); };
+    a.onerror = () => handy(teile.slice(nr).join(' '));
+    a.src = `stimme/teile/${keys[nr]}.mp3`;
+    a.playbackRate = tempo;
+    a.play().catch(() => handy(teile.slice(nr).join(' ')));
+  };
+  weiter();
+}
 
 /** Knopf „Vorlesen“ – liest den Text vor, zweiter Tipp stoppt */
 export function SpeakButton({ text, label = 'Vorlesen', small }: { text: string; label?: string; small?: boolean }) {
