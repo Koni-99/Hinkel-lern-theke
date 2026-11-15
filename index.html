@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html lang="de">
   <head>
-    
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Hinkel App" />
-
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#78350f" />
+    <meta name="theme-color" content="#FFC72C" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Lern-Theke" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="shortcut icon" href="favicon.ico" />
-    <title>hinkel-lern-app</title>
+    <link rel="icon" type="image/png" href="favicon-64.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <title>Hinkel Lern-Theke</title>
+    <style>
+      /* Startbild, bis die App geladen ist (React ersetzt es) */
+      html, body { margin: 0; background: #FFFBF2; }
+      .lt-start { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #FFFBF2; font-family: Verdana, system-ui, sans-serif; color: #4B2A14; }
+      .lt-start img { width: 150px; height: auto; animation: ltStartWippen 1.6s ease-in-out infinite; }
+      .lt-start span { font-size: 18px; font-weight: 700; letter-spacing: .04em; }
+      @keyframes ltStartWippen { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+      @media (prefers-reduced-motion: reduce) { .lt-start img { animation: none } }
+    </style>
   </head>
   <body>
     <noscript>JavaScript ist nötig.</noscript>
-    <div id="root"></div>
+    <div id="root"><div class="lt-start" role="status"><img src="start-logo.png" alt="Bäckerei Hinkel" /><span>Lern-Theke</span></div></div>
     <script type="module" src="/src/index.tsx"></script>
-    
   </body>
 </html>

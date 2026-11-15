@@ -1,17 +1,14 @@
 {
-    "short_name": "Hinkel",
-    "name": "Bäckerei Hinkel Lern-App",
-    "description": "Lerne alle Fachbegriffe für die Bäckerei",
-    "icons": [
-      {
-        "src": "favicon.ico",
-        "sizes": "64x64",
-        "type": "image/x-icon"
-      }
-    ],
-    "start_url": ".",
-    "display": "standalone",
-    "theme_color": "#78350f",
-    "background_color": "#fef3c7"
-  }
-  
+  "short_name": "Lern-Theke",
+  "name": "Hinkel Lern-Theke",
+  "description": "Die Lern-App der Bäckerei Hinkel: Produkte, Allergene, Beratung und Hygiene",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#FFC72C",
+  "background_color": "#FFFBF2"
+}

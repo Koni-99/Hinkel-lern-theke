@@ -333,6 +333,10 @@ async function offlineTests() {
       ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', vorschau && fertig, `Vorschau ${vorschau}, übernommen ${fertig}`);
     } catch (e) { ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', false, String(e.message || e).slice(0, 160)); }
     ok('Ausbilder: keine Fehler beim Einlesen', d.errors.length === 0, d.errors[0]);
+    await click(d.page.getByRole('tab', { name: 'Einstellungen' })); await settle(d.page, 500);
+    ok('Ausbilder: Liste „Produkte ohne Foto“ mit Foto-Knöpfen', (await d.page.getByRole('heading', { name: 'Produkte ohne Foto' }).count()) > 0 && (await d.page.locator('input[aria-label^="Foto für "]').count()) > 5);
+    const mf = await d.page.evaluate(async () => { const m = await (await fetch('manifest.json')).json(); const r = await Promise.all(m.icons.map((i) => fetch(i.src).then((x) => x.ok && (x.headers.get('content-type') || '').includes('png')))); return m.icons.length >= 3 && r.every(Boolean); });
+    ok('App-Symbol: Manifest mit Symbolen, alle abrufbar', mf);
     await d.ctx.close();
   }
 }

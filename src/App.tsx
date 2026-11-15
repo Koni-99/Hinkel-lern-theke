@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 181;
+const APP_VERSION: number = 182;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -214,9 +214,38 @@ export default function App() {
     return `${count} Produktfotos importiert, alle Mitarbeiter sehen sie ab jetzt.`;
   };
 
+  // Ein einzelnes Produktfoto hochladen (Ausbilder → Einstellungen → Produkte ohne Foto): verkleinern, speichern, Version erhöhen
+  const uploadProductPhoto = async (name: string, file: File): Promise<string> => {
+    if (!imagesUrl) return 'Es ist keine Firebase-Datenbank eingestellt.';
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const sc = Math.min(1, 900 / Math.max(img.width, img.height));
+          const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+          const ctx = c.getContext('2d'); if (!ctx) return resolve('');
+          ctx.drawImage(img, 0, 0, c.width, c.height); resolve(c.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = () => resolve('');
+        img.src = String(reader.result || '');
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+    if (!dataUrl.startsWith('data:image/')) return 'Das Foto konnte nicht gelesen werden. Bitte ein anderes Bild wählen.';
+    const key = productImageKey(name); const version = Date.now();
+    try {
+      const r1 = await fetch(await withAdminAuth(`${imagesUrl}/images/${key}.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataUrl) });
+      const r2 = r1.ok ? await fetch(await withAdminAuth(`${imagesUrl}/version.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(version) }) : r1;
+      if (!r1.ok || !r2.ok) return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.';
+    } catch { return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.'; }
+    cacheImages(version, { ...productImages, [key]: dataUrl });
+    return `Foto für „${name}“ gespeichert. Alle Mitarbeiter sehen es ab jetzt.`;
+  };
+
   // Offline-Modus: Hinweis anzeigen, wenn keine Verbindung besteht, und melden, wenn alles nachgeschickt wurde
   const [offlineSince, setOfflineSince] = useState<number>(0);
-  const [offlineDismissed, setOfflineDismissed] = useState(false);
   const wasOfflineRef = useRef(false);
   useEffect(() => {
     if (!cloudConnected) {
@@ -225,7 +254,7 @@ export default function App() {
     }
     if (wasOfflineRef.current) {
       wasOfflineRef.current = false;
-      setOfflineSince(0); setOfflineDismissed(false);
+      setOfflineSince(0);
       if (!unsyncedRef.current) { setToast('Wieder online! Alles, was du offline gemacht hast, ist gespeichert.'); window.setTimeout(() => setToast(''), 4000); }
     }
   }, [cloudConnected]);
@@ -2289,6 +2318,11 @@ export default function App() {
           ))}
           <div className="lt-hdr-row">
             <div className="lt-hdr-left" style={{ gap: '6px', alignItems: 'center' }}>
+              {username && offlineSince > 0 && !cloudConnected && (
+              <button type="button" className="lt-offline" onClick={() => setToast('Gerade kein Internet. Deine Punkte werden gespeichert und hochgeladen, sobald du wieder Netz hast.')} aria-label="Offline: Punkte werden gespeichert" title="Offline: Punkte werden gespeichert">
+                <span aria-hidden="true" className="lt-offline-dot" /><span className="lt-offline-txt">Offline</span>
+              </button>
+            )}
               {skyOn && weather && <span className="lt-wxpill" title="Aktuelles Wetter in Düsseldorf"><WxIcon kind={wxKindOf(weather.code, new Date().getHours() + new Date().getMinutes() / 60)} size={26} />{weather.temp}°</span>}
             {!isAdmin && (
               <button onClick={() => setActiveTab('home')} className="lt-kasse lt-pill" title={`Stufe ${shownLevel.no}: ${shownLevel.title}`}>
@@ -2359,13 +2393,6 @@ export default function App() {
         ))}
       </nav>
 
-      {username && offlineSince > 0 && !cloudConnected && !offlineDismissed && (
-        <div role="status" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '10px auto 0', maxWidth: '1100px', width: 'calc(100% - 24px)', padding: '6px 6px 6px 14px', borderRadius: '999px', backgroundColor: dc('#F4EADB'), color: LT.ink, fontSize: '15px', lineHeight: 1.35, boxSizing: 'border-box' }}>
-          <span aria-hidden="true" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: dc('#B54708'), flex: '0 0 auto' }} />
-          <span style={{ flex: 1 }}><b>Offline</b> · Punkte werden gespeichert</span>
-          <button onClick={() => setOfflineDismissed(true)} aria-label="Hinweis schließen" style={{ minWidth: '44px', minHeight: '44px', borderRadius: '999px', border: 'none', backgroundColor: 'transparent', color: LT.muted, fontSize: '18px', cursor: 'pointer' }}>✕</button>
-        </div>
-      )}
       <main key={`${activeTab}-${activeTab === 'quiz' ? (currentQuizCategory === null ? 'o' : selectedLevel === null ? 'l' : quizFinished ? 'r' : 'q') : ''}`} className={`lt-page lt-dir-${tabDirRef.current}`} style={{ position: 'relative', maxWidth: isWidePage ? '1100px' : '760px', width: '92%', marginTop: '22px' }}>
       <Suspense fallback={<div role="status" style={{ padding: '48px 0', textAlign: 'center', color: LT.muted, fontSize: '17px' }}>Wird geladen …</div>}>
 
@@ -2483,6 +2510,8 @@ export default function App() {
             overwriteCloudDataDirectly={overwriteCloudDataDirectly}
             imageCount={Object.keys(productImages).length}
             onImportImages={importImagesFile}
+            productImages={productImages}
+            onUploadPhoto={uploadProductPhoto}
           />
           </Suspense>
         )}

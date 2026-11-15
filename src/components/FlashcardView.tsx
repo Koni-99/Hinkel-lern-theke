@@ -291,7 +291,8 @@ export function FlashcardView({
         @media (max-width: 700px) {
           .fc-overlay { padding: 0 !important; align-items: flex-end !important; }
           .fc-sheet { max-height: 94vh !important; border-radius: 28px 28px 0 0 !important; }
-          .fc-grid { grid-template-columns: 1fr !important; }
+          .fc-grid:not(.lt-foto-raster) { grid-template-columns: 1fr !important; }
+          .lt-foto-raster { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
           .fc-area { grid-template-columns: 1fr !important; }
         }
       `}</style>

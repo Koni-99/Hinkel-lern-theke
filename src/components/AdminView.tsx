@@ -8,6 +8,7 @@ import type { ReportItem } from '../admin/adminHelfer';
 import { KollegenTab, offeneKollegenSachen } from '../admin/KollegenTab';
 import { FragenImport } from '../admin/FragenImport';
 import { ProduktImport } from '../admin/ProduktImport';
+import { FehlendeFotos } from '../admin/FehlendeFotos';
 import { UmfragenVerwaltung } from '../admin/UmfragenVerwaltung';
 
 import { CloudPayload } from '../types';
@@ -42,7 +43,9 @@ export function AdminView({
   mutateCloudData,
   overwriteCloudDataDirectly,
   imageCount = 0,
-  onImportImages
+  onImportImages,
+  productImages = {},
+  onUploadPhoto
 }: {
   cloudData: CloudPayload;
   cloudUrl: string;
@@ -60,6 +63,8 @@ export function AdminView({
   overwriteCloudDataDirectly: (updater: (curr: CloudPayload) => CloudPayload) => void;
   imageCount?: number;
   onImportImages?: (file: File) => Promise<string>;
+  productImages?: Record<string, string>;
+  onUploadPhoto?: (name: string, file: File) => Promise<string>;
 }) {
   const [imageMsg, setImageMsg] = useState<string>('');
   const [imageBusy, setImageBusy] = useState<boolean>(false);
@@ -795,6 +800,7 @@ export function AdminView({
         window.setTimeout(() => { const el = document.getElementById('lt-neue-quizfrage'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
         alert('Die Frage steht jetzt im Formular „Neue Quizfrage“. Bitte noch zwei oder drei falsche Antworten eintragen, Bereich wählen und speichern.');
       }} />}
+      {adminTab === 'settings' && <FehlendeFotos images={productImages} onUpload={onUploadPhoto} />}
       {adminTab === 'settings' && <EinstellungenTab {...{ cloudData, setCloudUrl, cloudConnected, setCloudConnected, fetchCloudData, overwriteCloudDataDirectly, imageCount, onImportImages, setImageMsg, imageMsg, imageBusy, setImageBusy, backupMsg, downloadBackup, restoreBackup, tempCloudUrl, setTempCloudUrl, markDeleted, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
     </div>
   );
