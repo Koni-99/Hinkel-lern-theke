@@ -278,6 +278,7 @@ export function scDrunkLoud(): Core | null {
     bread: x,
     persona: pick([{ name: 'Herr Meier', title: 'Herr Meier', who: 'telefoniert sehr laut' }]),
     basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
+    sliceIntro: [pick([`(Legt auf.) Oh, sorry! Einmal ${x.name}, bitte.`, `(Steckt das Handy weg.) Entschuldigung. Ich hätte gern ${x.name}.`])],
     steps: [{
       topic: 'Kunde blockiert die Schlange',
       customer: ['(Telefoniert laut, die Schlange hinter ihm wird lang.) … ja, Moment … was wollte ich hier noch mal?'],

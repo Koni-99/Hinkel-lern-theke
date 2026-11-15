@@ -240,6 +240,15 @@ async function offlineTests() {
         if (ok && /–/.test(ok.text)) fehler.push('Gedankenstrich: ' + ok.text);
       }
       if (!bekannt && /^(Frau|Herr) /.test(c.persona.name)) fehler.push('Fremder Kunde hat einen Namen: ' + c.persona.name);
+      // Ablauf wie an der echten Theke: erst „Sonst noch was?“, dann der Preis, dann bezahlen
+      const t = c.steps.map((x) => x.topic);
+      const iZ = t.indexOf('Zusatzverkauf'), iS = t.indexOf('Summe'), iP = t.findIndex((x) => ['Rückgeld', 'Kartenzahlung', 'Trinkgeld'].includes(x));
+      if (iZ < 0 || iS < 0 || !(iZ < iS && iS < iP)) fehler.push('Reihenfolge stimmt nicht: ' + t.join(' > '));
+      if (iZ >= 0 && iS >= 0) {
+        const angebot = (c.steps[iZ].options.find((o) => o.correct) || {}).text || '';
+        const m = angebot.match(/Noch ein paar (.+) dazu\?/);
+        if (m && !c.steps[iS].customer.join(' ').includes(m[1])) fehler.push('Angebot und Antwort passen nicht: ' + angebot + ' / ' + c.steps[iS].customer.join(' '));
+      }
     }
     ok('Theken-Simulator: echte Gespräche (fremde Kunden ohne Namen, keine Millimeter-Fragen)', fehler.length === 0, fehler.slice(0, 2).join(' | '));
   }

@@ -131,15 +131,16 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   }
 
   // 4) Sonst noch etwas?
-  const askMore = core.forceRoll || want('Zusatzverkauf') || shape === 'lang' || (shape === 'normal' && Math.random() < 0.75);
+  // An der echten Theke fragt man immer „Sonst noch was?“, sonst würde der Kunde auf eine Frage antworten, die keiner gestellt hat
+  const askMore = true;
   const addRoll = askMore && (core.forceRoll || Math.random() < 0.55) && ROLLS.length > 0;
   const roll = pick(ROLLS);
   const rollQty = rnd(2, 6);
   if (askMore) steps.push({
     topic: 'Zusatzverkauf',
-    customer: [pick(['Danke.', 'Super, danke.', 'Prima.', 'Danke schön.'])],
+    customer: [steps[steps.length - 1]?.topic === 'Schnitt' || steps[steps.length - 1]?.topic === 'Smalltalk' ? pick(['Danke.', 'Super, danke.', 'Prima.', 'Danke schön.']) : pick(['Gut, dann nehm ich das.', 'Okay, das nehm ich.', 'Prima, dann das.'])],
     options: opts([
-      { text: pick(['Darf’s sonst noch was sein?', 'Sonst noch etwas?', 'Kann ich Ihnen sonst noch was geben?', `Noch ein paar ${pick(ROLLS).name} dazu?`, 'Darf es noch etwas sein?']), correct: true },
+      { text: pick(['Darf’s sonst noch was sein?', 'Sonst noch etwas?', 'Kann ich Ihnen sonst noch was geben?', ...(addRoll ? [`Noch ein paar ${roll.name} dazu?`] : []), 'Darf es noch etwas sein?']), correct: true },
       ...sample([
         { text: 'Das war’s dann, oder? Hinter Ihnen warten schon Leute.', correct: false, why: 'Nie drängeln, freundlich nachfragen, ob noch etwas dazu soll.' },
         { text: 'Nehmen Sie doch noch Brötchen mit, die müssen heute weg.', correct: false, why: 'So verkauft man nicht, frag offen und freundlich nach weiteren Wünschen.' },
@@ -161,7 +162,8 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   for (const t of tweaks) { if (totalWrong.size >= 6) break; if (total + t > 0) totalWrong.add(total + t); }
   totalWrong.delete(total);
   Array.from(totalWrong).forEach(v => { if (v <= 0) totalWrong.delete(v); });
-  const showSum = want('Summe') || shape !== 'kurz' || Math.random() < 0.4;
+  // Der Kunde muss den Preis hören, bevor er bezahlt
+  const showSum = true;
   if (showSum) steps.push({
     topic: 'Summe',
     prices: basket.map(b => ({ ...b })),
@@ -246,7 +248,7 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
     }
     steps.push({
       topic: 'Rückgeld',
-      customer: [pick([`Hier, ${givenText}.`, `${givenText}, bitte.`, `Bitte, ${givenText}.`, `Geht ${givenText}?`])],
+      customer: [pick([`Hier, ${givenText}.`, `Ich geb Ihnen ${givenText}.`, `Bitte, ${givenText}.`, `Geht ${givenText}?`])],
       options: changeOpts(given - total, given, total, 'Danke, und '),
     });
     // Manchmal wandert danach etwas in die Trinkgelddose
