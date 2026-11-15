@@ -139,6 +139,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       </>, 11)}
       {box(boxIcon(ICON.heart), 'Lob, Umfragen und wichtige Nachrichten', <>
         <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 15 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“.</div>
+        <div><strong>Wer heute gelernt hat:</strong> Auf der Startseite siehst du, welche Kollegen heute schon gelernt haben. Sind es mehr als zwei, tippst du die Zeile an und siehst alle Namen.</div>
         <div><strong>Umfragen:</strong> Stellt der Ausbilder eine Frage ans Team, erscheint sie auf der Startseite. Einfach antippen und abstimmen.</div>
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>
       </>, 12)}
@@ -164,7 +165,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div>Unter Spielen → „Theken-Simulator“ bedienst du einen Kunden von der Begrüßung bis zum Abschied. Die Gespräche sind wie an der echten Theke: Die meisten Kunden kennst du nicht, nur Stammkunden haben einen Namen. „Sonst noch was?“ und der Preis kommen in jedem Gespräch.</div>
         <div>Es gibt viele Situationen, zum Beispiel Allergien, Reklamation, Kartenzahlung, eine Vorbestellung abholen, falsche Ware in der Tüte oder Fragen zu Saisongebäck.</div>
         <div><strong>Zuhören:</strong> Schaltest du vor dem Start „Zuhören“ ein, spricht der Kunde laut. Seinen Satz siehst du erst, wenn du antippst oder antwortest. Mit „Nochmal hören“ wiederholt er ihn. Ton am Handy einschalten!</div>
-        <div><strong>Telefon-Bestellung:</strong> Unter Spielen ruft ein Kunde an und bestellt vor. Du füllst den Bestellzettel aus: Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. Wer nur zuhört und den Text nicht liest, bekommt einen Extra-Bonus.</div>
+        <div><strong>Telefon-Bestellung:</strong> Unter Spielen ruft ein Kunde an und bestellt vor. Du füllst den Bestellzettel aus: Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. Pro Runde gibt es 5 Anrufe, von einfach bis kompliziert (der Kunde korrigiert sich, streicht etwas oder sagt „ein Dutzend“). Nach und nach kommt jeder Artikel aus dem Sortiment einmal dran. Wer nur zuhört und den Text nicht liest, bekommt einen Extra-Bonus.</div>
       </>, 2)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>
         <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>

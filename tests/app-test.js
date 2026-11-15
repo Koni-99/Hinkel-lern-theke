@@ -496,17 +496,41 @@ async function offlineTests() {
     ok('Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 214: „... haben heute schon gelernt“ aufklappen, alle Namen sehen
+  {
+    const heute = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    ['Claudia', 'Koni', 'Mia', 'Tom'].forEach((n) => { probe.progress[n.toLowerCase()] = { ...(probe.progress[n.toLowerCase()] || {}), _displayName: n, _days: [heute] }; });
+    const d = await device({ user: 'Anna', backup: probe });
+    await clearPopups(d.page);
+    const knopf = d.page.locator('.lt-team-knopf');
+    const tagFormatOk = (await knopf.count()) > 0;
+    if (tagFormatOk) { await click(knopf.first()); await settle(d.page, 400); }
+    const liste = tagFormatOk ? await d.page.locator('.lt-team-liste').innerText().catch(() => '') : '';
+    ok('Startseite: „heute gelernt“ aufklappen zeigt alle Namen', ['Claudia', 'Koni', 'Mia', 'Tom'].every((n) => liste.includes(n)), liste.replace(/\n/g, ' ').slice(0, 120) || 'keine Zeile (Tagesformat?)');
+    ok('Startseite aufklappen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
     const fehler = [];
-    for (let i = 0; i < 200; i++) {
-      const b = T.neueBestellung();
+    const BACK = { 'Burgunderstuten': [4], 'Jan-Wellem Stuten': [3], 'Chia-Brot': [0], 'Reines Roggen': [1, 3], 'Buchweizenbrot': [1, 3], 'Heidesand': [0], 'Kokosmakronen': [1, 3] };
+    for (let i = 0; i < 400; i++) {
+      const stufe = T.STUFEN_RUNDE[i % T.STUFEN_RUNDE.length];
+      const b = T.neueBestellung(stufe, new Set(), 10);
       const satz = b.text.join(' ');
       if (/–/.test(satz)) fehler.push('Gedankenstrich: ' + satz);
+      if ((satz.match(/Und zwar/g) || []).length > 1) fehler.push('Doppelt „Und zwar“: ' + satz);
       if (b.tag === 5 && b.zeit > 15 * 60) fehler.push('Samstag zu spät: ' + satz);
+      if (b.zeit >= 13 * 60 && !/nachmittags|\d+ Uhr/.test(satz)) fehler.push('Nachmittag nicht eindeutig: ' + satz);
+      for (const p of b.positionen) {
+        if (BACK[p.name] && !BACK[p.name].includes(b.tag)) fehler.push(`${p.name} an ${T.TAGE[b.tag]} gibt es nicht`);
+        if (p.name === 'Landbaguette' && b.zeit < 11 * 60) fehler.push('Landbaguette vor 11 Uhr');
+        if (/ (\d+|zwei|drei) (Großes|Kleines|Schweineohr |Innsbrucker Roggenlaib\b)/.test(satz)) fehler.push('Mehrzahl falsch: ' + satz);
+      }
       if (!b.positionen.every((p) => b.auswahl.includes(p.name))) fehler.push('Bestelltes fehlt auf dem Zettel');
-      if (b.auswahl.length !== 8 || new Set(b.auswahl).size !== 8) fehler.push('Zettel hat nicht 8 verschiedene Waren');
+      if (b.auswahl.length < 8 || new Set(b.auswahl).size !== b.auswahl.length) fehler.push('Zettel zu kurz oder doppelt');
       if (!satz.includes(b.name)) fehler.push('Name fehlt im Anruf');
       // alles richtig ausgefüllt → alles grün; eine Menge falsch → genau ein Fehler
       const z = { name: b.name.toLowerCase(), tag: b.tag, zeit: b.zeit, mengen: Object.fromEntries(b.positionen.map((p) => [p.name, p.menge])), geschnitten: Object.fromEntries(b.positionen.filter((p) => p.geschnitten).map((p) => [p.name, true])) };
@@ -514,16 +538,20 @@ async function offlineTests() {
       const z2 = { ...z, mengen: { ...z.mengen, [b.positionen[0].name]: b.positionen[0].menge + 1 } };
       if (T.pruefe(b, z2).filter((r) => !r.ok).length !== 1) fehler.push('Falsche Menge nicht genau einmal erkannt');
     }
-    ok('Telefon-Bestellung: 200 Anrufe sinnvoll, Prüfung stimmt', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+    // Ganzes Sortiment: nach wenigen Runden war jeder Artikel einmal dran
+    const alle = T.sortiment(10).map((a) => a.name); const g = new Set(); let anrufe = 0;
+    while (alle.some((x) => !g.has(x)) && anrufe < 300) { T.neueBestellung(T.STUFEN_RUNDE[anrufe % 5], g, 10).positionen.forEach((p) => g.add(p.name)); anrufe++; }
+    ok(`Telefon-Bestellung: ganzes Sortiment (${alle.length} Artikel) nach ${anrufe} Anrufen einmal dran`, anrufe < 100 && alle.every((x) => g.has(x)), `${anrufe} Anrufe`);
+    ok('Telefon-Bestellung: 400 Anrufe (alle Stufen) sinnvoll, Prüfung stimmt', fehler.length === 0, fehler.slice(0, 2).join(' | '));
     ok('Telefon-Bestellung: Name tolerant (Krueger = Krüger, ein Tippfehler)', T.nameStimmt('krueger', 'Krüger') && T.nameStimmt('Schmiz', 'Schmitz') && !T.nameStimmt('Weber', 'Becker'));
-    ok('Telefon-Bestellung: Uhrzeit wie gesprochen', T.zeitGesprochen(8 * 60 + 30) === 'um halb neun' && T.zeitGesprochen(15 * 60 + 45) === 'um Viertel vor vier');
+    ok('Telefon-Bestellung: Uhrzeit wie gesprochen', T.zeitGesprochen(8 * 60 + 30) === 'um halb neun' && T.zeitGesprochen(16 * 60) === 'um vier Uhr nachmittags' && T.zeitGesprochen(15 * 60 + 45) === 'um Viertel vor vier nachmittags');
     const d = await device({ user: 'Anna' });
     await clearPopups(d.page);
     await click(nav(d.page).nth(2)); await settle(d.page);
     await click(d.page.locator('button.lt-card:visible', { hasText: 'Telefon-Bestellung' }).first()); await settle(d.page, 1200);
     await click(d.page.getByRole('button', { name: 'Anruf annehmen' })); await settle(d.page, 800);
     const zettel = d.page.locator('.lt-bestellzettel');
-    ok('Telefon-Bestellung: Bestellzettel mit 8 Waren', (await zettel.count()) > 0 && (await d.page.locator('.lt-zettel-zeile').count()) === 8);
+    ok('Telefon-Bestellung: Bestellzettel (mind. 8 Waren) und Stufe „Einfach“', (await zettel.count()) > 0 && (await d.page.locator('.lt-zettel-zeile').count()) >= 8 && (await d.page.getByText('Einfach', { exact: true }).count()) > 0);
     const lesen = d.page.getByRole('button', { name: 'Text lesen' });
     if (await lesen.count()) { await click(lesen); await settle(d.page, 300); }
     const text = await d.page.locator('.lt-telefon-text').innerText().catch(() => '');

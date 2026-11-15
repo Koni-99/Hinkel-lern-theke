@@ -67,7 +67,7 @@ if (canSpeak()) {
   try { window.speechSynthesis.addEventListener('voiceschanged', () => { cachedVoice = bestGermanVoice(); }); } catch {}
 }
 
-export function speakText(text: string, onEnd?: () => void) {
+export function speakText(text: string, onEnd?: () => void, tempo = 1.15) {
   if (!canSpeak()) return;
   const synth = window.speechSynthesis;
   synth.cancel();
@@ -75,7 +75,7 @@ export function speakText(text: string, onEnd?: () => void) {
   const u = new SpeechSynthesisUtterance(text.replace(/[„“"]/g, '').replace(/·/g, ',').replace(/\s+/g, ' ').trim());
   u.lang = 'de-DE';
   // Wie ein freundlicher Verkäufer: zügig, etwas heller und lebendig statt langsam und müde
-  u.rate = 1.15;
+  u.rate = tempo;
   u.pitch = 1.1;
   u.volume = 1;
   if (cachedVoice) u.voice = cachedVoice;

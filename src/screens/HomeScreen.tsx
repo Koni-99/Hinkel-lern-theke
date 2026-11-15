@@ -118,6 +118,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
   const mainRef = useRef<HTMLDivElement>(null);
   const sideRef = useRef<HTMLDivElement>(null);
   const [links, setLinks] = useState<string[]>([]);
+  const [teamAuf, setTeamAuf] = useState(false); // „Wer heute gelernt hat“ aufgeklappt
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1180px)');
     const pruefe = () => {
@@ -413,12 +414,24 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
         const rest = others.length - shown.length;
         const text = others.length === 1 ? <><strong>{others[0]}</strong> hat heute schon gelernt.</> : others.length === 2 ? <><strong>{others[0]} und {others[1]}</strong> haben heute schon gelernt.</> : <><strong>{others[0]}, {others[1]} und {rest} weitere</strong> haben heute schon gelernt.</>;
         return (
-          <section className="lt-team" aria-label="Wer heute schon gelernt hat">
+          <section className="lt-team" aria-label="Wer heute schon gelernt hat" style={{ flexWrap: 'wrap' }}>
+            <button type="button" className="lt-team-knopf" disabled={rest <= 0} aria-expanded={rest > 0 ? teamAuf : undefined} onClick={() => setTeamAuf(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 100%', minWidth: 0, padding: 0, border: 'none', background: 'none', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: rest > 0 ? 'pointer' : 'default' }}>
             <span className="lt-team-av" aria-hidden="true">
               {shown.map((n, i) => <span key={n + i} style={{ backgroundColor: cols[i][0], color: cols[i][1], animationDelay: `${0.1 + i * 0.12}s` }}>{ini(n)}</span>)}
               {rest > 0 && <span style={{ backgroundColor: cols[2][0], color: cols[2][1], animationDelay: '.34s' }}>+{rest}</span>}
             </span>
-            <span style={{ flex: 1, minWidth: 0 }}>{text}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>{text}{rest > 0 && <span style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#9A7206', marginTop: '2px' }}>{teamAuf ? 'Zuklappen' : 'Antippen: alle anzeigen'}</span>}</span>
+            {rest > 0 && <span aria-hidden="true" style={{ display: 'inline-flex', transform: teamAuf ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform .25s' }}><LtIcon paths={ICON.chevron} size={20} /></span>}
+            </button>
+            {rest > 0 && teamAuf && (
+              <span className="lt-team-liste lt-pop-in" style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: '8px', paddingTop: '4px' }}>
+                {others.map((n, i) => (
+                  <span key={n + i} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px 4px 4px', borderRadius: '999px', backgroundColor: cols[i % 3][0], color: cols[i % 3][1], fontWeight: 700, fontSize: '15px' }}>
+                    <span aria-hidden="true" style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#FFFFFF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 800 }}>{ini(n)}</span>{n}
+                  </span>
+                ))}
+              </span>
+            )}
           </section>
         );
       })()}

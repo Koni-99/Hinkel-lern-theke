@@ -1,89 +1,212 @@
 // ═══ Telefon-Bestellung: Logik ═══
-// Ein Kunde ruft an und bestellt für einen Abholtag. Nur Ware, die es jeden Tag gibt
-// (keine Saisonware, keine Brote mit festen Backtagen), damit die Bestellung immer möglich ist.
+// Ein Kunde ruft an und bestellt für einen Abholtag. Es kommt das ganze Sortiment dran:
+// Was noch nie bestellt wurde, kommt zuerst (im Gerät gemerkt), bis jeder Artikel mindestens einmal dran war.
+// Backtage, Uhrzeiten (Weinstock ab 10, Landbaguette ab 11 Uhr) und Saisonware werden beachtet.
+// Vier Stufen: einfach, mittel, schwer, kompliziert (Korrekturen, Dutzend, halb/halb, streichen, tauschen).
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 
 export const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+export type Stufe = 'einfach' | 'mittel' | 'schwer' | 'kompliziert';
+export const STUFEN_RUNDE: Stufe[] = ['einfach', 'mittel', 'mittel', 'schwer', 'kompliziert'];
 
-/** Brote, die es an allen Tagen gibt (Brote mit festen Backtagen bewusst nicht) */
-const BROT_NAMEN = ['Münsterländer', 'Schweizer', 'Großes Schwarzwälder', 'Kleines Schwarzwälder', 'Feinbrot', 'Mehrkornbrot', 'Sonnenblumenbrot', 'Französisches Landbrot', 'Dinkeltraum', 'Spezialbrot', 'Elsässer', 'Oberländer'];
-const GEBAECK_NAMEN = ['Berliner', 'Butter-Croissant', 'Schoko-Croissant', 'Apfeltasche', 'Puddingbrezel', 'Mohnschnecke', 'Rosinenschnecke', 'Butterkuchen', 'Streuselkuchen'];
-const da = (n: string) => SHOP_PRODUCTS.some((p) => p.name === n);
-export const BROTE = BROT_NAMEN.filter(da);
-export const BROETCHEN = SHOP_PRODUCTS.filter((p) => p.group === 'Brötchen').map((p) => p.name);
-export const GEBAECK = GEBAECK_NAMEN.filter(da);
-const istKuchen = (n: string) => /kuchen$/i.test(n);
-export const istBrot = (n: string) => BROTE.includes(n);
+const ALLE_TAGE = [0, 1, 2, 3, 4, 5];
+/** Feste Backtage (0 = Montag … 5 = Samstag), aus den Fragen zu den Backtagen */
+const BACKTAGE: Record<string, number[]> = {
+  'Burgunderstuten': [4], 'Jan-Wellem Stuten': [3], 'Chia-Brot': [0], 'Harzer Nuss-Stange': [4, 5],
+  'Innsbrucker Roggenlaib': [0, 2, 4], 'Kartäuser': [0, 2, 4], 'Casanova': [0, 2, 4], 'Abendschnitte': [0, 2, 4],
+  'Toastbrot': [0, 4, 5], 'Reines Roggen': [1, 3], 'Buchweizenbrot': [1, 3], 'Wochenendstuten': [4, 5], 'Wunderzopf': [4, 5],
+  'Kleines Vollkornschwarzbrot': [0, 1, 2, 3, 4], 'Kürbiskern-Schwarzbrot': [0, 1, 2, 3, 4],
+  'Mandelhörnchen': [0, 2, 4], 'Heidesand': [0], 'Schwarz-Weiß Gebäck': [0], 'Kokosmakronen': [1, 3], 'Spritzgebäck': [1, 2, 3, 4, 5],
+  'Schokoladen-Printen': [1, 3], 'Muzenmandeln': [1, 3, 5], 'Vollmilch-Nuss-Printen': [0, 2, 4],
+};
+/** Frühestens ab dieser Uhrzeit (Minuten) frisch */
+const AB_ZEIT: Record<string, number> = { 'Weinstock': 10 * 60, 'Landbaguette': 11 * 60 };
+/** Saisonware: nur in diesen Monaten (0 = Januar) */
+const SAISON_GRUPPE: Record<string, number[]> = { 'Weihnachtsgebäck': [10, 11], 'Saisongebäck': [9, 10] };
+const SAISON_NAME: Record<string, number[]> = { 'Grünschnabel': [9, 10], 'Kappeskopp': [9, 10] };
 
-const NAMEN = ['Schmitz', 'Müller', 'Hoffmann', 'Becker', 'Wagner', 'Schulz', 'Weber', 'Klein', 'Lange', 'Krüger', 'Jansen', 'Peters', 'Kaiser', 'Hartmann', 'Vogel', 'Busch'];
-const BUCHSTABIERT: Record<string, string> = { Schmitz: 'Schmitz, mit t z am Ende.', Müller: 'Müller, mit ü.', Krüger: 'Krüger, mit ü.', Jansen: 'Jansen, mit J.', Hartmann: 'Hartmann, mit zwei n.' };
+const PACKUNG = new Set(['Backmischung Abendschnitte', 'Butterspekulatius', 'Gewürzprinten', 'Gewürzspekulatius', 'Granola', 'Heidesand', 'Hüftgold', 'Knäckebrot', 'Kokosmakronen', 'Mandelsplitter Vollmilch', 'Mandelsplitter Zartbitter', 'Muzenmandeln', 'Paniermehl', 'Pistazien Kekse', 'Printenbruch', 'Schokoladen-Printen', 'Schwarz-Weiß Gebäck', 'Spritzgebäck', 'Stollen-Konfekt', 'Vollmilch-Nuss-Printen', 'Zimtsterne', 'Zimtmonde', 'Dinkel Hafer Cookies', 'Spitzkuchen']);
+const STUECK = new Set(['Monte Christo', 'Tarte Depart', 'Spuntino Mediterano', 'Prasselkuchen', 'Düsselhappen', 'Große Schokoladenprinte', 'Nuss-Kuss']);
+
+type Art = { name: string; group: string };
+const gruppeVon = (n: string) => (SHOP_PRODUCTS.find((p) => p.name === n) || { group: '' }).group;
+export const istBrot = (n: string) => ['Brot', 'Stuten & Brioche'].includes(gruppeVon(n));
+const istBroetchen = (n: string) => gruppeVon(n) === 'Brötchen';
+
+/** Alles, was man heute (in diesem Monat) bestellen kann */
+export function sortiment(monat = new Date().getMonth()): Art[] {
+  return SHOP_PRODUCTS.filter((p) => {
+    const s = SAISON_NAME[p.name] || SAISON_GRUPPE[p.group];
+    return !s || s.includes(monat);
+  }).map((p) => ({ name: p.name, group: p.group }));
+}
+const tageVon = (n: string) => BACKTAGE[n] || ALLE_TAGE;
 
 const zufall = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
 const mischen = <T,>(a: T[]): T[] => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+const zw = (a: number, b: number) => a + Math.floor(Math.random() * (b - a + 1));
 
 /** Mehrzahl, wie man sie am Telefon sagt */
-export function mehrzahl(name: string, n: number): string {
-  if (name === 'Brötchen (Piepken)') return n === 1 ? 'Brötchen' : 'Brötchen';
-  if (n === 1) return name;
-  if (/(stange|tasche|schnecke|brezel)$/i.test(name)) return name + 'n';
-  if (/ling$/i.test(name)) return name + 'e';
+export function mehrzahl(name: string): string {
+  const m = name.match(/^(.*?)( (mit|ohne) .*)$/);
+  if (m) return mehrzahl(m[1]) + m[2];
+  if (name === 'Brötchen (Piepken)') return 'Brötchen';
+  const adj = name.match(/^(Groß|Klein|Rein)es (.+)$/);
+  if (adj) return `${adj[1]}e ${adj[2] === 'Roggen' ? 'Roggen' : mehrzahl(adj[2])}`;
+  if (name === 'Feuriges') return 'Feurige';
+  if (/(Mambolito|Casanova)$/.test(name)) return name + 's';
+  if (/weckmann$/i.test(name)) return name.replace(/mann$/i, 'männer');
+  if (/brezel$/i.test(name)) return name + 'n';
+  if (/(ohr|laib)$/i.test(name)) return name + (/ohr$/i.test(name) ? 'en' : 'e');
+  if (/brot$/i.test(name)) return name + 'e';
+  if (/e$/.test(name)) return name + 'n';
+  if (/(ling|ring)$/.test(name)) return name + 'e';
   if (/croissant$/i.test(name)) return name + 's';
-  return name;
+  return name; // -chen, -er, -el, -en, Römer, Krapfen …
 }
-const zahlwort = (n: number) => (n === 1 ? 'ein' : n === 2 ? 'zwei' : String(n));
-function posText(name: string, n: number, geschnitten?: boolean): string {
-  if (istKuchen(name)) return `${zahlwort(n) === 'ein' ? 'ein' : zahlwort(n)} Stück ${name}`;
-  if (istBrot(name)) return `${n === 1 ? 'ein' : zahlwort(n)} ${name}${geschnitten === undefined ? '' : geschnitten ? (n === 1 ? ', das bitte geschnitten' : ', bitte geschnitten') : ', am Stück'}`;
-  return `${zahlwort(n)} ${mehrzahl(name, n)}`;
+const ZAHL = ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf'];
+
+/** So sagt der Kunde eine Position */
+function posText(name: string, n: number, opt: { geschnitten?: boolean; dutzend?: boolean } = {}): string {
+  const schnitt = opt.geschnitten === undefined ? '' : opt.geschnitten ? ', geschnitten' : ', am Stück';
+  if (PACKUNG.has(name)) return `${n === 1 ? 'eine Packung' : `${ZAHL[n] || n} Packungen`} ${name}`;
+  if (STUECK.has(name) || gruppeVon(name) === 'Kuchen') return `${n === 1 ? 'ein Stück' : `${n} Stück`} ${name}`;
+  if (n === 1) return `einmal ${name}${schnitt}`;
+  if (opt.dutzend && n === 12) return `ein Dutzend ${mehrzahl(name)}${schnitt}`;
+  if (opt.dutzend && n === 6) return `ein halbes Dutzend ${mehrzahl(name)}${schnitt}`;
+  return `${n} ${mehrzahl(name)}${schnitt}`;
 }
 
 const STUNDE = ['zwölf', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf'];
 const sw = (h: number) => STUNDE[h % 12];
-/** Uhrzeit (Minuten seit Mitternacht) so, wie man sie sagt: „halb neun“, „Viertel nach zehn“ */
-export function zeitGesprochen(min: number): string {
+/** Uhrzeit so, wie man sie sagt. Nachmittags immer eindeutig („16 Uhr“ oder „vier Uhr nachmittags“) */
+export function zeitGesprochen(min: number, genau = false): string {
   const h = Math.floor(min / 60), m = min % 60;
-  if (m === 0) return `um ${sw(h)}`;
-  if (m === 15) return `um Viertel nach ${sw(h)}`;
-  if (m === 30) return `um halb ${sw(h + 1)}`;
-  return `um Viertel vor ${sw(h + 1)}`;
+  const tag = h >= 12 ? (h < 13 && m < 30 ? ' mittags' : ' nachmittags') : '';
+  if (genau) return `um ${h} Uhr${m ? ` ${m}` : ''}`;
+  if (m === 0) return h > 12 ? `um ${sw(h) === 'eins' ? 'ein' : sw(h)} Uhr${tag}` : `um ${sw(h)}${h === 12 ? ' Uhr mittags' : ''}`;
+  if (m === 15) return `um Viertel nach ${sw(h)}${tag}`;
+  const nach = h + 1 === 13 ? ' mittags' : h + 1 > 13 ? ' nachmittags' : '';
+  if (m === 30) return `um halb ${sw(h + 1)}${nach}`;
+  return `um Viertel vor ${sw(h + 1)}${nach}`;
 }
 export const zeitText = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')} Uhr`;
 /** Auswahl auf dem Bestellzettel: 6:00 bis 18:00 Uhr in Viertelstunden */
 export const ZEITEN = Array.from({ length: 49 }, (_, i) => 360 + i * 15);
 
 export type Position = { name: string; menge: number; geschnitten?: boolean };
-export type Bestellung = { name: string; tag: number; zeit: number; positionen: Position[]; text: string[]; auswahl: string[] };
+export type Bestellung = { name: string; tag: number; zeit: number; positionen: Position[]; text: string[]; auswahl: string[]; stufe: Stufe };
 
-export function neueBestellung(): Bestellung {
+const NAMEN = ['Schmitz', 'Müller', 'Hoffmann', 'Becker', 'Wagner', 'Schulz', 'Weber', 'Klein', 'Lange', 'Krüger', 'Jansen', 'Peters', 'Kaiser', 'Hartmann', 'Vogel', 'Busch', 'Meyer', 'Schröder', 'Neumann', 'Braun', 'Zimmermann', 'Krause', 'Lehmann', 'Köhler', 'Wolff', 'Scholz', 'Möller', 'Thelen', 'Esser', 'Kremer'];
+const BUCHSTABIERT: Record<string, string> = { Schmitz: 'Schmitz, mit t z am Ende.', Müller: 'Müller, mit ü.', Krüger: 'Krüger, mit ü.', Jansen: 'Jansen, mit J.', Hartmann: 'Hartmann, mit zwei n.', Meyer: 'Meyer, mit e y.', Wolff: 'Wolff, mit zwei f.', Möller: 'Möller, mit ö.', Köhler: 'Köhler, mit ö und h.', Thelen: 'Thelen, mit t h.' };
+
+function menge(name: string, stufe: Stufe): number {
+  if (PACKUNG.has(name)) return zw(1, stufe === 'einfach' || /paniermehl|knäckebrot|granola|backmischung/i.test(name) ? 2 : 3);
+  if (/stollen$/i.test(name) && !/mini/i.test(name)) return zw(1, 2);
+  if (istBrot(name)) return Math.random() < 0.8 ? 1 : 2;
+  if (istBroetchen(name)) return zufall(stufe === 'einfach' ? [4, 5, 6, 8, 10] : [4, 5, 6, 8, 10, 12, 15, 20, 24, 30]);
+  return zw(2, stufe === 'einfach' ? 4 : 8);
+}
+
+/** Nächster Artikel: zuerst noch nie bestellte, passend zu den möglichen Tagen */
+function waehle(pool: Art[], schon: string[], tage: number[], gesehen: Set<string>, nur?: (a: Art) => boolean): Art | null {
+  const passt = pool.filter((a) => !schon.includes(a.name) && tageVon(a.name).some((t) => tage.includes(t)) && (!nur || nur(a)));
+  const neu = passt.filter((a) => !gesehen.has(a.name));
+  return (neu.length ? zufall(neu) : passt.length ? zufall(passt) : null);
+}
+
+export function neueBestellung(stufe: Stufe = 'mittel', gesehen: Set<string> = new Set(), monat = new Date().getMonth()): Bestellung {
+  const pool = sortiment(monat);
+  const anzahl = { einfach: zw(1, 2), mittel: zw(2, 3), schwer: zw(3, 4), kompliziert: zw(4, 5) }[stufe];
+  const positionen: Position[] = [];
+  let tage = [...ALLE_TAGE];
+  const nimm = (a: Art | null) => {
+    if (!a) return;
+    tage = tage.filter((t) => tageVon(a.name).includes(t));
+    positionen.push({ name: a.name, menge: menge(a.name, stufe), ...(istBrot(a.name) && stufe !== 'einfach' ? { geschnitten: Math.random() < 0.6 } : {}) });
+  };
+  while (positionen.length < anzahl) {
+    const vorher = positionen.length;
+    // höchstens 2 Brote pro Bestellung, sonst wird es unrealistisch
+    const brote = positionen.filter((p) => istBrot(p.name)).length;
+    nimm(waehle(pool, positionen.map((p) => p.name), tage, gesehen, (a) => brote < 2 || !istBrot(a.name)));
+    if (positionen.length === vorher) break;
+  }
   const name = zufall(NAMEN);
-  const tag = Math.floor(Math.random() * 6);
-  const bis = tag === 5 ? 15 * 60 : 17 * 60; // samstags früher zu
-  const zeit = zufall(ZEITEN.filter((z) => z >= 7 * 60 && z <= bis));
-  const positionen: Position[] = [{ name: zufall(BROETCHEN), menge: zufall([6, 8, 10, 12, 15, 20, 24, 30]) }];
-  if (Math.random() < 0.6) { const b = zufall(BROETCHEN.filter((x) => x !== positionen[0].name)); positionen.push({ name: b, menge: zufall([4, 5, 6, 8, 10]) }); }
-  if (Math.random() < 0.7) positionen.push({ name: zufall(BROTE), menge: Math.random() < 0.8 ? 1 : 2, geschnitten: Math.random() < 0.6 });
-  if (Math.random() < 0.4) positionen.push({ name: zufall(GEBAECK), menge: zufall([2, 3, 4, 5, 6]) });
+  let tag = zufall(tage.length ? tage : ALLE_TAGE);
+  const frueh = Math.max(7 * 60, ...positionen.map((p) => AB_ZEIT[p.name] || 0));
+  const spaet = tag === 5 ? 15 * 60 : 17 * 60 + 30;
+  const zeiten = ZEITEN.filter((z) => z >= frueh && z <= spaet && (stufe !== 'einfach' || z % 60 === 0));
+  const zeit = zufall(zeiten.length ? zeiten : [frueh]);
 
-  // Was der Kunde sagt (manchmal korrigiert er sich, wie am echten Telefon)
-  const korrektur = Math.random() < 0.3 ? 0 : -1;
-  let alteMenge = 0;
-  if (korrektur === 0) { alteMenge = positionen[0].menge; positionen[0].menge = zufall([6, 8, 10, 12, 15, 20, 24, 30].filter((x) => x !== alteMenge)); }
-  const liste = positionen.map((p, i) => posText(p.name, i === korrektur ? alteMenge : p.menge, p.geschnitten));
+  // ── Was der Kunde sagt ──
+  const nebenbei: string[] = []; // genannt, aber am Ende nicht bestellt (für den Zettel)
+  const liste: string[] = positionen.map((p) => posText(p.name, p.menge, { geschnitten: p.geschnitten, dutzend: stufe === 'kompliziert' }));
+  const extra: string[] = [];
+  let tagGesagt = tag;
+  if (stufe === 'schwer' || stufe === 'kompliziert') {
+    const moeglich = ['menge', ...(stufe === 'kompliziert' ? ['tag', 'streichen', 'tauschen', 'halb'] : [])];
+    let tricks = mischen(moeglich).slice(0, stufe === 'kompliziert' ? 2 : 1);
+    // Menge ändern und Sorte tauschen nicht zusammen (sonst passt der Satz nicht mehr)
+    if (tricks.includes('menge') && tricks.includes('tauschen')) tricks = tricks.map((t) => (t === 'tauschen' ? 'tag' : t));
+    for (const t of tricks) {
+      if (t === 'menge') {
+        const i = positionen.findIndex((p) => istBroetchen(p.name) || (!istBrot(p.name) && !PACKUNG.has(p.name) && p.menge > 1));
+        if (i < 0) continue;
+        const p = positionen[i], alt = p.menge;
+        p.menge = alt + zufall([-2, 2, 4, 6].filter((d) => alt + d > 0));
+        liste[i] = posText(p.name, alt, { geschnitten: p.geschnitten });
+        extra.push(`Ach nee, warten Sie, bei ${STUECK.has(p.name) || gruppeVon(p.name) === 'Kuchen' ? `dem ${p.name}` : `den ${mehrzahl(p.name)}`}: machen Sie lieber ${p.menge}.`);
+      } else if (t === 'tag') {
+        const andere = tage.filter((x) => x !== tag);
+        if (!andere.length) continue;
+        tagGesagt = zufall(andere); // erst falscher Tag, dann korrigiert auf „tag“
+        extra.push(`Oh, Moment, ich hab mich vertan: nicht ${TAGE[tagGesagt]}, sondern ${TAGE[tag]}.`);
+      } else if (t === 'streichen') {
+        const a = waehle(pool, [...positionen.map((p) => p.name), ...nebenbei], [tag], gesehen, (x) => !istBrot(x.name));
+        if (!a) continue;
+        nebenbei.push(a.name);
+        liste.push(posText(a.name, menge(a.name, stufe)));
+        extra.push(`Und ${PACKUNG.has(a.name) ? `die ${a.name}` : STUECK.has(a.name) || gruppeVon(a.name) === 'Kuchen' ? `den ${a.name}` : `die ${mehrzahl(a.name)}`} streichen Sie bitte wieder, die brauchen wir doch nicht.`);
+      } else if (t === 'tauschen') {
+        const i = positionen.findIndex((p) => istBroetchen(p.name));
+        if (i < 0) continue;
+        const neu = waehle(pool, [...positionen.map((p) => p.name), ...nebenbei], [tag], gesehen, (x) => istBroetchen(x.name));
+        if (!neu) continue;
+        const alt = positionen[i].name;
+        nebenbei.push(alt);
+        positionen[i] = { ...positionen[i], name: neu.name };
+        extra.push(`Ach, statt der ${mehrzahl(alt)} nehm ich doch lieber ${mehrzahl(neu.name)}, gleiche Menge.`);
+      } else if (t === 'halb') {
+        const sorten = pool.filter((a) => /brötchen$/i.test(a.name) && a.name !== 'Brötchen (Piepken)' && !positionen.some((p) => p.name === a.name) && !nebenbei.includes(a.name));
+        if (sorten.length < 2) continue;
+        const [a, b] = mischen(sorten).slice(0, 2);
+        const n = zufall([6, 8, 10, 12, 20]);
+        positionen.push({ name: a.name, menge: n / 2 }, { name: b.name, menge: n / 2 });
+        const kurz = (x: string) => x.replace(/brötchen$/i, '');
+        liste.push(`${n} Brötchen, halb ${kurz(a.name)}, halb ${kurz(b.name)}`);
+      }
+    }
+  }
   const und = (a: string[]) => (a.length > 1 ? `${a.slice(0, -1).join(', ')}${a[a.length - 2].includes(',') ? ',' : ''} und ${a[a.length - 1]}` : a[0]);
-  const tagSatz = zufall([`für ${TAGE[tag]}`, `für ${TAGE[tag]}, bitte`, `für diesen ${TAGE[tag]}`]);
+  const fuer = zufall([`für ${TAGE[tagGesagt]}`, `für ${TAGE[tagGesagt]}, bitte`, `für diesen ${TAGE[tagGesagt]}`]);
+  const zeitSatz = zeitGesprochen(zeit, stufe === 'einfach' && Math.random() < 0.5);
   const text = [
-    zufall([`Ja, hallo, hier ist ${name}.`, `Guten Tag, ${name} hier.`, `Hallo, mein Name ist ${name}.`]) + ' ' + zufall([`Ich würde gern was bestellen, ${tagSatz}.`, `Ich möchte was vorbestellen, ${tagSatz}.`]),
-    `Und zwar ${und(liste)}.`,
-    ...(korrektur === 0 ? [`Ach nee, warten Sie, bei den ${mehrzahl(positionen[0].name, 2)}: machen Sie lieber ${positionen[0].menge}.`] : []),
-    zufall([`Ich hol das dann ${zeitGesprochen(zeit)} ab.`, `Abholen komm ich so ${zeitGesprochen(zeit)}.`, `Ich bin dann ${zeitGesprochen(zeit)} da.`]),
-    ...(BUCHSTABIERT[name] && Math.random() < 0.7 ? [`Der Name war ${BUCHSTABIERT[name]}`] : []),
-    zufall(['Danke, bis dann!', 'Super, vielen Dank. Tschüss!', 'Danke schön, auf Wiederhören!']),
+    zufall([`Ja, hallo, hier ist ${name}.`, `Guten Tag, ${name} hier.`, `Hallo, mein Name ist ${name}.`, `Guten Morgen, hier spricht ${name}.`]) + ' ' + zufall([`Ich würde gern was bestellen, ${fuer}.`, `Ich möchte was vorbestellen, ${fuer}.`, `Kann ich bei Ihnen was vorbestellen? ${fuer.charAt(0).toUpperCase() + fuer.slice(1)}.`]),
+    stufe === 'einfach' ? `Ich hätte gern ${und(liste)}.` : `Und zwar ${und(liste)}.`,
+    ...extra,
+    zufall([`Ich hol das dann ${zeitSatz} ab.`, `Abholen komm ich so ${zeitSatz}.`, `Ich bin dann ${zeitSatz} da.`]),
+    ...(BUCHSTABIERT[name] && stufe !== 'einfach' && Math.random() < 0.7 ? [`Der Name war ${BUCHSTABIERT[name]}`] : []),
+    zufall(['Danke, bis dann!', 'Super, vielen Dank. Tschüss!', 'Danke schön, auf Wiederhören!', 'Prima, danke, bis dann!']),
   ];
-  // Auf dem Bestellzettel: bestellte Ware plus ähnliche, nicht bestellte
+  // Auf dem Zettel: bestellte Ware, genannte, aber nicht bestellte, und ähnliche Ware
   const bestellt = positionen.map((p) => p.name);
-  const andere = mischen([...BROETCHEN, ...BROTE, ...GEBAECK].filter((n) => !bestellt.includes(n))).slice(0, 8 - bestellt.length);
-  const auswahl = mischen([...bestellt, ...andere]);
-  return { name, tag, zeit, positionen, text, auswahl };
+  const gruppen = new Set(positionen.map((p) => gruppeVon(p.name)));
+  const ziel = Math.max(8, bestellt.length + nebenbei.length + 3);
+  const aehnlich = mischen(pool.filter((a) => !bestellt.includes(a.name) && !nebenbei.includes(a.name) && gruppen.has(a.group)));
+  const sonst = mischen(pool.filter((a) => !bestellt.includes(a.name) && !nebenbei.includes(a.name) && !gruppen.has(a.group)));
+  const andere = [...aehnlich, ...sonst].slice(0, ziel - bestellt.length - nebenbei.length).map((a) => a.name);
+  return { name, tag, zeit, positionen, text, auswahl: mischen([...bestellt, ...nebenbei, ...andere]), stufe };
 }
 
 /** Namen tolerant vergleichen: Groß/klein egal, ü = ue, ein Tippfehler erlaubt */
@@ -113,4 +236,17 @@ export function pruefe(b: Bestellung, z: Zettel): Pruefung {
     if (n > 0 && !b.positionen.some((p) => p.name === name)) out.push({ zeile: name, richtig: 'nicht bestellt', deins: `${n}×`, ok: false });
   }
   return out;
+}
+
+// ── Welche Artikel schon einmal bestellt wurden (im Gerät) ──
+const GESEHEN = 'lt_telefon_gesehen';
+export function gesehenLesen(): Set<string> { try { return new Set(JSON.parse(localStorage.getItem(GESEHEN) || '[]')); } catch { return new Set(); } }
+export function gesehenMerken(namen: string[]): Set<string> {
+  const s = gesehenLesen(); namen.forEach((n) => s.add(n));
+  // Alles einmal dran gewesen? Dann von vorn, damit es weiter abwechslungsreich bleibt
+  const alle = sortiment().map((a) => a.name);
+  const fertig = alle.every((n) => s.has(n));
+  const neu = fertig ? new Set<string>() : s;
+  try { localStorage.setItem(GESEHEN, JSON.stringify([...neu])); } catch {}
+  return neu;
 }

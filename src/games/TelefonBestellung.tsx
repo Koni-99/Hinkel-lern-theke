@@ -1,14 +1,17 @@
 // ═══ Spiel: Telefon-Bestellung ═══
 // Ein Kunde ruft an (Handy-Stimme) und bestellt für einen Abholtag. Du füllst den Bestellzettel aus:
-// Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. 3 Anrufe pro Runde.
+// Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. 5 Anrufe pro Runde, von einfach bis kompliziert.
+// Nach und nach kommt jeder Artikel aus dem Sortiment dran (im Gerät gemerkt).
 import { useState, useEffect } from 'react';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
 import { scrollToPlay } from '../ui/belohnungen';
 import { LtIcon, ICON } from '../basis/symbole';
 import { canSpeak, speakText, stopSpeaking } from './spielBasis';
-import { neueBestellung, pruefe, istBrot, TAGE, ZEITEN, zeitText, Bestellung, Zettel, Pruefung } from './telefonLogik';
+import { neueBestellung, pruefe, istBrot, TAGE, ZEITEN, zeitText, Bestellung, Zettel, Pruefung, STUFEN_RUNDE, gesehenLesen, gesehenMerken, sortiment } from './telefonLogik';
 
-const ANRUFE = 3;
+const ANRUFE = STUFEN_RUNDE.length;
+const TEMPO = 1.0; // etwas ruhiger als sonst (1,15), am Telefon versteht man schlechter
+const STUFE_NAME = { einfach: 'Einfach', mittel: 'Mittel', schwer: 'Schwer', kompliziert: 'Kompliziert' } as const;
 const leer = (): Zettel => ({ name: '', tag: null, zeit: null, mengen: {}, geschnitten: {} });
 
 export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: number, category: string) => void }) {
@@ -21,11 +24,13 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
   const [punkte, setPunkte] = useState(0);
   const [runde, setRunde] = useState(0);
   const stimme = canSpeak();
+  const [gesehen, setGesehen] = useState<Set<string>>(() => gesehenLesen());
+  const alle = sortiment().length;
   useEffect(() => () => { stopSpeaking(); }, []);
 
-  const vorlesen = (x: Bestellung) => speakText(x.text.join(' '));
+  const vorlesen = (x: Bestellung) => speakText(x.text.join(' '), undefined, TEMPO);
   const anruf = (i: number) => {
-    const x = neueBestellung();
+    const x = neueBestellung(STUFEN_RUNDE[i], gesehen);
     setB(x); setZ(leer()); setGelesen(!stimme); setPruefung([]); setNr(i); setPhase('anruf');
     if (stimme) window.setTimeout(() => vorlesen(x), 400);
     scrollToPlay();
@@ -39,6 +44,7 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
     const alles = p.every((r) => r.ok);
     const pts = richtig * 10 + (alles ? 10 : 0) + (alles && !gelesen ? 10 : 0);
     setPruefung(p); setRunde(pts); setPunkte((v) => v + pts); setPhase('ergebnis');
+    setGesehen(gesehenMerken(b.positionen.map((x) => x.name)));
   };
   const weiter = () => {
     if (nr + 1 < ANRUFE) { anruf(nr + 1); return; }
@@ -56,17 +62,25 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
       {phase === 'menu' && (
         <GameIntro
           title="Das Telefon klingelt"
-          text={`${ANRUFE} Kunden rufen an. Schreib auf: Name, Abholtag, Uhrzeit, was und wie viel, und ob das Brot geschnitten werden soll. Manche Kunden korrigieren sich mittendrin, so wie am echten Telefon.`}
+          text={`${ANRUFE} Kunden rufen an, vom einfachen Anruf bis zum komplizierten, der sich mittendrin korrigiert. Schreib auf: Name, Abholtag, Uhrzeit, was und wie viel, und ob das Brot geschnitten werden soll. Manche Kunden korrigieren sich mittendrin, so wie am echten Telefon.`}
           hint={stimme ? '10 Punkte für jedes richtige Feld, +10 wenn alles stimmt, +10 extra, wenn du nur zugehört hast, ohne den Text zu lesen. Ton am Handy einschalten!' : '10 Punkte für jedes richtige Feld, +10 wenn alles stimmt. Dein Gerät kann nicht vorlesen, deshalb siehst du den Text.'}
           startLabel="Anruf annehmen"
           onStart={start}
         />
+      )}
+      {phase === 'menu' && (
+        <div className="lt-telefon-sortiment" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontWeight: 700, fontSize: '18px' }}>Sortiment am Telefon: {Math.min(gesehen.size, alle)} von {alle} Artikeln schon bestellt</div>
+          <div style={{ height: '10px', borderRadius: '999px', backgroundColor: TH.cream, overflow: 'hidden' }}><div style={{ width: `${Math.round((Math.min(gesehen.size, alle) / Math.max(1, alle)) * 100)}%`, height: '100%', backgroundColor: TH.green }} /></div>
+          <div style={{ fontSize: '15px', color: TH.muted }}>Die Kunden bestellen zuerst, was bei dir noch nie dran war. So kommt nach und nach jeder Artikel einmal vor.</div>
+        </div>
       )}
 
       {(phase === 'anruf' || phase === 'ergebnis') && b && (
         <>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <StatChip label="Anruf" value={`${nr + 1} / ${ANRUFE}`} tone="yellow" />
+            <StatChip label="Stufe" value={STUFE_NAME[b.stufe]} />
             <StatChip label="Punkte" value={punkte} />
           </div>
           <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
