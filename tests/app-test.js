@@ -210,6 +210,22 @@ async function offlineTests() {
     const schlecht = (S.SHOP_PRODUCTS || []).map((p) => P.getSalesTip(p)).filter((t) => verboten.test(t) || /–/.test(t));
     ok('Zusatzverkauf-Tipps nur mit eigenen Backwaren (keine Getränke, Torten, belegten Sachen)', (S.SHOP_PRODUCTS || []).length > 100 && schlecht.length === 0, schlecht.slice(0, 3).join(' | '));
   }
+  // Keine Gedankenstriche in sichtbaren Texten (Wunsch des Nutzers) und am PC keine große Lücke auf der Startseite (Version 201)
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 1300, height: 900 } });
+    await clearPopups(d.page); await d.page.waitForTimeout(800);
+    const hoehen = await d.page.evaluate(() => { const m = document.querySelector('.lt-home-main'), s = document.querySelector('.lt-home-side'); return m && s ? [m.getBoundingClientRect().height, s.getBoundingClientRect().height] : [0, 0]; });
+    ok('Startseite am PC: beide Spalten fast gleich lang', hoehen[0] > 0 && Math.abs(hoehen[0] - hoehen[1]) < 300, hoehen.map(Math.round).join(' / '));
+    const striche = [];
+    for (const seite of [() => click(nav(d.page).nth(0)), async () => { await click(d.page.getByRole('button', { name: 'Menü' }).first()); await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); }]) {
+      await seite(); await settle(d.page, 600);
+      await d.page.evaluate(() => document.querySelectorAll('details').forEach((x) => { x.open = true; }));
+      const t = await d.page.evaluate(() => document.body.innerText);
+      for (const m of t.matchAll(/.{0,30}(–|—|\s-\s).{0,30}/g)) striche.push(m[0]);
+    }
+    ok('Keine Gedankenstriche in sichtbaren Texten (Startseite, Hilfe)', striche.length === 0, striche.slice(0, 3).join(' | '));
+    await d.ctx.close();
+  }
   // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
   {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;

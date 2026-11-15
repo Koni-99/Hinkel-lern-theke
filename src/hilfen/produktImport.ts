@@ -97,7 +97,7 @@ export function vergleichen(blaetter: { data: unknown[][] }[], produkte: AppProd
       if (!v) return;
       if (f === 'preis') {
         const w = preisWert(v); if (!w) return;
-        if (w.pricePerKg) add('preis', p.pricePerKg || '–', w.pricePerKg, w); else add('preis', p.price || '–', w.price!, w);
+        if (w.pricePerKg) add('preis', p.pricePerKg || 'leer', w.pricePerKg, w); else add('preis', p.price || 'leer', w.price!, w);
       } else if (f === 'allergene') {
         const w = allergenWert(v);
         const zeig = (a: string[], n?: string) => `${a.join(', ') || 'keine'}${n ? ` · ${n}` : ''}`;
@@ -112,7 +112,7 @@ export function vergleichen(blaetter: { data: unknown[][] }[], produkte: AppProd
         add('vegan', p.vegan ? 'Ja' : 'Nein', ja ? 'Ja' : 'Nein', { vegan: ja });
       } else if (f === 'gewicht') {
         const n = Number(String(v).replace(',', '.')); if (!(n > 0)) return;
-        add('gewicht', p.weight || '–', `${Math.round(n)} g`, { weight: `${Math.round(n)} g` });
+        add('gewicht', p.weight || 'leer', `${Math.round(n)} g`, { weight: `${Math.round(n)} g` });
       }
     });
   });

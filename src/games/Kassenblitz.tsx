@@ -61,7 +61,7 @@ export function KassenblitzView({ onSaveScore }: { onSaveScore: (points: number,
   }, [kbState, kbTimer]);
 
   const generateKassenblitzRound = () => {
-    // 1–3 verschiedene echte Artikel, Brötchen & Feingebäck auch mehrfach
+    // 1 bis 3 verschiedene echte Artikel, Brötchen & Feingebäck auch mehrfach
     const count = 1 + Math.floor(Math.random() * 3);
     const picked = shuffleArray(kassenArtikel()).slice(0, count);
     const basket: KassenPosten[] = picked.map(a => ({ name: a.name, cents: a.cents, qty: a.small ? 1 + Math.floor(Math.random() * 4) : 1 }));

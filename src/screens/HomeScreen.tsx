@@ -1,5 +1,6 @@
 // ═══ Startseite ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { useState, useEffect, useRef } from 'react';
 import type { ReactNode, Dispatch, SetStateAction } from 'react';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import type { PinboardMessage, ScoreEntry } from '../types';
@@ -112,6 +113,205 @@ export type HomeScreenProps = {
 };
 
 export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow , pinGelesenAm = 0, onPinGelesen, teamKarten }: HomeScreenProps) {
+  // Statistik und Lern-Bon (Version 201): am PC/Tablet quer in die kürzere der beiden Spalten, damit keine große Lücke bleibt
+  const mainRef = useRef<HTMLDivElement>(null);
+  const sideRef = useRef<HTMLDivElement>(null);
+  const [links, setLinks] = useState<string[]>([]);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1180px)');
+    const pruefe = () => {
+      const m = mainRef.current, sd = sideRef.current;
+      if (!mq.matches || !m || !sd) { setLinks((l) => (l.length ? [] : l)); return; }
+      const hoehe = (id: string) => { const e = document.querySelector(`.lt-blk[data-blk="${id}"]`); return e ? e.getBoundingClientRect().height + 22 : 0; };
+      const ids = ['T', 'B', 'P', 'K', 'S'].filter((id) => hoehe(id) > 22);
+      const verschoben = links.reduce((a, id) => a + hoehe(id), 0);
+      const m0 = m.getBoundingClientRect().height - verschoben;
+      const sVoll = sd.getBoundingClientRect().height + verschoben;
+      // Alle Möglichkeiten durchprobieren: welche Karten nach links, damit beide Spalten fast gleich lang sind?
+      let best: string[] = [], bestDiff = Math.abs(m0 - sVoll);
+      for (let mask = 1; mask < 1 << ids.length; mask++) {
+        const wahl = ids.filter((_, i) => mask & (1 << i));
+        const l = wahl.reduce((a, id) => a + hoehe(id), 0);
+        const d = Math.abs(m0 + l - (sVoll - l)) + wahl.length * 30;
+        if (d < bestDiff) { bestDiff = d; best = wahl; }
+      }
+      if (best.join() !== links.join()) setLinks(best);
+    };
+    const ro = new ResizeObserver(pruefe);
+    [mainRef.current, sideRef.current].forEach((e) => e && ro.observe(e));
+    mq.addEventListener?.('change', pruefe);
+    pruefe();
+    return () => { ro.disconnect(); mq.removeEventListener?.('change', pruefe); };
+  }, [links]);
+  const teamBlock = (() => {
+        const pct = Math.min(100, Math.round((team.points / Math.max(1, team.goal)) * 100));
+        const mine = team.players.has(userKeyLower);
+        return (
+          <section className="lt-teamgoal" aria-labelledby="lt-team-h" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '18px', borderRadius: '22px', backgroundColor: team.reached ? dc('#E3F4EA') : dc('#FFFFFF'), border: `2px solid ${team.reached ? dc('#1F7A4D') : LT.line}` }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>Team-Challenge</h2>
+              <span style={{ fontSize: '15px', color: LT.muted, fontWeight: 700 }}>{team.reached ? 'Geschafft!' : team.daysLeft === 1 ? 'Noch heute' : `Noch ${team.daysLeft} Tage`}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
+              {team.reached
+                ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte.`
+                : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte.`}
+            </p>
+            <div role="progressbar" aria-label="Fortschritt Team-Challenge" aria-valuemin={0} aria-valuemax={team.goal} aria-valuenow={Math.min(team.points, team.goal)} style={{ height: '16px', borderRadius: '999px', backgroundColor: dc('#F1E3C8'), overflow: 'hidden' }}>
+              <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', backgroundColor: team.reached ? dc('#1F7A4D') : LT.yellow, transition: 'width .6s ease' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', fontSize: '15px', fontVariantNumeric: 'tabular-nums' }}>
+              <span><strong>{team.points.toLocaleString('de-DE')}</strong> von {team.goal.toLocaleString('de-DE')} Punkten · {team.players.size} {team.players.size === 1 ? 'Person spielt' : 'Personen spielen'} mit</span>
+              {!isAdmin && <span style={{ color: mine ? dc('#1F7A4D') : LT.muted, fontWeight: 700 }}>{mine ? '✓ Du bist dabei' : 'Spiel eine Runde, dann bist du dabei'}</span>}
+            </div>
+            {team.lastPoints > 0 && <div style={{ fontSize: '14px', color: LT.muted }}>Letzte Woche: {team.lastPoints.toLocaleString('de-DE')} von {team.lastGoal.toLocaleString('de-DE')} Punkten {team.lastReached ? '✓ geschafft' : ''}</div>}
+          </section>
+        );
+      })();
+  const basketBlock = !isAdmin && (() => {
+        const n = Math.floor(masteredNow / 10);
+        const rest = 10 - (masteredNow % 10);
+        const breads = [
+          { d: 'M22 26a12 9 0 1 0 24 0a12 9 0 1 0-24 0z', c: '#B9773A' },
+          { d: 'M48 24a14 11 0 1 0 28 0a14 11 0 1 0-28 0z', c: '#D9A066' },
+          { d: 'M36 30c2-12 22-12 24 0z', c: '#8A4F22' },
+          { d: 'M64 30a10 7 0 1 0 20 0a10 7 0 1 0-20 0z', c: '#C98345' },
+          { d: 'M14 32a9 6 0 1 0 18 0a9 6 0 1 0-18 0z', c: '#E7B271' },
+        ].slice(0, Math.min(5, n));
+        return (
+          <section className="lt-basket" aria-label="Dein Brotkorb">
+            <svg width="104" height="64" viewBox="0 0 104 64" aria-hidden="true" style={{ flex: '0 0 auto', overflow: 'visible' }}>
+              {breads.map((b, i) => <path key={i} className="lt-bread" d={b.d} fill={b.c} style={{ animationDelay: `${0.25 + i * 0.18}s` }} />)}
+              <path d="M6 30h92l-8 30a3 3 0 0 1-3 2H17a3 3 0 0 1-3-2z" fill="#C88A4A" />
+              <path d="M6 30h92" stroke="#8B5A2B" strokeWidth="5" strokeLinecap="round" />
+              <path d="M18 38l4 20M32 38l2 20M46 38v20M60 38v20M74 38l-2 20M88 38l-4 20M12 46h80" stroke="#A26A33" strokeWidth="2.4" />
+            </svg>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <b>Dein Brotkorb</b>
+              <span>{n === 0 ? `Noch leer. Nach ${rest} gemeisterten ${rest === 1 ? 'Frage' : 'Fragen'} kommt das erste Gebäck rein.` : `${n} Gebäck im Korb · noch ${rest} ${rest === 1 ? 'Frage' : 'Fragen'} bis zum nächsten`}</span>
+              <span className="lt-basket-lvl"><i style={{ width: `${shownLevel.next ? shownLevel.pct : 100}%` }} /></span>
+              <span style={{ fontSize: '13px' }}>Stufe {shownLevel.no} · {shownLevel.title}{shownLevel.next ? ` · noch ${shownLevel.toNext.toLocaleString('de-DE')} P. bis ${shownLevel.next.title}` : ' · höchste Stufe'}</span>
+              {isMeister && <span style={{ fontSize: '13px', fontWeight: 800, color: '#8A6A00' }}>Alles gemeistert! Die Meister-Runde wartet unter Lernen.</span>}
+              {meisterLeft > 0 && <span style={{ fontSize: '13px', fontWeight: 700, color: '#8A6A00' }}>Noch {meisterLeft} {meisterLeft === 1 ? 'Frage' : 'Fragen'} bis zum Hinkel-Meister</span>}
+            </span>
+          </section>
+        );
+      })();
+  const boardBlock = activePinboard && activePinboard.text && (
+        <section className="lt-board" aria-label="Nachricht von deinem Ausbilder">
+          <span className="lt-board-pin" aria-hidden="true" />
+          <div className="lt-board-frame">
+            <span className="lt-board-ttl">Dein Ausbilder sagt</span>
+            {activePinboard.image && <img src={activePinboard.image} alt="Foto vom Ausbilder" className="lt-board-img lt-loaded" />}
+            <span className="lt-board-txt">{activePinboard.text}</span>
+            <span className="lt-board-sig">von {activePinboard.author}{activePinboard.updatedAt ? <small> · {activePinboard.updatedAt}</small> : null}</span>
+            <div className="lt-board-speak"><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
+            {activePinboard.pflicht && !isAdmin && (pinGelesenAm
+              ? <span style={{ display: 'block', marginTop: '10px', fontSize: '15px', fontWeight: 700, color: '#2F5D3A' }}>✓ Gelesen bestätigt am {new Date(pinGelesenAm).toLocaleDateString('de-DE')}</span>
+              : <button type="button" onClick={onPinGelesen} style={{ marginTop: '12px', minHeight: '50px', padding: '0 18px', borderRadius: '14px', border: 'none', backgroundColor: '#4B2A14', color: '#FFF6E0', fontSize: '17px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Gelesen und verstanden</button>)}
+            <span className="lt-board-ledge" aria-hidden="true"><span className="lt-board-sponge" /><span className="lt-board-piece" /></span>
+          </div>
+        </section>
+      );
+  const statBlock = !isAdmin && (() => {
+        const qs: Record<string, any> = myProg._qs || {};
+        let rr = 0, ww = 0;
+        Object.values(qs).forEach((v: any) => { if (Array.isArray(v)) { rr += Number(v[0]) || 0; ww += Number(v[1]) || 0; } });
+        const quote = rr + ww > 0 ? Math.round((rr / (rr + ww)) * 100) : 0;
+        const mon = mondayOf(new Date());
+        const todayK = dayKey(new Date());
+        const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((label, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); const k = dayKey(d); return { label, k, pts: 0, today: k === todayK }; });
+        const idx = new Map(days.map((d, i) => [d.k, i]));
+        const tot: Record<string, number> = {};
+        let weekPts = 0;
+        cloudScores.forEach(sc => {
+          const d = parseBonDate(sc.date); if (!d || d < mon) return;
+          const key = (sc.username || '').toLowerCase(); const pts = Number(sc.score) || 0;
+          tot[key] = (tot[key] || 0) + pts;
+          if (key === userKeyLower) { const i = idx.get(dayKey(d)); if (i !== undefined) days[i].pts += pts; weekPts += pts; }
+        });
+        const order = Object.keys(tot).filter(k => tot[k] > 0).sort((x, y) => tot[y] - tot[x]);
+        const rank = order.indexOf(userKeyLower) + 1;
+        const maxPts = Math.max(1, ...days.map(d => d.pts));
+        const cats = [['Arbeit & Hygiene', 'Hygiene'], ['Fachwissen', 'Fachwissen'], ['Sortiment & Warenkunde', 'Sortiment'], ['Service & Verkauf', 'Service']].map(([c, l]) => ({ c, l, p: catPercent(c) }));
+        const weakest = [...cats].sort((x, y) => x.p - y.p)[0];
+        const now = new Date();
+        const bonTime = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        return (
+          <div className="lt-statbon">
+            <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '30px' }}>Deine Statistik</h2>
+              <div className="lt-st">
+                <div className="lt-st-kpis">
+                  <div className="lt-st-kpi"><b>{quote}<small style={{ fontSize: '15px' }}>%</small></b><span>richtig beantwortet</span></div>
+                  <div className="lt-st-kpi"><b>{streak.current}</b><span>{streak.current === 1 ? 'Tag' : 'Tage'} am Stück</span></div>
+                  <div className="lt-st-kpi"><b>{rank > 0 ? `#${rank}` : 'neu'}</b><span>im Team diese Woche</span></div>
+                </div>
+                <div className="lt-st-h">Diese Woche <em>{weekPts.toLocaleString('de-DE')} Punkte</em></div>
+                <div className="lt-st-week" role="img" aria-label={`Punkte pro Tag: ${days.map(d => `${d.label} ${d.pts}`).join(', ')}`}>
+                  {days.map((d, i) => (
+                    <div key={d.k}><i className={d.today ? 'today' : d.pts > 0 ? 'on' : ''} style={{ height: `${Math.max(8, Math.round((d.pts / maxPts) * 100))}%`, animationDelay: `${i * 0.05}s` }} /><span style={d.today ? { color: LT.ink } : undefined}>{d.label}</span></div>
+                  ))}
+                </div>
+                <div className="lt-st-h">Deine Bereiche <em>{overallPercent} % gesamt</em></div>
+                <div className="lt-st-cats">
+                  {cats.map(c => (
+                    <div key={c.c} className="lt-st-cat"><span>{c.l}</span><span className="lt-st-bar"><i style={{ width: `${Math.max(2, c.p)}%`, backgroundColor: c === weakest && c.p < 100 ? '#E8401C' : '#FFC72C' }} /></span><b>{c.p}%</b></div>
+                  ))}
+                </div>
+                {weakest && weakest.p < 100 && (
+                  <div className="lt-st-tip"><span><b>Tipp:</b> Bei {weakest.l} holst du gerade am meisten raus.</span><button className="lt-st-btn" onClick={() => { setCurrentQuizCategory(weakest.c); setSelectedSubfilter('all'); setSelectedLevel(null); setActiveTab('quiz'); }}>Jetzt üben</button></div>
+                )}
+                <button className="lt-st-more" onClick={() => setActiveTab('statistik')}>Alle Statistiken ansehen ›</button>
+              </div>
+            </section>
+    
+            <details className="lt-fold" style={{ ...cardStyle, padding: 0 }}>
+              <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', minHeight: '60px' }}>
+                <span style={{ flex: 1 }}><span style={{ display: 'block', fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Dein Lern-Bon</span><span style={{ display: 'block', fontSize: '15px', color: LT.muted }}>Alle Zahlen auf einen Blick</span></span>
+                <span className="lt-fold-arrow" aria-hidden="true" style={{ fontSize: '20px' }}>▾</span>
+              </summary>
+              <div style={{ padding: '0 12px 18px' }}>
+            <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+              <div className="lt-bon lt-papier" style={{ position: 'relative', width: '100%', maxWidth: '380px', transform: 'rotate(-1.2deg)', filter: 'drop-shadow(0 18px 24px rgba(75,42,20,0.22))' }}>
+                <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(225deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', backgroundPosition: 'bottom left' }} />
+                <div style={{ position: 'relative', backgroundColor: dc('#FFFFFF'), padding: '20px 22px 24px', fontFamily: "'Courier Prime', 'Courier New', monospace", lineHeight: 1.55, color: LT.ink, fontSize: '15px' }}>
+                  <div style={{ textAlign: 'center', fontWeight: 700, fontSize: '1.2em', letterSpacing: '2px' }}>BÄCKEREI HINKEL</div>
+                  <div style={{ textAlign: 'center', fontSize: '0.8em', letterSpacing: '1px' }}>DÜSSELDORF · SEIT 1891</div>
+                  {BON_DIVIDER}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8em' }}><span>LERN-BON Nr. {String(masteredNow).padStart(4, '0')}</span><span>{bonTime}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8em', gap: '8px' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>AZUBI: {username.toUpperCase()}</span><span>KASSE 1</span></div>
+                  {BON_DIVIDER}
+                  <BonLine left="Fragen gemeistert" right={`${allProgress.totalAnswered} / ${allProgress.total}`} />
+                  <BonLine left="Trefferquote" right={`${quote} %`} />
+                  <BonLine left="Punkte diese Woche" right={weekPts.toLocaleString('de-DE')} />
+                  <BonLine left="Lerntage gesamt" right={String(myDays.length)} />
+                  <BonLine left="Bester Lauf" right={`${streak.best} ${streak.best === 1 ? 'Tag' : 'Tage'}`} />
+                  <BonLine left="Fehler-Stapel" right={String(myWrongCount)} />
+                  <BonLine left="Abzeichen" right={`${earnedBadges.length} / ${badges.length}`} />
+                  {BON_DIVIDER}
+                  <BonLine left={`Stufe ${myLevel.no} · ${myLevel.title}`} right={myLevel.next ? `${myLevel.toNext.toLocaleString('de-DE')} bis ${myLevel.no + 1}` : 'MAX'} />
+                  <div className="lt-bon-prog" aria-hidden="true"><i style={{ width: `${myLevel.next ? myLevel.pct : 100}%` }} /></div>
+                  <BonLine left="Rang" right={myRank.title} />
+                  {BON_DIVIDER}
+                  <div style={{ fontSize: '1.3em' }}><BonLine left="SUMME" right={`${myTotalScore.toLocaleString('de-DE')} PKT`} strong /></div>
+                  {streak.current >= 2 && <span className="lt-bon-stamp" aria-hidden="true">SERIE {streak.current}</span>}
+                  <div aria-hidden="true" style={{ height: '40px', margin: '12px auto 0', width: '80%', backgroundImage: `repeating-linear-gradient(90deg, ${LT.ink} 0px, ${LT.ink} 3px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 5px, ${LT.ink} 5px, ${LT.ink} 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 10px)` }} />
+                  <div style={{ textAlign: 'center', fontSize: '0.85em', marginTop: '8px' }}>VIELEN DANK · BIS MORGEN!</div>
+                </div>
+                <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(45deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(-45deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', transform: 'rotate(180deg)' }} />
+              </div>
+              <button onClick={() => { setActiveTab('scoreboard'); fetchCloudData(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '50px', padding: '0 22px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '17px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 20px -12px rgba(31,20,12,.7)' }}><LtIcon paths={ICON.trophy} size={20} width={2} />Zur Bestenliste</button>
+            </section>
+              </div>
+            </details>
+          </div>
+        );
+      })();
+
+  const kartenBlock = teamKarten;
+  const BLOECKE: Record<string, ReactNode> = { T: teamBlock, B: basketBlock, P: boardBlock, K: kartenBlock, S: statBlock };
+  const blk = (id: string) => BLOECKE[id] ? <div key={id} className="lt-blk" data-blk={id}>{BLOECKE[id]}</div> : null;
   return (
     <div className="lt-home" style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       <section className="lt-home-greet" style={{ display: 'block', marginBottom: '-8px' }}>
@@ -128,7 +328,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
       <KuekenFact />
     
       {/* Hauptspalte (am PC links). Am Handy und Tablet zählt nur die Reihenfolge, siehe theke-design.ts */}
-      <div className="lt-home-main">
+      <div className="lt-home-main" ref={mainRef}>
       {(() => {
         const pd = productOfTheDay(productImages);
         if (!pd) return null;
@@ -355,183 +555,12 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           <span style={{ fontSize: '18px', fontWeight: 700, color: dc('#2F5D3A') }}>Öffnen ›</span>
         </button>
       )}
+      {(['T', 'B', 'P', 'K', 'S'] as const).map((id) => links.includes(id) && blk(id))}
       </div>
 
       {/* Seitenspalte (am PC rechts) */}
-      <div className="lt-home-side">
-      {(() => {
-        const pct = Math.min(100, Math.round((team.points / Math.max(1, team.goal)) * 100));
-        const mine = team.players.has(userKeyLower);
-        return (
-          <section className="lt-teamgoal" aria-labelledby="lt-team-h" style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '18px', borderRadius: '22px', backgroundColor: team.reached ? dc('#E3F4EA') : dc('#FFFFFF'), border: `2px solid ${team.reached ? dc('#1F7A4D') : LT.line}` }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-              <h2 id="lt-team-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '26px' }}>Team-Challenge</h2>
-              <span style={{ fontSize: '15px', color: LT.muted, fontWeight: 700 }}>{team.reached ? 'Geschafft!' : team.daysLeft === 1 ? 'Noch heute' : `Noch ${team.daysLeft} Tage`}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
-              {team.reached
-                ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte.`
-                : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte.`}
-            </p>
-            <div role="progressbar" aria-label="Fortschritt Team-Challenge" aria-valuemin={0} aria-valuemax={team.goal} aria-valuenow={Math.min(team.points, team.goal)} style={{ height: '16px', borderRadius: '999px', backgroundColor: dc('#F1E3C8'), overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', borderRadius: '999px', backgroundColor: team.reached ? dc('#1F7A4D') : LT.yellow, transition: 'width .6s ease' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', fontSize: '15px', fontVariantNumeric: 'tabular-nums' }}>
-              <span><strong>{team.points.toLocaleString('de-DE')}</strong> von {team.goal.toLocaleString('de-DE')} Punkten · {team.players.size} {team.players.size === 1 ? 'Person spielt' : 'Personen spielen'} mit</span>
-              {!isAdmin && <span style={{ color: mine ? dc('#1F7A4D') : LT.muted, fontWeight: 700 }}>{mine ? '✓ Du bist dabei' : 'Spiel eine Runde, dann bist du dabei'}</span>}
-            </div>
-            {team.lastPoints > 0 && <div style={{ fontSize: '14px', color: LT.muted }}>Letzte Woche: {team.lastPoints.toLocaleString('de-DE')} von {team.lastGoal.toLocaleString('de-DE')} Punkten {team.lastReached ? '✓ geschafft' : ''}</div>}
-          </section>
-        );
-      })()}
-
-      {/* Brotkorb wie im Prototyp, darunter die Ausbilder-Tafel */}
-      {!isAdmin && (() => {
-        const n = Math.floor(masteredNow / 10);
-        const rest = 10 - (masteredNow % 10);
-        const breads = [
-          { d: 'M22 26a12 9 0 1 0 24 0a12 9 0 1 0-24 0z', c: '#B9773A' },
-          { d: 'M48 24a14 11 0 1 0 28 0a14 11 0 1 0-28 0z', c: '#D9A066' },
-          { d: 'M36 30c2-12 22-12 24 0z', c: '#8A4F22' },
-          { d: 'M64 30a10 7 0 1 0 20 0a10 7 0 1 0-20 0z', c: '#C98345' },
-          { d: 'M14 32a9 6 0 1 0 18 0a9 6 0 1 0-18 0z', c: '#E7B271' },
-        ].slice(0, Math.min(5, n));
-        return (
-          <section className="lt-basket" aria-label="Dein Brotkorb">
-            <svg width="104" height="64" viewBox="0 0 104 64" aria-hidden="true" style={{ flex: '0 0 auto', overflow: 'visible' }}>
-              {breads.map((b, i) => <path key={i} className="lt-bread" d={b.d} fill={b.c} style={{ animationDelay: `${0.25 + i * 0.18}s` }} />)}
-              <path d="M6 30h92l-8 30a3 3 0 0 1-3 2H17a3 3 0 0 1-3-2z" fill="#C88A4A" />
-              <path d="M6 30h92" stroke="#8B5A2B" strokeWidth="5" strokeLinecap="round" />
-              <path d="M18 38l4 20M32 38l2 20M46 38v20M60 38v20M74 38l-2 20M88 38l-4 20M12 46h80" stroke="#A26A33" strokeWidth="2.4" />
-            </svg>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <b>Dein Brotkorb</b>
-              <span>{n === 0 ? `Noch leer. Nach ${rest} gemeisterten ${rest === 1 ? 'Frage' : 'Fragen'} kommt das erste Gebäck rein.` : `${n} Gebäck im Korb · noch ${rest} ${rest === 1 ? 'Frage' : 'Fragen'} bis zum nächsten`}</span>
-              <span className="lt-basket-lvl"><i style={{ width: `${shownLevel.next ? shownLevel.pct : 100}%` }} /></span>
-              <span style={{ fontSize: '13px' }}>Stufe {shownLevel.no} · {shownLevel.title}{shownLevel.next ? ` · noch ${shownLevel.toNext.toLocaleString('de-DE')} P. bis ${shownLevel.next.title}` : ' · höchste Stufe'}</span>
-              {isMeister && <span style={{ fontSize: '13px', fontWeight: 800, color: '#8A6A00' }}>Alles gemeistert! Die Meister-Runde wartet unter Lernen.</span>}
-              {meisterLeft > 0 && <span style={{ fontSize: '13px', fontWeight: 700, color: '#8A6A00' }}>Noch {meisterLeft} {meisterLeft === 1 ? 'Frage' : 'Fragen'} bis zum Hinkel-Meister</span>}
-            </span>
-          </section>
-        );
-      })()}
-    
-      {activePinboard && activePinboard.text && (
-        <section className="lt-board" aria-label="Nachricht von deinem Ausbilder">
-          <span className="lt-board-pin" aria-hidden="true" />
-          <div className="lt-board-frame">
-            <span className="lt-board-ttl">Dein Ausbilder sagt</span>
-            {activePinboard.image && <img src={activePinboard.image} alt="Foto vom Ausbilder" className="lt-board-img lt-loaded" />}
-            <span className="lt-board-txt">{activePinboard.text}</span>
-            <span className="lt-board-sig">– {activePinboard.author}{activePinboard.updatedAt ? <small> · {activePinboard.updatedAt}</small> : null}</span>
-            <div className="lt-board-speak"><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
-            {activePinboard.pflicht && !isAdmin && (pinGelesenAm
-              ? <span style={{ display: 'block', marginTop: '10px', fontSize: '15px', fontWeight: 700, color: '#2F5D3A' }}>✓ Gelesen bestätigt am {new Date(pinGelesenAm).toLocaleDateString('de-DE')}</span>
-              : <button type="button" onClick={onPinGelesen} style={{ marginTop: '12px', minHeight: '50px', padding: '0 18px', borderRadius: '14px', border: 'none', backgroundColor: '#4B2A14', color: '#FFF6E0', fontSize: '17px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Gelesen und verstanden</button>)}
-            <span className="lt-board-ledge" aria-hidden="true"><span className="lt-board-sponge" /><span className="lt-board-piece" /></span>
-          </div>
-        </section>
-      )}
-    
-      {teamKarten}
-
-      {/* Statistik und Lern-Bon, immer sichtbar */}
-      {!isAdmin && (() => {
-        const qs: Record<string, any> = myProg._qs || {};
-        let rr = 0, ww = 0;
-        Object.values(qs).forEach((v: any) => { if (Array.isArray(v)) { rr += Number(v[0]) || 0; ww += Number(v[1]) || 0; } });
-        const quote = rr + ww > 0 ? Math.round((rr / (rr + ww)) * 100) : 0;
-        const mon = mondayOf(new Date());
-        const todayK = dayKey(new Date());
-        const days = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((label, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); const k = dayKey(d); return { label, k, pts: 0, today: k === todayK }; });
-        const idx = new Map(days.map((d, i) => [d.k, i]));
-        const tot: Record<string, number> = {};
-        let weekPts = 0;
-        cloudScores.forEach(sc => {
-          const d = parseBonDate(sc.date); if (!d || d < mon) return;
-          const key = (sc.username || '').toLowerCase(); const pts = Number(sc.score) || 0;
-          tot[key] = (tot[key] || 0) + pts;
-          if (key === userKeyLower) { const i = idx.get(dayKey(d)); if (i !== undefined) days[i].pts += pts; weekPts += pts; }
-        });
-        const order = Object.keys(tot).filter(k => tot[k] > 0).sort((x, y) => tot[y] - tot[x]);
-        const rank = order.indexOf(userKeyLower) + 1;
-        const maxPts = Math.max(1, ...days.map(d => d.pts));
-        const cats = [['Arbeit & Hygiene', 'Hygiene'], ['Fachwissen', 'Fachwissen'], ['Sortiment & Warenkunde', 'Sortiment'], ['Service & Verkauf', 'Service']].map(([c, l]) => ({ c, l, p: catPercent(c) }));
-        const weakest = [...cats].sort((x, y) => x.p - y.p)[0];
-        const now = new Date();
-        const bonTime = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        return (
-          <div className="lt-statbon">
-            <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <h2 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '30px' }}>Deine Statistik</h2>
-              <div className="lt-st">
-                <div className="lt-st-kpis">
-                  <div className="lt-st-kpi"><b>{quote}<small style={{ fontSize: '15px' }}>%</small></b><span>richtig beantwortet</span></div>
-                  <div className="lt-st-kpi"><b>{streak.current}</b><span>{streak.current === 1 ? 'Tag' : 'Tage'} am Stück</span></div>
-                  <div className="lt-st-kpi"><b>{rank > 0 ? `#${rank}` : '–'}</b><span>im Team diese Woche</span></div>
-                </div>
-                <div className="lt-st-h">Diese Woche <em>{weekPts.toLocaleString('de-DE')} Punkte</em></div>
-                <div className="lt-st-week" role="img" aria-label={`Punkte pro Tag: ${days.map(d => `${d.label} ${d.pts}`).join(', ')}`}>
-                  {days.map((d, i) => (
-                    <div key={d.k}><i className={d.today ? 'today' : d.pts > 0 ? 'on' : ''} style={{ height: `${Math.max(8, Math.round((d.pts / maxPts) * 100))}%`, animationDelay: `${i * 0.05}s` }} /><span style={d.today ? { color: LT.ink } : undefined}>{d.label}</span></div>
-                  ))}
-                </div>
-                <div className="lt-st-h">Deine Bereiche <em>{overallPercent} % gesamt</em></div>
-                <div className="lt-st-cats">
-                  {cats.map(c => (
-                    <div key={c.c} className="lt-st-cat"><span>{c.l}</span><span className="lt-st-bar"><i style={{ width: `${Math.max(2, c.p)}%`, backgroundColor: c === weakest && c.p < 100 ? '#E8401C' : '#FFC72C' }} /></span><b>{c.p}%</b></div>
-                  ))}
-                </div>
-                {weakest && weakest.p < 100 && (
-                  <div className="lt-st-tip"><span><b>Tipp:</b> Bei {weakest.l} holst du gerade am meisten raus.</span><button className="lt-st-btn" onClick={() => { setCurrentQuizCategory(weakest.c); setSelectedSubfilter('all'); setSelectedLevel(null); setActiveTab('quiz'); }}>Jetzt üben</button></div>
-                )}
-                <button className="lt-st-more" onClick={() => setActiveTab('statistik')}>Alle Statistiken ansehen ›</button>
-              </div>
-            </section>
-    
-            <details className="lt-fold" style={{ ...cardStyle, padding: 0 }}>
-              <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 20px', minHeight: '60px' }}>
-                <span style={{ flex: 1 }}><span style={{ display: 'block', fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Dein Lern-Bon</span><span style={{ display: 'block', fontSize: '15px', color: LT.muted }}>Alle Zahlen auf einen Blick</span></span>
-                <span className="lt-fold-arrow" aria-hidden="true" style={{ fontSize: '20px' }}>▾</span>
-              </summary>
-              <div style={{ padding: '0 12px 18px' }}>
-            <section style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-              <div className="lt-bon lt-papier" style={{ position: 'relative', width: '100%', maxWidth: '380px', transform: 'rotate(-1.2deg)', filter: 'drop-shadow(0 18px 24px rgba(75,42,20,0.22))' }}>
-                <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(135deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(225deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', backgroundPosition: 'bottom left' }} />
-                <div style={{ position: 'relative', backgroundColor: dc('#FFFFFF'), padding: '20px 22px 24px', fontFamily: "'Courier Prime', 'Courier New', monospace", lineHeight: 1.55, color: LT.ink, fontSize: '15px' }}>
-                  <div style={{ textAlign: 'center', fontWeight: 700, fontSize: '1.2em', letterSpacing: '2px' }}>BÄCKEREI HINKEL</div>
-                  <div style={{ textAlign: 'center', fontSize: '0.8em', letterSpacing: '1px' }}>DÜSSELDORF · SEIT 1891</div>
-                  {BON_DIVIDER}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8em' }}><span>LERN-BON Nr. {String(masteredNow).padStart(4, '0')}</span><span>{bonTime}</span></div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8em', gap: '8px' }}><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>AZUBI: {username.toUpperCase()}</span><span>KASSE 1</span></div>
-                  {BON_DIVIDER}
-                  <BonLine left="Fragen gemeistert" right={`${allProgress.totalAnswered} / ${allProgress.total}`} />
-                  <BonLine left="Trefferquote" right={`${quote} %`} />
-                  <BonLine left="Punkte diese Woche" right={weekPts.toLocaleString('de-DE')} />
-                  <BonLine left="Lerntage gesamt" right={String(myDays.length)} />
-                  <BonLine left="Bester Lauf" right={`${streak.best} ${streak.best === 1 ? 'Tag' : 'Tage'}`} />
-                  <BonLine left="Fehler-Stapel" right={String(myWrongCount)} />
-                  <BonLine left="Abzeichen" right={`${earnedBadges.length} / ${badges.length}`} />
-                  {BON_DIVIDER}
-                  <BonLine left={`Stufe ${myLevel.no} · ${myLevel.title}`} right={myLevel.next ? `${myLevel.toNext.toLocaleString('de-DE')} bis ${myLevel.no + 1}` : 'MAX'} />
-                  <div className="lt-bon-prog" aria-hidden="true"><i style={{ width: `${myLevel.next ? myLevel.pct : 100}%` }} /></div>
-                  <BonLine left="Rang" right={myRank.title} />
-                  {BON_DIVIDER}
-                  <div style={{ fontSize: '1.3em' }}><BonLine left="SUMME" right={`${myTotalScore.toLocaleString('de-DE')} PKT`} strong /></div>
-                  {streak.current >= 2 && <span className="lt-bon-stamp" aria-hidden="true">SERIE {streak.current}</span>}
-                  <div aria-hidden="true" style={{ height: '40px', margin: '12px auto 0', width: '80%', backgroundImage: `repeating-linear-gradient(90deg, ${LT.ink} 0px, ${LT.ink} 3px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 5px, ${LT.ink} 5px, ${LT.ink} 6px, rgba(0,0,0,0) 6px, rgba(0,0,0,0) 10px)` }} />
-                  <div style={{ textAlign: 'center', fontSize: '0.85em', marginTop: '8px' }}>VIELEN DANK · BIS MORGEN!</div>
-                </div>
-                <div aria-hidden="true" style={{ height: '14px', backgroundImage: `linear-gradient(45deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%), linear-gradient(-45deg, rgba(0,0,0,0) 50%, ${dc('#FFFFFF')} 50%)`, backgroundSize: '20px 14px', backgroundRepeat: 'repeat-x', transform: 'rotate(180deg)' }} />
-              </div>
-              <button onClick={() => { setActiveTab('scoreboard'); fetchCloudData(); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '50px', padding: '0 22px', borderRadius: '999px', border: 'none', backgroundColor: '#1F140C', color: '#FFD86B', fontSize: '17px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 20px -12px rgba(31,20,12,.7)' }}><LtIcon paths={ICON.trophy} size={20} width={2} />Zur Bestenliste</button>
-            </section>
-              </div>
-            </details>
-          </div>
-        );
-      })()}
-    
+      <div className="lt-home-side" ref={sideRef}>
+      {(['T', 'B', 'P', 'K', 'S'] as const).map((id) => !links.includes(id) && blk(id))}
       </div>
     
       {/* Drei Hauptkarten */}

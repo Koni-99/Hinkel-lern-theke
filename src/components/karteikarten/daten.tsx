@@ -282,7 +282,7 @@ export const FACH_SECTIONS: FachSection[] = [
       { term: "Lagern", text: "bei Raumtemperatur in einer Brotdose mit Luftlöchern, so kann Feuchtigkeit entweichen" },
       { term: "Kühlschrank", text: "Kunden davon abraten, Brot schimmelt dort schneller" },
       { term: "Einfrieren", text: "luftdicht und scheibenweise" },
-      { term: "Aufbacken", text: "Baguette, Brötchen und Brote leicht mit Wasser befeuchten, bei 100 °C für 10–15 Minuten in den Ofen" },
+      { term: "Aufbacken", text: "Baguette, Brötchen und Brote leicht mit Wasser befeuchten, bei 100 °C für 10 bis 15 Minuten in den Ofen" },
     ],
   },
   {
@@ -337,8 +337,8 @@ export const FACH_SECTIONS: FachSection[] = [
   {
     id: "geschaefte", icon: "📍", title: "Unsere Geschäfte",
     items: [
-      { term: "Hohe Straße", text: "Hohe Str. 31, Carlstadt · Tel. 0211 86 20 34 13 · Mo–Fr 6–18 Uhr, Sa 6–16 Uhr" },
-      { term: "Mittelstraße", text: "Mittelstraße 25, Altstadt · Tel. 0211 86 20 34 21 · Mo–Fr 7–18:30 Uhr, Sa 6–16 Uhr" },
+      { term: "Hohe Straße", text: "Hohe Str. 31, Carlstadt · Tel. 0211 86 20 34 13 · Mo bis Fr 6 bis 18 Uhr, Sa 6 bis 16 Uhr" },
+      { term: "Mittelstraße", text: "Mittelstraße 25, Altstadt · Tel. 0211 86 20 34 21 · Mo bis Fr 7 bis 18:30 Uhr, Sa 6 bis 16 Uhr" },
       { term: "Verkaufswagen", text: "Dienstag 8-13 Uhr Oberkassel, Mittwoch 8-11 Uhr AOK am Flughafen, Donnerstag 8-13 Uhr Gerresheim" },
     ],
   },

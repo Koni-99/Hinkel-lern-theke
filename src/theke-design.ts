@@ -773,4 +773,9 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
   .lt-root .lt-awning-sm .lt-pill-round{width:40px}
   .lt-kopf-aehren .lt-awning-sm .lt-hdr-row{row-gap:16px;padding-bottom:16px}
 }
+/* v201: Karten der rechten Spalte stecken in .lt-blk. Am Handy/Tablet zählen sie nicht (Reihenfolge wie bisher),
+   am PC verschiebt HomeScreen sie in die kürzere Spalte, damit keine große Lücke bleibt */
+.lt-blk{display:contents}
+@media (max-width:1179px){.lt-blk>*{order:2}}
+@media (min-width:1180px){.lt-root .lt-home-main>.lt-blk,.lt-root .lt-home-side>.lt-blk{display:flex;flex-direction:column;gap:22px;min-width:0}}
 `;

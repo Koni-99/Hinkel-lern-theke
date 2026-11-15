@@ -165,7 +165,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
           <KollegenTipps key={sp ? sp.name : prod.name} produkt={sp ? sp.name : prod.name} tipps={kollegenTipps} meine={meineTipps} onTipp={onTipp} />
           {onNotiz && <MeineNotiz key={`notiz-${sp ? sp.name : prod.name}`} produkt={sp ? sp.name : prod.name} notiz={meineNotizen[sp ? sp.name : prod.name] || ''} onNotiz={onNotiz} />}
 
-          <ReportContext report={{ game: "Steckbrief", product: sp ? sp.name : prod.name, text: `Steckbrief ${sp ? sp.name : prod.name}`, detail: sp ? `Preis: ${sp.price || "–"}${prod.slice ? `, Schnitt: ${prod.slice}` : ""}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` : `${prod.name}\n${prod.facts.join("\n")}` }} />
+          <ReportContext report={{ game: "Steckbrief", product: sp ? sp.name : prod.name, text: `Steckbrief ${sp ? sp.name : prod.name}`, detail: sp ? `Preis: ${sp.price || "unbekannt"}${prod.slice ? `, Schnitt: ${prod.slice}` : ""}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` : `${prod.name}\n${prod.facts.join("\n")}` }} />
           <button onClick={() => toggleFavorite(prod.ids[0])} style={{ minHeight: "54px", borderRadius: "16px", border: fav ? "none" : `2px solid ${TH.line}`, backgroundColor: fav ? TH.tintYellow : TH.white, color: TH.ink, fontSize: "18px", fontWeight: 700, cursor: "pointer" }}>
             {fav ? "★ Gemerkt, nochmal tippen zum Entfernen" : "☆ Merken"}
           </button>

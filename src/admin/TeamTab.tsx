@@ -148,7 +148,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
           const matchingScores = cloudScores.filter(s => s.username?.toLowerCase() === userKey);
           const totalUserPoints = matchingScores.reduce((sum, s) => sum + (Number(s.score) || 0), 0);
           const displayName = seenInfo?.displayName || userProgObj._displayName || matchingScores[0]?.username || userKey;
-          const lastSeenTime = seenInfo?.time || matchingScores[0]?.date || '–';
+          const lastSeenTime = seenInfo?.time || matchingScores[0]?.date || 'noch nie';
           const isOnline = seenInfo?.timestamp ? (Date.now() - seenInfo.timestamp < 120000) : false;
           const masteryPct = getUserMasteryPercent(userKey);
           const uRank = getRankByPercentage(masteryPct);
@@ -212,7 +212,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                             { l: 'Lerntage', v: `${w.learnDays.length} von 7` },
                             { l: 'Punkte diese Woche', v: w.weekPoints.toLocaleString('de-DE') },
                             { l: 'Lern-Serie', v: `${w.streak} ${w.streak === 1 ? 'Tag' : 'Tage'}` },
-                            { l: 'Schwächster Bereich', v: w.weakestCat ? `${w.weakestCat.cat} (${w.weakestCat.pct} %)` : '–' },
+                            { l: 'Schwächster Bereich', v: w.weakestCat ? `${w.weakestCat.cat} (${w.weakestCat.pct} %)` : 'keiner' },
                           ].map(x => (
                             <div key={x.l} style={{ padding: '10px 12px', borderRadius: '12px', backgroundColor: TH.white }}>
                               <div style={{ fontSize: '13px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>{x.l}</div>

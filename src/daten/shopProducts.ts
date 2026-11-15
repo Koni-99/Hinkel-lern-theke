@@ -173,7 +173,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Butter-Croissant wird ganz klassisch französisch mit viel Butter im Teig touriert. Durch den hohen Butteranteil entsteht eine blättrige, zarte Struktur und ein Geschmack, der an die Auslagen einer Pariser Boulangerie erinnert. Außen goldbraun gebacken, innen luftig und herrlich aromatisch.',
     shortIngredients: 'Weizenmehl, viel Butter, Wasser, Ei, Zucker, Hefe, Salz',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono - und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
+      'WEIZENMEHL, BUTTER, Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono- und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch']
   },
   {
@@ -498,7 +498,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     pricePerKg: '19,50 € / kg',
     weight: '300 g',
     description:
-      'Unser Granola ist eine ofengeröstete Mischung aus Hafer, Leinsaat, Roggenmalzflocken, Sonnenblumenkernen, Kürbiskernen, Mandeln und Haselnüssen - verfeinert mit Cranberries, Ahornsirup und einem Hauch Zimt. Knusprig, ausgewogen und vielseitig und somit ideal zum Frühstück oder als Topping. Unser Granola ist vegan.',
+      'Unser Granola ist eine ofengeröstete Mischung aus Hafer, Leinsaat, Roggenmalzflocken, Sonnenblumenkernen, Kürbiskernen, Mandeln und Haselnüssen, verfeinert mit Cranberries, Ahornsirup und einem Hauch Zimt. Knusprig, ausgewogen und vielseitig und somit ideal zum Frühstück oder als Topping. Unser Granola ist vegan.',
     shortIngredients: 'Hafer, Leinsaat, Roggenmalzflocken, Kerne, Cranberries, Ahornsirup, Mandeln, Haselnüsse, Zimt',
     fullIngredients:
       'HAFER, Leinsaat, ROGGENMALZFLOCKEN, Sonnenblumenkerne, Cranberries (Cranberries, Maismehl), Kürbiskerne, Ahornsirup, pflanzliche Fette, MANDELN, HASELNÜSSE, Zimt',
@@ -683,7 +683,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     pricePerKg: '12,67 € / kg',
     weight: '750 g',
     description:
-      'Unser Innsbrucker Roggenlaib ist ein kräftiges Roggenvollkornbrot ohne Weizenanteil. Es wird mit hauseigenem Sauerteig gebacken und dezent mit gemahlenem Kümmel und Koriander gewürzt. Die dunkle, saftige Krume und die ausgewogene Würze erinnern an klassische Brote aus den Alpenregionen - herzhaft, charaktervoll und mit langer Tradition.',
+      'Unser Innsbrucker Roggenlaib ist ein kräftiges Roggenvollkornbrot ohne Weizenanteil. Es wird mit hauseigenem Sauerteig gebacken und dezent mit gemahlenem Kümmel und Koriander gewürzt. Die dunkle, saftige Krume und die ausgewogene Würze erinnern an klassische Brote aus den Alpenregionen: herzhaft, charaktervoll und mit langer Tradition.',
     shortIngredients: 'Roggenmehl, Wasser, Salz, Sauerteig, Koriander, gemahlener Kümmel, ohne Weizen',
     fullIngredients: 'Wasser, ROGGENVOLLKORNMEHL, Salz, Koriander, Kümmel gemahlen (Kümmel, Wasser), ROGGENSAUER',
     allergens: ['Gluten (Roggen)'],
@@ -1037,7 +1037,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Marzipan-Croissant wird aus buttrigem Croissantteig gefertigt, liebevoll mit Marzipan gefüllt und mit gehobelten Mandeln sowie Puderzucker veredelt. Die Kombination aus saftigem Inneren und knuspriger Kruste bringt französischen Genuss mit einer nussigen Note.',
     shortIngredients: 'Croissant-Teig mit Butter, Marzipanfüllung, gehobelte Mandeln, Puderzucker',
     fullIngredients:
-      'WEIZENMEHL, MANDELN, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), BUTTER, Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono - und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
+      'WEIZENMEHL, MANDELN, Marzipan (MANDELN, Zucker, Wasser, Invertzucker), BUTTER, Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono- und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
@@ -1500,7 +1500,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Schoko-Croissant ist ein echt französisches Buttergebäck, touriert mit viel Butter für den unverwechselbar zarten Biss. In der Mitte sorgen zwei feine Schokoladenstäbchen für eine süße Füllung, die perfekt mit dem blättrigen Teig harmoniert.',
     shortIngredients: 'Croissant-Teig mit viel Butter, zwei Schokostäbchen',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Schokostäbe (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono - und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
+      'WEIZENMEHL, BUTTER, Schokostäbe (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), Wasser, Zucker, VOLLEI, VOLLMILCHPULVER, Hefe, Salz, Plunderbackmittel (WEIZENKLEBER, WEIZENMEHL, Monoglyceride von Speisefettsäuren, Diglyceride von Speisefettsäuren, Essigsäureester von Mono- und Diglyceriden von Speisefettsäuren, Calciumphosphate, Ascorbinsäure)',
     allergens: ['Gluten (Weizen)', 'Eier', 'Soja', 'Milch']
   },
   {
@@ -1723,7 +1723,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     pricePerKg: '26,50 € / kg',
     weight: '200 g',
     description:
-      'Unser Spritzgebäck wird von Hand gefertigt und mit echter Butter gebacken. Die feine Vanillenote, kombiniert mit einer zart mürben Textur, macht jeden Bissen zu einem kleinen Genussmoment. Ob pur oder zum Kaffee serviert - dieses klassische Gebäck gehört einfach in jede Keksdose.',
+      'Unser Spritzgebäck wird von Hand gefertigt und mit echter Butter gebacken. Die feine Vanillenote, kombiniert mit einer zart mürben Textur, macht jeden Bissen zu einem kleinen Genussmoment. Ob pur oder zum Kaffee serviert, dieses klassische Gebäck gehört einfach in jede Keksdose.',
     shortIngredients: 'Weizenmehl, Butter, Zucker, Kondensmilch, Ei, Vanille',
     fullIngredients:
       'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, natürliches Bourbon-Vanillearoma',
@@ -1747,7 +1747,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     pricePerKg: '8,00 € / kg',
     weight: '250 g',
     description:
-      'Unser Sternchen ist die kleine Version unseres Schwarzwälders - genauso kräftig, saftig und aromatisch, aber handlicher im Format. Gebacken mit Sauerteig und einem Roggen-Weizen-Verhältnis von 70 zu 30 überzeugt es mit rustikaler Kruste und herzhafter Krume. Ideal für kleinere Haushalte oder wenn’s einfach mal nicht das ganze Brot sein soll.',
+      'Unser Sternchen ist die kleine Version unseres Schwarzwälders, genauso kräftig, saftig und aromatisch, aber handlicher im Format. Gebacken mit Sauerteig und einem Roggen-Weizen-Verhältnis von 70 zu 30 überzeugt es mit rustikaler Kruste und herzhafter Krume. Ideal für kleinere Haushalte oder wenn’s einfach mal nicht das ganze Brot sein soll.',
     shortIngredients: 'Roggenmehl, Weizenmehl, Wasser, Sauerteig, Salz, Hefe',
     fullIngredients:
       'ROGGENMEHL, Wasser, WEIZENMEHL, Salz, zerkleinertes Roggenmischbrot (ROGGENMEHL, WEIZENMEHL, ROGGENSAUER, Salz, Hefe, WEIZENGRIEß, WEIZENMALZMEHL, Wasser), Hefe, ROGGENSAUER, WEIZENMALZMEHL, WEIZENGRIEß',

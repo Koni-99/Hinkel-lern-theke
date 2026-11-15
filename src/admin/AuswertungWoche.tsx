@@ -40,8 +40,8 @@ export function AuswertungWoche({ allKnownUserKeys, smallBtn, sectionTitle, wSta
                     <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.learnDays.length} / 7</td>
                     <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.weekPoints.toLocaleString('de-DE')}</td>
                     <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.streak}</td>
-                    <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.weakestCat ? `${w.weakestCat.cat} (${w.weakestCat.pct} %)` : '–'}</td>
-                    <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.thekeWeak.length ? w.thekeWeak.map(t => t.topic).join(', ') : '–'}</td>
+                    <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.weakestCat ? `${w.weakestCat.cat} (${w.weakestCat.pct} %)` : 'keiner'}</td>
+                    <td style={{ padding: '10px', borderBottom: `1px solid ${TH.line}` }}>{w.thekeWeak.length ? w.thekeWeak.map(t => t.topic).join(', ') : 'keine'}</td>
                   </tr>
                 );
               })}

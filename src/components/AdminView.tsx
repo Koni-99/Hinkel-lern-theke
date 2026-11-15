@@ -168,7 +168,7 @@ export function AdminView({
   const [fixCorrect, setFixCorrect] = useState(0);
   const [fixExpl, setFixExpl] = useState('');
   const [fixSearch, setFixSearch] = useState('');
-  // Produkt korrigieren (Preis, Zutaten, Allergene, Alternativen) – gilt in allen Spielen
+  // Produkt korrigieren (Preis, Zutaten, Allergene, Alternativen), gilt in allen Spielen
   const [pfName, setPfName] = useState<string | null>(null);
   const [pfPrice, setPfPrice] = useState('');
   const [pfShort, setPfShort] = useState('');
@@ -602,7 +602,7 @@ export function AdminView({
           {orig && (
             <details style={{ fontSize: '15px', color: TH.muted }}>
               <summary style={{ cursor: 'pointer', fontWeight: 700 }}>Original anzeigen</summary>
-              <div style={{ marginTop: '6px', lineHeight: 1.5 }}>Preis: {orig.price || '–'}<br />Im Verkauf sagen: {orig.shortIngredients}<br />Allergene: {orig.allergens.join(', ') || 'keine'}<br />Alternativen: {orig.alts.join(', ') || 'keine'}</div>
+              <div style={{ marginTop: '6px', lineHeight: 1.5 }}>Preis: {orig.price || 'kein Preis'}<br />Im Verkauf sagen: {orig.shortIngredients}<br />Allergene: {orig.allergens.join(', ') || 'keine'}<br />Alternativen: {orig.alts.join(', ') || 'keine'}</div>
             </details>
           )}
           {pfMsg && <div style={{ color: TH.red, fontWeight: 700 }}>{pfMsg}</div>}

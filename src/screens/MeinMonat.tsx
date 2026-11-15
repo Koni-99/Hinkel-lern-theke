@@ -42,9 +42,9 @@ export function MeinMonat({ username, scores, tage, snap, gemeistertJetzt, tipp 
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
             {kachel(ICON.sparkle, d.punkte.toLocaleString('de-DE'), 'Punkte', d.punkteVormonat > 0 ? `${diff >= 0 ? '+' : '−'}${Math.abs(diff).toLocaleString('de-DE')} zum Vormonat` : undefined)}
-            {kachel(ICON.trophy, d.platz ? `${d.platz}.` : '–', d.platz ? `Platz von ${d.mitspieler} im Team` : 'noch kein Platz')}
+            {kachel(ICON.trophy, d.platz ? `${d.platz}.` : 'kein', d.platz ? `Platz von ${d.mitspieler} im Team` : 'noch kein Platz')}
             {kachel(ICON.calendar, String(d.lerntage), d.lerntage === 1 ? 'Tag gelernt' : 'Tage gelernt')}
-            {kachel(ICON.checklist, d.neuGemeistert === null ? '–' : String(d.neuGemeistert), d.neuGemeistert === null ? 'neu gemeistert (wird ab jetzt gezählt)' : d.neuGemeistert === 1 ? 'Frage neu gemeistert' : 'Fragen neu gemeistert')}
+            {kachel(ICON.checklist, d.neuGemeistert === null ? '0' : String(d.neuGemeistert), d.neuGemeistert === null ? 'neu gemeistert (wird ab jetzt gezählt)' : d.neuGemeistert === 1 ? 'Frage neu gemeistert' : 'Fragen neu gemeistert')}
           </div>
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '17px' }}>
             <h2 style={{ margin: 0, fontFamily: TH.serif, fontWeight: 400, fontSize: '26px' }}>Dein {name(mo)}</h2>

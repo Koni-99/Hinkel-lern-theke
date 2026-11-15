@@ -31,7 +31,7 @@ export function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
-/** Heutiges Datum in lokaler Zeit (YYYY-MM-DD). `toISOString()` liefert UTC und kippt nachts um 1–2 Uhr. */
+/** Heutiges Datum in lokaler Zeit (YYYY-MM-DD). `toISOString()` liefert UTC und kippt nachts um 1 bis 2 Uhr. */
 export function todayLocal(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
