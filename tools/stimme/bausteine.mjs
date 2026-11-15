@@ -55,16 +55,17 @@ console.log(`${teile.size} Bausteine (Simulator ${nachGespr}, Telefon ${teile.si
 if (args.includes('--zaehlen')) process.exit(0);
 
 async function sprechen(text, stimme) {
-  for (let versuch = 1; versuch <= 4; versuch++) {
+  for (let versuch = 1; versuch <= 10; versuch++) {
     const res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input: { text }, voice: { languageCode: 'de-DE', name: stimme }, audioConfig: { audioEncoding: 'MP3' } }),
     });
     if (res.ok) return Buffer.from((await res.json()).audioContent, 'base64');
-    if (res.status === 429 || res.status >= 500) { await new Promise((r) => setTimeout(r, 2000 * versuch)); continue; }
+    // Google erlaubt nur eine gewisse Zahl Anfragen pro Minute: dann geduldig warten
+    if (res.status === 429 || res.status >= 500) { await new Promise((r) => setTimeout(r, 8000 * versuch)); continue; }
     throw new Error(`Google antwortet ${res.status}: ${(await res.text()).slice(0, 300)}`);
   }
-  throw new Error('Google antwortet nach 4 Versuchen nicht.');
+  throw new Error('Google antwortet nach 10 Versuchen nicht.');
 }
 
 mkdirSync(ZIEL, { recursive: true });
@@ -72,9 +73,10 @@ const auftrag = [];
 for (const st of stimmen) for (const t of teile) { const k = B.teilKey(st, t); if (!existsSync(path.join(ZIEL, `${k}.mp3`))) auftrag.push([k, t, st]); }
 console.log(`Erzeuge ${auftrag.length} neue Dateien …`);
 let fertig = 0;
-await Promise.all(Array.from({ length: 6 }, async () => {
+await Promise.all(Array.from({ length: 3 }, async () => {
   while (auftrag.length) {
     const [k, t, st] = auftrag.shift();
+    await new Promise((r) => setTimeout(r, 600)); // höchstens etwa 250 Anfragen pro Minute
     writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, st));
     if (++fertig % 200 === 0) console.log(`  ${fertig} fertig …`);
   }
