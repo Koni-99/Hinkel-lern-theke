@@ -1,6 +1,7 @@
 // ═══ Karteikarten: interaktive Lernkarten ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
+import { hoerTexte, stimmeKey } from '../../hilfen/stimme';
 import { dc } from '../../daten/data';
 import { getRightAnswerText } from '../../hilfen/allgemein';
 import { TH } from '../../ui/basis';
@@ -66,7 +67,7 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
                     <span style={{ fontSize: "15px", color: dc('#2F5D3A'), fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Antwort & Erklärung</span>
                     <p style={{ fontSize: "20px", fontWeight: 700, color: dc('#2F5D3A'), margin: "0 0 8px 0" }}>{getRightAnswerText(current)}</p>
                     <p style={{ fontSize: "17px", color: dc('#6B4A30'), margin: 0, lineHeight: 1.45 }}>{current.explanation}</p>
-                    <span onClick={(e) => e.stopPropagation()} style={{ display: "inline-block", marginTop: "8px" }}><SpeakButton small text={`${getRightAnswerText(current)}. ${current.explanation || ""}`} /></span>
+                    <span onClick={(e) => e.stopPropagation()} style={{ display: "inline-block", marginTop: "8px" }}><SpeakButton small hoerKey={stimmeKey(hoerTexte(current).antwort)} text={`${getRightAnswerText(current)}. ${current.explanation || ""}`} /></span>
                     {typeof current.id === "number" && <ReportContext report={{ game: "Lernkarten", qid: current.id, product: (current as any).product, text: current.question }} />}
                   </div>
                 )}

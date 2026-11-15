@@ -1,6 +1,7 @@
 // ═══ Spiel: Schneide-Profi ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
+import { schneideText } from '../hilfen/vorlesen';
 import { dc } from '../daten/data';
 import { shuffleArray } from '../hilfen/allgemein';
 import { focusShuffle, noteResult } from '../focus';
@@ -185,7 +186,7 @@ export function SchneideProfiView({ images, best = 0, onSaveScore, onFinished, o
             {chosen && (
               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className="lt-expl" style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: chosen === correct ? TH.tintSage : TH.tintPeach, fontSize: '18px', lineHeight: 1.5 }}>
-                  <span style={{ float: 'right', marginLeft: '8px' }}><SpeakButton small text={`${p.name} wird mit ${correct} geschnitten.`} /></span>
+                  <span style={{ float: 'right', marginLeft: '8px' }}><SpeakButton small natuerlich text={schneideText(p.name, correct)} /></span>
                   <strong>{chosen === correct ? 'Richtig! ' : 'Leider nicht. '}{p.name} wird mit {correct} geschnitten.</strong>
                   <div style={{ marginTop: '4px', color: TH.brown }}>{p.name} ist {TYPE_LABEL[p.breadType!] === 'Stuten & Brioche' ? 'ein Stuten' : `ein ${TYPE_LABEL[p.breadType!]}`}{p.flour ? ` (${p.flour})` : ''}.</div>
                   {learnedNow && <div style={{ marginTop: '8px', fontSize: '16px', fontWeight: 700, color: dc('#2F4F8A') }}>Die Quizfrage zur Schnittstärke von „{p.name}“ ist jetzt in deinem Lernbereich abgehakt.</div>}

@@ -1,6 +1,7 @@
 // ═══ Karteikarten: Steckbrief-Detail (aufgeklappte Karte) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { useState, useRef } from 'react';
+import { steckbriefText } from '../../hilfen/vorlesen';
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { TH, productImageKey, ProductImages } from '../../ui/basis';
@@ -119,7 +120,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
 
           {sp && (
             <>
-              <div style={{ alignSelf: "flex-start" }}><SpeakButton text={`${sp.name}. ${sp.description || ""} Im Verkauf sagen: ${sp.shortIngredients}. Allergene: ${sp.allergens.join(", ") || "keine"}.${sp.price ? ` Preis: ${sp.price}.` : ""}`} label="Steckbrief vorlesen" /></div>
+              <div style={{ alignSelf: "flex-start" }}><SpeakButton natuerlich text={steckbriefText(sp)} label="Steckbrief vorlesen" /></div>
               <div style={{ padding: "16px 18px", borderRadius: "18px", backgroundColor: TH.tintYellow }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Im Verkauf sagen</div>
                 <div style={{ fontSize: "20px", fontWeight: 700, lineHeight: 1.45, marginTop: "4px" }}>{sp.shortIngredients}</div>

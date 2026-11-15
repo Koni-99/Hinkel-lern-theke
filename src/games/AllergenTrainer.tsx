@@ -1,44 +1,24 @@
 // ═══ Spiel: Allergene-Training ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState } from 'react';
+import { allergenNachher, allergenVorher, allergenFrage } from '../hilfen/vorlesen';
 import { kleinesFoto } from '../daten/fotos';
 import { dc } from '../daten/data';
 import { shuffleArray } from '../hilfen/allgemein';
 import { focusShuffle, noteResult } from '../focus';
-import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { GameProgress, AnswerFx, AnswerFxState } from '../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult, productImageKey, ProductImages, starsFor } from '../ui/basis';
 import { ReportContext } from '../ui/melden';
 import { scrollToPlay } from '../ui/belohnungen';
 import { scrollToCard, OnLearn, LearnHint, SpeakButton, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, AllAtOnceButton, FinishEarlyButton, learnedText } from './spielBasis';
 import { scrollToNext, ShopProduct } from './BilderQuiz';
+import { ALLERGEN_TESTS, splitByAllergen, AllergenTest } from './allergenDaten';
 
 // ═════════════════════════ Allergene-Training ═════════════════════════
 
-export type AllergenTest = { id: string; label: string; kein: string; tag: RegExp; ing: RegExp; safeRounds: boolean };
-
-export const ALLERGEN_TESTS: AllergenTest[] = [
-  { id: 'milch', label: 'Milch', kein: 'keine Milch', tag: /^milch/i, ing: /milch|butter|sahne|quark|käse|joghurt|molke|laktose|gouda|feta/i, safeRounds: true },
-  { id: 'eier', label: 'Eier', kein: 'keine Eier', tag: /^eier?$/i, ing: /\beier?\b|vollei|hühnerei|eigelb|eiweiß|eiklar/i, safeRounds: true },
-  { id: 'nuesse', label: 'Nüsse', kein: 'keine Nüsse', tag: /schalenfrüchte|mandel|pistazie|haselnu|walnu/i, ing: /nuss|nüsse|mandel|haselnu|walnu|pistazie|cashew|pekan|macadamia/i, safeRounds: true },
-  { id: 'sesam', label: 'Sesam', kein: 'keinen Sesam', tag: /sesam/i, ing: /sesam/i, safeRounds: false },
-  { id: 'senf', label: 'Senf', kein: 'keinen Senf', tag: /^senf/i, ing: /senf/i, safeRounds: false },
-  { id: 'sellerie', label: 'Sellerie', kein: 'keinen Sellerie', tag: /sellerie/i, ing: /sellerie/i, safeRounds: false },
-];
-
+export type { AllergenTest };
+export { ALLERGEN_TESTS, splitByAllergen };
 export type AllergenRound = { test: AllergenTest; mode: 'safe' | 'contains'; options: ShopProduct[]; answer: ShopProduct };
-
-export function splitByAllergen(t: AllergenTest) {
-  const withIt: ShopProduct[] = [], without: ShopProduct[] = [];
-  SHOP_PRODUCTS.forEach(p => {
-    if (p.allergens.length === 0) return; // ohne Angabe im Shop: lieber nicht verwenden
-    const tagged = p.allergens.some(a => t.tag.test(a));
-    const inIngredients = t.ing.test(p.fullIngredients || '');
-    if (tagged) withIt.push(p);
-    else if (!inIngredients) without.push(p); // Zutatenliste und Allergene passen nicht zusammen → weglassen
-  });
-  return { withIt, without };
-}
 
 /** Alle möglichen Situationen im Allergene-Training (Allergen + richtiges Produkt) */
 export const ALLERGEN_KEYS: string[] = (() => {
@@ -112,11 +92,7 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
   };
 
   const r = rounds[idx];
-  const question = r
-    ? r.mode === 'safe'
-      ? { who: 'Eine Kundin sagt:', quote: `„Ich habe eine Allergie gegen ${r.test.label}.“`, ask: `Welches dieser Produkte enthält laut Allergenliste ${r.test.kein}?` }
-      : { who: 'Ein Kunde sagt:', quote: `„Ich vertrage ${r.test.kein}.“`, ask: 'Von welchem Produkt musst du ihm abraten?' }
-    : null;
+  const question = r ? allergenFrage(r.test, r.mode) : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
@@ -152,7 +128,7 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.35 }}>{question.ask}</div>
-              <SpeakButton small text={chosen ? (r.mode === 'safe' ? `${r.answer.name} enthält laut Liste ${r.test.kein}, die anderen schon.` : `${r.answer.name} enthält ${r.test.label}, davon musst du abraten.`) + ' ' + r.options.map(o => `${o.name}: ${o.allergens.join(', ')}`).join('. ') : `${question.who} ${question.quote} ${question.ask} ${r.options.map((o, i) => `${i + 1}: ${o.name}`).join('. ')}`} />
+              <SpeakButton small natuerlich text={chosen ? allergenNachher(r.test, r.mode, r.answer, r.options) : allergenVorher(r.test, r.mode, r.options)} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {r.options.map(o => {

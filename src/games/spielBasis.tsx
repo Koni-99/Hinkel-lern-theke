@@ -6,6 +6,7 @@ import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
 import { LtIcon, ICON } from '../basis/symbole';
 import type { ShopProduct } from './BilderQuiz';
 import { zerlege, teilKey, KUNDEN_STIMMEN, KundenStimme } from '../hilfen/bausteine';
+import { saetze, satzKey } from '../hilfen/vorlesen';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */
 export const scrollToCard = () => window.setTimeout(() => {
@@ -88,41 +89,67 @@ export function speakText(text: string, onEnd?: () => void, tempo = 1.15) {
 
 export function stopSpeaking() { stopTeile(); if (canSpeak()) window.speechSynthesis.cancel(); }
 
-// ───────── Natürliche Kundenstimme aus Bausteinen (Theken-Simulator, Telefon) ─────────
-// Siehe src/hilfen/bausteine.ts. Fehlt ein Baustein oder gibt es kein Internet, liest die Handy-Stimme.
-let teilIndex: Promise<Set<string>> | null = null;
-const ladeTeile = () => teilIndex || (teilIndex = fetch('stimme/teile/index.json').then((r) => (r.ok ? r.json() : [])).then((a: string[]) => new Set(Array.isArray(a) ? a : [])).catch(() => { teilIndex = null; return new Set<string>(); }));
+// ───────── Natürliche Stimmen aus fertigen Tondateien (einmalig erzeugt, danach keine Kosten) ─────────
+// Kundenstimme aus Bausteinen (src/hilfen/bausteine.ts), Vorlesen Satz für Satz (src/hilfen/vorlesen.ts),
+// Lernkarten mit den Hör-Lernen-Dateien. Fehlt eine Datei oder gibt es kein Internet, liest die Handy-Stimme.
+const indexe: Record<string, Promise<Set<string>>> = {};
+const ladeIndex = (url: string) => indexe[url] || (indexe[url] = fetch(url).then((r) => (r.ok ? r.json() : [])).then((a: string[]) => new Set(Array.isArray(a) ? a : [])).catch(() => { delete indexe[url]; return new Set<string>(); }));
+const mitZeitlimit = (p: Promise<Set<string>>) => Promise.race([p, new Promise<Set<string>>((r) => window.setTimeout(() => r(new Set()), 2000))]);
 let teilAudio: HTMLAudioElement | null = null;
 let teilLauf = 0;
 export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause(); } catch {} } }
-/** Liest einen Kundensatz mit natürlicher Stimme (Frau oder Mann) vor, sonst mit der Handy-Stimme */
-export async function sprichKunde(text: string, stimme: KundenStimme, tempo = 1.0, onEnd?: () => void) {
-  stopSpeaking();
-  const lauf = ++teilLauf;
-  const index = await Promise.race([ladeTeile(), new Promise<Set<string>>((r) => window.setTimeout(() => r(new Set()), 2000))]);
-  if (lauf !== teilLauf) return;
-  const name = KUNDEN_STIMMEN[stimme];
-  const teile = zerlege(text);
-  const keys = teile.map((t) => teilKey(name, t));
-  const handy = (rest: string) => { if (lauf === teilLauf) { speakText(rest, onEnd, tempo * 1.15); } };
-  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { handy(text); return; }
+/** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei). */
+function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void) {
+  const handy = (rest: string) => { if (lauf === teilLauf) speakText(rest, onEnd, handyTempo); };
   const a = teilAudio || (teilAudio = new Audio());
   let i = 0;
   const weiter = () => {
     if (lauf !== teilLauf) return;
-    if (i >= keys.length) { onEnd?.(); return; }
+    if (i >= urls.length) { onEnd?.(); return; }
     const nr = i++;
     a.onended = () => { window.setTimeout(weiter, 90); };
-    a.onerror = () => handy(teile.slice(nr).join(' '));
-    a.src = `stimme/teile/${keys[nr]}.mp3`;
+    a.onerror = () => handy(stuecke.slice(nr).join(' '));
+    a.src = urls[nr];
     a.playbackRate = tempo;
-    a.play().catch(() => handy(teile.slice(nr).join(' ')));
+    a.play().catch(() => handy(stuecke.slice(nr).join(' ')));
   };
   weiter();
 }
+/** Liest einen Kundensatz mit natürlicher Stimme (Frau oder Mann) vor, sonst mit der Handy-Stimme */
+export async function sprichKunde(text: string, stimme: KundenStimme, tempo = 1.0, onEnd?: () => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await mitZeitlimit(ladeIndex('stimme/teile/index.json'));
+  if (lauf !== teilLauf) return;
+  const teile = zerlege(text);
+  const keys = teile.map((t) => teilKey(KUNDEN_STIMMEN[stimme], t));
+  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd, tempo * 1.15); return; }
+  spieleFolge(lauf, keys.map((k) => `stimme/teile/${k}.mp3`), teile, tempo, tempo * 1.15, onEnd);
+}
+/** Liest einen festen Text Satz für Satz mit natürlicher Stimme (Frau 4) vor, sonst mit der Handy-Stimme */
+export async function sprichSaetze(text: string, onEnd?: () => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await mitZeitlimit(ladeIndex('stimme/saetze/index.json'));
+  if (lauf !== teilLauf) return;
+  const s = saetze(text);
+  const keys = s.map(satzKey);
+  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd); return; }
+  spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd);
+}
+/** Spielt eine Datei aus dem Hör-Lernen (z. B. die Antwort einer Lernkarte), sonst liest die Handy-Stimme den Text */
+export async function sprichHoerDatei(key: string, text: string, onEnd?: () => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await mitZeitlimit(ladeIndex('stimme/index.json'));
+  if (lauf !== teilLauf) return;
+  if (typeof Audio === 'undefined' || !index.has(key)) { speakText(text, onEnd); return; }
+  spieleFolge(lauf, [`stimme/${key}.mp3`], [text], 1.0, 1.15, onEnd);
+}
 
 /** Knopf „Vorlesen“ – liest den Text vor, zweiter Tipp stoppt */
-export function SpeakButton({ text, label = 'Vorlesen', small }: { text: string; label?: string; small?: boolean }) {
+/** natuerlich: Satz für Satz mit natürlicher Stimme. hoerKey: fertige Hör-Lernen-Datei abspielen. */
+export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerKey }: { text: string; label?: string; small?: boolean; natuerlich?: boolean; hoerKey?: string }) {
   const [on, setOn] = useState(false);
   useEffect(() => () => { stopSpeaking(); }, []);
   useEffect(() => { setOn(false); stopSpeaking(); }, [text]);
@@ -130,7 +157,7 @@ export function SpeakButton({ text, label = 'Vorlesen', small }: { text: string;
   return (
     <button
       type="button"
-      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); speakText(text, () => setOn(false)); } }}
+      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); const fertig = () => setOn(false); if (hoerKey) sprichHoerDatei(hoerKey, text, fertig); else if (natuerlich) sprichSaetze(text, fertig); else speakText(text, fertig); } }}
       aria-pressed={on}
       title={on ? 'Vorlesen stoppen' : 'Vorlesen'}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: small ? '38px' : '44px', padding: small ? '0 10px' : '0 14px', borderRadius: '12px', border: `2px solid ${on ? TH.brown : TH.line}`, backgroundColor: on ? TH.tintYellow : TH.white, color: TH.ink, fontSize: small ? '14px' : '16px', fontWeight: 700, cursor: 'pointer', flex: '0 0 auto' }}

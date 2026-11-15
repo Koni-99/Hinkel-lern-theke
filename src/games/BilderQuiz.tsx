@@ -1,6 +1,7 @@
 // ═══ Spiel: Bilderquiz ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { useState, useRef } from 'react';
+import { bilderText, bqName, firstSentence as ersterSatz } from '../hilfen/vorlesen';
 import { dc } from '../daten/data';
 import { shuffleArray } from '../hilfen/allgemein';
 import { focusShuffle, noteResult } from '../focus';
@@ -28,7 +29,7 @@ export type BqRound = { answer: ShopProduct; options: ShopProduct[]; img: string
 /** Verpackte Artikel (Name steht auf der Tüte) und Sorten, die auf dem Foto gleich aussehen, lassen wir weg */
 export const BQ_EXCLUDE = new Set(['Backmischung Abendschnitte', 'Granola', 'Knäckebrot', 'Paniermehl', 'Mandelsplitter Zartbitter', 'Florentinertaler', 'Schweineohr mit Schokolade']);
 
-export const bqName = (n: string) => n.replace(/^(Kleines|Großes) /, '');
+export { bqName };
 
 export const bqCat = (p: ShopProduct): BqCat => (p.breadType && p.breadType !== 'stuten' ? 'brot' : ['Brötchen', 'Herzhafte Snacks'].includes(p.group) ? 'broetchen' : 'suess');
 
@@ -39,10 +40,7 @@ export const BQ_FILTERS: { id: 'alle' | BqCat; label: string }[] = [
   { id: 'suess', label: 'Süßes & Stuten' },
 ];
 
-export const firstSentence = (s: string) => {
-  const m = (s || '').match(/^(.+?[.!])(\s|$)/);
-  return (m ? m[1] : s || '').replace(/^Unser(e)?\s+[^ ]+(\s+[^ ]+)?\s+ist\s+/, '').replace(/^./, c => c.toUpperCase());
-};
+export const firstSentence = ersterSatz;
 
 export function buildBilderPool(images: ProductImages) {
   const seen = new Set<string>();
@@ -237,7 +235,7 @@ export function BilderQuizView({ images, onSaveScore, onFinished, known = [], on
             {chosen && (
               <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div className="lt-expl" style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: chosen === r.answer.name ? TH.tintSage : TH.tintPeach, fontSize: '18px', lineHeight: 1.5 }}>
-                  <span style={{ float: 'right', marginLeft: '8px' }}><SpeakButton small text={`Das ist ${bqName(r.answer.name)}. ${firstSentence(r.answer.description)} Warengruppe: ${r.answer.group}.`} /></span>
+                  <span style={{ float: 'right', marginLeft: '8px' }}><SpeakButton small natuerlich text={bilderText(r.answer)} /></span>
                   <strong>{chosen === r.answer.name ? 'Richtig! ' : 'Leider nicht. '}Das ist {bqName(r.answer.name)}</strong>
                   {r.answer.flour ? ` · ${r.answer.flour}` : ''}
                   <div style={{ marginTop: '4px', color: TH.brown }}>{firstSentence(r.answer.description)}</div>

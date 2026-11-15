@@ -1,6 +1,7 @@
 // ═══ Karteikarten: Produkt-Lernkarten (Foto vorne, Infos hinten) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import type { Dispatch, SetStateAction } from 'react';
+import { produktKarteText } from '../../hilfen/vorlesen';
 import { dc } from '../../daten/data';
 import { TH, cardStyle, productImageKey, ProductImages } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
@@ -118,7 +119,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
                     <div style={{ fontSize: "17px", fontWeight: 700, lineHeight: 1.4 }}>{sp.shortIngredients}</div>
                   </div>
                   <div style={{ fontSize: "16px", lineHeight: 1.45 }}><strong>Allergene:</strong> {sp.allergens.length ? sp.allergens.join(", ") : "keine angegeben"}{sp.allergenNote ? ` · ${sp.allergenNote}` : ""}</div>
-                  <span onClick={(e) => e.stopPropagation()} style={{ alignSelf: "flex-start" }}><SpeakButton small text={`${p.name}. ${facts.map(([l, v]) => `${l}: ${v}`).join(". ")}. Im Verkauf sagen: ${sp.shortIngredients}. Allergene: ${sp.allergens.join(", ") || "keine angegeben"}.`} /></span>
+                  <span onClick={(e) => e.stopPropagation()} style={{ alignSelf: "flex-start" }}><SpeakButton small natuerlich text={produktKarteText(p.name, facts, sp)} /></span>
                   <ReportContext report={{ game: "Produktkarten", product: p.name, text: `Produktkarte ${p.name}`, detail: `${facts.map(([l, v]) => `${l}: ${v}`).join(", ")}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` }} />
                 </div>
                 <div style={{ fontSize: "16px", color: TH.green, fontWeight: 700, textAlign: "center" }}>↺ Antippen, zurück</div>

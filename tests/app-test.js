@@ -539,6 +539,17 @@ async function offlineTests() {
     ok('Natürliche Stimme: Telefon-Bestellung, mind. 99 % der Anrufe aus Bausteinen', ok2 / anrufe >= 0.99, `${ok2} von ${anrufe}`);
     ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
   }
+  // Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien
+  {
+    const fs = require('fs'), path = require('path');
+    const M = kompiliere(['src/hilfen/vorlesen.ts', 'src/daten/shopProducts.ts']);
+    const V = M.hilfen_vorlesen, P = M.daten_shopProducts.SHOP_PRODUCTS;
+    const idx = new Set(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/stimme/saetze/index.json'), 'utf8')));
+    const fehlt = [];
+    for (const sp of P) for (const t of [V.steckbriefText(sp), V.bilderText(sp)]) V.saetze(t).forEach((x) => { if (!idx.has(V.satzKey(x))) fehlt.push(x); });
+    ok('Natürliche Stimme: Steckbrief und Bilderquiz, alle Sätze vorhanden', fehlt.length === 0, fehlt.slice(0, 2).join(' | '));
+    ok('Vorlesen: Sätze ohne Satzzeichen am Ende', V.saetze('Das ist Feinbrot. Warengruppe: Brot.').join('|') === 'Das ist Feinbrot|Warengruppe: Brot');
+  }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
