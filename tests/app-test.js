@@ -226,6 +226,23 @@ async function offlineTests() {
     ok('Keine Gedankenstriche in sichtbaren Texten (Startseite, Hilfe)', striche.length === 0, striche.slice(0, 3).join(' | '));
     await d.ctx.close();
   }
+  // Theken-Simulator wie ein echtes Gespräch (Version 202): fremde Kunden ohne Namen, keine Millimeter-Fragen
+  {
+    const G = kompiliere(['src/games/theke/gespraech.tsx']).games_theke_gespraech;
+    let fehler = [];
+    for (let i = 0; i < 150; i++) {
+      const c = G.buildConversation();
+      const bekannt = /Stammkund/i.test(c.persona.who);
+      for (const st of c.steps) {
+        if (/millimeter|wie dünn|wie dick/i.test(st.customer.join(' '))) fehler.push('Kunde fragt nach Millimetern: ' + st.customer.join(' '));
+        const ok = st.options.find((o) => o.correct);
+        if (!bekannt && ok && /(Frau|Herr) [A-ZÄÖÜ]/.test(ok.text)) fehler.push('Fremder Kunde mit Namen angesprochen: ' + ok.text);
+        if (ok && /–/.test(ok.text)) fehler.push('Gedankenstrich: ' + ok.text);
+      }
+      if (!bekannt && /^(Frau|Herr) /.test(c.persona.name)) fehler.push('Fremder Kunde hat einen Namen: ' + c.persona.name);
+    }
+    ok('Theken-Simulator: echte Gespräche (fremde Kunden ohne Namen, keine Millimeter-Fragen)', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+  }
   // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
   {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;

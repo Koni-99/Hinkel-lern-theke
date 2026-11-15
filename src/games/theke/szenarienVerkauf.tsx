@@ -21,8 +21,8 @@ export function scAllergyBread(): Core | null {
       topic: 'Allergie',
       customer: [pick([`Ich suche ein Brot, aber: ${pick(t.says)} Was können Sie mir empfehlen?`, `${pick(t.says)} Welches Brot kann ich da bedenkenlos nehmen?`, `Ich bräuchte ein Brot ohne ${t.label}. ${pick(t.says)}`])],
       options: evenOpts([
-        { text: `Da kann ich Ihnen ${right.name} empfehlen, da ${t.verb} ${t.neg} drin.`, correct: true },
-        ...wrong.map(w => ({ text: `Da kann ich Ihnen ${w.name} empfehlen, da ${t.verb} ${t.neg} drin.`, correct: false, why: `${w.name} enthält ${t.label} (Allergene: ${allergenText(w)}).` })),
+        { text: `Da können Sie ${right.name} nehmen, da ${t.verb} ${t.neg} drin.`, correct: true },
+        ...wrong.map(w => ({ text: `Da können Sie ${w.name} nehmen, da ${t.verb} ${t.neg} drin.`, correct: false, why: `${w.name} enthält ${t.label} (Allergene: ${allergenText(w)}).` })),
       ]),
       afterWrong: `Oh, warten Sie, ${t.verb} da wirklich ${t.neg} drin? … Dann nehme ich lieber ${right.name}.`,
     }],
@@ -42,8 +42,8 @@ export function scVeganBread(): Core | null {
       topic: 'Vegan',
       customer: [pick(['Ich ernähre mich vegan. Welches Brot ist für mich geeignet?', 'Haben Sie auch veganes Brot? Meine Tochter isst keine tierischen Produkte.', 'Ich suche ein Brot ganz ohne Milch und Ei, also vegan.'])],
       options: evenOpts([
-        { text: `${right.name} ist vegan, das kann ich Ihnen empfehlen.`, correct: true },
-        ...wrong.map(w => ({ text: `${w.name} ist vegan, das kann ich Ihnen empfehlen.`, correct: false, why: `${w.name} ist nicht vegan (Allergene: ${allergenText(w)}).` })),
+        { text: `Ja, ${right.name} ist vegan.`, correct: true },
+        ...wrong.map(w => ({ text: `Ja, ${w.name} ist vegan.`, correct: false, why: `${w.name} ist nicht vegan (Allergene: ${allergenText(w)}).` })),
       ]),
       afterWrong: `Hm, ich glaube da ist doch Milch oder Ei drin … Dann nehme ich ${right.name}.`,
     }],
@@ -99,7 +99,7 @@ export function scSoldOut(): Core | null {
       topic: 'Ausverkauft',
       customer: [pick([`Haben Sie noch ${missing.name}?`, `Ich hätte gern ${missing.name}, bitte.`, `Ist ${missing.name} heute noch da?`]), `(${missing.name} ist leider schon ausverkauft.)`],
       options: evenOpts([
-        { text: `${missing.name} ist leider schon weg, aber ich kann Ihnen ${right.name} empfehlen, das passt sehr gut.`, correct: true },
+        { text: `${missing.name} ist leider schon weg. Wie wär’s mit ${right.name}? Das ist so ähnlich.`, correct: true },
         ...wrong.map(w => ({ text: `${missing.name} ist leider schon weg, aber ich kann Ihnen ${w.name} empfehlen, das passt sehr gut.`, correct: false, why: `${w.name} ist keine gute Alternative. ${good}` })),
         { text: `${missing.name} ist leider schon ausverkauft, kommen Sie doch morgen früh einfach noch mal vorbei.`, correct: false, noPad: true, why: `Biete immer aktiv eine passende Alternative an. ${good}` },
       ]),
@@ -129,13 +129,16 @@ export function scIngredients(): Core | null {
       learn: { product: right.name, kind: 'inhalt' },
       customer: [pick([`Ich überlege, ${right.name} zu nehmen. Was ist da eigentlich drin?`, `Was ist denn in ${right.name} alles drin?`, `${right.name} sieht lecker aus, woraus ist das?`])],
       options: opts([
-        { text: right.shortIngredients, correct: true },
-        ...others.map(o => ({ text: o.shortIngredients, correct: false, why: `Das sind die Zutaten von ${o.name}.` })),
+        { text: `Da ist ${right.shortIngredients} drin.`, correct: true },
+        ...others.map(o => ({ text: `Da ist ${o.shortIngredients} drin.`, correct: false, why: `Das sind die Zutaten von ${o.name}.` })),
       ]),
       afterWrong: `Ach so? Ich dachte … na egal, ich nehme ${right.name} trotzdem.`,
     }],
   };
 }
+
+/** Mehl so sagen, wie man es an der Theke sagt: „Da ist 100 % Weizen drin.“ */
+const mehlSatz = (f: string) => (/^\d/.test(f) ? `Da ist ${f} drin.` : `Das ist ${f.charAt(0).toLowerCase()}${f.slice(1)}.`);
 
 export function scFlour(): Core | null {
   const withFlour = BREADS.filter(p => !!p.flour);
@@ -150,8 +153,8 @@ export function scFlour(): Core | null {
       learn: { product: right.name, kind: 'mehl' },
       customer: [pick([`Welches Mehl ist in ${right.name}?`, `Ist ${right.name} eher Weizen oder Roggen?`, `Ich achte aufs Mehl, woraus ist ${right.name} gebacken?`])],
       options: opts([
-        { text: `${right.name}: ${right.flour}.`, correct: true },
-        ...sample(flours, 3).map(f => ({ text: `${right.name}: ${f}.`, correct: false, why: `Richtig wäre: ${right.flour}.` })),
+        { text: mehlSatz(right.flour as string), correct: true },
+        ...sample(flours, 3).map(f => ({ text: mehlSatz(f), correct: false, why: `Richtig wäre: ${right.flour}.` })),
       ]),
       afterWrong: `Hm, da bin ich mir nicht sicher … ich nehme es trotzdem mal mit.`,
     }],
@@ -187,13 +190,13 @@ export function scAllergenCheck(): Core | null {
     topic: 'Allergene prüfen',
     customer: [pick([`Ist in ${p.name} ${t.label} drin? ${pick(t.says)}`, `${pick(t.says)} Kann ich ${p.name} nehmen?`])],
     options: opts(contains ? [
-      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label} enthalten, das kann ich Ihnen nicht empfehlen.`, correct: true },
-      { text: `Nein, keine Sorge, in ${p.name} ${t.verb} ${t.neg} enthalten, das können Sie nehmen.`, correct: false, why: `${p.name} enthält ${t.label} (Allergene: ${allergenText(p)}).` },
+      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label}. Das würde ich nicht nehmen.`, correct: true },
+      { text: `Nein, keine Sorge, da ${t.verb} ${t.neg} drin. Das können Sie nehmen.`, correct: false, why: `${p.name} enthält ${t.label} (Allergene: ${allergenText(p)}).` },
       { text: `In ${p.name} ${t.verb} nur ganz wenig ${t.label} drin, das macht bei einer Allergie bestimmt nichts.`, correct: false, why: `Bei Allergien gibt es kein „ein bisschen“, ${p.name} enthält ${t.label}.` },
       { text: `Das weiß ich bei ${p.name} leider nicht genau, probieren Sie es doch einfach mal aus.`, correct: false, why: 'Bei Allergie-Fragen immer in den Spickzettel schauen, niemals raten!' },
     ] : [
-      { text: `Nein, keine Sorge, in ${p.name} ${t.verb} ${t.neg} enthalten, das können Sie nehmen.`, correct: true },
-      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label} enthalten, das kann ich Ihnen nicht empfehlen.`, correct: false, why: `${p.name} ist ohne ${t.label} (Allergene: ${allergenText(p)}).` },
+      { text: `Nein, keine Sorge, da ${t.verb} ${t.neg} drin. Das können Sie nehmen.`, correct: true },
+      { text: `Leider ja, in ${p.name} ${t.verb} ${t.label}. Das würde ich nicht nehmen.`, correct: false, why: `${p.name} ist ohne ${t.label} (Allergene: ${allergenText(p)}).` },
       { text: `In ${p.name} ${t.verb} nur ganz wenig ${t.label} drin, das macht bei einer Allergie bestimmt nichts.`, correct: false, why: `${p.name} enthält gar ${t.neg}, und „ein bisschen“ gibt es bei Allergien nicht.` },
       { text: `Das weiß ich bei ${p.name} leider nicht genau, probieren Sie es doch einfach mal aus.`, correct: false, why: 'Bei Allergie-Fragen immer in den Spickzettel schauen, niemals raten!' },
     ]),
@@ -209,7 +212,7 @@ export function scAllergenCheck(): Core | null {
     topic: 'Alternative ohne Allergen',
     customer: [`Schade. Was hätten Sie denn ohne ${t.label}?`],
     options: evenOpts([
-      { text: `${right.name} ist ohne ${t.label}, das kann ich Ihnen empfehlen.`, correct: true },
+      { text: `${right.name} ist ohne ${t.label}, das geht.`, correct: true },
       ...closeByName(bad, right, 3).map(w => ({ text: `${w.name} ist ohne ${t.label}, das kann ich Ihnen empfehlen.`, correct: false, why: `${w.name} enthält ${t.label} (Allergene: ${allergenText(w)}).` })),
     ]),
     afterWrong: `Moment … dann lieber ${right.name}, da bin ich auf der sicheren Seite.`,
@@ -258,7 +261,7 @@ export function scComplaint(): Core | null {
       topic: 'Reklamation',
       customer: [pick([`Ich muss mich leider beschweren: ${x.name} von gestern ${problem}.`, `Hören Sie mal, ${x.name}, das ich gestern gekauft habe, ${problem}. Das ärgert mich schon.`])],
       options: opts([
-        { text: `Das tut mir leid! Ich gebe Ihnen gern ein frisches ${x.name}, und sage der Backstube Bescheid.`, correct: true },
+        { text: `Oh, das tut mir leid! Ich geb Ihnen ein neues und sag der Backstube Bescheid.`, correct: true },
         { text: `Das kann eigentlich nicht sein, bei uns ist ${x.name} immer gut, das war bestimmt nur Zufall.`, correct: false, why: 'Nie widersprechen: zuhören, Verständnis zeigen, entschuldigen und unkompliziert Ersatz anbieten.' },
         { text: `Haben Sie ${x.name} vielleicht falsch gelagert? Dann kann ich da leider auch nichts machen.`, correct: false, why: 'Gib dem Kunden nicht die Schuld, entschuldige dich und biete Ersatz an.' },
         { text: 'Da müssen Sie sich leider bei der Zentrale melden, ich darf hier vorne selbst überhaupt nichts entscheiden.', correct: false, why: 'Bei einer berechtigten Reklamation bieten wir direkt Ersatz an oder holen die Filialleitung dazu.' },
@@ -281,7 +284,7 @@ export function scPreorder(): Core | null {
       topic: 'Vorbestellung',
       customer: [pick([`Kann ich für ${when} ${n} ${roll.name} vorbestellen? Wir haben im Büro ein Frühstück.`, `Ich bräuchte ${when} ${n} ${roll.name} für unser Team, kann ich die vorbestellen?`])],
       options: opts([
-        { text: 'Sehr gerne! Ich schreibe Ihnen alles auf, auf welchen Namen und um wie viel Uhr holen Sie es ab?', correct: true },
+        { text: 'Klar, kein Problem. Auf welchen Namen, und wann holen Sie das ab?', correct: true },
         { text: 'Vorbestellen geht bei uns leider nicht, kommen Sie einfach morgen ganz früh vorbei, dann klappt das.', correct: false, why: 'Bestellungen nehmen wir gern an, immer mit Name, Abholzeit und Menge notieren.' },
         { text: 'Klar, das merke ich mir einfach, sagen Sie morgen an der Theke nur kurz Ihren Namen, dann passt das.', correct: false, why: 'Bestellungen immer schriftlich festhalten: Name, Menge, Abholzeit, nicht „merken“.' },
         { text: `Dann packe ich Ihnen die ${n} ${roll.name} gleich jetzt schon ein, die halten bis morgen.`, correct: false, why: 'Vorbestellte Ware soll frisch sein, Bestellung notieren und morgen frisch bereitstellen.' },
@@ -305,7 +308,7 @@ export function scBrunch(): Core | null {
       topic: 'Anlass-Beratung',
       customer: [pick([`Wir machen Sonntag einen Brunch für ${people} Personen. Was können Sie mir da empfehlen?`, `Ich habe am Wochenende ${people} Gäste zum Frühstück, was würden Sie mir einpacken?`])],
       options: opts([
-        { text: 'Ich würde gemischte Brötchen nehmen und dazu einen Stuten, so haben Sie Herzhaftes und Süßes.', correct: true },
+        { text: 'Ich würd gemischte Brötchen nehmen und einen Stuten dazu. Dann haben Sie was Herzhaftes und was Süßes.', correct: true },
         { text: 'Für so viele Gäste reicht ein großes Schwarzbrot, das ist schön kräftig und hält auch lange.', correct: false, why: 'Bei Anlässen auf Abwechslung achten: Brötchen für alle und etwas Süßes wie Stuten.' },
         { text: `Nehmen Sie doch einfach ${people} Berliner mit, süße Teilchen passen zu jedem Brunch am besten.`, correct: false, why: 'Nur Süßes ist einseitig, empfiehl eine Mischung aus Brötchen und Süßem.' },
         { text: 'Für so viele Personen müssen Sie leider vorher bestellen, sonst kann ich Ihnen gar nichts geben.', correct: false, why: 'Der Kunde ist jetzt da, berate ihn und stelle eine passende Auswahl zusammen.' },
@@ -327,7 +330,7 @@ export function scGrill(): Core | null {
       topic: 'Anlass-Beratung',
       customer: [pick(['Wir grillen heute Abend. Welches Brot passt da am besten dazu?', 'Ich suche ein Brot für unseren Grillabend, was empfehlen Sie?'])],
       options: evenOpts([
-        { text: `Zum Grillen empfehle ich ${right.name}, ein helles, lockeres Weizenbrot.`, correct: true },
+        { text: `Zum Grillen passt ${right.name}, schön hell und locker.`, correct: true },
         ...closeByName(bad, right, 3).map(w => ({ text: `Zum Grillen empfehle ich ${w.name}, ein helles, lockeres Weizenbrot.`, correct: false, why: `${w.name} ist ${w.breadType === 'stuten' ? 'ein süßer Stuten' : 'ein kräftiges Vollkornschwarzbrot'}, zum Grillen passt helles Weizenbrot.` })),
       ]),
       afterWrong: `Hm, das passt doch nicht so zum Grillen … Dann nehme ich ${right.name}.`,
@@ -345,7 +348,7 @@ export function scPriceObjection(): Core | null {
       topic: 'Preis-Einwand',
       customer: [pick([`Was, ${x.price} für ${x.name}? Im Discounter kostet Brot die Hälfte!`, `${x.price}? Das ist aber ganz schön teuer für ein Brot …`])],
       options: opts([
-        { text: 'Ich verstehe Sie, bei uns wird alles von Hand mit langer Teigführung gebacken, dadurch bleibt es lange frisch.', correct: true },
+        { text: 'Verstehe ich. Bei uns ist aber alles selbst gebacken, und der Teig bekommt viel Zeit. Das schmeckt man, und es bleibt länger frisch.', correct: true },
         { text: 'Na gut, dann gebe ich Ihnen heute ausnahmsweise 20 Prozent Rabatt, aber sagen Sie es bitte bloß keinem weiter.', correct: false, why: 'Keine Rabatte verschenken, mit Qualität argumentieren: Handwerk, Zutaten, Frische.' },
         { text: 'Dann kaufen Sie Ihr Brot doch einfach beim Discounter, das ist ja letztendlich ganz allein Ihre Entscheidung.', correct: false, why: 'Nie patzig werden, Verständnis zeigen und den Wert unseres Brotes erklären.' },
         { text: 'Die Preise macht bei uns die Chefin, da kann ich Ihnen leider überhaupt gar nichts zu sagen, tut mir leid.', correct: false, why: 'Du kannst den Preis erklären: handwerkliche Herstellung, gute Zutaten, lange Frische.' },
@@ -388,7 +391,7 @@ export function scOfficeOrder(): Core | null {
       topic: 'Großbestellung',
       customer: [pick([`Ich brauche ${na} ${a.name} und ${nb} ${b.name} für unser Büro. Geht das jetzt sofort?`, `Für unsere Besprechung hätte ich gern ${na} ${a.name} und ${nb} ${b.name}, bitte.`])],
       options: opts([
-        { text: 'Sehr gern! Ich packe die Sorten getrennt in Tüten, dann zerdrückt nichts und Sie finden alles schnell wieder.', correct: true },
+        { text: 'Klar, geht sofort. Ich pack die Sorten getrennt ein, dann wird nichts zerdrückt.', correct: true },
         { text: 'So viel auf einmal geht nur mit Vorbestellung, kommen Sie lieber morgen nochmal wieder.', correct: false, why: 'Was da ist, verkaufen wir gern sofort. Vorbestellen ist nur für das, was nicht vorrätig ist.' },
         { text: 'Ich werfe einfach alles zusammen in eine große Tüte, das geht am schnellsten.', correct: false, why: 'Bei großen Mengen sorgfältig packen: Sorten getrennt, Schweres nach unten, nichts zerdrücken.' },
         { text: 'Puh, so viele? Dann müssen die anderen Kunden jetzt aber warten, das dauert.', correct: false, why: 'Große Bestellungen freundlich und zügig bedienen, ohne zu stöhnen.' },

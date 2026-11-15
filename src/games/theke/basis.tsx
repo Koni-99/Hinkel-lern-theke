@@ -104,7 +104,7 @@ export type Core = { steps: SimStep[]; basket: BasketLine[]; bread?: ShopItem; s
 export const opts = (list: SimOpt[]) => shuffleArray(list);
 
 /** Gleicht die Länge an: Kurze Antworten bekommen einen neutralen Zusatz, damit man die richtige nicht an der Länge erkennt */
-export const FILLERS = [' Das kommt heute ganz frisch aus dem Ofen.', ' Das ist bei unseren Kunden sehr beliebt.', ' Das kann ich wirklich empfehlen.', ' Das nehmen viele Stammkunden.'];
+export const FILLERS = [' Das ist heute ganz frisch.', ' Das ist sehr beliebt.', ' Das kann ich echt empfehlen.', ' Das nehmen viele gern.'];
 
 export const evenOpts = (list: SimOpt[]) => {
   const max = Math.max(...list.map(o => o.text.length));

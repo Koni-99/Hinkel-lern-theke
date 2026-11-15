@@ -2,7 +2,7 @@
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { shuffleArray } from '../../hilfen/allgemein';
 import { euro } from '../Kassenblitz';
-import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, SWEETS, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, Core, opts } from './basis';
+import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, Core, opts } from './basis';
 import { scPrice } from './szenarienVerkauf';
 import { SCENARIOS } from './szenarienAlltag';
 import { SLICE_EXCLUDE } from '../SchneideProfi';
@@ -11,38 +11,38 @@ export const GENERAL_TOPICS = ['Begrüßung', 'Schnitt', 'Zusatzverkauf', 'Summe
 
 // Kleine Zwischenfragen für längere Gespräche
 export const SMALLTALK: ((p: Persona) => SimStep)[] = [
-  () => ({ topic: 'Smalltalk', customer: [pick(['Ganz schön ungemütlich draußen heute, oder?', 'Was für ein schönes Wetter heute!', 'Puh, heute ist ja wieder was los in der Stadt.'])], options: opts([
-    { text: pick(['Ja, wirklich! Da tut etwas Frisches vom Bäcker doch gut.', 'Stimmt, umso schöner, dass Sie bei uns vorbeischauen!', 'Absolut. Dann machen wir es Ihnen hier wenigstens gemütlich.']), correct: true },
+  () => { const [frage, antwort] = pick([['Ganz schön ungemütlich draußen heute, oder?', 'Ja, echt, richtig ungemütlich!'], ['Was für ein schönes Wetter heute!', 'Ja, herrlich, oder?'], ['Puh, heute ist ja wieder was los in der Stadt.', 'Ja, heute ist echt viel los.']]); return { topic: 'Smalltalk', customer: [frage], options: opts([
+    { text: antwort, correct: true },
     { text: '(Nicht reagieren und weiter einpacken.)', correct: false, why: 'Kurz und freundlich auf Smalltalk eingehen, das macht den Einkauf persönlich.' },
     { text: 'Ach, erzählen Sie mir nichts, mein Tag war auch furchtbar, ich bin seit fünf Uhr hier …', correct: false, why: 'Eigene Sorgen gehören nicht an die Theke, freundlich und positiv bleiben.' },
     { text: 'Hm. Was wollten Sie noch mal?', correct: false, why: 'Lieber kurz freundlich antworten, dann weiter bedienen.' },
-  ]) }),
+  ]) }; },
   () => ({ topic: 'Smalltalk', customer: ['Ich habe meinen Einkaufsbeutel vergessen …'], options: opts([
-    { text: pick(['Kein Problem, ich gebe Ihnen gern eine Tüte.', 'Macht nichts, dafür haben wir Tüten. Ich packe Ihnen alles ein.']), correct: true },
+    { text: pick(['Kein Problem, ich geb Ihnen eine Tüte.', 'Macht nichts, ich pack Ihnen das in eine Tüte.']), correct: true },
     { text: 'Dann müssen Sie das so tragen, Tüten haben wir nicht für jeden.', correct: false, why: 'Hilfsbereit sein: eine Tüte anbieten.' },
     { text: 'Selbst schuld, das nächste Mal denken Sie dran.', correct: false, why: 'Nie belehren, einfach freundlich helfen.' },
     { text: '(Die Ware lose auf die Theke legen.)', correct: false, why: 'Biete eine Tüte an und packe ordentlich ein.' },
   ]) }),
   () => ({ topic: 'Smalltalk', customer: [pick(['Ist das Brot eigentlich von heute?', 'Backen Sie das hier selbst?'])], options: opts([
-    { text: pick(['Ja, wir backen alles selbst in unserer Backstube auf der Hohen Straße, ganz frisch.', 'Ja, alles aus unserer eigenen Backstube, handwerklich gebacken.']), correct: true },
+    { text: pick(['Ja, das ist von heute früh. Wir backen alles selbst in unserer Backstube.', 'Ja, alles heute frisch gebacken, aus unserer eigenen Backstube.']), correct: true },
     { text: 'Keine Ahnung, das kommt morgens einfach mit dem Wagen.', correct: false, why: 'Wir backen selbst in unserer Backstube, darauf sind wir stolz.' },
     { text: 'Nein, das ist Fertigware, wie überall.', correct: false, why: 'Falsch: Hinkel backt handwerklich in der eigenen Backstube.' },
     { text: 'Ist doch egal, schmeckt doch.', correct: false, why: 'Kundenfragen ernst nehmen und stolz von unserer Backstube erzählen.' },
   ]) }),
-  (p) => ({ topic: 'Smalltalk', customer: [`(${p.title} telefoniert noch kurz.)`, 'Moment … ja, ich bin gleich da … Entschuldigung!'], options: opts([
-    { text: pick(['Kein Problem, lassen Sie sich Zeit!', '(Kurz lächeln und warten, dann weiter bedienen.)']), correct: true },
+  (p) => ({ topic: 'Smalltalk', customer: [`(${p.title} telefoniert noch kurz.)`, 'Moment … ja, bin gleich da … Sorry!'], options: opts([
+    { text: pick(['Kein Problem, ganz in Ruhe.', '(Kurz lächeln und warten.)']), correct: true },
     { text: 'Hallo? Hier sind noch andere Kunden!', correct: false, why: 'Geduldig und freundlich bleiben, kurz warten.' },
     { text: '(Schon den nächsten Kunden bedienen.)', correct: false, why: 'Den Kunden nicht stehen lassen, kurz warten und dann weitermachen.' },
     { text: 'Telefonieren ist hier eigentlich nicht erlaubt.', correct: false, why: 'Kein Verbot, einfach freundlich warten.' },
   ]) }),
   () => ({ topic: 'Smalltalk', customer: ['Ihre Kollegin hat mich letzte Woche so toll beraten!'], options: opts([
-    { text: pick(['Oh, das freut mich sehr, das richte ich ihr gern aus!', 'Wie schön! Das sage ich ihr, darüber freut sie sich bestimmt.']), correct: true },
+    { text: pick(['Oh, wie schön, das sag ich ihr!', 'Das freut mich, das richte ich ihr aus!']), correct: true },
     { text: 'Ach, die? Na ja, die ist eigentlich eher langsam.', correct: false, why: 'Nie schlecht über Kollegen sprechen, Lob freundlich weitergeben.' },
     { text: 'Hm. Und, was wollen Sie heute?', correct: false, why: 'Lob annehmen und weitergeben, das freut alle.' },
     { text: 'Ich berate aber viel besser, glauben Sie mir.', correct: false, why: 'Teamgeist zeigen, Lob gern weitergeben.' },
   ]) }),
   () => ({ topic: 'Smalltalk', customer: ['Bis wann haben Sie heute eigentlich geöffnet?'], options: opts([
-    { text: 'Das schaue ich Ihnen gern nach. Die Öffnungszeiten hängen auch an der Tür und stehen auf unserer Internetseite.', correct: true },
+    { text: 'Ich schau kurz für Sie nach. Die Zeiten stehen auch vorne an der Tür.', correct: true },
     { text: 'Keine Ahnung, ich arbeite hier nur.', correct: false, why: 'Hilfsbereit sein: nachschauen oder auf Aushang und Internetseite verweisen.' },
     { text: 'Bis die Ware weg ist, dann machen wir zu.', correct: false, why: 'Lieber verlässlich auf die Öffnungszeiten an Tür und Internetseite verweisen.' },
     { text: 'Rund um die Uhr, wir sind ja eine Bäckerei.', correct: false, why: 'Nichts erfinden, nachschauen oder auf den Aushang verweisen.' },
@@ -68,7 +68,11 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
     core = c;
   }
   if (!core) core = scPrice() as Core;
-  const persona = core.persona || pick(PERSONAS);
+  // Die meisten Kunden kennen wir nicht (von 1500 am Tag rund 1300): nur Stammkunden haben einen Namen
+  const roh = core.persona || pick(PERSONAS);
+  const isRegular = /Stammkund/i.test(roh.who);
+  const frau = /^(Frau|Ms\.)/.test(roh.name);
+  const persona: Persona = isRegular ? roh : { name: frau ? 'Kundin' : 'Kunde', title: frau ? 'Die Kundin' : 'Der Kunde', who: roh.who };
 
   const steps: SimStep[] = [];
   // Mal kurz, mal ausführlich: nicht jedes Gespräch hat gleich viele Schritte
@@ -76,12 +80,11 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   const want = (t: string) => focus === t;
 
   // 1) Begrüßung
-  const isRegular = /Stammkund/i.test(persona.who);
   steps.push({
     topic: 'Begrüßung',
-    customer: [pick([...g.customer, ...(isRegular ? ['Na, da bin ich wieder!', 'Hallo, alles gut bei Ihnen?'] : []), '(Die Kundin lächelt und schaut in die Auslage.)'.replace('Die Kundin', persona.title.startsWith('Herr') ? 'Der Kunde' : 'Die Kundin')])],
+    customer: [pick([...g.customer, ...(isRegular ? ['Na, da bin ich wieder!', 'Hallo, alles gut bei Ihnen?'] : []), `(${frau ? 'Die Kundin' : 'Der Kunde'} schaut in die Auslage.)`])],
     options: (() => {
-      const phrase = pick(['Schön, dass Sie da sind, was darf es für Sie sein?', 'Was darf ich Ihnen heute Gutes einpacken?', 'Wie kann ich Ihnen heute weiterhelfen?', 'Was darf es heute sein?', 'Womit kann ich Ihnen eine Freude machen?', 'Was darf’s sein?', 'Was hätten Sie gern?', 'Na, worauf haben Sie heute Lust?', 'Herzlich willkommen bei Hinkel, was darf ich Ihnen anbieten?', 'Schön Sie zu sehen! Wie immer oder mal was Neues?'].filter(x => isRegular || !x.includes('Wie immer')));
+      const phrase = pick(['Was darf’s sein?', 'Was bekommen Sie?', 'Was hätten Sie gern?', 'Was darf ich Ihnen geben?', 'Was kann ich für Sie tun?']);
       const greet = isRegular ? `${g.std}, ${persona.title}!` : `${g.std}!`;
       const wrongPool: SimOpt[] = [
         { text: `${g.wrong}! ${phrase}`, correct: false, why: `Achte auf die Tageszeit, jetzt passt „${g.std}“.` },
@@ -107,16 +110,24 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
       topic: 'Schnitt',
       learn: { product: core.bread.name, kind: 'schnitt' },
       customer: (() => {
-        const ask = pick(['Können Sie mir das bitte schneiden? Wie dünn machen Sie das?', 'Schneiden Sie mir das? Auf wie viel Millimeter geht das?', 'Gerne geschnitten bitte, wie dick werden die Scheiben?']);
-        if (core.sliceIntro && core.sliceIntro.length >= 2) return core.sliceIntro;
-        if (core.sliceIntro && core.sliceIntro.length === 1) return [core.sliceIntro[0], ask];
-        return [pick(['Ach super, das nehme ich!', 'Prima, dann nehme ich das.', 'Wunderbar, genau das hab ich gesucht.']), ask];
+        // Echte Kunden fragen nicht nach Millimetern, sie sagen nur „geschnitten, bitte“. Die Maschine stellst du richtig ein.
+        const ask = pick(['Und einmal schneiden, bitte.', 'Können Sie mir das schneiden?', 'Geschnitten, bitte.', 'Schneiden Sie mir das bitte?', ...(isRegular ? ['Wie immer geschnitten, bitte.'] : [])]);
+        const intro = core.sliceIntro && core.sliceIntro[0];
+        if (intro && /schneid|cut/i.test(intro)) return [intro];
+        if (intro) return [intro, ask];
+        return [pick(['Ja, das nehm ich.', 'Okay, dann das.', 'Gut, dann nehm ich das.']), ask];
       })(),
       options: opts([
-        ...(() => { const tpl = pick([(x: string) => `Gerne! Das schneide ich Ihnen auf ${x}, so schneiden wir ${label}.`, (x: string) => `Mach ich! ${label} kommt bei uns auf ${x}.`, (x: string) => `Selbstverständlich. Für ${label} nehmen wir ${x}, dann passt die Scheibe perfekt.`, (x: string) => `Klar, ${x} ist für ${label} genau richtig.`]); return [{ text: tpl(mm), correct: true }, ...others.map(o => ({ text: tpl(o), correct: false, why: `${label} schneiden wir auf ${mm}.` }))]; })(),
-        { text: 'Ganze Brote schneiden wir leider nicht, das müssten Sie zuhause machen.', correct: false, why: `Natürlich schneiden wir, ${label} auf ${mm}.` },
+        ...(() => { const tpl = pick([(x: string) => `Gerne, mach ich. (Schneidemaschine auf ${x} stellen.)`, (x: string) => `Klar, kein Problem. (Maschine auf ${x} stellen.)`, (x: string) => `Mach ich. (Für ${label}: Maschine auf ${x}.)`]); return [{ text: tpl(mm), correct: true }, ...others.map(o => ({ text: tpl(o), correct: false, why: `${label} schneiden wir auf ${mm}.` }))]; })(),
+        { text: 'Schneiden machen wir leider nicht, das müssten Sie zu Hause machen.', correct: false, why: `Natürlich schneiden wir, ${label} auf ${mm}.` },
       ]),
     });
+  }
+
+  // Lange Gespräche: noch eine kleine Zwischenfrage oder etwas Smalltalk
+  if (shape === 'lang') {
+    const extras = sample(SMALLTALK, Math.random() < 0.35 ? 2 : 1).map(f => f(persona));
+    steps.push(...extras);
   }
 
   // 4) Sonst noch etwas?
@@ -126,9 +137,9 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   const rollQty = rnd(2, 6);
   if (askMore) steps.push({
     topic: 'Zusatzverkauf',
-    customer: [pick(['Danke schön!', 'Super, danke.', 'Prima.', 'Toll, danke!', 'Wunderbar.'])],
+    customer: [pick(['Danke.', 'Super, danke.', 'Prima.', 'Danke schön.'])],
     options: opts([
-      { text: pick(['Sehr gerne! Darf es denn sonst noch etwas für Sie sein?', 'Gerne doch! Kann ich Ihnen sonst noch etwas Gutes einpacken?', 'Mach ich sofort! Darf es sonst noch etwas dazu sein?', `Gern! Darf es dazu vielleicht noch ein paar frische ${pick(ROLLS).name} sein?`, 'Gern! Noch was dazu?', 'Sehr gern. Darf ich Ihnen noch etwas anbieten, vielleicht etwas Süßes für den Nachmittag?', `Kommt sofort! Unsere ${pick(SWEETS.length ? SWEETS : ROLLS).name} sind heute übrigens besonders lecker, darf es eins dazu sein?`]), correct: true },
+      { text: pick(['Darf’s sonst noch was sein?', 'Sonst noch etwas?', 'Kann ich Ihnen sonst noch was geben?', `Noch ein paar ${pick(ROLLS).name} dazu?`, 'Darf es noch etwas sein?']), correct: true },
       ...sample([
         { text: 'Das war’s dann, oder? Hinter Ihnen warten schon Leute.', correct: false, why: 'Nie drängeln, freundlich nachfragen, ob noch etwas dazu soll.' },
         { text: 'Nehmen Sie doch noch Brötchen mit, die müssen heute weg.', correct: false, why: 'So verkauft man nicht, frag offen und freundlich nach weiteren Wünschen.' },
@@ -140,15 +151,9 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   });
   if (addRoll) basket.push({ name: roll.name, qty: rollQty, cents: parseCents(roll.price) });
 
-  // Lange Gespräche: noch eine kleine Zwischenfrage oder etwas Smalltalk
-  if (shape === 'lang') {
-    const extras = sample(SMALLTALK, Math.random() < 0.35 ? 2 : 1).map(f => f(persona));
-    steps.push(...extras);
-  }
 
   // 5) Summe
   const total = basket.reduce((s, b) => s + b.cents * b.qty, 0);
-  const listText = basket.map(b => `${b.qty > 1 ? b.qty + '× ' : ''}${b.name}`).join(' und ');
   const totalWrong = new Set<number>();
   const tweaks = shuffleArray([-100, 100, -50, 50, -10, 10, -20, 20]);
   if (addRoll) { totalWrong.add(total - parseCents(roll.price) * rollQty); totalWrong.add(total + parseCents(roll.price)); }
@@ -160,9 +165,9 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   if (showSum) steps.push({
     topic: 'Summe',
     prices: basket.map(b => ({ ...b })),
-    customer: [addRoll ? `Ja, geben Sie mir noch ${rollQty} ${roll.name}, bitte.` : pick(['Nein danke, das wäre alles.', 'Das war’s für heute.', 'Nein, das reicht. Was macht das?']), addRoll ? 'Das wäre dann alles. Was bekommen Sie?' : 'Was bekommen Sie von mir?'],
+    customer: [addRoll ? `Ja, noch ${rollQty} ${roll.name}, bitte.` : pick(['Nee, das war’s.', 'Nein danke, das war alles.', 'Das war’s, danke.']), addRoll ? pick(['Dann war’s das.', 'Und das war’s dann.']) : pick(['Was macht das?', 'Was bekommen Sie?', 'Was kriegen Sie?'])],
     options: (() => {
-      const tpl = pick([(v: number) => `${listText}, das macht zusammen ${euro(v)}.`, (v: number) => `Dann bekomme ich ${euro(v)} von Ihnen, bitte.`, (v: number) => `Das macht ${euro(v)}, bitte schön.`, (v: number) => `Zusammen sind das ${euro(v)}.`]);
+      const tpl = pick([(v: number) => `Das macht ${euro(v)}, bitte.`, (v: number) => `Dann bekomme ich ${euro(v)}.`, (v: number) => `Zusammen ${euro(v)}, bitte.`, (v: number) => `${euro(v)}, bitte.`]);
       return opts([
         { text: tpl(total), correct: true },
         ...sample(Array.from(totalWrong), 3).map(w => ({ text: tpl(w), correct: false, why: `Richtig: ${basket.map(b => `${b.qty} × ${euro(b.cents)}`).join(' + ')} = ${euro(total)}.` })),
@@ -181,19 +186,19 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
     const chWrong = new Set<number>();
     for (const t of shuffleArray([-100, 100, -50, 50, -10, 10, -20, 20, -500, 500])) { if (chWrong.size >= 5) break; if (change + t > 0) chWrong.add(change + t); }
     chWrong.delete(change);
-    const pre = showSum ? prefix : `${prefix}das macht ${euro(base)}, `;
+    const pre = showSum ? prefix : `Das macht ${euro(base)}. ${prefix}`;
     return opts([
-      { text: `${pre}${euro(change)} bekommen Sie zurück.`, correct: true },
-      ...sample(Array.from(chWrong), 3).map(w => ({ text: `${pre}${euro(w)} bekommen Sie zurück.`, correct: false, why: `${euro(given)} − ${euro(base)} = ${euro(change)}.` })),
+      { text: `${pre}${euro(change)} zurück.`, correct: true },
+      ...sample(Array.from(chWrong), 3).map(w => ({ text: `${pre}${euro(w)} zurück.`, correct: false, why: `${euro(given)} − ${euro(base)} = ${euro(change)}.` })),
     ]);
   };
   if (payRoll < 0.15) {
     // Kartenzahlung
     steps.push({
       topic: 'Kartenzahlung',
-      customer: [pick(['Ich zahle mit Karte.', 'Kann ich mit Karte zahlen?', 'Mit dem Handy geht auch, oder?'])],
+      customer: [pick(['Mit Karte, bitte.', 'Kann ich mit Karte zahlen?', 'Geht auch mit Handy?'])],
       options: opts([
-        { text: 'Sehr gerne, das Gerät ist bereit, halten Sie Karte oder Handy einfach dran.', correct: true },
+        { text: 'Ja, klar. Einfach hier dranhalten.', correct: true },
         { text: 'Sagen Sie mir die PIN ruhig laut, dann tippe ich sie schnell für Sie ein.', correct: false, why: 'Die PIN gibt nur der Kunde selbst ein, niemals nachfragen oder mitlesen.' },
         { text: 'Karte? Na gut … aber nächstes Mal bitte bar, das ist für uns einfacher.', correct: false, why: 'Kartenzahlung freundlich annehmen, ohne Kommentar.' },
         { text: 'Halten Sie die Karte schon mal hin, ich bediene derweil den Nächsten.', correct: false, why: 'Den Bezahlvorgang in Ruhe zu Ende bringen, dann den nächsten Kunden bedienen.' },
@@ -204,9 +209,9 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
     tipCents = nextNote - total;
     steps.push({
       topic: 'Trinkgeld', tipStep: true,
-      customer: [pick([`Hier sind ${noteText(nextNote)}, stimmt so!`, `${noteText(nextNote)}, bitte. Der Rest ist für Sie!`])],
+      customer: [pick([`${noteText(nextNote)}, stimmt so.`, `Hier, ${noteText(nextNote)}. Passt so!`])],
       options: opts([
-        { text: 'Oh, vielen herzlichen Dank, das ist sehr lieb! Das kommt in unsere Trinkgeldkasse.', correct: true },
+        { text: 'Oh, danke schön, das ist nett!', correct: true },
         { text: `Nein, nein, hier sind Ihre ${euro(tipCents)}, Trinkgeld nehmen wir grundsätzlich nicht an.`, correct: false, why: 'Trinkgeld darfst du freundlich und dankend annehmen.' },
         { text: '(Das Geld wortlos in die Kasse legen und den nächsten Kunden aufrufen.)', correct: false, why: 'Bedanke dich für das Trinkgeld, das ist eine nette Geste.' },
         { text: 'Danke! Das stecke ich mir gleich selbst ein, das merkt ja keiner.', correct: false, why: 'Trinkgeld kommt in die Trinkgeldkasse, und ein ehrliches Dankeschön gehört dazu.' },
@@ -220,11 +225,11 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
       tipCents = round - total;
       steps.push({
         topic: 'Trinkgeld', tipStep: true,
-        customer: [pick([`Hier sind ${noteText(given)}, machen Sie ${noteText(round)} draus.`, `Ich gebe Ihnen ${noteText(given)}. Machen Sie einfach ${noteText(round)}, der Rest ist für Sie.`])],
-        options: changeOpts(given - round, given, round, 'Vielen Dank, das ist sehr nett! '),
+        customer: [pick([`${noteText(given)}, machen Sie ${noteText(round)}.`, `Hier, ${noteText(given)}. Machen Sie ${noteText(round)} draus.`])],
+        options: changeOpts(given - round, given, round, 'Oh, danke schön! Dann '),
       });
     } else {
-      steps.push({ topic: 'Rückgeld', customer: [`Hier sind ${noteText(nextNote)}.`], options: changeOpts(nextNote - total, nextNote, total, 'Vielen Dank, ') });
+      steps.push({ topic: 'Rückgeld', customer: [`Hier sind ${noteText(nextNote)}.`], options: changeOpts(nextNote - total, nextNote, total, 'Danke, und ') });
     }
   } else {
     // Normal bar, manchmal mit passendem Kleingeld
@@ -238,17 +243,17 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
     }
     steps.push({
       topic: 'Rückgeld',
-      customer: [pick([`Hier sind ${givenText}.`, `Ich gebe Ihnen ${givenText}.`, `Bitte schön, ${givenText}.`, `${givenText}, passt das?`])],
-      options: changeOpts(given - total, given, total, 'Vielen Dank, '),
+      customer: [pick([`Hier, ${givenText}.`, `${givenText}, bitte.`, `Bitte, ${givenText}.`, `Geht ${givenText}?`])],
+      options: changeOpts(given - total, given, total, 'Danke, und '),
     });
     // Manchmal wandert danach etwas in die Trinkgelddose
     if (Math.random() < 0.15) {
       tipCents = pick([20, 30, 50]);
       steps.push({
         topic: 'Trinkgeld', tipStep: true,
-        customer: [`(${persona.title} wirft ${euro(tipCents)} in die Trinkgelddose.)`, pick(['Für die Kaffeekasse!', 'Sie machen das immer so nett hier.'])],
+        customer: [`(${persona.title} wirft ${euro(tipCents)} in die Trinkgelddose.)`, pick(['Für Sie!', 'Für die Dose.'])],
         options: opts([
-          { text: 'Oh, wie lieb, vielen Dank! Darüber freut sich das ganze Team.', correct: true },
+          { text: 'Oh, danke schön!', correct: true },
           { text: 'Das müssen Sie aber wirklich nicht, nehmen Sie das ruhig wieder raus.', correct: false, why: 'Trinkgeld freundlich annehmen und sich bedanken.' },
           { text: '(Nichts sagen, man sieht ja, dass es in die Dose geht.)', correct: false, why: 'Ein kurzes, herzliches Dankeschön gehört dazu.' },
           { text: 'Nur 50 Cent? Na ja, besser als nichts.', correct: false, why: 'Jedes Trinkgeld ist eine nette Geste, herzlich bedanken.' },
@@ -262,21 +267,21 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
   // 7) Verabschiedung
   if (want('Verabschiedung') || shape !== 'kurz' || Math.random() < 0.6) steps.push({
     topic: 'Verabschiedung',
-    customer: [pick(['Danke schön!', 'Super, danke.', 'Wunderbar, danke Ihnen!', 'Dann bis bald!', 'Schönen Tag noch!'])],
+    customer: [pick(['Danke schön!', 'Danke.', 'Tschüss!', 'Schönen Tag noch!'])],
     options: opts([
-      { text: pick([`Vielen Dank, ${persona.title}, ich wünsche Ihnen einen schönen Tag!`, `Ich danke Ihnen, ${persona.title}! Einen schönen Tag und bis bald!`, `Danke Ihnen, ${persona.title}, lassen Sie es sich schmecken!`, 'Vielen Dank und guten Appetit, bis zum nächsten Mal!']), correct: true },
+      { text: isRegular ? pick([`Danke, ${persona.title}, bis morgen!`, `Tschüss, ${persona.title}, schönen Tag noch!`]) : pick(['Danke, schönen Tag noch!', 'Danke schön, tschüss!', 'Vielen Dank, einen schönen Tag noch!', 'Danke, lassen Sie es sich schmecken!']), correct: true },
       ...sample([
         { text: 'So, tschüss dann, und der Nächste bitte, hier geht’s weiter!', correct: false, why: 'Erst den Kunden freundlich verabschieden, dann den nächsten bedienen.' },
         { text: 'Den Kassenbon brauchen Sie ja bestimmt nicht, den werfe ich weg.', correct: false, why: 'Zum Schluss steht die freundliche Verabschiedung, den Bon bieten wir an, statt ihn wegzuwerfen.' },
-        { text: 'Jo, danke, tschüss. Und Tür bitte hinter sich zumachen!', correct: false, why: 'Zu knapp und unhöflich, bedanken, schönen Tag wünschen, gern mit Namen.' },
+        { text: 'Jo, danke, tschüss. Und Tür bitte hinter sich zumachen!', correct: false, why: 'Zu knapp und unhöflich: bedanken und einen schönen Tag wünschen.' },
         { text: '(Schon dem nächsten Kunden zuwenden, ohne etwas zu sagen.)', correct: false, why: 'Jeden Kunden freundlich verabschieden, mit Blickkontakt und einem guten Wunsch.' },
         { text: 'Ciao! Und morgen bitte etwas früher, dann ist mehr da.', correct: false, why: 'Freundlich bedanken und einen schönen Tag wünschen, keine Belehrungen.' },
       ] as SimOpt[], 3),
     ]),
   });
 
-  const endLines = [pick(tipCents > 0
-    ? ['Gern geschehen, Sie haben mich toll beraten. Bis bald!', 'Das haben Sie sich verdient. Tschüss!', 'Ihnen auch einen schönen Tag, bis zum nächsten Mal!']
-    : ['Danke, Ihnen auch! Bis morgen!', 'Gleichfalls, bis zum nächsten Mal!', 'Danke, war wie immer super hier. Tschüss!', 'Ihnen auch einen schönen Tag!', 'Bis bald, und danke für die nette Beratung!', 'Tschüss, bis Samstag!'])];
+  const endLines = [pick(isRegular
+    ? ['Danke, bis morgen!', 'Ihnen auch, tschüss!', 'Bis Samstag!']
+    : ['Danke, Ihnen auch!', 'Tschüss!', 'Gleichfalls!', 'Danke, tschüss!'])];
   return { persona, steps, endLines, tipCents, coreKey: coreKeyOf(core), coreTopics: core.steps.map(st => st.topic) };
 }

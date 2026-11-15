@@ -173,7 +173,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
         if (!conv.tipCents) {
           const quote = newCorrect / total;
           const bonus = quote === 1 ? (Math.random() < 0.5 ? pick([30, 50, 100]) : 0) : quote >= 0.75 ? (Math.random() < 0.2 ? pick([20, 30]) : 0) : 0;
-          if (bonus) { tip = bonus; extra.push({ from: 'customer', text: `(${conv.persona.title} wirft ${euro(bonus)} in die Trinkgelddose. ${pick(['Für die tolle Beratung!', 'Das war richtig gut, danke!', 'So freundlich wird man selten bedient!'])}` }); }
+          if (bonus) { tip = bonus; extra.push({ from: 'customer', text: `(${conv.persona.title} wirft ${euro(bonus)} in die Trinkgelddose.) ${pick(['Danke, war nett!', 'Sehr nett, danke!', 'Für Sie.'])}` }); }
         }
         conv.endLines.forEach(t => extra.push({ from: 'customer', text: t }));
         setMessages(m => [...m, ...extra]);
