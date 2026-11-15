@@ -90,7 +90,7 @@ export const abstimmen = (userKey: string, name: string, id: string, wahl: numbe
 // (Nicht verwechseln mit _lob: das ist das Lob vom Ausbilder, das als Pop-up erscheint.)
 export type KLob = { an: string; anName: string; t: string; ts: number; anonym?: boolean };
 export type KLobEintrag = KLob & { id: string; von: string; vonName: string };
-export const LOB_PUNKTE = 10;
+export const LOB_PUNKTE = 15; // seit Version 199 ×1,5 (vorher 10)
 export const LOB_MAX = 140;
 const tagVon = (ts: number) => { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
 

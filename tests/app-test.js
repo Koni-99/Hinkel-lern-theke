@@ -241,6 +241,7 @@ async function offlineTests() {
     }
     await settle(d.page, 800);
     ok('Quiz: Kassenbon zeigt eine Wissens-Pause', (await d.page.locator('.lt-wissenspause').count()) > 0);
+    ok('Quiz: Kassenbon zeigt den Punkte-Bonus ×1,5', (await d.page.getByText(/Punkte-Bonus ×1,5/i).count()) > 0);
     ok('Quiz-Extras: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
@@ -576,7 +577,7 @@ async function cloudTests() {
     const A = await device({ cloud: true, user: 'Anna' });
     let pkt = [];
     for (let i = 0; i < 60 && pkt.length < 2; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (pkt.length < 2) await sleep(100); }
-    ok('Lob: Gelobte bekommt je Lob 10 Punkte (2 Lobe, eins davon anonym)', pkt.length === 2 && pkt.every((x) => x.score === 10), `${pkt.length} Einträge`);
+    ok('Lob: Gelobte bekommt je Lob 15 Punkte (2 Lobe, eins davon anonym)', pkt.length === 2 && pkt.every((x) => x.score === 15), `${pkt.length} Einträge`);
     ok('Lob: Karte „Lob der Woche“ zeigt das Lob', (await A.page.getByText('Danke für die Hilfe!', { exact: false }).count()) > 0);
     const anonymZeile = await A.page.locator('section[aria-label="Lob der Woche"] div', { hasText: 'Heimlich danke!' }).first().innerText().catch(() => '');
     ok('Lob: anonymes Danke zeigt „Ein Kollege“ statt Namen', /Ein Kollege/.test(anonymZeile) && !/Carla/.test(anonymZeile), anonymZeile);

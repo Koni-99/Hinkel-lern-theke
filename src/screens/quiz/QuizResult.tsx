@@ -6,7 +6,7 @@ import { DAILY_FACTS } from '../../basis/fakten';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getExamEvaluation } from '../../hilfen/pruefung';
-import { getRightAnswerText } from '../../hilfen/allgemein';
+import { getRightAnswerText, PUNKTE_FAKTOR } from '../../hilfen/allgemein';
 import { StarRating, starsFor, ReceiptHead, ReceiptFoot, TH, cardStyle, btnPrimary, btnSecondary, ConfettiOverlay } from '../../ui/basis';
 import { ihkGrade } from '../../ui/lernstand';
 import { ReportLink } from '../../ui/melden';
@@ -70,8 +70,10 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
         {(() => {
           const n = quizList.length; const pct = n ? Math.round((correctCount / n) * 100) : 0;
           const combo = !isExamMode && !isAdmin && score > 0 ? lastComboExtra : 0;
-          const summe = !isExamMode && !isAdmin && score > 0 ? Math.round((score + combo) * streakMult) : Math.max(0, score);
-          const serie = Math.max(0, summe - Math.max(0, score) - combo);
+          const mitSerie = !isExamMode && !isAdmin && score > 0 ? Math.round((score + combo) * streakMult) : Math.max(0, score);
+          const serie = Math.max(0, mitSerie - Math.max(0, score) - combo);
+          const summe = !isExamMode && !isAdmin && score > 0 ? Math.round((score + combo) * streakMult * PUNKTE_FAKTOR) : Math.max(0, score);
+          const bonus = Math.max(0, summe - mitSerie);
           const stamp = correctCount === n && n > 0 ? 'PERFEKT' : pct >= 75 ? 'SPITZE' : pct >= 50 ? 'GESCHAFFT' : 'WEITER ÜBEN';
           return (
             <>
@@ -85,6 +87,7 @@ export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, p
                 {!isExamMode && <div><span>Punkte</span><span>{score > 0 ? `+${score}` : '0'}</span></div>}
                 {combo > 0 && <div><span>Combo-Bonus</span><span>+{combo}</span></div>}
                 {serie > 0 && <div><span>Serien-Bonus</span><span>+{serie}</span></div>}
+                {bonus > 0 && <div><span>Punkte-Bonus ×1,5</span><span>+{bonus}</span></div>}
                 {!isExamMode && <div className="lt-rc-sum"><span>SUMME</span><span>{summe.toLocaleString('de-DE')} PKT</span></div>}
               </div>
             </>

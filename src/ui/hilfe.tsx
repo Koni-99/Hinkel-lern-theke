@@ -10,12 +10,12 @@ const boxIcon = (paths: string[]) => <LtIcon paths={paths} size={28} />;
 // ───────────────────────── Kurze Einführung für Neue ─────────────────────────
 export const INTRO_SLIDES = [
   { icon: bigIcon(ICON.bread), anim: 'lt-emo-shake', title: 'Willkommen in der Lern-Theke!', text: 'Hier lernst du alles, was du an der Theke brauchst: unsere Produkte, Allergene, Beratung und Hygiene. In kleinen Häppchen, wann immer du Zeit hast.', bg: '#FFF0C2' },
-  { icon: bigIcon(ICON.home), anim: 'lt-emo-bob', title: 'Wo finde ich was?', text: 'Unten am Handy und Tablet (am Computer links) sind die Hauptseiten: Start, Lernen, Spielen, Nachschlagen und die Bestenliste. Oben rechts hinter den drei Strichen ist das Menü: dort findest du deine Statistik, „Mein Monat“, die Ideen-Box, Kundenstimmen, deinen Geburtstag und die Hilfe „So funktioniert die Lern-Theke“.', bg: '#F6E7C8' },
+  { icon: bigIcon(ICON.home), anim: 'lt-emo-bob', title: 'Wo finde ich was?', text: 'Unten am Handy und Tablet (am Computer links) sind die Hauptseiten: Start, Lernen, Spielen, Nachschlagen und die Bestenliste. Oben rechts hinter den drei Strichen ist das Menü: dort findest du deine Statistik, „Mein Monat“, die Ideen-Box, Kundenstimmen, deinen Geburtstag, das Aussehen der App und die Hilfe „So funktioniert die Lern-Theke“.', bg: '#F6E7C8' },
   { icon: bigIcon(ICON.book), anim: 'lt-emo-bob', title: 'Lernen', text: 'Du beantwortest Fragen und siehst nach jeder Antwort die Erklärung. Was du falsch hattest, kommt in deinen Fehler-Stapel und taucht später noch einmal auf. So bleibt es hängen.', bg: '#DDE6F7' },
   { icon: bigIcon(ICON.game), anim: 'lt-dice-idle', title: 'Spielen', text: 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr. Viele Spiele zählen auch fürs Lernen: richtig beantwortet ist richtig beantwortet.', bg: '#E1EEDC' },
-  { icon: bigIcon(ICON.sparkle), anim: 'lt-emo-twinkle', title: 'Punkte und Stufen', text: 'Für richtige Antworten gibt es Punkte. Damit steigst du Stufe für Stufe auf, vom Neuling bis zur Hinkel-Ikone. In deiner ersten Woche gibt es keine Minuspunkte.', bg: '#FCE1D2' },
+  { icon: bigIcon(ICON.sparkle), anim: 'lt-emo-twinkle', title: 'Punkte und Stufen', text: 'Für richtige Antworten gibt es Punkte, dazu einen Punkte-Bonus ×1,5 auf alles. Damit steigst du Stufe für Stufe auf, vom Neuling bis zur Hinkel-Ikone. In deiner ersten Woche gibt es keine Minuspunkte.', bg: '#FCE1D2' },
   { icon: bigIcon(ICON.coins), anim: 'lt-coin', title: 'Trinkgeld und Laden', text: 'Trinkgeld bekommst du im Theken-Simulator, jeden Tag fürs Vorbeischauen und am Glücksrad. Oben rechts beim Trinkgeld (z. B. „0,00 €“) öffnest du den Laden und kaufst dir Zeichen, Farben und Joker.', bg: '#FFF0C2' },
-  { icon: bigIcon(ICON.users), anim: 'lt-emo-bob', title: 'Gemeinsam im Team', text: 'Die Lern-Theke ist auch für den Austausch da: Kundenfragen und Verkaufstipps teilen, einmal am Tag einen Kollegen loben, bei Umfragen abstimmen und Ideen einreichen. Alles Wichtige dazu steht im Menü unter „So funktioniert die Lern-Theke“.', bg: '#E1EEDC' },
+  { icon: bigIcon(ICON.users), anim: 'lt-emo-bob', title: 'Gemeinsam im Team', text: 'Die Lern-Theke ist auch für den Austausch da: Kundenfragen und Verkaufstipps teilen, einmal am Tag einen Kollegen loben (auch anonym), bei Umfragen abstimmen und Ideen einreichen. Alles Wichtige dazu steht im Menü unter „So funktioniert die Lern-Theke“.', bg: '#E1EEDC' },
 ];
 
 export function IntroTour({ name, onDone }: { name: string; onDone: () => void }) {
@@ -90,6 +90,10 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Rubbellos', 'im Laden kaufen, auf der Startseite freirubbeln')}
         {ort('Abzeichen', 'für besondere Erfolge, als Sticker in deinem Stickerheft')}
         {ort('Krone', 'für die meisten Punkte in einem Monat')}
+        {ort('Glücksfrage', 'kommt nach 5 richtigen in Folge, zählt dreifach, kein Abzug')}
+        {ort('Punkte-Bonus ×1,5', 'auf alle Punkte, steht auf dem Kassenbon')}
+        {ort('Zusatzverkauf', 'grüner Tipp im Steckbrief: was du dem Kunden noch anbieten kannst')}
+        {ort('Küken-Geheimnis', 'Küken neben „Wusstest du?“ antippen')}
       </>, 0)}
       {box(boxIcon(ICON.sparkle), 'Punkte', <>
         <div>Für jede richtige Antwort gibt es Punkte, schwere Fragen bringen mehr:</div>
@@ -98,6 +102,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {row('Experten-Ecke und Produkt der Woche', '+20 / +40')}
         {row('Falsche Antwort (ab der zweiten Woche)', '−10 / −15')}
         <div>Eine Runde fällt nie unter 0 Punkte. Auch Spiele bringen Punkte für die Bestenliste.</div>
+        <div><strong>Punkte-Bonus ×1,5:</strong> Auf alle Punkte aus Quiz und Spielen kommt noch die Hälfte obendrauf. Aus 100 Punkten werden 150. Ein Sieg im Quiz Battle bringt 38 Punkte, ein Lob 15, das geschaffte Team-Ziel 75.</div>
         <div><strong>Combo-Bonus:</strong> In jedem Spiel und Quiz zählt, wie viele richtige Antworten du am Stück hast. Alle 5 richtigen in Folge gibt es mehr: ab 5 ×1,2, ab 10 ×1,4, ab 15 ×1,6, ab 20 ×1,8, ab 25 höchstens ×2,0. Jede Antwort zählt einzeln mit dem Faktor, den du gerade hast. Eine falsche Antwort setzt die Combo zurück.</div>
       </>, 0)}
       {box(boxIcon(ICON.trophy), 'Stufen', <>
@@ -120,7 +125,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       </>, 3)}
       {box(boxIcon(ICON.wheel), 'Glücksrad', <div>Einmal pro Woche (ab Montag) darfst du drehen. Zu gewinnen gibt es Joker, Trinkgeld und Extra-Punkte. Mit dem Joker „Extra-Dreh“ drehst du zusätzlich.</div>, 4)}
       {box(boxIcon(ICON.repeat), 'Fehler-Stapel', <div>Jede Frage, die du falsch beantwortest, landet hier. Sie kommt am nächsten Tag wieder, danach nach 3, nach 7 und nach 14 Tagen. Hast du sie dabei jedes Mal richtig, ist sie gelernt und raus. So lernst du genau das, was noch nicht sitzt.</div>, 5)}
-      {box(boxIcon(ICON.flame), 'Lern-Serie und Serien-Bonus', <><div>Jeder Tag, an dem du etwas lernst oder spielst, verlängert deine Serie. Sonntags ist die Bäckerei zu, ein Sonntag ohne Lernen unterbricht die Serie deshalb nicht. Lässt du einen anderen Tag aus, fängt sie wieder bei 1 an.</div><div>Je länger deine Serie, desto mehr Punkte bekommst du:</div>{row('Tag 1', '×1,0')}{row('Tag 2', '×1,1')}{row('Tag 3', '×1,2')}{row('Tag 4', '×1,3')}{row('Tag 5', '×1,4')}{row('ab Tag 6', '×1,5')}</>, 6)}
+      {box(boxIcon(ICON.flame), 'Lern-Serie und Serien-Bonus', <><div>Jeder Tag, an dem du etwas lernst oder spielst, verlängert deine Serie. Sonntags ist die Bäckerei zu, ein Sonntag ohne Lernen unterbricht die Serie deshalb nicht. Lässt du einen anderen Tag aus, fängt sie wieder bei 1 an.</div><div>Auf alle Punkte gibt es einen <strong>Punkte-Bonus ×1,5</strong> (steht auf dem Kassenbon). Und je länger deine Serie, desto mehr kommt noch dazu:</div>{row('Tag 1', '×1,0')}{row('Tag 2', '×1,1')}{row('Tag 3', '×1,2')}{row('Tag 4', '×1,3')}{row('Tag 5', '×1,4')}{row('ab Tag 6', '×1,5')}</>, 6)}
       {box(boxIcon(ICON.medal), 'Abzeichen', <div>Für besondere Leistungen gibt es Abzeichen, zum Beispiel für Serien, viele richtige Antworten oder alle Produkte im Bilderquiz. Ein paar sind geheim. Sie kommen als Sticker in dein Stickerheft (Startseite → „Dein Fortschritt“): Neue Sticker werden beim Öffnen eingeklebt, mit den Knöpfen oder durch Wischen blätterst du um.</div>, 7)}
       {box(boxIcon(ICON.dice), 'Lernpfad', <div>Unter Lernen → „Lernpfad“ gehst du Feld für Feld einen Weg mit 24 Feldern entlang. Fertige Felder sind braun mit Haken, dein aktuelles Feld leuchtet gold. Unten steht, welcher Bereich dran ist, mit „Spielen“ geht es los. Pro Feld 5 Fragen, ab 4 richtigen geht es weiter. Jedes 6. Feld ist ein Brot-Meilenstein, am Ende wirst du Brotmeister.</div>, 7)}
       {box(boxIcon(ICON.shield), 'Hinkel-Meister', <div>Wer 100 % aller Fragen gemeistert hat, wird Hinkel-Meister: goldener Rahmen um die Punktekarte, ein Meister-Zeichen vor dem Namen in der Bestenliste und die Meister-Runde unter Lernen mit 15 schweren Fragen und dreifachen Punkten, so oft man will. Ab 90 % zeigt die App, wie viele Fragen noch fehlen.</div>, 8)}
@@ -134,7 +139,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Verkaufstipps:</strong> In jedem Produkt-Steckbrief kannst du einen Tipp für die Kollegen hinterlassen, zum Beispiel „passt super zu Frischkäse“.</div>
       </>, 11)}
       {box(boxIcon(ICON.heart), 'Lob, Umfragen und wichtige Nachrichten', <>
-        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 10 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“.</div>
+        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 15 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“.</div>
         <div><strong>Umfragen:</strong> Stellt der Ausbilder eine Frage ans Team, erscheint sie auf der Startseite. Einfach antippen und abstimmen.</div>
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>
       </>, 12)}

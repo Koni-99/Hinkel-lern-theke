@@ -1,8 +1,13 @@
 // ═══ Allgemeine Helfer: Zahlen, Mischen, Datum, Namen, Rang, Adressen, Sortiment-Filter ═══
 // Vorher in utils.ts. Inhalt unverändert übernommen.
 
+/** Mehr Punkte überall (Version 199, Wunsch des Nutzers): alle neuen Punkte ×1,5. Schatzkammer-Preise bleiben gleich */
+export const PUNKTE_FAKTOR = 1.5;
+
 /** Punkte für Sieg/Niederlage im Quiz Battle */
 export const BATTLE_POINTS = 25;
+/** Was ein Sieg im Quiz Battle bringt (mit Punkte-Faktor), ohne Einsatz. Eine Niederlage kostet weiter BATTLE_POINTS */
+export const BATTLE_SIEG = Math.round(BATTLE_POINTS * PUNKTE_FAKTOR);
 
 /**
  * Repariert alte, kaputte Fehler-Zähler aus der Cloud (z. B. Riesenzahlen).

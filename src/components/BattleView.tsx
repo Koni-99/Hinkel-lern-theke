@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getRankByPercentage, BATTLE_POINTS } from '../hilfen/allgemein';
+import { getRankByPercentage, BATTLE_POINTS, BATTLE_SIEG } from '../hilfen/allgemein';
 import { battleOutcomeSinceReset, battleTimeOf, formatBattleTime } from '../hilfen/battle';
 import { dc } from '../daten/data';
 import { Tombstones } from "../types";
@@ -110,7 +110,7 @@ export function BattleView({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "12px", flexWrap: "wrap" }}>
         <PageHead
           title="Quiz Battle"
-          subtitle={`Fordere Kollegen heraus: 5 gemischte Fragen, auch mit Produktfotos, ${BATTLE_SEKUNDEN} Sekunden pro Frage. Bei gleich vielen richtigen Antworten gewinnt, wer schneller war. Sieg +${BATTLE_POINTS} Punkte, Niederlage −${BATTLE_POINTS} Punkte.`}
+          subtitle={`Fordere Kollegen heraus: 5 gemischte Fragen, auch mit Produktfotos, ${BATTLE_SEKUNDEN} Sekunden pro Frage. Bei gleich vielen richtigen Antworten gewinnt, wer schneller war. Sieg +${BATTLE_SIEG} Punkte, Niederlage −${BATTLE_POINTS} Punkte.`}
         />
         {battleState === "menu" && (
           <button onClick={() => fetchCloudData()} style={{ ...btnSecondary, minHeight: "48px", fontSize: "16px" }}>Aktualisieren</button>
@@ -206,7 +206,7 @@ export function BattleView({
                       </div>
                       <span style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                         <span style={{ fontWeight: 700, fontSize: "17px", color: isTie ? TH.ink : isWinner ? TH.green : TH.red }}>
-                          {isTie ? "Unentschieden" : isWinner ? `Sieg${b.challengerScore === b.opponentScore ? " (schneller)" : ""} · +${BATTLE_POINTS + (Number(b.stake) || 0)}` : `Niederlage${b.challengerScore === b.opponentScore ? " (langsamer)" : ""} · −${BATTLE_POINTS + (Number(b.stake) || 0)}`}
+                          {isTie ? "Unentschieden" : isWinner ? `Sieg${b.challengerScore === b.opponentScore ? " (schneller)" : ""} · +${BATTLE_SIEG + (Number(b.stake) || 0)}` : `Niederlage${b.challengerScore === b.opponentScore ? " (langsamer)" : ""} · −${BATTLE_POINTS + (Number(b.stake) || 0)}`}
                         </span>
                         {(() => {
                           const otherKey = b.challengerKey === myKey ? b.opponentKey : b.challengerKey;

@@ -1,5 +1,5 @@
 // ═══ Startseite: „Lob der Woche“ unter Kollegen ═══
-// Zeigt die Lobe der letzten 7 Tage. Jeder kann einmal am Tag einen Kollegen loben (+10 Punkte für den Gelobten).
+// Zeigt die Lobe der letzten 7 Tage. Jeder kann einmal am Tag einen Kollegen loben (+15 Punkte für den Gelobten).
 import { useState } from 'react';
 import { dc } from '../daten/data';
 import { LT } from '../basis/marke';

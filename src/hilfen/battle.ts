@@ -1,7 +1,7 @@
 // ═══ Quiz Battle: Zeiten, Sieger, Punkte ═══
 // Vorher in utils.ts. Inhalt unverändert übernommen.
 import { BattleEntry, CloudPayload, Tombstones } from '../types';
-import { BATTLE_POINTS } from './allgemein';
+import { BATTLE_POINTS, BATTLE_SIEG } from './allgemein';
 /** Zeit pro Frage im Quiz Battle (Sekunden) */
 export const BATTLE_SEKUNDEN = 40;
 
@@ -86,7 +86,7 @@ export function battleOutcomeSinceReset(b: BattleEntry, userKey: string, t?: Tom
   return getBattleOutcome(b, userKey);
 }
 
-/** Schreibt Sieger +25 / Verlierer −25 Punkte in die Bestenliste (genau einmal pro Battle). */
+/** Schreibt Sieger +38 (25 ×1,5) / Verlierer −25 Punkte in die Bestenliste (genau einmal pro Battle). */
 export function awardBattlePoints(curr: CloudPayload, b: BattleEntry): void {
   if (b.status !== "finished" || b.winner === "Unentschieden") return;
   if (!Array.isArray(curr.scores)) curr.scores = [];
@@ -106,7 +106,7 @@ export function awardBattlePoints(curr: CloudPayload, b: BattleEntry): void {
     curr.scores.push({
       id,
       username: name,
-      score: (outcome === "won" ? 1 : -1) * (BATTLE_POINTS + (Number((b as any).stake) || 0)),
+      score: outcome === "won" ? BATTLE_SIEG + (Number((b as any).stake) || 0) : -(BATTLE_POINTS + (Number((b as any).stake) || 0)),
       date: nowStr,
       category: "Quiz Battle",
     });

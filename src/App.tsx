@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 198;
+const APP_VERSION: number = 199;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -13,7 +13,7 @@ const AlternativenJaegerView = lazy(() => import('./components/AlternativenJaege
 import { CloudPayload, PinEntry } from './types';
 import { useCloud } from './cloud/useCloud';
 import { alleKundenfragen, alleTipps, tippGeben } from './hilfen/kollegen';
-import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, lobVon, meineNotizen, notizSpeichern } from './hilfen/team';
+import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, lobVon, LOB_PUNKTE, meineNotizen, notizSpeichern } from './hilfen/team';
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
@@ -21,7 +21,7 @@ import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
 import { UmfrageKarten } from './screens/UmfrageKarten';
 import { setFocusData, setFocusSaver, flushFocus, applyWeakDelta, WEAK_MAX } from './focus';
-import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory } from './hilfen/allgemein';
+import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuffleArray, todayLocal, sanitizeUsername, isLeaderboardExcludedCategory, PUNKTE_FAKTOR } from './hilfen/allgemein';
 import { shuffleQuestionOptions } from './hilfen/pruefung';
 import { hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT } from './hilfen/anmeldung';
 import { settleBattle, awardBattlePoints, battleWinnerSide, BATTLE_SEKUNDEN } from './hilfen/battle';
@@ -789,8 +789,9 @@ export default function App() {
     const comboRaw = comboTake(finalScore);
     const comboExtra = finalScore > 0 && catName !== 'Quiz Battle' ? comboRaw : 0;
     setLastComboExtra(comboExtra);
-    const withBonus = Math.round((finalScore + comboExtra) * mult);
-    if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `Combo-Bonus +${comboExtra}` : ''}${comboExtra > 0 && mult > 1 ? ' · ' : ''}${mult > 1 ? `Serien-Bonus ×${mult.toFixed(1).replace('.', ',')}` : ''}: ${withBonus} statt ${finalScore} Punkte!`);
+    // Version 199: auf alle positiven Punkte zusätzlich der Punkte-Faktor (×1,5)
+    const withBonus = Math.round((finalScore + comboExtra) * mult * (finalScore > 0 ? PUNKTE_FAKTOR : 1));
+    if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `Combo-Bonus +${comboExtra} · ` : ''}${mult > 1 ? `Serien-Bonus ×${mult.toFixed(1).replace('.', ',')} · ` : ''}Punkte-Bonus ×1,5: ${withBonus} statt ${finalScore} Punkte!`);
     finalScore = withBonus;
     mutateCloudData((curr) => {
       curr.scores.push({ id: `${userKey}_${Date.now()}`, username, score: finalScore, date: nowStr, category: catName });
@@ -1861,7 +1862,7 @@ export default function App() {
     if (!lobNeuKey || !cloudConnected) return;
     mutateCloudData(lobPunkteGutschreiben(username.toLowerCase(), username, lobNeu));
     const l = lobNeu[0];
-    setToast(lobNeu.length === 1 ? `${lobVon(l)} hat dich gelobt: „${l.t}“ (+10 Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * 10} Punkte)`);
+    setToast(lobNeu.length === 1 ? `${lobVon(l)} hat dich gelobt: „${l.t}“ (+${LOB_PUNKTE} Punkte)` : `Du wurdest ${lobNeu.length}-mal gelobt! (+${lobNeu.length * LOB_PUNKTE} Punkte)`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lobNeuKey, cloudConnected]);
   // Hinweis, wenn der Ausbilder eine eigene Idee beantwortet hat (pro Antwort nur einmal)
