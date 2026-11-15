@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 205;
+const APP_VERSION: number = 206;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -53,7 +53,7 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
-import { mitShopFotos, mitZufallsFotos } from './daten/fotos';
+import { mitShopFotos, mitZufallsFotos, setEigeneFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
@@ -171,10 +171,12 @@ export default function App() {
   const setProductImages = (b: ProductImages) => setProductImagesRoh(mitShopFotos(b));
   const spielBilder = useMemo(() => mitZufallsFotos(productImages), [productImages]); // Spiele: zufälliges Shop-Foto zur Abwechslung
   const imagesVersionRef = useRef<number>(0);
-  const cacheImages = (version: number, images: ProductImages) => {
+  const eigeneFotosRef = useRef<string[]>([]); // Produkte mit eigenem Foto vom Ausbilder (gewinnt gegen das Shop-Foto)
+  const cacheImages = (version: number, images: ProductImages, eigen: string[] = eigeneFotosRef.current) => {
     imagesVersionRef.current = version;
+    eigeneFotosRef.current = eigen; setEigeneFotos(eigen);
     setProductImages(images);
-    idbSet('bilder', { version, images }).catch(() => {});
+    idbSet('bilder', { version, images, eigen }).catch(() => {});
   };
   useEffect(() => {
     let cancelled = false;
@@ -184,6 +186,7 @@ export default function App() {
         const cached = await idbGet('bilder');
         if (!cancelled && cached && cached.images && !imagesVersionRef.current) {
           imagesVersionRef.current = Number(cached.version) || 0;
+          eigeneFotosRef.current = Array.isArray(cached.eigen) ? cached.eigen : []; setEigeneFotos(eigeneFotosRef.current);
           setProductImages(cached.images);
         }
       } catch {}
@@ -198,7 +201,9 @@ export default function App() {
         const res = await fetch(await withAdminAuth(`${imagesUrl}/images.json`));
         if (!res.ok) return;
         const imgs = await res.json();
-        if (!cancelled && imgs && typeof imgs === 'object') cacheImages(version, imgs);
+        let eigen: string[] = [];
+        try { const er = await fetch(await withAdminAuth(`${imagesUrl}/eigen.json`)); const ej = er.ok ? await er.json() : null; if (ej && typeof ej === 'object') eigen = Object.keys(ej); } catch { /* ohne Liste: Shop-Fotos gewinnen */ }
+        if (!cancelled && imgs && typeof imgs === 'object') cacheImages(version, imgs, eigen);
       } catch {}
     })();
     return () => { cancelled = true; };
@@ -244,10 +249,12 @@ export default function App() {
     const key = productImageKey(name); const version = Date.now();
     try {
       const r1 = await fetch(await withAdminAuth(`${imagesUrl}/images/${key}.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataUrl) });
+      // merken, dass dieses Foto vom Ausbilder ist: dann gewinnt es gegen das Shop-Foto (Version 206)
+      if (r1.ok) await fetch(await withAdminAuth(`${imagesUrl}/eigen/${key}.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(version) }).catch(() => null);
       const r2 = r1.ok ? await fetch(await withAdminAuth(`${imagesUrl}/version.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(version) }) : r1;
       if (!r1.ok || !r2.ok) return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.';
     } catch { return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.'; }
-    cacheImages(version, { ...Object.fromEntries(Object.entries(productImages).filter(([, v]) => String(v).startsWith('data:'))), [key]: dataUrl });
+    cacheImages(version, { ...Object.fromEntries(Object.entries(productImages).filter(([, v]) => String(v).startsWith('data:'))), [key]: dataUrl }, Array.from(new Set([...eigeneFotosRef.current, key])));
     return `Foto für „${name}“ gespeichert. Alle Mitarbeiter sehen es ab jetzt.`;
   };
 

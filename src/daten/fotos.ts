@@ -1,6 +1,7 @@
 // ═══ Produktfotos aus dem Hinkel-Online-Shop (Version 193) ═══
 // Scharfe Originalfotos (hinkel-shop.de, auf 820px verkleinert) liegen als Dateien in public/fotos/<schlüssel>.jpg.
 // Sie gehen vor den alten Fotos aus der Datenbank (die waren aus Screenshots und deshalb unscharf).
+// Ausnahme (Version 206): Hat der Ausbilder selbst ein Foto gemacht (Liste hinkel_bilder/eigen), gewinnt sein Foto.
 // Neue Produkte ohne Shop-Foto nutzen weiter die Fotos aus der Datenbank (Ausbilder → Einstellungen).
 import type { ProductImages } from '../ui/basis';
 
@@ -11,12 +12,16 @@ export const FOTO_ANZAHL: Record<string, number> = {abendschnitte: 4, apfelring:
 
 const BASIS = (import.meta as any).env?.BASE_URL || '/';
 const url = (k: string, n: number) => `${BASIS}fotos/${k}${n > 1 ? `-${n}` : ''}.jpg`;
-/** Alle Shop-Fotos eines Produkts (leer, wenn es keins im Shop gibt) – für die Galerie im Steckbrief */
-export const alleFotos = (k: string): string[] => (SHOP_FOTOS.includes(k) ? Array.from({ length: FOTO_ANZAHL[k] || 1 }, (_, i) => url(k, i + 1)) : []);
+/** Produkte, für die der Ausbilder selbst ein Foto gemacht hat: dort gewinnt sein Foto */
+let EIGEN = new Set<string>();
+export const setEigeneFotos = (keys: string[]) => { EIGEN = new Set(keys); };
+const ohneEigene = (m: ProductImages): ProductImages => (EIGEN.size ? Object.fromEntries(Object.entries(m).filter(([k]) => !EIGEN.has(k))) : m);
+/** Alle Shop-Fotos eines Produkts (leer, wenn es keins im Shop gibt oder der Ausbilder ein eigenes Foto hat), für die Galerie im Steckbrief */
+export const alleFotos = (k: string): string[] => (SHOP_FOTOS.includes(k) && !EIGEN.has(k) ? Array.from({ length: FOTO_ANZAHL[k] || 1 }, (_, i) => url(k, i + 1)) : []);
 const FOTO_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, url(k, 1)]));
 // Zur Abwechslung zeigen die Spiele bei jedem App-Start zufällig eins der Fotos (Startseite, Steckbriefe usw. immer das Hauptfoto)
 const ZUFALL_MAP: ProductImages = Object.fromEntries(SHOP_FOTOS.map((k) => [k, url(k, 1 + Math.floor(Math.random() * (FOTO_ANZAHL[k] || 1)))]));
 /** Fotos aus der Datenbank + Shop-Hauptfotos (Shop-Fotos gewinnen) */
-export const mitShopFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...FOTO_MAP });
+export const mitShopFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ohneEigene(FOTO_MAP) });
 /** Für Spiele: wie mitShopFotos, aber mit zufälligem Shop-Foto */
-export const mitZufallsFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ZUFALL_MAP });
+export const mitZufallsFotos = (bilder: ProductImages): ProductImages => ({ ...bilder, ...ohneEigene(ZUFALL_MAP) });
