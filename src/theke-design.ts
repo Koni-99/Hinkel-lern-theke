@@ -760,4 +760,17 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
   .lt-home-side h2{font-size:26px !important}
   .lt-h1{font-size:56px}
 }
+/* v188 Handy: Markise auf den Unterseiten etwa halb so hoch wie auf der Startseite, auch in zwei Reihen,
+   damit das Logo nicht mehr über Punkte/Trinkgeld/Menü liegt */
+@media (max-width:560px){
+  .lt-root .lt-awning.lt-awning-sm{height:auto;min-height:124px}
+  .lt-root .lt-awning-sm .lt-hdr-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"l r" "m m";row-gap:8px;padding-top:10px;padding-bottom:10px}
+  .lt-root .lt-awning-sm .lt-hdr-left{grid-area:l}
+  .lt-root .lt-awning-sm .lt-hdr-pills{grid-area:r}
+  .lt-root .lt-awning-sm .lt-hdr-logo{grid-area:m;justify-self:center}
+  .lt-root .lt-awning.lt-awning-sm .lt-logo{height:58px}
+  .lt-root .lt-awning-sm .lt-pill{min-height:40px}
+  .lt-root .lt-awning-sm .lt-pill-round{width:40px}
+  .lt-kopf-aehren .lt-awning-sm .lt-hdr-row{row-gap:16px;padding-bottom:16px}
+}
 `;

@@ -72,7 +72,6 @@ ${M} .lt-b-ebene{bottom:-34px}
 ${M} .lt-b-aehre{filter:brightness(.62) saturate(1.25)}
 ${M} .lt-b-t3{filter:drop-shadow(0 2px 3px rgba(75,42,20,.35))}
 ${M} .lt-b-staub{background:#FFF8E1;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
-${M} .lt-awning-sm .lt-b-ebene{display:none}
 .lt-b-licht{position:absolute;left:50%;bottom:-70%;width:min(760px,150%);aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,rgba(253,230,138,.3),rgba(234,179,8,.1) 55%,transparent);transform:translate3d(calc(-50% + var(--px,0) * 26px),calc(var(--py,0) * 12px),0);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 .lt-b-ebene{position:absolute;bottom:-26px;display:block;transition:transform .45s cubic-bezier(.2,.8,.2,1);will-change:transform}
 .lt-b-t1{transform:translate3d(calc(var(--px,0) * -6px),calc(var(--py,0) * -4px),0);opacity:.32;filter:blur(1.6px)}
@@ -84,7 +83,9 @@ ${M} .lt-awning-sm .lt-b-ebene{display:none}
 .lt-b-staub.lt-b-t1{filter:blur(1px)}
 .lt-b-staub.lt-b-t3{filter:none}
 @keyframes ltStaub{0%,100%{margin-top:0;margin-left:0;opacity:0}20%{opacity:.9}50%{margin-top:-26px;margin-left:10px;opacity:.55}80%{opacity:.85}}
-${B} .lt-hdr-logo{transform:rotateY(calc(var(--px,0) * 10deg)) rotateX(calc(var(--py,0) * -7deg));transition:transform .45s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+${B} .lt-hdr-logo{transform:rotateY(calc(var(--px,0) * 10deg)) rotateX(calc(var(--py,0) * -7deg));transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+/* Logo dreht sich beim Antippen: ohne preserve-3d, sonst schneidet der goldene Rahmen das Logo in der Mitte ab */
+${B} .lt-hdr-logo{isolation:isolate}
 ${B} .lt-hdr-logo::before{content:"";position:absolute;inset:-9px -20px;z-index:-1;border-radius:26px;background:radial-gradient(120% 120% at 30% 12%,#FFF0B3,#FFC72C 42%,#D9972B 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(140,84,10,.4),0 16px 34px -12px #000,0 0 54px -6px rgba(234,179,8,.75)}
 ${B} .lt-logo{filter:drop-shadow(0 2px 0 rgba(255,255,255,.35)) !important}
 html.lt-noanim .lt-b-aehre,html.lt-noanim .lt-b-staub{animation:none}

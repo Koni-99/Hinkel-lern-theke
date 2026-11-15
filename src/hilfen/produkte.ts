@@ -69,33 +69,27 @@ export const priceText = (cents: number) => (cents / 100).toFixed(2).replace('.'
 
 export const centsOf = (s?: string) => { const m = (s || '').match(/(\d+),(\d\d)/); return m ? parseInt(m[1], 10) * 100 + parseInt(m[2], 10) : 0; };
 
-/** Generiert automatisch einen Verkaufstipp aus der Produktbeschreibung oder der Gruppe */
+/** Verkaufstipp für den Steckbrief: aus der Beschreibung („perfekt zu …“), sonst passend zur Gruppe. Ohne Gedankenstriche (Wunsch des Nutzers) */
 export function getSalesTip(product: ShopProduct): string {
-  const desc = product.description;
-
-  // Stufe 1: Extraktion aus der Beschreibung
-  const triggers = [
-    /(?:perfekt|ideal) (?:zu|für) (.+?)[.!]/i,
-    /(?:besonders gut geeignet|passt (?:wunderbar|hervorragend) zu) (.+?)[.!]/i
-  ];
-  for (const trigger of triggers) {
-    const match = desc.match(trigger);
-    if (match && match[1]) {
-      return `Tipp: Passt ${match[0].charAt(0).toLowerCase() + match[0].slice(1)}`;
-    }
-  }
-
-  // Stufe 2: Fallback nach Gruppe
+  const desc = product.description || '';
+  // 1. Aus der Beschreibung: „perfekt zu Suppe.“ → „Tipp: Perfekt zu Suppe.“
+  const m = desc.match(/\b((?:perfekt|ideal|besonders gut geeignet|passt (?:wunderbar|hervorragend|gut|prima)) (?:zu|für|als) [^.!]+)[.!]/i);
+  if (m) return `Tipp: ${m[1].charAt(0).toUpperCase()}${m[1].slice(1)}.`;
+  // 2. Passend zur Gruppe
   const groupTips: Record<string, string> = {
-    'Brot': 'Ein wunderbares Brot – ideal für das tägliche Frühstück.',
-    'Brötchen': 'Ein frisches Brötchen – perfekt für einen guten Start in den Tag.',
-    'Feingebäck': 'Ein feiner Genuss – perfekt als kleine Belohnung für den Nachmittag.',
-    'Kuchen': 'Ein Stück Kuchen – ideal für die gemütliche Kaffeepause.',
+    'Brot': 'Frag ruhig, ob du es schneiden sollst. Viele Kunden freuen sich darüber.',
+    'Brötchen': 'Perfekt zum Frühstück. Frag, ob noch etwas Süßes dazu passt.',
+    'Kleingebäck': 'Ein schneller Snack für unterwegs. Passt gut zu einem Kaffee.',
+    'Feingebäck': 'Eine kleine Belohnung für zwischendurch. Passt gut zu einem Kaffee.',
+    'Kuchen': 'Ideal für die Kaffeepause. Frag, ob es mehrere Stücke sein dürfen.',
+    'Stuten & Brioche': 'Schmeckt am Sonntag zum Frühstück, gern mit Butter und Marmelade.',
+    'Herzhafte Snacks': 'Ideal für die Mittagspause, satt machend und schnell gegessen.',
+    'Weihnachtsgebäck': 'Ein schönes Mitbringsel in der Adventszeit.',
+    'Saisongebäck': 'Gibt es nur eine Zeit lang. Sag das den Kunden ruhig dazu.',
   };
   if (groupTips[product.group]) return `Tipp: ${groupTips[product.group]}`;
-
-  // Stufe 3: Allgemeiner Allrounder
-  return 'Tipp: Dieses Produkt ist bei unseren Kunden sehr beliebt. Haben Sie es schon einmal selbst probiert?';
+  // 3. Für alles andere
+  return 'Tipp: Bei unseren Kunden sehr beliebt. Haben Sie es schon einmal probiert?';
 }
 
 /** Quizfragen zu korrigierten Produkten anpassen (Preis, Kurz-Zutaten, Allergene, Alternativen) */
