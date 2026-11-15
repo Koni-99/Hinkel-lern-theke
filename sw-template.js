@@ -7,6 +7,7 @@
 // - Tondateien (stimme/…): NICHT anfassen, der Browser lädt sie stückweise. Ohne Netz liest die Handy-Stimme.
 // - Firebase, Wetter und alles von anderen Adressen: wird NICHT angefasst.
 const VERSION = '__VERSION__';
+const FOTOS = 'lern-theke-fotos-1';
 const FILES = __FILES__;
 const CACHE = 'lern-theke-' + VERSION;
 const SCOPE = new URL(self.registration.scope);
@@ -23,7 +24,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lern-theke-') && k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('lern-theke-') && k !== CACHE && k !== FOTOS).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -56,6 +57,8 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(req).then((hit) => hit || fetch(req).then((res) => {
       if (res.ok && url.pathname.includes('/assets/')) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+      // Produktfotos (public/fotos) in einem eigenen Speicher, der bei neuen Versionen bleibt
+      else if (res.ok && url.pathname.includes('/fotos/')) { const copy = res.clone(); caches.open(FOTOS).then((c) => c.put(req, copy)); }
       return res;
     }))
   );

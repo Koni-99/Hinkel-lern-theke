@@ -242,6 +242,8 @@ async function offlineTests() {
     if (await karte.count()) {
       await click(karte); await settle(d.page, 500);
       const auf = await d.page.locator('.fc-sheet').count();
+      const galerie = await d.page.locator('.lt-galerie img').count();
+      ok('Steckbrief: mehrere Shop-Fotos zum Wischen', galerie >= 2, `${galerie} Fotos`);
       await d.page.goBack(); await settle(d.page, 500);
       sheetZu = auf > 0 && (await d.page.locator('.fc-sheet').count()) === 0 && (await d.page.locator('.lt-foto-raster').count()) > 0;
     }
@@ -400,7 +402,9 @@ async function offlineTests() {
     } catch (e) { ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', false, String(e.message || e).slice(0, 160)); }
     ok('Ausbilder: keine Fehler beim Einlesen', d.errors.length === 0, d.errors[0]);
     await click(d.page.getByRole('tab', { name: 'Einstellungen' })); await settle(d.page, 500);
-    ok('Ausbilder: Liste „Produkte ohne Foto“ mit Foto-Knöpfen', (await d.page.getByRole('heading', { name: 'Produkte ohne Foto' }).count()) > 0 && (await d.page.locator('input[aria-label^="Foto für "]').count()) > 5);
+    // Seit Version 193 haben alle Produkte ein Shop-Foto: dann steht dort „Alle Produkte haben ein Foto.“
+    ok('Ausbilder: Liste „Produkte ohne Foto“ (mit Foto-Knöpfen oder „alle haben ein Foto“)', (await d.page.getByRole('heading', { name: 'Produkte ohne Foto' }).count()) > 0 && ((await d.page.locator('input[aria-label^="Foto für "]').count()) > 0 || (await d.page.getByText('Alle Produkte haben ein Foto.').count()) > 0));
+
     const mf = await d.page.evaluate(async () => { const m = await (await fetch('manifest.json')).json(); const r = await Promise.all(m.icons.map((i) => fetch(i.src).then((x) => x.ok && (x.headers.get('content-type') || '').includes('png')))); return m.icons.length >= 3 && r.every(Boolean); });
     ok('App-Symbol: Manifest mit Symbolen, alle abrufbar', mf);
     // Ausbilder: Foto-Knopf direkt im Steckbrief

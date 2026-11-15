@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 192;
+const APP_VERSION: number = 193;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -53,6 +53,7 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
+import { mitShopFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
@@ -166,7 +167,8 @@ export default function App() {
 
   // ── Produktfotos: liegen in Firebase neben den App-Daten (hinkel_bilder) und werden pro Gerät zwischengespeichert ──
   const imagesUrl = (() => { const u = formatEndpointUrl(cloudUrl); return /hinkel_app\.json$/.test(u) ? u.replace(/hinkel_app\.json$/, 'hinkel_bilder') : ''; })();
-  const [productImages, setProductImages] = useState<ProductImages>({});
+  const [productImages, setProductImagesRoh] = useState<ProductImages>(() => mitShopFotos({}));
+  const setProductImages = (b: ProductImages) => setProductImagesRoh(mitShopFotos(b));
   const imagesVersionRef = useRef<number>(0);
   const cacheImages = (version: number, images: ProductImages) => {
     imagesVersionRef.current = version;
@@ -244,7 +246,7 @@ export default function App() {
       const r2 = r1.ok ? await fetch(await withAdminAuth(`${imagesUrl}/version.json`), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(version) }) : r1;
       if (!r1.ok || !r2.ok) return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.';
     } catch { return 'Hochladen hat nicht geklappt, bitte Internetverbindung prüfen.'; }
-    cacheImages(version, { ...productImages, [key]: dataUrl });
+    cacheImages(version, { ...Object.fromEntries(Object.entries(productImages).filter(([, v]) => String(v).startsWith('data:'))), [key]: dataUrl });
     return `Foto für „${name}“ gespeichert. Alle Mitarbeiter sehen es ab jetzt.`;
   };
 

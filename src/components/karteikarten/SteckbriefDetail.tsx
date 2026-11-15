@@ -1,6 +1,6 @@
 // ═══ Karteikarten: Steckbrief-Detail (aufgeklappte Karte) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { TH, productImageKey, ProductImages } from '../../ui/basis';
@@ -11,6 +11,31 @@ import { KollegenTipps } from './KollegenTipps';
 import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
 import { getSalesTip } from '../../hilfen/produkte';
+import { alleFotos } from '../../daten/fotos';
+
+
+// Mehrere Fotos pro Produkt (Version 193): zum Wischen, Punkte zeigen, welches Foto gerade da ist
+function FotoGalerie({ fotos, name }: { fotos: string[]; name: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [nr, setNr] = useState(0);
+  const geh = (i: number) => { const el = ref.current; if (!el) return; const z = Math.max(0, Math.min(fotos.length - 1, i)); el.scrollTo({ left: z * el.clientWidth, behavior: 'smooth' }); };
+  const pfeil = (links: boolean) => (
+    <button className="lt-galerie-pfeil" aria-label={links ? 'Vorheriges Foto' : 'Nächstes Foto'} onClick={() => geh(nr + (links ? -1 : 1))} disabled={links ? nr === 0 : nr === fotos.length - 1}
+      style={{ position: 'absolute', top: '50%', [links ? 'left' : 'right']: '10px', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', border: 'none', backgroundColor: 'rgba(255,255,255,.85)', color: TH.ink, fontSize: '22px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,.18)' } as any}>{links ? '‹' : '›'}</button>
+  );
+  return (
+    <div style={{ position: 'relative' }}>
+      <div ref={ref} className="lt-galerie" onScroll={(e) => { const el = e.currentTarget; setNr(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}
+        style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', borderRadius: '22px', border: `2px solid ${TH.line}`, scrollbarWidth: 'none' }}>
+        {fotos.map((f, i) => <img key={f} src={f} alt={`${name}, Foto ${i + 1} von ${fotos.length}`} loading={i ? 'lazy' : 'eager'} className="lt-loaded" style={{ flex: '0 0 100%', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', scrollSnapAlign: 'center', display: 'block' }} />)}
+      </div>
+      {pfeil(true)}{pfeil(false)}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '10px', height: '12px' }}>
+        {fotos.map((_, i) => <button key={i} aria-label={`Foto ${i + 1}`} onClick={() => geh(i)} style={{ width: i === nr ? '22px' : '9px', height: '9px', minHeight: 0, minWidth: 0, borderRadius: '999px', border: 'none', padding: 0, flex: '0 0 auto', backgroundColor: i === nr ? TH.yellow : TH.line, cursor: 'pointer', transition: 'width .2s' }} />)}
+      </div>
+    </div>
+  );
+}
 
 // Allergene als farbige Kästchen: jede Allergen-Gruppe hat ihre eigene Farbe, damit man sie an der Theke sofort erkennt
 const ALLERGEN_STIL: Record<string, { bg: string; ink: string; icon?: string[] }> = {
@@ -65,7 +90,9 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
         </div>
 
         <div style={{ padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {images[productImageKey(prod.name)] && (
+          {alleFotos(productImageKey(prod.name)).length > 1
+            ? <FotoGalerie key={prod.name} fotos={alleFotos(productImageKey(prod.name))} name={prod.name} />
+            : images[productImageKey(prod.name)] && (
             <img src={images[productImageKey(prod.name)]} alt={prod.name} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}` }} />
           )}
           {onFoto && (

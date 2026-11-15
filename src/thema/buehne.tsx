@@ -2,8 +2,8 @@
 // Nur Schmuck: keine Funktion hängt daran. Sichtbar nur ohne gekaufte Markise/Sorte (siehe artisan.ts).
 import { useEffect, useRef } from 'react';
 
-const Aehre = ({ tiefe, links, rechts, hoch, verz }: { tiefe: 1 | 2 | 3; links?: string; rechts?: string; hoch: number; verz: number }) => (
-  <span className={`lt-b-ebene lt-b-t${tiefe}`} style={{ left: links, right: rechts, height: `${hoch}px`, width: `${hoch * 0.3}px` }}>
+const Aehre = ({ tiefe, links, rechts, hoch, verz, breit }: { tiefe: 1 | 2 | 3; links?: string; rechts?: string; hoch: number; verz: number; breit?: boolean }) => (
+  <span className={`lt-b-ebene lt-b-t${tiefe}${breit ? ' lt-b-breit' : ''}`} style={{ left: links, right: rechts, height: `${hoch}px`, width: `${hoch * 0.3}px` }}>
     <span style={{ display: 'block', height: '100%', transform: rechts ? 'scaleX(-1)' : undefined }}>
     <svg className="lt-b-aehre" style={{ animationDelay: `${verz}s` }} viewBox="0 0 60 220" aria-hidden="true">
       <path d="M32 220C31 165 27 110 30 42" fill="none" stroke="url(#lt-b-gold)" strokeWidth="2.4" strokeLinecap="round" />
@@ -54,6 +54,21 @@ export function Buehne() {
       <Aehre tiefe={2} rechts="13%" hoch={180} verz={-3.1} />
       <Aehre tiefe={3} links="-1%" hoch={230} verz={-2} />
       <Aehre tiefe={3} rechts="-2%" hoch={240} verz={-0.9} />
+      {/* v193: mehr Ähren, damit der Kopf nicht so leer aussieht (die mit „breit“ nur auf Tablet und PC) */}
+      <Aehre tiefe={1} links="19%" hoch={105} verz={-3.4} />
+      <Aehre tiefe={1} rechts="21%" hoch={110} verz={-1.7} />
+      <Aehre tiefe={2} links="6%" hoch={150} verz={-2.2} />
+      <Aehre tiefe={2} rechts="7%" hoch={155} verz={-0.2} />
+      <Aehre tiefe={3} links="5%" hoch={195} verz={-4.1} />
+      <Aehre tiefe={3} rechts="4%" hoch={205} verz={-1.4} />
+      <Aehre tiefe={1} links="27%" hoch={95} verz={-0.8} breit />
+      <Aehre tiefe={1} rechts="29%" hoch={100} verz={-2.9} breit />
+      <Aehre tiefe={2} links="17%" hoch={165} verz={-1.1} breit />
+      <Aehre tiefe={2} rechts="18%" hoch={160} verz={-3.6} breit />
+      <Aehre tiefe={3} links="11%" hoch={215} verz={-0.5} breit />
+      <Aehre tiefe={3} rechts="12%" hoch={220} verz={-2.4} breit />
+      <Aehre tiefe={2} links="33%" hoch={130} verz={-1.9} breit />
+      <Aehre tiefe={2} rechts="35%" hoch={135} verz={-4.4} breit />
       {Array.from({ length: 22 }, (_, i) => (
         <i key={i} className={`lt-b-staub lt-b-t${(i % 3) + 1}`} style={{ left: `${(i * 37 + 9) % 100}%`, top: `${(i * 53 + 11) % 92}%`, width: `${2 + (i % 4) * 1.5}px`, height: `${2 + (i % 4) * 1.5}px`, animationDelay: `${-(i * 0.71) % 7}s`, animationDuration: `${6 + (i % 5) * 1.3}s` }} />
       ))}
