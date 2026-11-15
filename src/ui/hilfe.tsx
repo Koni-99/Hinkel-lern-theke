@@ -74,6 +74,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
+        {ort('Neu laden', 'du bleibst auf der Seite, auf der du gerade warst')}
         {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Idee einreichen, Kundenstimme, Geburtstag, Hilfe, größere Schrift')}
         <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
       </>, 0, true)}

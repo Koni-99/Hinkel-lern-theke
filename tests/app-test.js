@@ -222,6 +222,12 @@ async function offlineTests() {
       sheetZu = auf > 0 && (await d.page.locator('.fc-sheet').count()) === 0 && (await d.page.locator('.lt-foto-raster').count()) > 0;
     }
     ok('Zurück-Taste: eine Seite zurück und Steckbrief schließen', zurueck1 && sheetZu, `Seite ${zurueck1}, Steckbrief ${sheetZu}`);
+    // Neu laden: man bleibt auf der Seite, auf der man war
+    await click(nav(d.page).nth(2)); await settle(d.page, 500);
+    const vorher = await titel();
+    await d.page.reload(); await settle(d.page, 2500);
+    const nachher = await titel();
+    ok('Neu laden: bleibt auf der gleichen Seite', vorher.length > 0 && vorher === nachher, `vorher „${vorher}“, nachher „${nachher}“`);
     ok('Zurück-Taste: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }

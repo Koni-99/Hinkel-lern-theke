@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 185;
+const APP_VERSION: number = 186;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -408,7 +408,8 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [team.reached, team.lastReached, team.week, cloudConnected, username, isAdmin, focusWeakKey, JSON.stringify(focusProg._teamWon || [])]);
 
-  const [activeTab, setActiveTab] = useState('home');
+  // Beim Neuladen auf der gleichen Seite bleiben (gilt nur für diesen Tab/dieses Fenster, siehe sessionStorage)
+  const [activeTab, setActiveTab] = useState<string>(() => { try { return sessionStorage.getItem('lt_seite') || 'home'; } catch { return 'home'; } });
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
   const [obDay, setObDay] = useState<number | null>(null);
@@ -1562,11 +1563,18 @@ export default function App() {
     seitenStapel.current.push(jetzt);
     try { history.pushState({ ltSeite: seitenStapel.current.length - 1 }, ''); } catch {}
   }, [seitenKey, username]);
+  const aktTabRef = useRef(activeTab);
+  aktTabRef.current = activeTab;
+  useEffect(() => { try { sessionStorage.setItem('lt_seite', activeTab); } catch { /* egal */ } }, [activeTab]);
   useEffect(() => {
     const onPop = () => {
       if (zurueckVerbraucht()) return; // aufgeklapptes Fenster geschlossen oder eigener Rücksprung
       const st = seitenStapel.current;
-      if (st.length <= 1) return; // erste Seite: Browser/Handy entscheidet (App verlassen)
+      if (st.length <= 1) {
+        // z. B. nach dem Neuladen auf einer Unterseite: erst zur Startseite, dann wie gewohnt raus
+        if (aktTabRef.current !== 'home') { ausZurueck.current = true; st[0] = { tab: 'home', cat: null, level: null }; setActiveTab('home'); setCurrentQuizCategory(null); setSelectedLevel(null); }
+        return;
+      }
       st.pop();
       const vorher = st[st.length - 1];
       ausZurueck.current = true;
