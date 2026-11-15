@@ -379,6 +379,14 @@ async function offlineTests() {
   // Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)
   {
     const keys = stimmeKeys();
+    // Version 215: zu jeder Frage und Antwort gibt es eine echte Tondatei (vier Stimmen im Wechsel)
+    {
+      const fs = require('fs'), path = require('path');
+      const dir = path.resolve(__dirname, '../public/stimme');
+      const liste = new Set(JSON.parse(fs.readFileSync(path.join(dir, 'index.json'), 'utf8')));
+      const fehlt = keys.filter((k) => !liste.has(k) || !fs.existsSync(path.join(dir, k + '.mp3')));
+      ok(`Hör-Lernen: Tondateien für alle ${keys.length} Texte vorhanden`, fehlt.length === 0, `${fehlt.length} fehlen (Werkzeug: node tools/stimme/erzeugen.mjs)`);
+    }
     const ctxRoute = async (ctx) => {
       await ctx.route(/\/stimme\/index\.json/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(keys) }));
       await ctx.route(/\/stimme\/[0-9a-f]+\.mp3/, (r) => { tonAbrufe++; r.fulfill({ contentType: 'audio/wav', body: stilleWav() }); });
