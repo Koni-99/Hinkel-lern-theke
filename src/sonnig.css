@@ -19,6 +19,12 @@
     drop-shadow(0 4px 0 rgba(75, 42, 20, 0.18))
     drop-shadow(0 12px 14px rgba(75, 42, 20, 0.25)) !important;
 }
+/* Kleines Logo (Unterseiten): Schatten ohne harten Versatz, sonst steht die kleine Schrift doppelt da */
+.lt-root:not(.lt-dark) .lt-awning-sm .lt-logo {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 1px 1px rgba(75, 42, 20, 0.3))
+    drop-shadow(0 5px 7px rgba(75, 42, 20, 0.22)) !important;
+}
 
 /* Kopfleiste: Punkte und Münzen als erhabene Tasten */
 .lt-root:not(.lt-dark) .lt-kasse {

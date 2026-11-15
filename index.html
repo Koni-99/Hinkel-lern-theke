@@ -16,7 +16,7 @@
       /* Startbild, bis die App geladen ist (React ersetzt es) */
       html, body { margin: 0; background: #FFFBF2; }
       .lt-start { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #FFFBF2; font-family: Verdana, system-ui, sans-serif; color: #4B2A14; }
-      .lt-start img { width: 150px; height: auto; animation: ltStartWippen 1.6s ease-in-out infinite; }
+      .lt-start img { height: 110px; width: auto; animation: ltStartWippen .9s ease-in-out infinite; }
       .lt-start span { font-size: 18px; font-weight: 700; letter-spacing: .04em; }
       @keyframes ltStartWippen { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       @media (prefers-reduced-motion: reduce) { .lt-start img { animation: none } }
@@ -26,7 +26,7 @@
   </head>
   <body>
     <noscript>JavaScript ist nötig.</noscript>
-    <div id="root"><div class="lt-start" role="status"><img src="start-logo.png" alt="Bäckerei Hinkel" /><span>Lern-Theke</span></div></div>
+    <div id="root"><div class="lt-start" role="status"><img src="start-kueken.png" alt="" /><span>Lern-Theke</span></div></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

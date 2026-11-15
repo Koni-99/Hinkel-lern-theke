@@ -97,7 +97,10 @@ ${B} .lt-hdr-logo{transform:rotateY(calc(var(--px,0) * 10deg)) rotateX(calc(var(
 /* Logo dreht sich beim Antippen: ohne preserve-3d, sonst schneidet der goldene Rahmen das Logo in der Mitte ab */
 ${B} .lt-hdr-logo{isolation:isolate}
 ${B} .lt-hdr-logo::before{content:"";position:absolute;inset:-9px -20px;z-index:-1;border-radius:26px;background:radial-gradient(120% 120% at 30% 12%,#FFF0B3,#FFC72C 42%,#D9972B 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.65),inset 0 -5px 0 rgba(140,84,10,.4),0 16px 34px -12px #000,0 0 54px -6px rgba(234,179,8,.75)}
-${B} .lt-logo{filter:drop-shadow(0 2px 0 rgba(255,255,255,.35)) !important}
+/* v190: weicher Schatten ohne Versatz (vorher stand die kleine Schrift doppelt, etwas tiefer) */
+${B} .lt-logo{filter:drop-shadow(0 1px 2px rgba(75,42,20,.28)) !important}
+/* v190: goldener Logo-Knopf am Handy kleiner */
+@media (max-width:560px){${B} .lt-awning:not(.lt-awning-sm) .lt-logo{height:100px}${B} .lt-hdr-logo::before{inset:-7px -14px;border-radius:20px}}
 html.lt-noanim .lt-b-aehre,html.lt-noanim .lt-b-staub{animation:none}
 html.lt-noanim .lt-b-staub{opacity:.5}
 @media (prefers-reduced-motion:reduce){.lt-b-aehre,.lt-b-staub,.lt-dark .lt-bar,.lt-dark .lt-fill{animation:none !important}.lt-b-staub{opacity:.5}}

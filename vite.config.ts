@@ -12,7 +12,7 @@ function offlineServiceWorker(): Plugin {
     name: 'lern-theke-offline',
     apply: 'build',
     generateBundle(_options, bundle) {
-      const files = ['./', 'index.html', 'manifest.json', 'start-logo.png', 'favicon-64.png', 'icon-192.png', 'apple-touch-icon.png', ...Object.keys(bundle).filter((f) => f !== 'index.html' && !f.endsWith('.map'))].sort();
+      const files = ['./', 'index.html', 'manifest.json', 'start-kueken.png', 'favicon-64.png', 'icon-192.png', 'apple-touch-icon.png', ...Object.keys(bundle).filter((f) => f !== 'index.html' && !f.endsWith('.map'))].sort();
       const version = createHash('sha1').update(files.join('|')).digest('hex').slice(0, 12);
       const code = readFileSync(new URL('./sw-template.js', import.meta.url), 'utf8')
         .replace("const VERSION = '__VERSION__';", `const VERSION = ${JSON.stringify(version)};`)
