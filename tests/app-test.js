@@ -556,6 +556,8 @@ async function offlineTests() {
     const fehlt = [];
     for (const sp of P) for (const t of [V.steckbriefText(sp), V.bilderText(sp)]) V.saetze(t).forEach((x) => { if (!idx.has(V.satzKey(x))) fehlt.push(x); });
     ok('Natürliche Stimme: Steckbrief und Bilderquiz, alle Sätze vorhanden', fehlt.length === 0, fehlt.slice(0, 2).join(' | '));
+    const fehltK = []; for (const sp of P) V.saetze(V.produktKarteVorne(sp.name)).forEach((x) => { if (!idx.has(V.satzKey(x))) fehltK.push(x); });
+    ok('Natürliche Stimme: Lernkarte vorne (Name und Frage), alle Sätze vorhanden, ohne „…“', fehltK.length === 0 && !/…/.test(V.produktKarteVorne('Test')), fehltK.slice(0, 2).join(' | '));
     const Qz = kompiliere(['src/daten/questions.ts']).daten_questions;
     const fehltQ = [];
     [...(Qz.questions || []), ...(Qz.examQuestions || [])].forEach((q) => V.saetze(V.quizVorherText(q.question, q.options)).forEach((x) => { if (!idx.has(V.satzKey(x))) fehltQ.push(x); }));
@@ -665,6 +667,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     ok('Teigi im Brotkorb ohne Kauf', (await d.page.locator('.lt-teigi-zeile').count()) === 1);
+    ok('Teigi begleitet auch auf der Startseite', (await d.page.locator('.lt-teigi-begleiter').count()) === 1);
     await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);
     ok('Schalter ganz unten blendet Teigi aus', (await d.page.locator('.lt-teigi-zeile').count()) === 0 && /einschalten/.test(await d.page.locator('button.lt-teigi-schalter').innerText()));
     await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);

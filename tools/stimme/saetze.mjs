@@ -38,6 +38,7 @@ for (const sp of SHOP_PRODUCTS) {
   const slice = sp.breadType && K.BREAD_TYPES[sp.breadType] ? K.BREAD_TYPES[sp.breadType].slice : '';
   const facts = [sp.flour ? ['Mehl', sp.flour] : null, slice ? ['Schnitt', slice] : null, sp.weight ? ['Gewicht', sp.weight] : null, sp.price ? ['Preis', sp.price] : null].filter(Boolean);
   dazu(V.produktKarteText(sp.name, facts, sp));
+  dazu(V.produktKarteVorne(sp.name));
   dazu(V.bilderText(sp));
   if (sp.breadType) MM.forEach((mm) => dazu(V.schneideText(sp.name, mm)));
 }

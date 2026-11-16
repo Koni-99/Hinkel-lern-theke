@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 236;
+const APP_VERSION: number = 237;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -2734,7 +2734,7 @@ export default function App() {
 
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
-      {!isAdmin && !myProg._teigiAus && (GAME_TABS.includes(activeTab) && activeTab !== 'spielen' || (activeTab === 'quiz' && quizList.length > 0 && !quizFinished && selectedLevel !== null)) && (
+      {!isAdmin && !myProg._teigiAus && activeTab !== 'admin' && (
         <TeigiBegleiter stufe={teigiStand(Array.isArray(myProg._days) ? myProg._days : [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
       )}
       {tuetenInhalt && (

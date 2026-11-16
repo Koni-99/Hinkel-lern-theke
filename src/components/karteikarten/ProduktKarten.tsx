@@ -1,12 +1,19 @@
 // ═══ Karteikarten: Produkt-Lernkarten (Foto vorne, Infos hinten) ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { produktKarteText } from '../../hilfen/vorlesen';
+import { produktKarteText, produktKarteVorne } from '../../hilfen/vorlesen';
 import { dc } from '../../daten/data';
 import { TH, cardStyle, productImageKey, ProductImages } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
-import { SpeakButton } from '../../games/spielBasis';
-import { groupColor, getProductEmoji, Profile } from './daten';
+import { SpeakButton, sprichSaetze, stopSpeaking } from '../../games/spielBasis';
+import { groupColor, Profile } from './daten';
+
+/** Fakten auf der Rückseite (auch fürs Vorlesen) */
+const faktenVon = (p: Profile) => {
+  const sp = p.shop!;
+  return [sp.flour ? ['Mehl', sp.flour] : null, p.slice ? ['Schnitt', p.slice] : null, sp.weight ? ['Gewicht', sp.weight] : null, sp.price ? ['Preis', sp.price] : null].filter((x): x is string[] => !!x);
+};
 
 export type ProduktKartenProps = {
   images: ProductImages;
@@ -29,7 +36,13 @@ export type ProduktKartenProps = {
   pcShuffle: () => void;
 };
 
-export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, pcMode, setPcMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }: ProduktKartenProps) {
+export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }: ProduktKartenProps) {
+  // „Vorlesen“ (Version 237): natürliche Stimme. Vorne Name und Frage, hinten die Infos der Karte
+  useEffect(() => {
+    if (!askMode || !pcCurrent || !pcCurrent.shop) { if (!askMode) stopSpeaking(); return; }
+    const t = window.setTimeout(() => sprichSaetze(pcFlipped ? produktKarteText(pcCurrent.name, faktenVon(pcCurrent), pcCurrent.shop!) : produktKarteVorne(pcCurrent.name)), 650);
+    return () => window.clearTimeout(t);
+  }, [askMode, pcFlipped, pcCurrent]);
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
       <div style={{ width: "100%", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
@@ -37,11 +50,6 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
           <option value="Alle">Alle Kategorien ({cardProducts.length})</option>
           {pcGroups.map((g) => <option key={g} value={g}>{g} ({cardProducts.filter((p) => p.group === g).length})</option>)}
         </select>
-        <div role="tablist" aria-label="Vorderseite" style={{ display: "flex", gap: "4px", padding: "4px", borderRadius: "14px", backgroundColor: TH.cream, border: `2px solid ${TH.line}` }}>
-          {([["foto", "Foto vorne"], ["name", "Name vorne"]] as const).map(([m, l]) => (
-            <button key={m} role="tab" aria-selected={pcMode === m} onClick={() => { setPcMode(m); setPcFlipped(false); }} style={{ padding: "0 14px", borderRadius: "10px", border: "none", backgroundColor: pcMode === m ? TH.brown : "transparent", color: pcMode === m ? dc('#FFF6E0') : TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>{l}</button>
-          ))}
-        </div>
         <button onClick={pcShuffle} style={{ padding: "0 16px", borderRadius: "12px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>Mischen</button>
       </div>
     
@@ -51,13 +59,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
         const p = pcCurrent;
         const sp = p.shop!;
         const img = images[productImageKey(p.name)];
-        const showPhoto = pcMode === "foto" && !!img;
-        const facts = [
-          sp.flour ? ["Mehl", sp.flour] : null,
-          p.slice ? ["Schnitt", p.slice] : null,
-          sp.weight ? ["Gewicht", sp.weight] : null,
-          sp.price ? ["Preis", sp.price] : null,
-        ].filter((x): x is string[] => !!x);
+        const facts = faktenVon(p);
         return (<>
           {typeof window !== "undefined" && "speechSynthesis" in window && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
@@ -65,7 +67,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
               {askMode && <span style={{ fontSize: "14px", color: TH.muted, textAlign: "center" }}>Ich lese die Karte vor. Sag die Antwort laut, dann dreh die Karte um.</span>}
             </div>
           )}
-          <div key={p.name + pcMode} className="fc-flip-in" style={{ width: "100%", maxWidth: "540px", height: "460px", perspective: "1400px" }}>
+          <div key={p.name} className="fc-flip-in" style={{ width: "100%", maxWidth: "540px", height: "460px", perspective: "1400px" }}>
             <div
               role="button"
               tabIndex={0}
@@ -80,18 +82,10 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
                   <span style={{ backgroundColor: groupColor(p.group), color: "#fff", padding: "4px 10px", borderRadius: "999px" }}>{p.group}</span>
                   <span style={{ color: TH.muted }}>Karte {Math.min(pcIndex, pcList.length - 1) + 1} / {pcList.length}</span>
                 </div>
-                {showPhoto ? (
-                  <>
-                    <img src={img} alt="Welches Produkt ist das?" style={{ width: "100%", maxWidth: "300px", flex: "1 1 auto", minHeight: 0, objectFit: "cover", aspectRatio: "1 / 1", borderRadius: "18px" }} />
-                    <div style={{ fontFamily: TH.serif, fontSize: "26px" }}>Welches Produkt ist das?</div>
-                  </>
-                ) : (
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "12px" }}>
-                    <span style={{ fontSize: "64px" }}>{getProductEmoji(p.name, p.group)}</span>
-                    <div style={{ fontFamily: TH.serif, fontSize: "36px", lineHeight: 1.1 }}>{p.name}</div>
-                    <div style={{ fontSize: "18px", color: TH.muted }}>Was weißt du darüber? Mehl, Zutaten, Allergene, Schnitt …</div>
-                  </div>
-                )}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "14px" }}>
+                  <div style={{ fontFamily: TH.serif, fontSize: "38px", lineHeight: 1.1, textAlign: "center", overflowWrap: "anywhere" }}>{p.name}</div>
+                  <div style={{ fontSize: "18px", color: TH.muted, textAlign: "center" }}>Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.</div>
+                </div>
                 <div style={{ fontSize: "16px", color: dc('#8A5A00'), fontWeight: 700 }}>↻ Antippen zum Umdrehen</div>
               </div>
               {/* Rückseite */}

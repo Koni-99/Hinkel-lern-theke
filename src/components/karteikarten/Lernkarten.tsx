@@ -1,12 +1,13 @@
 // ═══ Karteikarten: interaktive Lernkarten ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { hoerTexte, stimmeKey } from '../../hilfen/stimme';
 import { dc } from '../../daten/data';
 import { getRightAnswerText } from '../../hilfen/allgemein';
 import { TH } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
-import { SpeakButton } from '../../games/spielBasis';
+import { SpeakButton, sprichHoerDatei, stopSpeaking } from '../../games/spielBasis';
 
 export type LernkartenProps = {
   toggleFavorite: (id: number) => void;
@@ -22,6 +23,13 @@ export type LernkartenProps = {
 };
 
 export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flipped, setFlipped, setAskMode, askMode, filteredCards, current, isFav }: LernkartenProps) {
+  // „Vorlesen“ (Version 237): natürliche Stimme aus dem Hör-Lernen (vorne Frage, hinten Antwort)
+  useEffect(() => {
+    if (!askMode || !current) { if (!askMode) stopSpeaking(); return; }
+    const t = hoerTexte(current);
+    const z = window.setTimeout(() => sprichHoerDatei(stimmeKey(flipped ? t.antwort : t.frage), flipped ? t.antwort : t.frage), 650);
+    return () => window.clearTimeout(z);
+  }, [askMode, flipped, current]);
   return (
     <>
       {/* Lernkarte mit echter 3D-Dreh-Animation */}

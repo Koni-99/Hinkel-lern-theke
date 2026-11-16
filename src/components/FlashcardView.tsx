@@ -1,3 +1,4 @@
+import { stopSpeaking } from '../games/spielBasis';
 import React, { useState, useEffect } from "react";
 import { dc } from '../daten/data';
 import { SHOP_PRODUCTS } from "../daten/shopProducts";
@@ -5,7 +6,7 @@ import { CustomProductItem } from "../types";
 import type { TippEintrag } from '../hilfen/kollegen';
 import { getRightAnswerText } from '../hilfen/allgemein';
 import { ProductImages } from '../ui/basis';
-import { DICT_ALL, speakGerman, QUICK_TAGS, customProductNumericId, BREAD_TYPES, Profile, FachSection, FACH_SECTIONS, normName } from './karteikarten/daten';
+import { DICT_ALL, QUICK_TAGS, customProductNumericId, BREAD_TYPES, Profile, FachSection, FACH_SECTIONS, normName } from './karteikarten/daten';
 import { SteckbriefDetail } from './karteikarten/SteckbriefDetail';
 import { Lernkarten } from './karteikarten/Lernkarten';
 import { Fragenkatalog } from './karteikarten/Fragenkatalog';
@@ -72,16 +73,9 @@ export function FlashcardView({
   const [pcIndex, setPcIndex] = useState(0);
   const [pcFlipped, setPcFlipped] = useState(false);
   const [askMode, setAskMode] = useState(false);
-  const [pcMode, setPcMode] = useState<"foto" | "name">("foto");
-  useEffect(() => {
-    if (!askMode) { try { window.speechSynthesis?.cancel(); } catch { /* egal */ } return; }
-    const t = window.setTimeout(() => {
-      const face = document.querySelector('[role="button"][aria-label*="Karte"] > div[aria-hidden="false"]') as HTMLElement | null;
-      if (face) speakGerman(face.innerText || '');
-    }, 650);
-    return () => window.clearTimeout(t);
-  }, [askMode, pcFlipped, pcIndex, pcMode, flipped, currentIndex]);
-  useEffect(() => () => { try { window.speechSynthesis?.cancel(); } catch { /* egal */ } }, []);
+  const [pcMode, setPcMode] = useState<"foto" | "name">("name"); // seit Version 237 immer Name vorne
+  // Vorlesen machen jetzt die Karten selbst mit natürlicher Stimme (Version 237)
+  useEffect(() => () => stopSpeaking(), []);
   const [pcOrder, setPcOrder] = useState<string[]>([]);
 
   // Steckbrief-Detail mit der Esc-Taste schließen

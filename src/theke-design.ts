@@ -419,7 +419,7 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-kopf-aehren .lt-papier.lt-wx-halo,.lt-kopf-mitaehren .lt-papier.lt-wx-halo{width:190% !important;height:135% !important;background:radial-gradient(closest-side,rgba(255,199,44,.75),rgba(234,179,8,.35) 55%,rgba(234,179,8,0))}
 /* Version 231: Teigi begleitet beim Lernen und Spielen (unten links, Sprechblase daneben, Seite bekommt unten Platz) */
 body.lt-mit-teigi main{padding-bottom:100px}
-.lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:1090;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:6px;pointer-events:none}
+.lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:95;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:6px;pointer-events:none}
 .lt-papier.lt-teigi-begleiter>button{pointer-events:auto;flex:0 0 auto;border:none;background:none;width:72px;height:76px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
 .lt-papier.lt-teigi-begleiter svg.lt-teigi{filter:drop-shadow(0 0 2px #FFE58A) drop-shadow(0 0 7px rgba(255,199,44,.85)) drop-shadow(0 4px 6px rgba(31,20,12,.35))}
 

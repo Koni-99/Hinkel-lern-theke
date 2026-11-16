@@ -20,6 +20,9 @@ export const steckbriefText = (sp: Prod) =>
 export const produktKarteText = (name: string, facts: string[][], sp: Prod) =>
   `${name}. ${facts.map(([l, v]) => `${l}: ${v}`).join('. ')}. Im Verkauf sagen: ${sp.shortIngredients}. Allergene: ${(sp.allergens || []).join(', ') || 'keine angegeben'}.`;
 
+/** Lernkarte vorne (Version 237): Name und die Frage, was man darüber weiß */
+export const produktKarteVorne = (name: string) => `${name}. Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.`;
+
 export const schneideText = (name: string, mm: string) => `${name} wird mit ${mm} geschnitten.`;
 
 export const bqName = (n: string) => n.replace(/^(Kleines|Großes) /, '');

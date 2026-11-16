@@ -178,5 +178,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 236: Teigi hat viel mehr Sprüche (33 richtig, 20 falsch, je 2 bis 4 pro Serie, 17 beim Antippen, 8 zum Start, viele mit Bäckerei-Witz), sagt nie zweimal hintereinander dasselbe (`zufall` merkt `letzter`), redet bei richtigen Antworten öfter (50 % statt 35 %)
 
+- 237: **Lernkarten**: Produkt-Lernkarten immer Name vorne (Umschalter Foto/Name entfernt, kein Emoji), Text vorne „Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.“ (vorher „…“, Stimme brach ab). „Vorlesen“ jetzt mit natürlicher Stimme statt Handy-Stimme: Produktkarten `sprichSaetze(produktKarteVorne/produktKarteText)` (neu in `vorlesen.ts` + `saetze.mjs`, 2 Sätze erzeugt), Frage-Lernkarten `sprichHoerDatei` (Hör-Lernen-Dateien). Das alte Vorlesen über `innerText` + `speakGerman` in FlashcardView ist weg. **Teigi überall** (außer Ausbilder-Bereich), z-index 95 = unter Pop-ups
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

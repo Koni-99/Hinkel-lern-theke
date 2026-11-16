@@ -1,5 +1,5 @@
 // ═══ Teigi als Begleiter beim Lernen und Spielen (Version 231) ═══
-// Seit Version 233 hat jeder Teigi (ausschaltbar unten in der App, _teigiAus). Er sitzt im Quiz und in den Spielen unten links.
+// Seit Version 233 hat jeder Teigi (ausschaltbar unten in der App, _teigiAus). Seit Version 237 auf allen Seiten (außer Ausbilder-Bereich), unter den Pop-ups.
 // Er reagiert auf jede Antwort: AnswerFx (ui/antwortFx.tsx) schickt das Ereignis „lt-teigi“ mit { ok, lauf }.
 // Antippen lässt ihn hüpfen und etwas sagen. Ausschalten nur ganz unten in der App (Version 234).
 import { useEffect, useRef, useState } from 'react';
