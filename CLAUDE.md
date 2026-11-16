@@ -168,5 +168,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 231: **Teigi begleitet beim Lernen und Spielen** (Nutzer wählte Begleiter + Sprüche): `src/ui/teigiBegleiter.tsx` (`TeigiBegleiter`, Sprüche `teigiSpruch`: Serie 3/5/10/15/20 immer, falsch meist, richtig ~35 %), nur wenn `h_teigi` gekauft, im Quiz (laufend) und allen Spiel-Reitern außer der Spiele-Auswahl. `AnswerFx` (`ui/antwortFx.tsx`) schickt bei jeder Antwort das Ereignis `lt-teigi` {ok, lauf} → gilt automatisch für alle Spiele mit AnswerFx (nicht Theken-Ansturm, Telefon). Position am Handy unten links (unten rechts sitzt „Fehler melden“), Sprechblase daneben, `body.lt-mit-teigi main` bekommt unten Platz; PC unten rechts. Antippen = bis zum nächsten App-Start weg (`sessionStorage lt_teigi_weg`)
 
+- 232: Teigi größer (Begleiter 76px Kreis, Glas 64px; Brotkorb 54px) und im dunklen Design gut sichtbar: goldener Ring mit Leuchten (Wunsch: wie Logo), heller Hintergrund. **Wichtig**: Auch CSS aus `theke-design.ts` wird im Nacht-Design umgerechnet, außer der Selektor enthält `lt-papier` (`PAPIER_RE` in `thema/farben.ts`) → Teigi-Regeln heißen `.lt-papier.lt-teigi-begleiter …`, `TeigiGlas` hat `lt-papier`
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

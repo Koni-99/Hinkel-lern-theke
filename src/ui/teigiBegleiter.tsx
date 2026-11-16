@@ -50,11 +50,11 @@ export function TeigiBegleiter({ stufe }: { stufe: number }) {
   }, [weg]);
   if (weg) return null;
   return (
-    <div className="lt-teigi-begleiter" role="status" aria-live="polite">
+    <div className="lt-teigi-begleiter lt-papier" role="status" aria-live="polite">
       {spruch && <span key={spruch.k} className="lt-teigi-sprech">{spruch.t}</span>}
       <button type="button" aria-label="Teigi ausblenden" title="Antippen zum Ausblenden" onClick={() => { setWeg(true); try { sessionStorage.setItem('lt_teigi_weg', '1'); } catch { /* egal */ } }}>
         <span key={jubel} className={laune === 'froh' ? 'lt-teigi-hops' : laune === 'schlapp' ? 'lt-teigi-traurig' : ''} style={{ display: 'inline-block' }}>
-          <TeigiGlas stufe={stufe} laune={laune} size={48} />
+          <TeigiGlas stufe={stufe} laune={laune} size={64} />
         </span>
       </button>
     </div>

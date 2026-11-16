@@ -878,7 +878,7 @@ async function cloudTests() {
     if ((await pins.count()) === 2) { await pins.nth(0).fill('4711'); await pins.nth(1).fill('4711'); await A.page.getByText('PIN speichern').click(); }
     await sleep(2500);
     ok('Anmeldung: nach „PIN speichern“ angemeldet', (await A.page.evaluate(() => localStorage.getItem('hinkel_username'))) === 'Testi');
-    const pin = await db('GET', '/pins/testi');
+    let pin = null; for (let i = 0; i < 50 && !(pin && pin.h); i++) { pin = await db('GET', '/pins/testi'); if (!(pin && pin.h)) await sleep(100); }
     ok('Anmeldung: PIN liegt verschlüsselt in Firebase', !!(pin && pin.h) && !JSON.stringify(pin).includes('4711'));
     const B = await device({ cloud: true });
     await B.page.fill('input[placeholder="z. B. Anna"]', 'Testi'); await B.page.keyboard.press('Enter');

@@ -415,17 +415,17 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 @media (max-width:560px){.lt-shop-sign{margin-top:14px !important;padding:8px 12px !important}.lt-shop-sign>div:first-child{font-size:22px !important}.lt-register{margin-top:14px !important;padding:6px 12px !important;min-width:0 !important}.lt-register>div:last-child{font-size:22px !important}.lt-shop-bell{display:none !important}.lt-chalk{padding:10px 12px !important;border-width:6px !important}}
 .lt-preis-nowrap{white-space:nowrap}
 /* Version 231: Teigi begleitet beim Lernen und Spielen (unten links, Sprechblase daneben, Seite bekommt unten Platz) */
-body.lt-mit-teigi main{padding-bottom:84px}
+body.lt-mit-teigi main{padding-bottom:100px}
 .lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:1090;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:6px;pointer-events:none}
-.lt-teigi-begleiter>button{pointer-events:auto;flex:0 0 auto;border:none;background:rgba(255,251,242,.94);border-radius:50%;width:58px;height:58px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);cursor:pointer;padding:0}
-html.lt-nacht .lt-teigi-begleiter>button{background:rgba(40,32,24,.94)}
-.lt-teigi-sprech{max-width:190px;margin-bottom:22px;padding:8px 12px;border-radius:16px 16px 16px 4px;background:#FFFBF2;color:#2B170A;font-size:14px;font-weight:700;line-height:1.3;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);border:2px solid #E3D6BE;animation:ltTeigiSprech 2.8s ease forwards}
+.lt-papier.lt-teigi-begleiter>button{pointer-events:auto;flex:0 0 auto;border:3px solid transparent;background:linear-gradient(#FFF8E6,#FFF8E6) padding-box,linear-gradient(135deg,#FFE58A,#E0A400 45%,#FFF2B8 60%,#C98A00) border-box;border-radius:50%;width:76px;height:76px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px rgba(255,199,44,.25),0 0 18px rgba(255,199,44,.45),0 8px 18px -6px rgba(31,20,12,.5);cursor:pointer;padding:0}
+
+.lt-papier .lt-teigi-sprech{max-width:200px;margin-bottom:30px;padding:8px 12px;border-radius:16px 16px 16px 4px;background:#FFFBF2;color:#2B170A;font-size:14px;font-weight:700;line-height:1.3;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);border:2px solid #FFC72C;animation:ltTeigiSprech 2.8s ease forwards}
 @keyframes ltTeigiSprech{0%{opacity:0;transform:translateX(-8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 .lt-teigi-hops{animation:ltTeigiHops .7s cubic-bezier(.3,1.6,.5,1)}
 @keyframes ltTeigiHops{0%{transform:translateY(0)}35%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(0) rotate(4deg)}100%{transform:none}}
 .lt-teigi-traurig{animation:ltTeigiTraurig .8s ease}
 @keyframes ltTeigiTraurig{0%,100%{transform:none}25%{transform:translateX(-4px) rotate(-4deg)}50%{transform:translateX(4px) rotate(4deg)}75%{transform:translateX(-2px)}}
-@media (min-width:1180px){.lt-teigi-begleiter{bottom:24px;left:auto;right:24px;flex-direction:row}.lt-teigi-sprech{border-radius:16px 16px 4px 16px}body.lt-mit-teigi main{padding-bottom:0}}
+@media (min-width:1180px){.lt-teigi-begleiter{bottom:24px;left:auto;right:24px;flex-direction:row}.lt-papier .lt-teigi-sprech{border-radius:16px 16px 4px 16px}body.lt-mit-teigi main{padding-bottom:0}}
 @media (prefers-reduced-motion:reduce){.lt-teigi-hops,.lt-teigi-traurig{animation:none}}
 
 

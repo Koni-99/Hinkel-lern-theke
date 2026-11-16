@@ -544,9 +544,9 @@ export function TeigiGlas({ stufe, laune, size = 56 }: { stufe: number; laune: '
   const teig = laune === 'schlapp' ? '#D8CDBB' : '#F3E3C0';
   const y = 46 - hoehe;
   return (
-    <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden="true" className={laune === 'froh' ? 'lt-teigi lt-teigi-froh' : 'lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
+    <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden="true" className={laune === 'froh' ? 'lt-papier lt-teigi lt-teigi-froh' : 'lt-papier lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
       <rect x="14" y="4" width="28" height="7" rx="2" fill="#B98A0A" />
-      <path d="M12 12h32v32a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z" fill="rgba(220,236,245,.55)" stroke="#8FA9B8" strokeWidth="2" />
+      <path d="M12 12h32v32a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z" fill="#E4F0F6" stroke="#5E7C8C" strokeWidth="2.4" />
       <path d={`M14 ${y + (laune === 'schlapp' ? 4 : 0)}q7 ${laune === 'schlapp' ? 2 : -4} 14 0t14 0V44a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5z`} fill={teig} />
       {laune !== 'schlapp' && <g fill="#FFFFFF" opacity=".9"><circle className="lt-teigi-blase" cx="21" cy={y + 8} r="2" /><circle className="lt-teigi-blase lt-tb2" cx="33" cy={y + 12} r="1.6" /><circle className="lt-teigi-blase lt-tb3" cx="27" cy={y + 5} r="1.2" /></g>}
       <g fill="#2B170A"><circle cx="23" cy={y + 16} r="1.6" /><circle cx="33" cy={y + 16} r="1.6" /></g>
