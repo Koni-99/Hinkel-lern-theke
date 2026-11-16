@@ -647,6 +647,49 @@ async function offlineTests() {
     ok('Steckbrief nachts: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 229: Laden-Neuheiten ohne Browser (Tüte, Wochen-Teile, Teigi, Schrift am Namen)
+  {
+    const L = kompiliere(['src/basis/laden.tsx']).basis_laden;
+    const alle = L.TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && i.price <= 1000).map((i) => i.id);
+    let schlecht = 0, arten = new Set();
+    for (let i = 0; i < 400; i++) { const t = L.tueteAuslosen(alle.slice(0, 20)); arten.add(t.art); if (t.art === 'teil' && (alle.slice(0, 20).includes(t.it.id) || t.it.months || t.it.woche)) schlecht++; if (t.art === 'joker' && !L.JOKER_FIELD[t.it.id]) schlecht++; }
+    ok('Überraschungstüte: nie etwas, das man schon hat, alle drei Arten kommen vor', schlecht === 0 && arten.size === 3, `${schlecht} falsch, Arten ${[...arten].join(',')}`);
+    const w1 = L.wochenTeile(new Date(2026, 10, 16)), w2 = L.wochenTeile(new Date(2026, 10, 23));
+    ok('Wochen-Teile: 2 verschiedene pro Woche, nächste Woche andere', w1.length === 2 && w1[0] !== w1[1] && w1.join() !== w2.join(), `${w1} / ${w2}`);
+    const t0 = L.teigiStand(['2026-11-16'], 3, new Date(2026, 10, 16)), t1 = L.teigiStand(['2026-11-10'], 20, new Date(2026, 10, 16));
+    ok('Teigi: wächst mit Lerntagen und wird ohne Lernen schlapp', t0.stufe === 0 && t0.laune === 'froh' && t1.stufe === 2 && t1.laune === 'schlapp', `${t0.stufe}/${t0.laune}, ${t1.stufe}/${t1.laune}`);
+    ok('Schrift am Namen: Klasse für Schrift und Farbe zusammen', L.nameClassOf({ _schrift: 'sf_kreide', _gold: true }) === 'lt-goldname lt-sf-kreide');
+  }
+  // Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz
+  {
+    const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
+    const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1 };
+    const d = await device({ user: 'Anna', backup: probe });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(1)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible').first()); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible').first()); await settle(d.page);
+    // eine Frage mit einfacher Antwort finden (Hinweis gibt es nicht bei mehreren richtigen)
+    for (let i = 0; i < 5 && !(await d.page.locator('.lt-joker-hinweis').count()); i++) { await click(d.page.locator('button.lt-qopt:visible').first()); await settle(d.page, 300); const w = d.page.getByRole('button', { name: /Nächste Frage|Weiter/ }).first(); if (await w.count()) { await click(w); await settle(d.page, 300); } }
+    const opts = d.page.locator('button.lt-qopt:visible');
+    const vorher = await opts.count();
+    await click(d.page.locator('.lt-joker-hinweis').first()); await settle(d.page, 300);
+    const nachHinweis = await opts.count();
+    ok('Hinweis-Joker: eine falsche Antwort verschwindet', vorher >= 3 && nachHinweis === vorher - 1, `${vorher} → ${nachHinweis}`);
+    await click(d.page.locator('.lt-joker-chance').first()); await settle(d.page, 300);
+    const an = (await d.page.locator('.lt-chance-an').count()) > 0;
+    const frage = (await d.page.locator('.lt-frage').first().innerText()).trim();
+    const ziel = String(richtig.get(frage) || '');
+    const texte = await opts.allInnerTexts();
+    const falsch = texte.findIndex((t) => ziel && !t.includes(ziel));
+    if (falsch >= 0) { await click(opts.nth(falsch)); await settle(d.page, 400); }
+    const nochOffen = (await d.page.locator('.lt-qcard.lt-ans-bad, .lt-qcard.lt-ans-ok').count()) === 0;
+    ok('Zweite Chance: falsche Antwort zählt nicht, man darf nochmal', an && falsch >= 0 && nochOffen && (await opts.count()) === nachHinweis - 1 && (await d.page.locator('.lt-chance-an').count()) === 0, `an ${an}, offen ${nochOffen}, ${await opts.count()} Antworten`);
+    ok('Neue Joker: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4
   {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });

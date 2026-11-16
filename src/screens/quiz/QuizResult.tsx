@@ -1,5 +1,6 @@
 // ═══ Quiz: Auswertung nach der Runde ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { JubelEffekt } from '../../basis/laden';
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { DAILY_FACTS } from '../../basis/fakten';
@@ -53,15 +54,16 @@ export type QuizResultProps = {
   setResOpen: Dispatch<SetStateAction<number | null>>;
   streakMult: number;
   isNewcomer: boolean;
+  jubel?: string | null;
 };
 
-export function QuizResult({ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }: QuizResultProps) {
+export function QuizResult({ jubel, fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }: QuizResultProps) {
   if (currentQuizCategory === null) return null; // wie die Bedingung in App.tsx
   const evalInfo = getExamEvaluation(correctCount, quizList.length);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
       <div className="lt-receipt lt-papier" style={{ ...cardStyle, padding: '26px 24px 44px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <ConfettiOverlay active={quizList.length > 0 && correctCount / quizList.length >= 0.75} />
+        {jubel && quizList.length > 0 && correctCount / quizList.length >= 0.75 ? <JubelEffekt id={jubel} /> : <ConfettiOverlay active={quizList.length > 0 && correctCount / quizList.length >= 0.75} />}
         <ReceiptHead />
         <div style={{ fontSize: '16px', fontWeight: 700, color: LT.muted, textTransform: 'uppercase', letterSpacing: '2px' }}>{currentQuizCategory} {correctCount === 0 ? 'beendet' : correctCount === quizList.length ? 'perfekt geschafft' : 'geschafft'}</div>
         <StarRating n={starsFor(quizList.length ? correctCount / quizList.length : 0)} />

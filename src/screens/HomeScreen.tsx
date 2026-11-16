@@ -19,7 +19,7 @@ import { LT } from '../basis/marke';
 import { LtIcon, ICON, MENU_ICON } from '../basis/symbole';
 import { KuekenFact } from '../basis/fakten';
 import { BonLine, TEAM_REWARD, weekIdNow, dayKey, streakMultFor, mondayOf, parseBonDate, BON_DIVIDER } from '../basis/serie';
-import { nameClassOf } from '../basis/laden';
+import { nameClassOf, TeigiGlas, teigiStand } from '../basis/laden';
 
 export type HomeScreenProps = {
   username: string;
@@ -200,6 +200,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           { d: 'M64 30a10 7 0 1 0 20 0a10 7 0 1 0-20 0z', c: '#C98345' },
           { d: 'M14 32a9 6 0 1 0 18 0a9 6 0 1 0-18 0z', c: '#E7B271' },
         ].slice(0, Math.min(5, n));
+        const teigi = !isAdmin && Array.isArray(myProg?._shopOwned) && myProg._shopOwned.includes('h_teigi') ? teigiStand(myDays || [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))) : null;
         return (
           <section className="lt-basket" aria-label="Dein Brotkorb">
             <svg width="104" height="64" viewBox="0 0 104 64" aria-hidden="true" style={{ flex: '0 0 auto', overflow: 'visible' }}>
@@ -215,6 +216,15 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               <span style={{ fontSize: '13px' }}>Stufe {shownLevel.no} · {shownLevel.title}{shownLevel.next ? ` · noch ${shownLevel.toNext.toLocaleString('de-DE')} P. bis ${shownLevel.next.title}` : ' · höchste Stufe'}</span>
               {isMeister && <span style={{ fontSize: '13px', fontWeight: 800, color: '#8A6A00' }}>Alles gemeistert! Die Meister-Runde wartet unter Lernen.</span>}
               {meisterLeft > 0 && <span style={{ fontSize: '13px', fontWeight: 700, color: '#8A6A00' }}>Noch {meisterLeft} {meisterLeft === 1 ? 'Frage' : 'Fragen'} bis zum Hinkel-Meister</span>}
+              {teigi && (
+                <span className="lt-teigi-zeile" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingTop: '8px', borderTop: '1px dashed rgba(139,90,43,.35)' }}>
+                  <TeigiGlas stufe={teigi.stufe} laune={teigi.laune} size={40} />
+                  <span style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', lineHeight: 1.3 }}>
+                    <b style={{ fontSize: '14px' }}>{teigi.name}</b>
+                    <span>{teigi.laune === 'froh' ? 'Heute gefüttert, er blubbert vor Freude.' : teigi.laune === 'gut' ? 'Hat Hunger: lern heute etwas, dann blubbert er.' : 'Ganz schlapp. Ein Lerntag macht ihn wieder munter.'}{teigi.naechste ? ` Noch ${teigi.naechste - teigi.futter} Lerntage bis er wächst.` : ''}</span>
+                  </span>
+                </span>
+              )}
             </span>
           </section>
         );

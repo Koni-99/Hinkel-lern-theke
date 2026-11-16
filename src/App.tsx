@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 228;
+const APP_VERSION: number = 229;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -63,7 +63,7 @@ import { mitShopFotos, mitZufallsFotos, setEigeneFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
-import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
+import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
 import { wxKindOf, WxIcon } from './basis/fakten';
 import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
@@ -806,7 +806,12 @@ export default function App() {
     const withBonus = Math.round((finalScore + comboExtra) * mult * (finalScore > 0 ? PUNKTE_FAKTOR : 1));
     if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `Combo-Bonus +${comboExtra} · ` : ''}${mult > 1 ? `Serien-Bonus ×${mult.toFixed(1).replace('.', ',')} · ` : ''}Punkte-Bonus ×1,5: ${withBonus} statt ${finalScore} Punkte!`);
     finalScore = withBonus;
+    // Punkte-Magnet (Version 229): nächstes Spiel/Quiz +25 %, wird automatisch eingesetzt
+    const magnetDa = finalScore > 0 && (Number(((cloudData.progress || {})[userKey] || {})._jokersMagnet) || 0) > 0
+      && !['Rubbellos', 'Glücksrad', 'Bonus vom Ausbilder', 'Lob von Kollegen', 'Quiz Battle', TEAM_CAT].includes(catName);
+    if (magnetDa) { const vorher = finalScore; finalScore = Math.round(finalScore * 1.25); window.setTimeout(() => setToast(`Punkte-Magnet: ${finalScore} statt ${vorher} Punkte!`), activeTab === 'quiz' ? 0 : 3200); }
     mutateCloudData((curr) => {
+      if (magnetDa) { const p0 = curr.progress[userKey]; if (p0) p0._jokersMagnet = Math.max(0, (Number(p0._jokersMagnet) || 0) - 1); }
       curr.scores.push({ id: `${userKey}_${Date.now()}`, username, score: finalScore, date: nowStr, category: catName });
       markLearnDay(curr, userKey, username);
       curr.scores.sort((a, b) => b.score - a.score);
@@ -910,6 +915,8 @@ export default function App() {
   const buyShopItem = (item: ShopItem) => {
     if (!username || isAdmin) return;
     const k = username.toLowerCase();
+    const prJetzt: any = (cloudData.progress || {})[k] || {};
+    const tuete = item.id === 'j_tuete' ? tueteAuslosen(Array.isArray(prJetzt._shopOwned) ? prJetzt._shopOwned : []) : null;
     mutateCloudData((curr) => {
       const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username });
       const balance = (Number(pr._tipCents) || 0) - (Number(pr._tipSpent) || 0);
@@ -919,29 +926,48 @@ export default function App() {
       if (item.kind !== 'joker' && owned.includes(item.id)) return curr;
       if (item.kind !== 'joker' && !inSeason(item)) return curr;
       pr._tipSpent = (Number(pr._tipSpent) || 0) + price;
-      if (item.kind === 'joker') { const f = JOKER_FIELD[item.id]; pr[f] = (Number(pr[f]) || 0) + 1; }
-      else { pr._shopOwned = [...owned, item.id]; if (item.kind === 'avatar') pr._avatar = item.icon; else if (item.kind === 'theme') pr._theme = item.id; else if (item.kind === 'effect') pr._effect = item.id; else pr._title = item.label; }
+      if (item.id === 'j_tuete') {
+        // Überraschungstüte: Inhalt wurde vorher ausgelost (tuete), hier nur gutschreiben
+        if (!tuete) return curr;
+        if (tuete.art === 'geld') pr._tipSpent = Math.max(0, (Number(pr._tipSpent) || 0) - tuete.cents);
+        else if (tuete.art === 'joker') { const f = JOKER_FIELD[tuete.it.id]; pr[f] = (Number(pr[f]) || 0) + 1; }
+        else if (!owned.includes(tuete.it.id)) pr._shopOwned = [...owned, tuete.it.id];
+      }
+      else if (item.kind === 'joker') { const f = JOKER_FIELD[item.id]; pr[f] = (Number(pr[f]) || 0) + 1; }
+      else {
+        pr._shopOwned = [...owned, item.id];
+        if (item.kind === 'avatar') pr._avatar = item.icon; else if (item.kind === 'theme') pr._theme = item.id; else if (item.kind === 'effect') pr._effect = item.id;
+        else if (item.kind === 'schrift') pr._schrift = item.id; else if (item.kind === 'jubel') pr._jubel = item.id;
+        else if (item.kind === 'haustier') { if (!pr._teigiSeit) { pr._teigiSeit = dayKey(new Date()); pr._teigiStart = Number(pr._stamps) || 0; } }
+        else pr._title = item.label;
+      }
       return curr;
     });
+    if (tuete) setTuetenInhalt(tuete);
   };
-  const equipShopItem = (kind: 'avatar' | 'title' | 'theme' | 'effect', value: string | null) => {
+  const equipShopItem = (kind: AnlegeArt, value: string | null) => {
     if (!username || isAdmin) return;
     const k = username.toLowerCase();
     mutateCloudData((curr) => {
       const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username });
-      if (kind === 'avatar') pr._avatar = value || null; else if (kind === 'theme') pr._theme = value || null; else if (kind === 'effect') pr._effect = value || null; else pr._title = value || null;
+      if (kind === 'avatar') pr._avatar = value || null; else if (kind === 'theme') pr._theme = value || null; else if (kind === 'effect') pr._effect = value || null;
+      else if (kind === 'schrift') pr._schrift = value || null; else if (kind === 'jubel') pr._jubel = value || null; else pr._title = value || null;
       return curr;
     });
   };
-  const applyJoker = (key: string, wrong: number[]) => {
+  // 50:50-Joker (zwei falsche weg) oder Hinweis-Joker (Version 229, eine falsche weg)
+  const applyJoker = (key: string, wrong: number[], hinweis = false) => {
     if (!username || isAdmin) return;
     const k = username.toLowerCase();
-    const n = Number((cloudData.progress?.[k] || {})._jokers) || 0;
-    if (n <= 0 || wrong.length < 2) return;
-    setJokerHide({ key, idx: shuffleArray([...wrong]).slice(0, 2) });
+    const feld = hinweis ? '_jokersHinweis' : '_jokers';
+    const n = Number((cloudData.progress?.[k] || {})[feld]) || 0;
+    const schon = jokerHide && jokerHide.key === key ? jokerHide.idx : [];
+    const frei = wrong.filter((i) => !schon.includes(i));
+    if (n <= 0 || frei.length < (hinweis ? 1 : 2)) return;
+    setJokerHide({ key, idx: [...schon, ...shuffleArray([...frei]).slice(0, hinweis ? 1 : 2)] });
     mutateCloudData((curr) => {
       const pr = curr.progress[k];
-      if (pr) pr._jokers = Math.max(0, (Number(pr._jokers) || 0) - 1);
+      if (pr) pr[feld] = Math.max(0, (Number(pr[feld]) || 0) - 1);
       return curr;
     });
   };
@@ -1465,6 +1491,14 @@ export default function App() {
     } else if (examSim) {
       setSelectedAnswer(index); // erst merken, ausgewertet wird am Ende
     } else {
+      // Zweite Chance (Version 229): falsche Antwort wird nur grau, kein Abzug, nochmal versuchen
+      if (chanceOn && index !== currentQ.correct && !isExamMode) {
+        const key = `${currentQuizCategory}|${currentIndex}|${currentQ.id}`;
+        setJokerHide((h) => ({ key, idx: [...(h && h.key === key ? h.idx : []), index] }));
+        setChanceOn(false); spendJoker('_jokersChance');
+        setToast('Zweite Chance: Das war es nicht. Versuch es nochmal, ohne Abzug!');
+        return;
+      }
       setSelectedAnswer(index);
       evaluateSubmission(index === currentQ.correct, currentQ);
     }
@@ -1675,6 +1709,8 @@ export default function App() {
   const [reportText, setReportText] = useState<string>('');
   const reportSentRef = useRef<(() => void) | null>(null);
   const [toast, setToast] = useState<string>('');
+  const [chanceOn, setChanceOn] = useState(false); // Zweite Chance für die aktuelle Frage eingeschaltet
+  const [tuetenInhalt, setTuetenInhalt] = useState<TuetenInhalt | null>(null); // Überraschungstüte: was war drin?
   // Monatsmeister: einmalig Abzeichen und 2 € Trinkgeld
   useEffect(() => {
     if (!username || username.toLowerCase() === 'admin' || !cloudConnected || isSyncing) return;
@@ -2542,10 +2578,10 @@ export default function App() {
         {activeTab === 'quiz' && currentQuizCategory !== null && selectedLevel === null && <QuizLevels {...{ questions, isAdmin, currentQuizCategory, setCurrentQuizCategory, selectedSubfilter, setSelectedSubfilter, onlyNew, toggleOnlyNew, quizPool, launchQuizWithLevel, overallPercent, myProg }} />}
 
         {/* ═════════ FRAGE ═════════ */}
-        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} />}
+        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} />}
 
         {/* ═════════ AUSWERTUNG ═════════ */}
-        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
+        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult jubel={myProg._jubel} {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
 
         {activeTab === 'bilderquiz' && <BilderQuizView images={spielBilder} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
         {activeTab === 'allergene' && <AllergenTrainerView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
@@ -2683,6 +2719,20 @@ export default function App() {
 
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
+      {tuetenInhalt && (
+        <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="lt-dialog lt-pop-in lt-tuete-popup" role="dialog" aria-modal="true" aria-label="Überraschungstüte" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '380px', backgroundColor: LT.cream, borderRadius: '24px', padding: '26px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
+            <ConfettiOverlay active />
+            <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>In deiner Überraschungstüte</div>
+            <span className="lt-emo-bob" style={{ display: 'inline-flex', minHeight: '84px', alignItems: 'center' }}>
+              {tuetenInhalt.art === 'geld' ? <ShopIcon3D k="coin" size={80} /> : tuetenInhalt.art === 'joker' ? <ShopIcon3D k={tuetenInhalt.it.id} size={80} /> : <span style={{ fontSize: '64px', lineHeight: 1 }}>{tuetenInhalt.it.kind === 'avatar' || tuetenInhalt.it.kind === 'jubel' ? tuetenInhalt.it.icon : tuetenInhalt.it.kind === 'schrift' ? 'Aa' : tuetenInhalt.it.kind === 'effect' ? (myProg._avatar || '🥨') : '🏷️'}</span>}
+            </span>
+            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{tuetenInhalt.art === 'geld' ? `${tipEuro(tuetenInhalt.cents)} Trinkgeld zurück!` : tuetenInhalt.art === 'joker' ? `Ein ${tuetenInhalt.it.label}!` : `Neu für dich: ${tuetenInhalt.it.label}`}</div>
+            <div style={{ fontSize: '15px', color: LT.muted }}>{tuetenInhalt.art === 'teil' ? 'Liegt jetzt in deinem Laden bereit. Antippen zum Anlegen.' : tuetenInhalt.art === 'joker' ? tuetenInhalt.it.desc : 'Das Geld ist schon wieder in deiner Kasse.'}</div>
+            <button onClick={() => setTuetenInhalt(null)} autoFocus style={{ minHeight: '50px', alignSelf: 'stretch', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Super!</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Anleitung: App auf den Startbildschirm ── */}
       {showAussehen && <Aussehen kopf={kopf} setKopf={setKopf} schliessen={() => setShowAussehen(false)} />}

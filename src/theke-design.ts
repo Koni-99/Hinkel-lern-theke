@@ -397,6 +397,24 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 @keyframes ltFxFlip{0%{transform:perspective(200px) rotateY(0)}100%{transform:perspective(200px) rotateY(360deg)}}
 .lt-fx-flip{display:inline-block;animation:ltFxFlip 2.4s ease-in-out infinite}
 .lt-shopfx{display:inline-block}
+/* Version 229: Namens-Schriften, Jubel-Effekte, Teigi, Laden am Handy */
+.lt-sf-kreide{font-family:'Caveat',cursive !important;font-weight:600 !important;font-size:1.15em;letter-spacing:.01em}
+.lt-sf-schreib{font-family:'Fraunces',serif !important;font-style:italic !important;font-weight:500 !important}
+.lt-sf-zucker{font-family:'Fredoka',sans-serif !important;font-weight:600 !important;color:#E8577A !important;-webkit-text-stroke:0;text-shadow:0 2px 0 #FFFFFF,0 -1px 0 #FFFFFF,1px 0 0 #FFFFFF,-1px 0 0 #FFFFFF,0 4px 8px rgba(232,87,122,.35) !important}
+.lt-sf-kasse{font-family:'Courier Prime',ui-monospace,monospace !important;font-weight:700 !important;text-transform:uppercase;letter-spacing:.06em}
+.lt-jubel{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:3}
+.lt-jubel span{position:absolute;top:-40px;animation:ltJubelFall 2.6s ease-in 1 both}
+@keyframes ltJubelFall{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(560px) rotate(300deg);opacity:0}}
+.lt-jubel-mehl span{top:60%;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,255,255,0) 70%);animation:ltJubelMehl 2.2s ease-out 1 both}
+@keyframes ltJubelMehl{0%{transform:translateY(0) scale(.3);opacity:0}25%{opacity:1}100%{transform:translateY(-220px) scale(2.4);opacity:0}}
+.lt-teigi-froh{animation:ltTeigiHupf 2.4s ease-in-out infinite}
+@keyframes ltTeigiHupf{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.lt-teigi-blase{animation:ltTeigiBlase 2.2s ease-in infinite}.lt-tb2{animation-delay:.7s}.lt-tb3{animation-delay:1.4s}
+@keyframes ltTeigiBlase{0%{transform:translateY(0);opacity:0}30%{opacity:.9}100%{transform:translateY(-10px);opacity:0}}
+@media (min-width:561px){.lt-shop-wide{grid-column:span 2}}
+@media (max-width:560px){.lt-shop-sign{margin-top:14px !important;padding:8px 12px !important}.lt-shop-sign>div:first-child{font-size:22px !important}.lt-register{margin-top:14px !important;padding:6px 12px !important;min-width:0 !important}.lt-register>div:last-child{font-size:22px !important}.lt-shop-bell{display:none !important}.lt-chalk{padding:10px 12px !important;border-width:6px !important}}
+.lt-preis-nowrap{white-space:nowrap}
+
 @keyframes ltDotPulse{0%{box-shadow:0 0 0 0 rgba(217,45,32,.6)}70%{box-shadow:0 0 0 10px rgba(217,45,32,0)}100%{box-shadow:0 0 0 0 rgba(217,45,32,0)}}
 .lt-dot-pulse{animation:ltDotPulse 1.6s ease-out infinite}
 .lt-tile{animation:ltTileIn .45s cubic-bezier(.2,.8,.2,1) backwards}

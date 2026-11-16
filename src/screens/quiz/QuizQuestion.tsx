@@ -43,7 +43,9 @@ export type QuizQuestionProps = {
   isExamMode: boolean;
   examSim: boolean;
   saveScoreToLeaderboard: (finalScore: number, customCat?: string | undefined, allowZero?: boolean) => void;
-  applyJoker: (key: string, wrong: number[]) => void;
+  applyJoker: (key: string, wrong: number[], hinweis?: boolean) => void;
+  chanceOn: boolean;
+  setChanceOn: (v: boolean) => void;
   spendJoker: (field: string) => void;
   applySwapJoker: () => void;
   finishPfad: (right: number) => void;
@@ -58,7 +60,7 @@ export type QuizQuestionProps = {
   quizBonus?: '' | 'comeback' | 'glueck' | 'beides';
 };
 
-export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg, gluecksfrage, quizBonus }: QuizQuestionProps) {
+export function QuizQuestion({ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg, gluecksfrage, quizBonus }: QuizQuestionProps) {
   const currentQ = quizList[currentIndex];
   const requiredIndices: number[] = currentQ.correctMulti || [currentQ.correct];
   const isMulti = requiredIndices.length > 1;
@@ -66,6 +68,9 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
   const hiddenOpts: number[] = jokerHide && jokerHide.key === jokerKey ? jokerHide.idx : [];
   const myJokers = Number(myProg._jokers) || 0;
   const canJoker = !isAnswered && !isExamMode && !examSim && !isMulti && !isAdmin && myJokers > 0 && hiddenOpts.length === 0 && currentQ.options.length >= 3;
+  const falscheUebrig = currentQ.options.map((_: string, i: number) => i).filter((i: number) => !requiredIndices.includes(i) && !hiddenOpts.includes(i));
+  const canHinweis = !isAnswered && !isExamMode && !examSim && !isMulti && !isAdmin && (Number(myProg._jokersHinweis) || 0) > 0 && falscheUebrig.length >= 1 && currentQ.options.length - hiddenOpts.length >= 3;
+  const canChance = !isAnswered && !isExamMode && !examSim && !isMulti && !isAdmin && !chanceOn && (Number(myProg._jokersChance) || 0) > 0;
   const mins = Math.floor(examSecondsLeft / 60);
   const secs = examSecondsLeft % 60;
   return (
@@ -113,6 +118,13 @@ export function QuizQuestion({ username, mutateCloudData, isAdmin, doubleOn, set
           {!isAnswered && !isExamMode && !examSim && !isAdmin && (Number(myProg._jokersSwap) || 0) > 0 && (
             <button onClick={applySwapJoker} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintBlue, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Frage tauschen ({Number(myProg._jokersSwap) || 0} übrig)</button>
           )}
+          {canHinweis && (
+            <button className="lt-joker-hinweis" onClick={() => applyJoker(jokerKey, falscheUebrig, true)} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintYellow, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Hinweis-Joker: eine falsche weg ({Number(myProg._jokersHinweis) || 0})</button>
+          )}
+          {canChance && (
+            <button className="lt-joker-chance" onClick={() => { setChanceOn(true); setToast('Zweite Chance ist an: Liegst du falsch, darfst du nochmal.'); }} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintSage, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>Zweite Chance einschalten ({Number(myProg._jokersChance) || 0})</button>
+          )}
+          {chanceOn && !isAnswered && !isExamMode && !examSim && <span className="lt-chance-an" style={{ alignSelf: 'flex-start', padding: '6px 12px', borderRadius: '999px', backgroundColor: TH.tintSage, color: TH.green, fontWeight: 800, fontSize: '15px' }}>Zweite Chance ist an</span>}
           {canJoker && (
             <button onClick={() => applyJoker(jokerKey, currentQ.options.map((_: string, i: number) => i).filter((i: number) => !requiredIndices.includes(i)))} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 16px', borderRadius: '12px', border: `2px dashed ${LT.brown}`, backgroundColor: TH.tintYellow, color: LT.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>50:50-Joker einsetzen ({myJokers} übrig)</button>
           )}
