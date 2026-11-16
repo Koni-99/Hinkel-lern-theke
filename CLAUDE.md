@@ -174,5 +174,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 234: Teigi-Begleiter ohne runden Kreis, nur goldener Schein ums Glas (`filter: drop-shadow` wie Logo). **Antippen blendet ihn nicht mehr aus** (Nutzer tippte drauf, Teigi war weg), sondern er hüpft und sagt etwas (`ANGETIPPT`). Ausschalten nur über den Knopf ganz unten (`_teigiAus`), `sessionStorage lt_teigi_weg` wird nicht mehr gelesen
 
+- 235: Wetter-Markise im dunklen Design: Lichtschein hinter dem Logo war dunkel (Inline-Farbe wurde umgerechnet) → Klasse `lt-papier lt-wx-halo` mit goldenem Verlauf in `theke-design.ts` (bei Ähren-Kopf etwas kleiner/kräftiger), Logo leuchtet wie ohne Wetter
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

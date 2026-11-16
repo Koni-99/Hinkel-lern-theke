@@ -414,6 +414,9 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 @media (min-width:561px){.lt-shop-wide{grid-column:span 2}}
 @media (max-width:560px){.lt-shop-sign{margin-top:14px !important;padding:8px 12px !important}.lt-shop-sign>div:first-child{font-size:22px !important}.lt-register{margin-top:14px !important;padding:6px 12px !important;min-width:0 !important}.lt-register>div:last-child{font-size:22px !important}.lt-shop-bell{display:none !important}.lt-chalk{padding:10px 12px !important;border-width:6px !important}}
 .lt-preis-nowrap{white-space:nowrap}
+/* Version 235: Lichtschein hinter dem Logo bei Wetter-Markise: golden wie ohne Wetter, auch im dunklen Design (lt-papier = Farben bleiben) */
+.lt-papier.lt-wx-halo{background:radial-gradient(closest-side,rgba(255,226,140,.9),rgba(255,199,44,.45) 55%,rgba(255,199,44,0))}
+.lt-kopf-aehren .lt-papier.lt-wx-halo,.lt-kopf-mitaehren .lt-papier.lt-wx-halo{width:190% !important;height:135% !important;background:radial-gradient(closest-side,rgba(255,199,44,.75),rgba(234,179,8,.35) 55%,rgba(234,179,8,0))}
 /* Version 231: Teigi begleitet beim Lernen und Spielen (unten links, Sprechblase daneben, Seite bekommt unten Platz) */
 body.lt-mit-teigi main{padding-bottom:100px}
 .lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:1090;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:6px;pointer-events:none}
