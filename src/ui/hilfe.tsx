@@ -76,7 +76,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
         {ort('Neu laden', 'du bleibst auf der Seite, auf der du gerade warst')}
-        {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Idee einreichen, Kundenstimme, Geburtstag, Aussehen, Hilfe, größere Schrift')}
+        {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Meine Nachrichten, Idee einreichen, Kundenstimme, Geburtstag, Aussehen, Hilfe, größere Schrift')}
         <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
       </>, 0, true)}
       {box(boxIcon(ICON.bulb), 'Was ist was? Kurz erklärt', <>
@@ -151,6 +151,10 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Idee einreichen</strong> (Menü): Du hast eine Idee für den Laden oder die App? Schreib sie hinein, auch ohne deinen Namen. Der Ausbilder antwortet dir.</div>
         <div><strong>Kundenstimme notieren</strong> (Menü oder Nachschlagen): Lob, Kritik oder Wünsche von Kunden kurz festhalten. So erfahren der Ausbilder und die Backstube davon.</div>
         <div><strong>Mein Geburtstag</strong> (Menü): Wenn du magst, trägst du deinen Geburtstag ein. Dann sieht das Team ihn auf der Startseite und kann gratulieren. Das ist freiwillig.</div>
+      </>, 14)}
+      {box(boxIcon(ICON.mail), 'Persönliche Nachrichten', <>
+        <div><strong>Meine Nachrichten</strong> (Menü): Hier landen Nachrichten, die nur an dich gehen. Neue Nachrichten kommen beim Öffnen der App als Pop-up. Du tippst „Gelesen“ oder schreibst kurz eine Antwort (freiwillig). Danach kannst du sie im Postfach jederzeit nochmal lesen. Eine rote Zahl im Menü zeigt, dass etwas Neues da ist.</div>
+        <div><strong>Wer schreibt?</strong> Der Ausbilder und Koni, und wem der Ausbilder das Recht gibt. Sie wählen einzelne Personen aus und sehen, wer gelesen und was geantwortet hat. Die anderen im Team sehen die Nachricht nicht.</div>
       </>, 14)}
       {box(boxIcon(ICON.globe), 'Englisch für die Theke', <div>Unter Nachschlagen → Fachwissen → „Wörterbuch Englisch“ findest du Sätze für Gäste aus aller Welt: Bedienung, Bezahlen, Zahlen und Mengen, Allergene und alle unsere Produkte. Unter „Das sagen Kunden“ steht, was Gäste oft fragen, mit der deutschen Bedeutung. Tippe auf den Lautsprecher, dann wird es auf Englisch vorgelesen.</div>, 15)}
       {box(boxIcon(ICON.calendar), 'Mein Monat', <div>Im Menü unter „Mein Monat“ siehst du, wie dein Monat lief: Punkte (auch im Vergleich zum Vormonat), dein Platz im Team, an wie vielen Tagen du gelernt hast, wie viele Fragen du neu gemeistert hast und was du am liebsten gemacht hast. Dazu gibt es einen Tipp, was du als Nächstes üben kannst. Das siehst nur du.</div>, 15)}

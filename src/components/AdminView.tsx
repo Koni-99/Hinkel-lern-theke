@@ -1,3 +1,4 @@
+import { NachrichtSchreiben } from '../screens/NachrichtenSeite';
 import { useState, FormEvent, CSSProperties } from 'react';
 import { dc, ALT_MAP } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from '../ui/basis';
@@ -793,6 +794,7 @@ export function AdminView({
 
       {/* ═════════ NACHRICHT ═════════ */}
       {adminTab === 'message' && <NachrichtTab progress={cloudData.progress} alleMitarbeiter={allKnownUserKeys} {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {adminTab === 'message' && <NachrichtSchreiben cloudData={cloudData} userKey="admin" name="Ausbilder" alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={(t: string) => alert(t)} isAdmin />}
       {adminTab === 'message' && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
 
       {/* ═════════ INHALTE ═════════ */}

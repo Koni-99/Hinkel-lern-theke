@@ -152,5 +152,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 223: **Theken-Ansturm größere Fotos**: am Handy (bis 700px) 3 statt 4 pro Reihe (`.lt-ansturm-grid` in `theke-design.ts`), Kacheln 108 statt ~78px, alle 8 Waren passen weiter auf einen Bildschirm. Tablet/PC unverändert 4 (dort schon groß)
 
+- 224: **Einzel-Nachrichten** (Nutzer wählte: Pop-up + Postfach, kurze Antwort möglich, Admin + Koni fest, Admin vergibt weiteres Recht). Logik `src/hilfen/nachrichten.ts`, Seiten `src/screens/NachrichtenSeite.tsx` (`NachrichtSchreiben` auch im Ausbilder-Reiter „Nachricht & Umfrage“, `NachrichtenSeite` = Menü „Meine Nachrichten“ mit roter Zahl, `EinzelNachrichtPopup`). Speicher nur im eigenen Fortschritt: Absender `progress/<name>/_nachrichten` {m<ts>: {an: {schlüssel: name}, t, ts}} (Admin unter `progress/admin`), Empfänger `progress/<name>/_postfach` {postfachKey: {g, a, aTs}}, Recht `progress/admin/_nachrichtRecht` {schlüssel: true}, `IMMER_SCHREIBEN` = admin, koni. Absender sieht pro Person gelesen/Antwort, kann löschen. Keine neue Karte auf der Startseite. Neues Symbol `ICON.mail`. Hilfe-Thema „Persönliche Nachrichten“
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

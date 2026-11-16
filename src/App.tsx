@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 223;
+const APP_VERSION: number = 224;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -17,6 +17,8 @@ import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, 
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
+import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen } from './hilfen/nachrichten';
+import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
 import { alleRanglisten } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
@@ -822,6 +824,11 @@ export default function App() {
     return pr._lob && Number(pr._lob.ts) > (Number(pr._lobSeen) || 0) ? pr._lob : null;
   })();
   const closeLob = () => { if (!username || !lobDue) return; const k = username.toLowerCase(); const ts = lobDue.ts; mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); pr._lobSeen = ts; return curr; }); };
+
+  // Einzel-Nachricht (Admin, Koni oder mit Recht) an mich: erste ungelesene als Pop-up
+  const einzelNeu = !username || isAdmin ? [] : einzelUngelesen(cloudData.progress, username.toLowerCase());
+  const einzelAntworten = !username || isAdmin ? 0 : neueAntworten(cloudData.progress, username.toLowerCase());
+  const einzelFertig = (antwort: string) => { const n = einzelNeu[0]; if (!n || !username) return; mutateCloudData(nachrichtGelesen(username.toLowerCase(), username, n.von, n.id, antwort)); if (antwort.trim()) setToast(`Antwort an ${n.vonName} geschickt.`); };
 
   // Ausbilder schenkt Punkte / Trinkgeld
   const adminGive = (key: string, pts: number, cents: number) => {
@@ -2340,7 +2347,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'nachrichten' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2464,6 +2471,7 @@ export default function App() {
             {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('statistik'); }}><LtIcon paths={ICON.medal} size={22} />Meine Statistik</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('monat'); }}><LtIcon paths={ICON.calendar} size={22} />Mein Monat</button>}
+            {!isAdmin && <button role="menuitem" className="lt-menu-nachrichten" onClick={() => { setHdrMenu(false); setActiveTab('nachrichten'); }}><LtIcon paths={ICON.mail} size={22} />Meine Nachrichten{einzelNeu.length + einzelAntworten > 0 && <span className="lt-menu-zahl" style={{ marginLeft: 'auto', minWidth: '24px', height: '24px', padding: '0 7px', borderRadius: '999px', backgroundColor: '#B42318', color: '#FFFFFF', fontSize: '14px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{einzelNeu.length + einzelAntworten}</span>}</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
@@ -2542,6 +2550,7 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
+        {activeTab === 'nachrichten' && <NachrichtenSeite cloudData={cloudData} username={username} alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'kundenstimmen' && <KundenstimmenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} produkte={Array.from(new Set(SHOP_PRODUCTS.map((p: any) => String(p.name)))).sort()} />}
         {activeTab === 'monat' && <MeinMonat username={username} scores={cloudData.scores || []} tage={myDays} snap={myProg._monatSnap} gemeistertJetzt={masteredNow}
@@ -2681,6 +2690,9 @@ export default function App() {
             <button onClick={closeLob} style={{ minHeight: '50px', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Danke!</button>
           </div>
         </div>
+      )}
+      {einzelNeu.length > 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && activeTab !== 'nachrichten' && (
+        <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} />
       )}
       {losPrize && !isAdmin && (
         <div className="lt-overlay" onClick={() => setLosPrize(null)} style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>

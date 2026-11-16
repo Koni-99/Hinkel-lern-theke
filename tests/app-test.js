@@ -295,7 +295,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -687,6 +687,19 @@ async function offlineTests() {
     ok('Nutzung und Sicherung: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 224: Ausbilder schreibt Einzel-Nachrichten und vergibt das Recht dazu
+  {
+    const d = await device({ admin: true, backup: SAMPLE });
+    await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
+    for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(d.page.getByRole('tab', { name: 'Nachricht & Umfrage' })); await settle(d.page, 500);
+    const recht = d.page.locator('.lt-einzel-recht button');
+    ok('Ausbilder: „Nachricht an einzelne“ und „Wer darf schicken?“ da', (await d.page.locator('.lt-einzel-schreiben').count()) > 0 && (await recht.count()) > 0);
+    if (await recht.count()) { await click(recht.first()); await settle(d.page, 300); }
+    ok('Ausbilder: Recht vergeben schaltet um', (await recht.first().getAttribute('aria-pressed').catch(() => '')) === 'true');
+    ok('Ausbilder Einzel-Nachrichten: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Ausbilder-Bereich: alle Reiter mit Beispieldaten
   {
     const d = await device({ admin: true, backup: SAMPLE });
@@ -870,6 +883,56 @@ async function cloudTests() {
     ok('Lob: anonymes Danke zeigt „Ein Kollege“ statt Namen', /Ein Kollege/.test(anonymZeile) && !/Carla/.test(anonymZeile), anonymZeile);
     ok('Lob: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
+  }
+  // Version 224: Einzel-Nachrichten (Koni schreibt an Anna und Ben, Anna antwortet im Pop-up, Koni sieht die Antwort)
+  {
+    await db('PATCH', '/progress/ben', { _displayName: 'Ben' });
+    await db('PATCH', '/progress/lena', { _displayName: 'Lena' });
+    { const alle = (await db('GET', '/pins')) || {}; const einer = Object.values(alle)[0]; if (einer) await db('PATCH', '/pins', { koni: einer, lena: alle.lena || einer, ben: alle.ben || einer }); }
+    const K = await device({ cloud: true, user: 'Koni' });
+    for (let r = 0; r < 4; r++) { await sleep(600); await clearPopups(K.page); }
+    await K.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
+    await K.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(K.page);
+    const schreiben = K.page.locator('.lt-einzel-schreiben');
+    for (let i = 0; i < 50 && !(await schreiben.locator('button', { hasText: /^Anna$/ }).count()); i++) await sleep(100);
+    await click(schreiben.locator('button', { hasText: /^Anna$/ }).first()).catch(() => {});
+    await click(schreiben.locator('button', { hasText: /^Ben$/ }).first()).catch(() => {});
+    await K.page.fill('textarea[aria-label="Deine Nachricht"]', 'Bitte morgen die Stollen-Schulung machen.');
+    await click(schreiben.getByRole('button', { name: 'Nachricht schicken' }));
+    let gesendet = null;
+    for (let i = 0; i < 50 && !gesendet; i++) { const m = await db('GET', '/progress/koni/_nachrichten'); gesendet = m && Object.values(m)[0]; if (!gesendet) await sleep(100); }
+    ok('Einzel-Nachricht: Koni schickt an Anna und Ben (nicht an alle)', !!gesendet && Object.keys(gesendet.an || {}).sort().join(',') === 'anna,ben', JSON.stringify(gesendet && gesendet.an));
+    await K.ctx.close();
+    const A = await device({ cloud: true, user: 'Anna' });
+    const pop = A.page.locator('.lt-einzel-popup');
+    for (let i = 0; i < 12 && !(await pop.count()); i++) {
+      const andere = A.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+      if (!(await pop.count()) && (await andere.count())) await andere.last().click({ timeout: 2000 }).catch(() => {});
+      await sleep(500);
+    }
+    ok('Einzel-Nachricht: Anna bekommt das Pop-up mit Text', (await pop.count()) > 0 && (await pop.innerText()).includes('Stollen-Schulung'));
+    if (await pop.count()) { await pop.locator('input').fill('Mach ich!'); await click(pop.getByRole('button', { name: 'Antworten' })); }
+    let pf = null;
+    for (let i = 0; i < 50 && !(pf && pf.a); i++) { const m = await db('GET', '/progress/anna/_postfach'); pf = m && Object.values(m)[0]; if (!(pf && pf.a)) await sleep(100); }
+    ok('Einzel-Nachricht: Antwort und „gelesen“ im eigenen Fortschritt', !!pf && pf.a === 'Mach ich!' && pf.g > 0, JSON.stringify(pf));
+    await A.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
+    await A.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(A.page);
+    ok('Einzel-Nachricht: steht in Annas Postfach, Anna darf selbst nicht schreiben', (await A.page.locator('.lt-postfach').innerText()).includes('Stollen-Schulung') && (await A.page.locator('.lt-einzel-schreiben').count()) === 0);
+    ok('Einzel-Nachricht (Anna): keine Fehler', A.errors.length === 0, A.errors[0]);
+    await A.ctx.close();
+    const L = await device({ cloud: true, user: 'Lena' });
+    for (let r = 0; r < 4; r++) { if (await L.page.locator('.lt-einzel-popup').count()) break; await sleep(600); await clearPopups(L.page); }
+    ok('Einzel-Nachricht: Lena (nicht ausgewählt) bekommt nichts', (await L.page.locator('.lt-einzel-popup').count()) === 0);
+    await L.ctx.close();
+    const K2 = await device({ cloud: true, user: 'Koni' });
+    for (let r = 0; r < 4; r++) { await sleep(600); await clearPopups(K2.page); }
+    await K2.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
+    await K2.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(K2.page);
+    let liste = '';
+    for (let i = 0; i < 50 && !liste.includes('Mach ich!'); i++) { liste = await K2.page.locator('.lt-einzel-gesendet').innerText().catch(() => ''); if (!liste.includes('Mach ich!')) await sleep(100); }
+    ok('Einzel-Nachricht: Koni sieht „Gelesen: 1 von 2“ und Annas Antwort', liste.includes('Gelesen: 1 von 2') && liste.includes('Mach ich!'), liste.slice(0, 160));
+    ok('Einzel-Nachricht (Koni): keine Fehler', K2.errors.length === 0, K2.errors[0]);
+    await K2.ctx.close();
   }
   // Geburtstag (freiwillig) und Ideen-Box
   {
