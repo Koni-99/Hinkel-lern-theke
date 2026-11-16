@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 221;
+const APP_VERSION: number = 222;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -17,6 +17,7 @@ import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, 
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
+import { alleRanglisten } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
@@ -1854,22 +1855,44 @@ export default function App() {
   })();
   const myRankIdx = rankTable.findIndex(([k]) => k === username.toLowerCase());
   const [overtaken, setOvertaken] = useState<{ by: string[]; place: number; gap: number } | null>(null);
+  // Alle Wertungen (Gesamt, Monat, jedes Spiel, Lernen & Quiz) mit dem letzten Stand auf diesem Gerät vergleichen
+  const ranglisten = alleRanglisten((cloudData.scores || []) as any, cloudData.progress || {});
+  const ranglistenSig = Object.entries(ranglisten).map(([id, r]) => `${id}:${r.liste.join(',')}`).join('|');
   useEffect(() => {
-    if (!username || isAdmin || !cloudConnected || isSyncing || myRankIdx < 0) return;
-    const key = `lt_rank_${username.toLowerCase()}`;
-    const above = rankTable.slice(0, myRankIdx).map(([k]) => k);
-    let prev: { place: number; above: string[] } | null = null;
-    try { prev = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
-    try { localStorage.setItem(key, JSON.stringify({ place: myRankIdx + 1, above })); } catch {}
-    if (!prev || !Array.isArray(prev.above)) return;
-    const passers = above.filter(k => !prev!.above.includes(k));
-    if (passers.length && myRankIdx + 1 > prev.place) {
-      const names = passers.map(k => (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k);
-      const gap = Math.max(1, (rankTable[myRankIdx - 1]?.[1] || 0) - (rankTable[myRankIdx]?.[1] || 0) + 1);
-      setOvertaken({ by: names, place: myRankIdx + 1, gap });
-      if (activeTab !== 'scoreboard') setToast(`${names.length === 1 ? `${names[0]} hat` : `${names.slice(0, 2).join(' und ')}${names.length > 2 ? ' und andere haben' : ' haben'}`} dich überholt! Jetzt Platz ${myRankIdx + 1}.`);
+    if (!username || isAdmin || !cloudConnected || isSyncing) return;
+    const me = username.toLowerCase();
+    const key = `lt_rang2_${me}`;
+    let prev: Record<string, { place: number; above: string[] }> = {};
+    try { prev = JSON.parse(localStorage.getItem(key) || 'null') || {}; } catch {}
+    if (!prev.total) { try { const alt = JSON.parse(localStorage.getItem(`lt_rank_${me}`) || 'null'); if (alt && Array.isArray(alt.above)) prev.total = alt; } catch {} }
+    const jetzt: Record<string, { place: number; above: string[] }> = { ...prev };
+    const meldungen: { id: string; label: string; names: string[]; place: number }[] = [];
+    const nameVon = (k: string) => (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k;
+    for (const [id, r] of Object.entries(ranglisten)) {
+      const idx = r.liste.indexOf(me);
+      if (idx < 0) continue;
+      const above = r.liste.slice(0, idx);
+      const p = prev[id];
+      if (p && Array.isArray(p.above) && idx + 1 > p.place) {
+        const passers = above.filter((k) => !p.above.includes(k));
+        if (passers.length) meldungen.push({ id, label: r.label, names: passers.map(nameVon), place: idx + 1 });
+      }
+      jetzt[id] = { place: idx + 1, above };
     }
-  }, [username, cloudConnected, isSyncing, myRankIdx, rankTable.map(r => r[0]).join(',')]);
+    try { localStorage.setItem(key, JSON.stringify(jetzt)); } catch {}
+    if (!meldungen.length) return;
+    const gesamt = meldungen.find((m) => m.id === 'total');
+    if (gesamt && myRankIdx >= 0) {
+      const gap = Math.max(1, (rankTable[myRankIdx - 1]?.[1] || 0) - (rankTable[myRankIdx]?.[1] || 0) + 1);
+      setOvertaken({ by: gesamt.names, place: gesamt.place, gap });
+    }
+    if (activeTab !== 'scoreboard') {
+      const wer = (n: string[]) => (n.length === 1 ? `${n[0]} hat` : `${n.slice(0, 2).join(' und ')}${n.length > 2 ? ' und andere haben' : ' haben'}`);
+      const erste = gesamt || meldungen[0];
+      const rest = meldungen.length - 1;
+      setToast(`${wer(erste.names)} dich ${erste.label} überholt! Jetzt Platz ${erste.place}.${rest > 0 ? ` Auch in ${rest} ${rest === 1 ? 'weiteren Wertung' : 'weiteren Wertungen'}, schau in die Bestenliste.` : ''}`);
+    }
+  }, [username, cloudConnected, isSyncing, ranglistenSig]);
 
   // Hinweis, wenn der Ausbilder eine eigene Kundenfrage beantwortet hat (pro Antwort nur einmal)
   const kfNeu = isAdmin || !username ? [] : alleKundenfragen(cloudData.progress).filter(f => f.user === username.toLowerCase() && f.a && !f.seen);

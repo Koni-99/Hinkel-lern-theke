@@ -770,6 +770,26 @@ async function cloudTests() {
     ok('Stufen-Feier: keine Fehler', L.errors.length === 0, L.errors[0]);
     await L.ctx.close();
   }
+  // Version 222: „überholt“ auch in den einzelnen Wertungen (hier Tüten-Blitz), nicht nur in den Gesamtpunkten
+  {
+    await db('PATCH', '', { scores: [{ id: 'b1', username: 'Ben', score: 50, date: '12.11.26, 08:00', category: 'Quiz' }, { id: 'l1', username: 'Lena', score: 450, date: '12.11.26, 09:00', category: 'Quiz' }, { id: 't1', username: 'Lena', score: 30, date: '13.11.26, 09:00', category: 'Tüten-Blitz 🛍️' }, { id: 't2', username: 'Ben', score: 60, date: '13.11.26, 10:00', category: 'Tüten-Blitz 🛍️' }] });
+    const L = await device({ cloud: true, user: 'Lena', vorher: async (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('lt_rang2_lena', JSON.stringify({ 'cat:Tüten-Blitz': { place: 1, above: [] } })); localStorage.setItem('hinkel_lvl_seen_lena', '9'); } catch {} }) });
+    let meldung = '';
+    for (let k = 0; k < 16 && !meldung; k++) {
+      await sleep(700);
+      const t = await L.page.getByText(/dich bei „Tüten-Blitz“ überholt/).first().innerText().catch(() => '');
+      if (t) { meldung = t; break; }
+      const pinFelder = L.page.locator('input[placeholder="4 bis 6 Ziffern"]:visible');
+      const n = await pinFelder.count();
+      if (n === 2) { await pinFelder.nth(0).fill('4711'); await pinFelder.nth(1).fill('4711'); await L.page.getByText('PIN speichern').click().catch(() => {}); continue; }
+      if (n === 1) { await pinFelder.first().fill('4711'); await pinFelder.first().press('Enter').catch(() => {}); continue; }
+      const o = L.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+      if (await o.count()) await o.last().click({ timeout: 2000 }).catch(() => {});
+    }
+    ok('Überholt: Meldung auch in einer Spiel-Wertung (Tüten-Blitz)', /Ben hat dich bei „Tüten-Blitz“ überholt/.test(meldung), meldung || 'keine Meldung');
+    ok('Überholt: keine Fehler', L.errors.length === 0, L.errors[0]);
+    await L.ctx.close();
+  }
   // Live-Updates: Änderung eines Kollegen kommt sofort an
   {
     const A = await device({ cloud: true, user: 'Anna' });

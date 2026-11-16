@@ -148,5 +148,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 221: **Tüten-Blitz Punkte reduziert** (Nutzer: 4.280 Punkte pro Runde waren möglich): vorher 10 + 2 × Serie ohne Grenze und × 3 beim Speichern; jetzt `proTuete` 1 Punkt, ab 10 in Folge 2, kein × 3 (gute Runde ~60–70, sehr schnell ~160 vor ×1,5). Alte Einträge in der Bestenliste bleiben (Ausbilder kann sie einzeln löschen). Produktname passt am Handy (`clamp(24px, 7.5vw, 44px)`, Umbruch). Andere Spiele geprüft: alle mit festen Punkten pro Antwort oder Ende nach Fehlern
 
+- 222: **„Du wurdest überholt“ für alle Wertungen** (Nutzer bekam keine Meldung in einer Kategorie): vorher nur Gesamtpunkte. Jetzt `alleRanglisten()` in `src/hilfen/wertungen.ts` (Gesamt, Monat, jedes Spiel, Lernen & Quiz; auch von ScoreboardView benutzt: `cleanLabel`, `scoreGroup`, `GAME_NAMES`), Vergleich mit letztem Stand im Gerät (localStorage `lt_rang2_<name>`, übernimmt alten `lt_rank_<name>`), Toast „Ben hat dich bei „Tüten-Blitz“ überholt! Jetzt Platz 2.“, Karte auf der Startseite weiter nur für Gesamtpunkte. Meldung kommt beim Öffnen der App (kein Handy-Push, Nutzer will keine Erinnerung aufs Handy). Telefon-Bestellung fehlte in `GAME_NAMES` (landete unter Lernen & Quiz), jetzt eigene Wertung
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

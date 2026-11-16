@@ -44,19 +44,7 @@ const SB_CSS = `
 }
 `;
 
-/** Emojis am Ende von Kategorienamen entfernen ("Kassenblitz ⚡" → "Kassenblitz") */
-const cleanLabel = (cat: string) =>
-  cat.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[☀-➿️‍]/g, "").trim();
-
-// Wertungen bündeln: echte Spiele einzeln, alle Quiz-Runden zusammen, Glücksspiele gar nicht
-const GAME_NAMES = ["Theken-Simulator", "Theken-Ansturm", "Kassenblitz", "Bilderquiz", "Allergene-Training", "Teurer oder billiger", "Schneide-Profi", "Tüten-Blitz", "Alternativen-Jäger", "Adventskalender"];
-const QUIZ_KEY = "Lernen & Quiz";
-const scoreGroup = (cat: string): string | null => {
-  const c = cleanLabel(cat || "");
-  if (!c || /^Quiz Battle|^Regal einräumen|^Bonus vom Ausbilder|^Glücksrad|^Rubbellos|^Stempelkarte/.test(c)) return null;
-  const g = GAME_NAMES.find((n) => c.startsWith(n));
-  return g || QUIZ_KEY;
-};
+import { cleanLabel, QUIZ_KEY, scoreGroup } from '../hilfen/wertungen';
 
 type BonRow = { key: string; name: string; value: string; sub?: string };
 
