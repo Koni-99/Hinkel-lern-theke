@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 225;
+const APP_VERSION: number = 226;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -19,6 +19,7 @@ import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } fro
 import { alleIdeen } from './hilfen/rueckmeldungen';
 import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen } from './hilfen/nachrichten';
 import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
+import { geschenkSchicken, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
 import { alleRanglisten } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
@@ -829,6 +830,15 @@ export default function App() {
   const einzelNeu = !username || isAdmin ? [] : einzelUngelesen(cloudData.progress, username.toLowerCase());
   const einzelAntworten = !username || isAdmin ? 0 : neueAntworten(cloudData.progress, username.toLowerCase());
   const einzelFertig = (antwort: string) => { const n = einzelNeu[0]; if (!n || !username) return; mutateCloudData(nachrichtGelesen(username.toLowerCase(), username, n.von, n.id, antwort)); if (antwort.trim()) setToast(`Antwort an ${n.vonName} geschickt.`); };
+
+  // Geschenke von Kollegen (Version 226): ältestes offenes als Pop-up
+  const geschenkNeu = !username || isAdmin ? [] : offeneGeschenke(cloudData.progress, username.toLowerCase());
+  const geschenkFertig = () => { const g = geschenkNeu[0]; if (!g || !username) return; mutateCloudData(geschenkAnnehmen(username.toLowerCase(), username, g)); };
+  const schenken = (jokerId: string, an: string, anName: string) => {
+    if (!username || isAdmin) return;
+    mutateCloudData(geschenkSchicken(username.toLowerCase(), username, an, anName, jokerId));
+    setToast(`${jokerVon(jokerId)?.label || 'Geschenk'} an ${anName} verschickt. Er oder sie bekommt es beim nächsten Öffnen der App.`);
+  };
 
   // Ausbilder schenkt Punkte / Trinkgeld
   const adminGive = (key: string, pts: number, cents: number) => {
@@ -1936,6 +1946,17 @@ export default function App() {
     setToast('Der Ausbilder hat auf deine Idee geantwortet. Du findest die Antwort im Menü unter „Idee einreichen“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ideeNeuKey]);
+  // Serien-Schutz (Version 226): verpasste Tage automatisch schützen, wenn genug Joker da sind
+  const schutzPr: any = username && !isAdmin ? ((cloudData.progress || {})[username.toLowerCase()] || {}) : {};
+  const schutzTage = username && !isAdmin && cloudConnected ? schutzNoetig(schutzPr) : [];
+  const schutzKey = schutzTage.join(',');
+  useEffect(() => {
+    if (!schutzKey || !username) return;
+    const n = schutzKey.split(',').length;
+    mutateCloudData(schutzEinsetzen(username.toLowerCase(), username));
+    setToast(n === 1 ? 'Serien-Schutz eingesetzt: Du hast einen Tag verpasst, deine Lern-Serie bleibt trotzdem.' : `Serien-Schutz eingesetzt: ${n} verpasste Tage sind geschützt, deine Lern-Serie bleibt.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [schutzKey]);
   if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }} />;
 
   const overallPercent = getUserMasteryPercent(username);
@@ -2014,7 +2035,7 @@ export default function App() {
     return p.total > 0 ? Math.round((p.totalAnswered / p.total) * 100) : 0;
   };
   const myDays: string[] = Array.isArray((cloudProgress[userKeyLower] || {})._days) ? (cloudProgress[userKeyLower] || {})._days : [];
-  const streak = computeStreak(myDays);
+  const streak = computeStreak(myDays, (cloudProgress[userKeyLower] || {})._schutzTage || []);
   const weekDots = (() => {
     const now = new Date();
     const monday = new Date(now);
@@ -2118,7 +2139,7 @@ export default function App() {
     const cnt: Record<string, number> = {};
     sc.forEach(x => { const c = String((x as any).category || ''); if (GAME_EMOJI[c] !== undefined && c !== 'Rubbellos' && c !== 'Glücksrad') cnt[c] = (cnt[c] || 0) + (Number(x.n) || 1); });
     const fav = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-    const st = computeStreak(Array.isArray(pr._days) ? pr._days : []);
+    const st = computeStreak(Array.isArray(pr._days) ? pr._days : [], pr._schutzTage || []);
     const bt = { w: 0, l: 0, d: 0 };
     Object.values(cloudBattles || {}).forEach((b: any) => {
       if (!b || (b.challengerKey !== k && b.opponentKey !== k)) return;
@@ -2661,7 +2682,7 @@ export default function App() {
       </nav>); })()}
 
       {/* ── Trinkgeld-Laden ── */}
-      {showTipShop && !isAdmin && <TipShop prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
+      {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
 
       {/* ── Anleitung: App auf den Startbildschirm ── */}
       {showAussehen && <Aussehen kopf={kopf} setKopf={setKopf} schliessen={() => setShowAussehen(false)} />}
@@ -2693,6 +2714,18 @@ export default function App() {
       )}
       {einzelNeu.length > 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && activeTab !== 'nachrichten' && (
         <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} />
+      )}
+      {geschenkNeu.length > 0 && einzelNeu.length === 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && (
+        <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 108, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div className="lt-dialog lt-pop-in lt-geschenk-popup" role="dialog" aria-modal="true" aria-label={`Geschenk von ${geschenkNeu[0].vonName}`} style={{ width: '100%', maxWidth: '400px', backgroundColor: LT.cream, borderRadius: '24px', padding: '26px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', textAlign: 'center' }}>
+            <ConfettiOverlay active />
+            <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>Ein Geschenk für dich</div>
+            <span className="lt-emo-bob" style={{ display: 'inline-flex' }}><ShopIcon3D k={geschenkNeu[0].j} size={84} /></span>
+            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{geschenkNeu[0].vonName} schenkt dir: {jokerVon(geschenkNeu[0].j)?.label}</div>
+            <div style={{ fontSize: '15px', color: LT.muted }}>{jokerVon(geschenkNeu[0].j)?.desc}</div>
+            <button onClick={geschenkFertig} autoFocus style={{ minHeight: '52px', alignSelf: 'stretch', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '18px', fontWeight: 700, cursor: 'pointer' }}>Danke!</button>
+          </div>
+        </div>
       )}
       {losPrize && !isAdmin && (
         <div className="lt-overlay" onClick={() => setLosPrize(null)} style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>

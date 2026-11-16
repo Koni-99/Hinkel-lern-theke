@@ -295,7 +295,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -592,6 +592,33 @@ async function offlineTests() {
     ok('Tüten-Blitz: Punkte begrenzt (höchstens 2 pro Tüte)', punkte > 0 && punkte <= 50, `${punkte} Punkte nach 25 Tüten`);
     ok('Tüten-Blitz: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }
+  // Version 226: Laden-Extras (Serien-Schutz, Geschenke, Sammel-Sets) ohne Browser prüfen
+  {
+    const M = kompiliere(['src/hilfen/geschenke.ts', 'src/basis/serie.tsx', 'src/basis/laden.tsx']);
+    const S = M.basis_serie, G = M.hilfen_geschenke, L = M.basis_laden;
+    const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return S.dayKey(d); };
+    // Lerntage: vorgestern und davor, gestern verpasst (Sonntage zählen nicht)
+    const arbeitstage = []; { const d = new Date(); while (arbeitstage.length < 6) { d.setDate(d.getDate() - 1); if (d.getDay() !== 0) arbeitstage.push(S.dayKey(new Date(d))); } }
+    const gelernt = arbeitstage.slice(1, 5); const verpasst = arbeitstage[0];
+    const ohne = S.computeStreak(gelernt).current, mit = S.computeStreak(gelernt, [verpasst]).current;
+    ok('Serien-Schutz: geschützter Tag hält die Serie (zählt aber nicht mit)', ohne === 0 && mit === 4, `ohne ${ohne}, mit ${mit}`);
+    const curr = { progress: { anna: { _displayName: 'Anna', _days: gelernt, _jokersSchutz: 1 } } };
+    G.schutzEinsetzen('anna', 'Anna')(curr);
+    ok('Serien-Schutz: wird automatisch eingesetzt und verbraucht 1 Joker', curr.progress.anna._jokersSchutz === 0 && curr.progress.anna._schutzTage.includes(verpasst), JSON.stringify(curr.progress.anna._schutzTage));
+    const zwei = { progress: { ben: { _days: arbeitstage.slice(2, 5), _jokersSchutz: 1 } } };
+    G.schutzEinsetzen('ben', 'Ben')(zwei);
+    ok('Serien-Schutz: 2 verpasste Tage mit nur 1 Joker: nichts verbraucht', zwei.progress.ben._jokersSchutz === 1 && !zwei.progress.ben._schutzTage);
+    const c2 = { progress: { anna: { _displayName: 'Anna', _tipCents: 1000, _tipSpent: 0 }, ben: { _displayName: 'Ben' } } };
+    for (let i = 0; i < 4; i++) G.geschenkSchicken('anna', 'Anna', 'ben', 'Ben', 'j_los', Date.now() + i)(c2);
+    ok('Geschenk: höchstens 3 am Tag, bezahlt mit Trinkgeld', Object.keys(c2.progress.anna._geschenke).length === 3 && c2.progress.anna._tipSpent === 150, `${Object.keys(c2.progress.anna._geschenke || {}).length} Geschenke, ${c2.progress.anna._tipSpent} Cent`);
+    G.offeneGeschenke(c2.progress, 'ben').forEach((g) => G.geschenkAnnehmen('ben', 'Ben', g)(c2));
+    G.offeneGeschenke(c2.progress, 'ben').forEach((g) => G.geschenkAnnehmen('ben', 'Ben', g)(c2));
+    ok('Geschenk: Beschenkter bekommt jedes Los genau einmal', c2.progress.ben._jokersLos === 3 && G.offeneGeschenke(c2.progress, 'ben').length === 0, `${c2.progress.ben._jokersLos} Lose`);
+    const st = L.setStand(['a_brot', 'a_brezel', 'a_croissant', 'a_baguette', 'a_aehre', 'a_keks']);
+    ok('Sammel-Sets: Brotkorb voll, Süße Theke nicht', st.find((x) => x.id === 'brot').voll && !st.find((x) => x.id === 'suess').voll);
+    const torte = L.TIP_SHOP.find((i) => i.id === 'a_torte');
+    ok('Laden: keine Torte mehr (jetzt Berliner), viele neue Teile', torte.label === 'Berliner' && !L.TIP_SHOP.some((i) => /Torte/.test(i.label)) && L.TIP_SHOP.length >= 70, `${L.TIP_SHOP.length} Teile`);
   }
   // Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4
   {
@@ -941,6 +968,46 @@ async function cloudTests() {
     ok('Einzel-Nachricht: Koni sieht „Gelesen: 1 von 2“ und Annas Antwort', liste.includes('Gelesen: 1 von 2') && liste.includes('Mach ich!'), liste.slice(0, 160));
     ok('Einzel-Nachricht (Koni): keine Fehler', K2.errors.length === 0, K2.errors[0]);
     await K2.ctx.close();
+  }
+  // Version 226: Anna schenkt Ben im Laden ein Rubbellos, Ben bekommt das Pop-up
+  {
+    await db('PATCH', '/progress/anna', { _tipCents: 2000 });
+    const A = await device({ cloud: true, user: 'Anna' });
+    for (let r = 0; r < 4; r++) { await sleep(600); await clearPopups(A.page); }
+    await click(A.page.locator('button[title="Trinkgeld-Laden öffnen"]').first()); await settle(A.page, 600);
+    const laden = A.page.locator('[role=dialog][aria-label="Trinkgeld-Laden"]');
+    await click(laden.getByRole('tab', { name: 'Titel' })); await settle(A.page, 300);
+    ok('Laden: Sammel-Sets im Reiter „Titel“', (await laden.locator('.lt-sammelset').count()) >= 6);
+    await click(laden.getByRole('tab', { name: 'Joker' })); await settle(A.page, 300);
+    const box = laden.locator('.lt-schenken');
+    ok('Laden: „Einem Kollegen etwas schenken“ unter Joker', (await box.count()) === 1);
+    if (await box.count()) {
+      await box.locator('select').selectOption('ben');
+      await click(box.getByRole('button', { name: /an Ben schenken/ }));
+    }
+    let gs = null;
+    for (let i = 0; i < 50 && !gs; i++) { const m = await db('GET', '/progress/anna/_geschenke'); gs = m && Object.values(m)[0]; if (!gs) await sleep(100); }
+    ok('Geschenk: im eigenen Fortschritt gespeichert', !!gs && gs.an === 'ben' && gs.j === 'j_los', JSON.stringify(gs));
+    ok('Geschenk (Anna): keine Fehler', A.errors.length === 0, A.errors[0]);
+    await A.ctx.close();
+    const vorher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0;
+    await db('PATCH', '/progress/ben', { _levelSeen: 25 });
+    const B = await device({ cloud: true, user: 'Ben', vorher: async (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('hinkel_lvl_seen_ben', '9'); } catch {} }) });
+    const pop = B.page.locator('.lt-geschenk-popup');
+    for (let i = 0; i < 30 && !(await pop.count()); i++) {
+      const skip = B.page.locator('button:visible:has-text("Überspringen")');
+      if (await skip.count()) { await skip.first().click({ timeout: 2000 }).catch(() => {}); await sleep(400); continue; }
+      const andere = B.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible, button:visible:has-text("Weiter so!")');
+      if (await andere.count()) await andere.last().click({ timeout: 2000 }).catch(() => {});
+      await sleep(500);
+    }
+    ok('Geschenk: Ben bekommt das Pop-up „Anna schenkt dir“', (await pop.count()) > 0 && /Anna schenkt dir/.test(await pop.innerText()));
+    if (await pop.count()) await click(pop.getByRole('button', { name: 'Danke!' }));
+    let nachher = vorher;
+    for (let i = 0; i < 50 && nachher === vorher; i++) { nachher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0; if (nachher === vorher) await sleep(100); }
+    ok('Geschenk: Ben hat ein Rubbellos mehr', nachher === vorher + 1, `${vorher} → ${nachher}`);
+    ok('Geschenk (Ben): keine Fehler', B.errors.length === 0, B.errors[0]);
+    await B.ctx.close();
   }
   // Geburtstag (freiwillig) und Ideen-Box
   {

@@ -92,8 +92,10 @@ export function markLearnDay(curr: CloudPayload, userKey: string, displayName: s
 /** Serien-Bonus: ab Tag 2 jeden Tag +10 % auf alle Punkte, höchstens ×1,5 (ab Tag 6) */
 export const streakMultFor = (n: number) => 1 + 0.1 * Math.min(5, Math.max(0, n - 1));
 
-export function computeStreak(days: string[]): { current: number; best: number; learnedToday: boolean } {
+export function computeStreak(days: string[], schutz: string[] = []): { current: number; best: number; learnedToday: boolean } {
   const set = new Set(days);
+  // Serien-Schutz (Version 226): geschützte Tage zählen nicht mit, unterbrechen die Serie aber nicht
+  const frei = new Set((Array.isArray(schutz) ? schutz : []).filter((k) => typeof k === 'string' && !set.has(k)));
   const d = new Date();
   const learnedToday = set.has(dayKey(d));
   if (!learnedToday) d.setDate(d.getDate() - 1);
@@ -101,18 +103,34 @@ export function computeStreak(days: string[]): { current: number; best: number; 
   const skipSunday = () => { if (d.getDay() === 0 && !set.has(dayKey(d))) d.setDate(d.getDate() - 1); };
   skipSunday();
   let current = 0;
-  while (set.has(dayKey(d))) { current++; d.setDate(d.getDate() - 1); skipSunday(); }
+  while (set.has(dayKey(d)) || frei.has(dayKey(d))) { if (set.has(dayKey(d))) current++; d.setDate(d.getDate() - 1); skipSunday(); }
   let best = 0, run = 0, prev: Date | null = null;
-  Array.from(set).sort().forEach(k => {
+  Array.from(new Set([...set, ...frei])).sort().forEach(k => {
     const [y, m, dd] = k.split('-').map(Number);
     const cur = new Date(y, m - 1, dd);
     const gap = prev ? Math.round((cur.getTime() - prev.getTime()) / 86400000) : 0;
     const sundayBetween = gap === 2 && prev ? new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1).getDay() === 0 : false;
-    run = prev && (gap === 1 || sundayBetween) ? run + 1 : 1;
+    const zaehlt = set.has(k) ? 1 : 0;
+    run = prev && (gap === 1 || sundayBetween) ? run + zaehlt : zaehlt;
     best = Math.max(best, run);
     prev = cur;
   });
   return { current, best: Math.max(best, current), learnedToday };
+}
+
+/** Serien-Schutz: verpasste Arbeitstage (ohne Sonntag) zwischen dem letzten Lerntag und heute */
+export function verpassteTage(days: string[], schutz: string[] = [], now = new Date()): string[] {
+  const set = new Set([...(days || []), ...(schutz || [])]);
+  if (!(days || []).length) return [];
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const out: string[] = [];
+  for (let i = 0; i < 14; i++) {
+    d.setDate(d.getDate() - 1);
+    const k = dayKey(d);
+    if (set.has(k)) return out.reverse();
+    if (d.getDay() !== 0) out.push(k);
+  }
+  return []; // zu lange her: da hilft kein Schutz mehr
 }
 
 // ── Stufen: aus den gesammelten Punkten ──

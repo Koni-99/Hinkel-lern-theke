@@ -22,7 +22,16 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 'a_muffin', kind: 'avatar', icon: '🧁', label: 'Muffin', price: 500 },
   { id: 'a_kuchen', kind: 'avatar', icon: '🍰', label: 'Kuchenstück', price: 750 },
   { id: 'a_kaffee', kind: 'avatar', icon: '🥧', label: 'Obstkuchen', price: 750 },
-  { id: 'a_torte', kind: 'avatar', icon: '🎂', label: 'Torte', price: 1250 },
+  // Version 226: Torte ersetzt (Hinkel verkauft keine Torten). Wer sie gekauft hat, behält sein altes Zeichen.
+  { id: 'a_torte', kind: 'avatar', icon: '🍩', label: 'Berliner', price: 1250 },
+  { id: 'a_aehre', kind: 'avatar', icon: '🌾', label: 'Ähre', price: 300 },
+  { id: 'a_apfel', kind: 'avatar', icon: '🍎', label: 'Apfel', price: 300 },
+  { id: 'a_butter', kind: 'avatar', icon: '🧈', label: 'Butter', price: 350 },
+  { id: 'a_kirsche', kind: 'avatar', icon: '🍒', label: 'Kirsche', price: 350 },
+  { id: 'a_nuss', kind: 'avatar', icon: '🌰', label: 'Haselnuss', price: 400 },
+  { id: 'a_honig', kind: 'avatar', icon: '🍯', label: 'Honig', price: 450 },
+  { id: 'a_schoko', kind: 'avatar', icon: '🍫', label: 'Schokolade', price: 450 },
+  { id: 'a_kueken', kind: 'avatar', icon: '🐥', label: 'Hinkel-Küken', price: 1800 },
   { id: 'a_koch', kind: 'avatar', icon: '🧑‍🍳', label: 'Bäckermütze', price: 1500 },
   { id: 'a_stern', kind: 'avatar', icon: '🌟', label: 'Goldstern', price: 2000 },
   { id: 'a_krone', kind: 'avatar', icon: '👑', label: 'Krone', price: 2500 },
@@ -34,12 +43,25 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 's_kuerbis', kind: 'avatar', icon: '🎃', label: 'Kürbis', price: 600, months: [10] },
   { id: 's_laterne', kind: 'avatar', icon: '🏮', label: 'Laterne', price: 600, months: [11] },
   { id: 's_baum', kind: 'avatar', icon: '🎄', label: 'Tannenbaum', price: 600, months: [12] },
+  { id: 's_feuerwerk', kind: 'avatar', icon: '🎆', label: 'Silvester', price: 600, months: [12, 1] },
+  { id: 's_herz', kind: 'avatar', icon: '💝', label: 'Herzchen', price: 600, months: [2] },
+  { id: 's_klee', kind: 'avatar', icon: '🍀', label: 'Glücksklee', price: 600, months: [3] },
+  { id: 's_tulpe', kind: 'avatar', icon: '🌷', label: 'Tulpe', price: 600, months: [4, 5] },
+  { id: 's_sonnenblume', kind: 'avatar', icon: '🌻', label: 'Sonnenblume', price: 600, months: [6, 7, 8] },
+  { id: 's_zimtstern', kind: 'avatar', icon: '⭐', label: 'Zimtstern', price: 600, months: [11, 12] },
+  { id: 's_nikolaus', kind: 'avatar', icon: '🎅', label: 'Nikolaus', price: 600, months: [12] },
   { id: 't_bote', kind: 'title', icon: '🏷️', label: 'Brötchen-Bote', price: 400 },
   { id: 't_talent', kind: 'title', icon: '🏷️', label: 'Theken-Talent', price: 600 },
   { id: 't_brezel', kind: 'title', icon: '🏷️', label: 'Brezel-Profi', price: 1000 },
   { id: 't_kasse', kind: 'title', icon: '🏷️', label: 'Kassen-Ass', price: 1250 },
   { id: 't_liebling', kind: 'title', icon: '🏷️', label: 'Kundenliebling', price: 2000 },
   { id: 't_legende', kind: 'title', icon: '🏷️', label: 'Theken-Legende', price: 3000 },
+  { id: 't_frueh', kind: 'title', icon: '🏷️', label: 'Frühaufsteher', price: 500 },
+  { id: 't_team', kind: 'title', icon: '🏷️', label: 'Teamplayer', price: 700 },
+  { id: 't_allergen', kind: 'title', icon: '🏷️', label: 'Allergen-Profi', price: 800 },
+  { id: 't_telefon', kind: 'title', icon: '🏷️', label: 'Telefon-Ass', price: 800 },
+  { id: 't_stollen', kind: 'title', icon: '🏷️', label: 'Stollen-Kenner', price: 900 },
+  { id: 't_sauerteig', kind: 'title', icon: '🏷️', label: 'Sauerteig-Held', price: 1000 },
   { id: 'th_schoko', kind: 'theme', icon: '🍫', label: 'Schokolade', price: 1000, desc: 'Warme Karamell- und Schokotöne' },
   { id: 'th_pistazie', kind: 'theme', icon: '🟢', label: 'Pistazie', price: 1000, desc: 'Frisches Pistaziengrün' },
   { id: 'th_erdbeere', kind: 'theme', icon: '🍓', label: 'Erdbeere', price: 1000, desc: 'Fruchtiges Erdbeerrosa' },
@@ -56,15 +78,19 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 'fx_puls', kind: 'effect', icon: '💓', label: 'Pulsieren', price: 500, desc: 'Dein Zeichen schlägt wie ein Herz.' },
   { id: 'fx_schein', kind: 'effect', icon: '🌈', label: 'Regenbogen', price: 900, desc: 'Dein Zeichen leuchtet bunt.' },
   { id: 'fx_wackel', kind: 'effect', icon: '〰️', label: 'Wackeln', price: 400, desc: 'Dein Zeichen wackelt fröhlich.' },
+  { id: 'fx_schaukel', kind: 'effect', icon: '🎠', label: 'Schaukeln', price: 500, desc: 'Dein Zeichen schaukelt hin und her.' },
+  { id: 'fx_schweben', kind: 'effect', icon: '🎈', label: 'Schweben', price: 700, desc: 'Dein Zeichen schwebt sanft auf und ab.' },
+  { id: 'fx_flip', kind: 'effect', icon: '🔃', label: 'Umdrehen', price: 700, desc: 'Dein Zeichen dreht sich wie eine Münze.' },
   { id: 'j_5050', kind: 'joker', icon: '🃏', label: '50:50-Joker', price: 200, desc: 'Lernen-Quiz: zwei falsche Antworten verschwinden.' },
   { id: 'j_swap', kind: 'joker', icon: '🔄', label: 'Tausch-Joker', price: 150, desc: 'Lernen-Quiz: die Frage gegen eine andere tauschen.' },
   { id: 'j_time', kind: 'joker', icon: '⏱️', label: 'Zeit-Joker', price: 150, desc: 'Quiz Battle: 10 Sekunden mehr für eine Frage.' },
   { id: 'j_double', kind: 'joker', icon: '✖️', label: 'Doppel-Joker', price: 400, desc: 'Lernen-Quiz: die Punkte für ein ganzes Quiz verdoppeln.' },
   { id: 'j_spin', kind: 'joker', icon: '🎟️', label: 'Extra-Dreh', price: 300, desc: 'Glücksrad: einmal zusätzlich drehen.' },
+  { id: 'j_schutz', kind: 'joker', icon: '🛡️', label: 'Serien-Schutz', price: 250, desc: 'Lern-Serie: Wenn du einen Tag nicht lernst, bleibt deine Serie trotzdem erhalten. Wird automatisch eingesetzt.' },
   { id: 'j_los', kind: 'joker', icon: '🎫', label: 'Rubbellos', price: 50, desc: 'Frei rubbeln und gewinnen: Punkte, Trinkgeld oder ein Joker. Mit etwas Glück ein seltenes Goldlos mit 5.000 Punkten! Startseite unter „Heute für dich“.' },
 ];
 
-export const JOKER_FIELD: Record<string, string> = { j_5050: '_jokers', j_swap: '_jokersSwap', j_time: '_jokersTime', j_double: '_jokersDouble', j_spin: '_jokersSpin', j_los: '_jokersLos' };
+export const JOKER_FIELD: Record<string, string> = { j_5050: '_jokers', j_swap: '_jokersSwap', j_time: '_jokersTime', j_double: '_jokersDouble', j_spin: '_jokersSpin', j_los: '_jokersLos', j_schutz: '_jokersSchutz' };
 
 /** Tagesangebot: jeden Tag ein anderes Teil zum halben Preis */
 export const dealOfDay = (d = new Date()): ShopItem => {
@@ -100,6 +126,7 @@ export function ShopIcon3D({ k, size = 52 }: { k: string; size?: number }) {
       {k === 'j_double' && <g><circle cy="3" r="20" fill="#A87A0E" /><circle r="20" fill="url(#shGold)" stroke="#A87A0E" strokeWidth="1.4" /><circle r="14" fill="none" stroke="rgba(168,122,14,.6)" strokeWidth="1.6" /><text y="1" textAnchor="middle" dominantBaseline="central" fontSize="17" fontWeight="900" fill="#7A5300" fontFamily="Arial, sans-serif">×2</text><ellipse cx="-7" cy="-10" rx="7" ry="3.4" fill="rgba(255,255,255,.7)" /></g>}
       {k === 'j_spin' && <g><circle r="20" fill="#1F140C" />{Array.from({ length: 8 }, (_, i) => { const a0 = (i * 45 - 90) * Math.PI / 180, a1 = ((i + 1) * 45 - 90) * Math.PI / 180; return <path key={i} d={`M0 0L${17 * Math.cos(a0)} ${17 * Math.sin(a0)}A17 17 0 0 1 ${17 * Math.cos(a1)} ${17 * Math.sin(a1)}Z`} fill={i % 2 ? '#FFF6E0' : '#FFC72C'} />; })}<circle r="5" fill="url(#shGold)" stroke="#1F140C" strokeWidth="1.6" /><path d="M0-24l4 6h-8z" fill="#D92D20" /><ellipse cx="-7" cy="-9" rx="7" ry="3.4" fill="rgba(255,255,255,.35)" /></g>}
       {k === 'j_los' && <g transform="rotate(-8)"><path d="M-22-13h44v8a5 5 0 0 0 0 10v8h-44v-8a5 5 0 0 0 0-10z" fill="url(#shTicket)" stroke="#A87A0E" strokeWidth="1.2" /><rect x="-15" y="-7" width="30" height="14" rx="3" fill="url(#shSilver)" /><path d="M-11 0h22" stroke="rgba(255,255,255,.9)" strokeWidth="2" strokeDasharray="3 3" /><text x="0" y="-10.5" textAnchor="middle" fontSize="5" fontWeight="900" fill="#7A5300" fontFamily="Arial, sans-serif">RUBBELLOS</text></g>}
+      {k === 'j_schutz' && <g><path d="M0-22l17 6v10c0 12-8 20-17 24-9-4-17-12-17-24v-10z" fill="url(#shBlue)" stroke="#1E4E9A" strokeWidth="1.4" strokeLinejoin="round" /><path d="M0-16l11 4v6c0 8-5 13-11 16z" fill="rgba(255,255,255,.28)" /><path d="M-7 1l5 5 9-10" stroke="#FFFFFF" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round" /></g>}
       {k === 'diamond' && <g><path d="M-18-6l8-10h20l8 10-18 22z" fill="url(#shGem)" stroke="#1E6FB8" strokeWidth="1.2" strokeLinejoin="round" /><path d="M-18-6h36M-10-16l4 10 6 22M10-16l-4 10-6 22M-6-6l6-10 6 10" stroke="rgba(255,255,255,.65)" strokeWidth="1" fill="none" /><path d="M-12-12l3-3" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" /></g>}
       {k === 'coin' && <g><circle cy="3" r="18" fill="#A87A0E" /><circle r="18" fill="url(#shGold)" stroke="#A87A0E" strokeWidth="1.4" /><text y="1" textAnchor="middle" dominantBaseline="central" fontSize="18" fontWeight="900" fill="#7A5300" fontFamily="Arial, sans-serif">€</text><ellipse cx="-6" cy="-9" rx="6" ry="3" fill="rgba(255,255,255,.7)" /></g>}
       {k === 'star' && <g><polygon points={Array.from({ length: 10 }, (_, i) => { const a = (i * Math.PI) / 5 - Math.PI / 2, r = i % 2 ? 9 : 20; return `${Math.cos(a) * r},${Math.sin(a) * r}`; }).join(' ')} fill="url(#shGold)" stroke="#A87A0E" strokeWidth="1.2" strokeLinejoin="round" /><ellipse cx="-5" cy="-7" rx="5" ry="2.6" fill="rgba(255,255,255,.75)" /></g>}
@@ -130,12 +157,18 @@ export const PT_SHOP: PtItem[] = [
   { id: 'pt_fr_herz', kind: 'frame', icon: '♥', label: 'Bon-Rahmen Herzen', price: 4000, desc: 'Herzen um deinen Namen auf dem Bestenlisten-Bon.' },
   { id: 'pt_fr_croissant', kind: 'frame', icon: '🥐', label: 'Bon-Rahmen Croissants', price: 4500, desc: 'Croissants um deinen Namen auf dem Bestenlisten-Bon.' },
   { id: 'pt_fr_krone', kind: 'frame', icon: '👑', label: 'Bon-Rahmen Kronen', price: 6000, desc: 'Kronen um deinen Namen auf dem Bestenlisten-Bon.' },
+  { id: 'pt_fr_aehre', kind: 'frame', icon: '🌾', label: 'Bon-Rahmen Ähren', price: 4000, desc: 'Ähren um deinen Namen auf dem Bestenlisten-Bon.' },
+  { id: 'pt_fr_schnee', kind: 'frame', icon: '❄', label: 'Bon-Rahmen Schnee', price: 4500, desc: 'Schneeflocken um deinen Namen auf dem Bestenlisten-Bon.' },
+  { id: 'pt_fr_kueken', kind: 'frame', icon: '🐥', label: 'Bon-Rahmen Küken', price: 5000, desc: 'Hinkel-Küken um deinen Namen auf dem Bestenlisten-Bon.' },
   { id: 'pt_av_krone', kind: 'avatar', icon: '👑', label: 'Krone', price: 6000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
   { id: 'pt_av_einhorn', kind: 'avatar', icon: '🦄', label: 'Einhorn', price: 6000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
   { id: 'pt_av_drache', kind: 'avatar', icon: '🐉', label: 'Drache', price: 8000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
   { id: 'pt_av_phoenix', kind: 'avatar', icon: '🦚', label: 'Pfau', price: 8000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
   { id: 'pt_av_rakete', kind: 'avatar', icon: '🚀', label: 'Rakete', price: 7000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
   { id: 'pt_av_diamant', kind: 'avatar', icon: '💎', label: 'Diamant', price: 12000, desc: 'Das seltenste Zeichen.' },
+  { id: 'pt_av_biene', kind: 'avatar', icon: '🐝', label: 'Biene', price: 6000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
+  { id: 'pt_av_eule', kind: 'avatar', icon: '🦉', label: 'Eule', price: 7000, desc: 'Seltenes Zeichen, gibt es nur hier.' },
+  { id: 'pt_av_goldkueken', kind: 'avatar', icon: '🐤', label: 'Goldküken', price: 10000, desc: 'Das Küken von Hinkel, in seltener Gold-Ausgabe.' },
   { id: 'pt_mk_croissant', kind: 'markise', icon: '🥐', label: 'Markise Croissants', price: 8000, desc: 'Deine Markise oben auf der Startseite: Croissants.' },
   { id: 'pt_mk_keks', kind: 'markise', icon: '🍪', label: 'Markise Kekse', price: 8000, desc: 'Deine Markise oben auf der Startseite: Kekse.' },
   { id: 'pt_mk_brezel', kind: 'markise', icon: '🥨', label: 'Markise Brezeln', price: 8000, desc: 'Deine Markise oben auf der Startseite: Brezeln.' },
@@ -152,11 +185,15 @@ export const PT_SHOP: PtItem[] = [
   { id: 'pt_mk_lavendel', kind: 'markise', icon: '💜', label: 'Markise Lavendel-Streifen', price: 7000, desc: 'Deine Markise oben auf der Startseite: Lavendel-Streifen.' },
   { id: 'pt_mk_regenbogen', kind: 'markise', icon: '🌈', label: 'Markise Regenbogen', price: 12000, desc: 'Deine Markise oben auf der Startseite: Regenbogen.' },
   { id: 'pt_mk_nacht', kind: 'markise', icon: '🌙', label: 'Markise Mitternachtsblau', price: 9000, desc: 'Deine Markise oben auf der Startseite: Mitternachtsblau.' },
+  { id: 'pt_mk_kueken', kind: 'markise', icon: '🐥', label: 'Markise Küken', price: 9000, desc: 'Deine Markise oben auf der Startseite: Hinkel-Küken.' },
+  { id: 'pt_mk_sonnenblume', kind: 'markise', icon: '🌻', label: 'Markise Sonnenblumen', price: 8000, desc: 'Deine Markise oben auf der Startseite: Sonnenblumen.' },
   { id: 'pt_spruch', kind: 'spruch', icon: '💬', label: 'Spruch des Tages', price: 15000, desc: 'Dein Satz steht einen Tag lang bei allen auf der Startseite. Der Ausbilder gibt ihn vorher frei.' },
 ];
 
-export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPts, onEquipPts }: { prog: any; onBuy: (it: ShopItem) => void; onEquip: (kind: 'avatar' | 'title' | 'theme' | 'effect', value: string | null) => void; onClose: () => void; ptsBalance?: number; onBuyPts?: (it: PtItem, text?: string) => void; onEquipPts?: (it: PtItem, on: boolean) => void }) {
+export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPts, onEquipPts, kollegen = [], onSchenken, geschenkeHeute = 0 }: { kollegen?: { k: string; name: string }[]; onSchenken?: (jokerId: string, an: string, anName: string) => void; geschenkeHeute?: number; prog: any; onBuy: (it: ShopItem) => void; onEquip: (kind: 'avatar' | 'title' | 'theme' | 'effect', value: string | null) => void; onClose: () => void; ptsBalance?: number; onBuyPts?: (it: PtItem, text?: string) => void; onEquipPts?: (it: PtItem, on: boolean) => void }) {
   const [spruch, setSpruch] = useState('');
+  const [gJoker, setGJoker] = useState('j_los');
+  const [gAn, setGAn] = useState('');
   const balance = (Number(prog._tipCents) || 0) - (Number(prog._tipSpent) || 0);
   const owned: string[] = Array.isArray(prog._shopOwned) ? prog._shopOwned : [];
   const [tab, setTab] = useState<ShopTab>('zeichen');
@@ -339,6 +376,49 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
               {list(tab).map(item)}
             </div>
           </div>}
+          {tab === 'titel' && (
+            <div className="lt-sammelsets" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px 16px', borderRadius: '18px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)' }}>
+              <div style={{ fontWeight: 800, fontSize: '17px' }}>Sammel-Sets</div>
+              <div style={{ fontSize: '14px', color: LT.brown }}>Hast du alle Teile einer Reihe, bekommst du einen seltenen Bonus-Titel geschenkt. Den gibt es nicht zu kaufen.</div>
+              {setStand(owned).map((st) => {
+                const an = prog._title === st.titel;
+                return (
+                  <div key={st.id} className="lt-sammelset" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 12px', borderRadius: '14px', backgroundColor: st.voll ? '#FFF4C7' : '#FBF6EC' }}>
+                    <span style={{ flex: '1 1 180px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 800 }}>{st.name} <span style={{ fontWeight: 600, color: LT.muted }}>· Bonus-Titel „{st.titel}“</span></span>
+                      <span style={{ display: 'block', height: '8px', borderRadius: '4px', backgroundColor: '#EADCC3', overflow: 'hidden' }}><span style={{ display: 'block', height: '100%', width: `${Math.round((st.hat / st.teile.length) * 100)}%`, backgroundColor: st.voll ? '#2F7A3E' : '#FFC72C' }} /></span>
+                      <span style={{ fontSize: '13px', color: LT.muted }}>{st.hat} von {st.teile.length} Teilen</span>
+                    </span>
+                    {st.voll && <button type="button" onClick={() => onEquip('title', an ? null : st.titel)} style={{ minHeight: '40px', padding: '0 14px', borderRadius: '999px', border: 'none', backgroundColor: an ? '#2F7A3E' : '#1F140C', color: an ? '#FFFFFF' : '#FFD86B', fontWeight: 800, fontSize: '14px', cursor: 'pointer' }}>{an ? '✓ an' : 'anlegen'}</button>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {tab === 'joker' && onSchenken && kollegen.length > 0 && (() => {
+            const j = TIP_SHOP.find((i) => i.id === gJoker);
+            const wer = kollegen.find((x) => x.k === gAn);
+            const frei = Math.max(0, 3 - geschenkeHeute);
+            const geht = !!j && !!wer && frei > 0 && balance >= j.price;
+            return (
+              <div className="lt-schenken" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px 16px', borderRadius: '18px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)' }}>
+                <div style={{ fontWeight: 800, fontSize: '17px' }}>Einem Kollegen etwas schenken</div>
+                <div style={{ fontSize: '14px', color: LT.brown }}>Du bezahlst mit deinem Trinkgeld, dein Kollege bekommt beim nächsten Öffnen der App ein Pop-up mit deinem Geschenk. Bis zu 3 Geschenke am Tag{frei < 3 ? `, heute noch ${frei}` : ''}.</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {['j_los', 'j_5050', 'j_swap', 'j_time', 'j_spin', 'j_schutz', 'j_double'].map((id) => { const it = TIP_SHOP.find((i) => i.id === id); if (!it) return null; const on = gJoker === id; return (
+                    <button key={id} type="button" aria-pressed={on} onClick={() => setGJoker(id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '44px', padding: '0 12px 0 6px', borderRadius: '999px', border: on ? '2px solid #1F140C' : '2px solid #E3D6BE', backgroundColor: on ? '#FFF4C7' : '#FFFFFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer', color: LT.ink }}><ShopIcon3D k={id} size={26} />{it.label} · {tipEuro(it.price)}</button>
+                  ); })}
+                </div>
+                <select value={gAn} onChange={(e) => setGAn(e.target.value)} aria-label="Kollege auswählen" style={{ minHeight: '46px', padding: '0 12px', borderRadius: '12px', border: '2px solid #E3D6BE', fontSize: '16px', backgroundColor: '#FFFFFF', color: LT.ink }}>
+                  <option value="">Wem möchtest du etwas schenken?</option>
+                  {kollegen.map((x) => <option key={x.k} value={x.k}>{x.name}</option>)}
+                </select>
+                <button type="button" disabled={!geht} onClick={() => { if (!geht || !j || !wer) return; onSchenken(j.id, wer.k, wer.name); setRing((r) => r + 1); setGAn(''); }} style={{ minHeight: '48px', borderRadius: '999px', border: 'none', backgroundColor: geht ? '#1F140C' : '#CBBBA4', color: geht ? '#FFD86B' : '#FFFFFF', fontWeight: 800, fontSize: '16px', cursor: geht ? 'pointer' : 'default' }}>
+                  {!wer ? 'Erst einen Kollegen auswählen' : frei === 0 ? 'Heute schon 3 Geschenke verschickt' : j && balance < j.price ? `Noch ${tipEuro(j.price - balance)} Trinkgeld nötig` : `${j?.label} an ${wer.name} schenken (${tipEuro(j?.price || 0)})`}
+                </button>
+              </div>
+            );
+          })()}
           {tab === 'joker' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: LT.brown, padding: '14px 16px', borderRadius: '18px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)' }}>
               {list('joker').map(j => <div key={j.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ flex: '0 0 auto' }}><ShopIcon3D k={j.id} size={30} /></span><span><strong>{j.label}:</strong> {j.desc}</span></div>)}
@@ -367,3 +447,22 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
     </div>
   );
 }
+
+/** Zeichen der Bon-Rahmen (Bestenliste) */
+export const RAHMEN_ZEICHEN: Record<string, string> = Object.fromEntries(PT_SHOP.filter((i) => i.kind === 'frame').map((i) => [i.id, i.icon]));
+
+// ── Sammel-Sets (Version 226): wer alle Teile einer Reihe hat, bekommt einen seltenen Bonus-Titel ──
+export type SammelSet = { id: string; name: string; titel: string; teile: string[] };
+const ids = (f: (i: ShopItem) => boolean) => TIP_SHOP.filter(f).map((i) => i.id);
+export const SAMMEL_SETS: SammelSet[] = [
+  { id: 'brot', name: 'Brotkorb', titel: 'Brotkorb-Meister', teile: ['a_brot', 'a_brezel', 'a_croissant', 'a_baguette', 'a_aehre'] },
+  { id: 'suess', name: 'Süße Theke', titel: 'Naschkatze', teile: ['a_keks', 'a_muffin', 'a_kuchen', 'a_kaffee', 'a_torte', 'a_schoko'] },
+  { id: 'zutaten', name: 'Gute Zutaten', titel: 'Rezept-Kenner', teile: ['a_butter', 'a_honig', 'a_apfel', 'a_nuss', 'a_kirsche'] },
+  { id: 'bewegung', name: 'Alle Bewegungen', titel: 'Show-Talent', teile: ids((i) => i.kind === 'effect') },
+  { id: 'farben', name: 'Alle Farben', titel: 'Farbkünstler', teile: ids((i) => i.kind === 'theme') },
+  { id: 'jahr', name: 'Jahreszeiten', titel: 'Jahres-Sammler', teile: ids((i) => i.kind === 'avatar' && !!i.months) },
+];
+export const setStand = (owned: string[]) => SAMMEL_SETS.map((st) => {
+  const hat = st.teile.filter((t) => owned.includes(t)).length;
+  return { ...st, hat, voll: hat === st.teile.length };
+});

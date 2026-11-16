@@ -1,3 +1,4 @@
+import { RAHMEN_ZEICHEN } from '../basis/laden';
 import { useState } from "react";
 import { dc } from '../daten/data';
 import { monthChampions, monthTotals, monthKeyOf, prevMonthKey, monthLabel } from '../ui/kalender';
@@ -322,7 +323,7 @@ export function ScoreboardView({
                       }}
                     >
                       <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {i + 1} {i === 0 ? <span className="lt-emo-spin">★</span> : "·"} {(() => { const pr = cloudProgress[r.key] || {}; const fr = ({ pt_fr_sterne: "✦", pt_fr_brezel: "🥨", pt_fr_herz: "♥", pt_fr_croissant: "🥐", pt_fr_krone: "👑" } as Record<string, string>)[pr._frame] || ""; return <>{fr && <span className="sb-frame">{fr} </span>}{(() => { const av = pr._avatar ? String(pr._avatar) : ""; const fc = frameFor(r.key); const cls = pr._nameColor ? `lt-nc lt-nc-${String(pr._nameColor).replace("pt_nc_", "")}` : pr._gold ? "lt-goldname" : undefined; if (!av || !fc || !r.name.includes(av + " ")) return <span className={cls}>{r.name.toUpperCase()}</span>; const [pre, post] = [r.name.slice(0, r.name.indexOf(av + " ")), r.name.slice(r.name.indexOf(av + " ") + av.length + 1)]; return <>{pre}<span className={fc} title="Rahmen nach Stufe" style={{ width: "1.9em", height: "1.9em" }}>{av}</span> <span className={cls}>{post.toUpperCase()}</span></>; })()}{fr && <span className="sb-frame"> {fr}</span>}</>; })()}{isMe ? " (DU)" : ""}
+                        {i + 1} {i === 0 ? <span className="lt-emo-spin">★</span> : "·"} {(() => { const pr = cloudProgress[r.key] || {}; const fr = RAHMEN_ZEICHEN[pr._frame] || ""; return <>{fr && <span className="sb-frame">{fr} </span>}{(() => { const av = pr._avatar ? String(pr._avatar) : ""; const fc = frameFor(r.key); const cls = pr._nameColor ? `lt-nc lt-nc-${String(pr._nameColor).replace("pt_nc_", "")}` : pr._gold ? "lt-goldname" : undefined; if (!av || !fc || !r.name.includes(av + " ")) return <span className={cls}>{r.name.toUpperCase()}</span>; const [pre, post] = [r.name.slice(0, r.name.indexOf(av + " ")), r.name.slice(r.name.indexOf(av + " ") + av.length + 1)]; return <>{pre}<span className={fc} title="Rahmen nach Stufe" style={{ width: "1.9em", height: "1.9em" }}>{av}</span> <span className={cls}>{post.toUpperCase()}</span></>; })()}{fr && <span className="sb-frame"> {fr}</span>}</>; })()}{isMe ? " (DU)" : ""}
                       </span>
                       <span style={{ whiteSpace: "nowrap" }}>{r.value}</span>
                     </div>
