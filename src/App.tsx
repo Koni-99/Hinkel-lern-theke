@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 230;
+const APP_VERSION: number = 231;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -19,6 +19,7 @@ import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } fro
 import { alleIdeen } from './hilfen/rueckmeldungen';
 import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen } from './hilfen/nachrichten';
 import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
+import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { geschenkSchicken, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
 import { alleRanglisten } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
@@ -63,7 +64,7 @@ import { mitShopFotos, mitZufallsFotos, setEigeneFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
-import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
+import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, teigiStand, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
 import { wxKindOf, WxIcon } from './basis/fakten';
 import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
@@ -2719,6 +2720,9 @@ export default function App() {
 
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
+      {!isAdmin && Array.isArray(myProg._shopOwned) && myProg._shopOwned.includes('h_teigi') && (GAME_TABS.includes(activeTab) && activeTab !== 'spielen' || (activeTab === 'quiz' && quizList.length > 0 && !quizFinished && selectedLevel !== null)) && (
+        <TeigiBegleiter stufe={teigiStand(Array.isArray(myProg._days) ? myProg._days : [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} />
+      )}
       {tuetenInhalt && (
         <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div className="lt-dialog lt-pop-in lt-tuete-popup" role="dialog" aria-modal="true" aria-label="Überraschungstüte" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '380px', backgroundColor: LT.cream, borderRadius: '24px', padding: '26px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>

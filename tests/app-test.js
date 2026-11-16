@@ -665,7 +665,7 @@ async function offlineTests() {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
     const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
     const probe = JSON.parse(JSON.stringify(SAMPLE));
-    probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1 };
+    probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1, _shopOwned: ['h_teigi'], _teigiStart: 0 };
     const d = await device({ user: 'Anna', backup: probe });
     await clearPopups(d.page);
     await click(nav(d.page).nth(1)); await settle(d.page);
@@ -687,6 +687,17 @@ async function offlineTests() {
     if (falsch >= 0) { await click(opts.nth(falsch)); await settle(d.page, 400); }
     const nochOffen = (await d.page.locator('.lt-qcard.lt-ans-bad, .lt-qcard.lt-ans-ok').count()) === 0;
     ok('Zweite Chance: falsche Antwort zählt nicht, man darf nochmal', an && falsch >= 0 && nochOffen && (await opts.count()) === nachHinweis - 1 && (await d.page.locator('.lt-chance-an').count()) === 0, `an ${an}, offen ${nochOffen}, ${await opts.count()} Antworten`);
+    // Version 231: Teigi begleitet im Quiz und reagiert auf Antworten
+    const begleiter = d.page.locator('.lt-teigi-begleiter');
+    ok('Teigi begleitet im Quiz (wer ihn gekauft hat)', (await begleiter.count()) === 1);
+    const opts2 = d.page.locator('button.lt-qopt:visible');
+    const frage2 = (await d.page.locator('.lt-frage').first().innerText()).trim();
+    const ziel2 = String(richtig.get(frage2) || '');
+    const r2 = (await opts2.allInnerTexts()).findIndex((t) => ziel2 && t.includes(ziel2));
+    if (r2 >= 0) { await click(opts2.nth(r2)); await d.page.waitForTimeout(250); }
+    ok('Teigi hüpft bei einer richtigen Antwort', (await d.page.locator('.lt-teigi-begleiter .lt-teigi-hops').count()) === 1);
+    await click(begleiter.locator('button')); await d.page.waitForTimeout(200);
+    ok('Teigi lässt sich antippen und ausblenden', (await begleiter.count()) === 0);
     ok('Neue Joker: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }

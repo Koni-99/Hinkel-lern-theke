@@ -166,5 +166,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 230: App durchgesehen (Rundgang 33 Seiten × Handy/Tablet/PC × hell/nacht, neuer Kontrast-Check im Scratchpad `kontrast.cjs`, Tüte/Teigi durchgespielt): keine Fehler. Aufgeräumt: Einarbeitung/„Erste Woche mit der App“ ohne Emojis (`icon` in `ONBOARDING_DAYS`/`APP_WEEK_DAYS` ist jetzt ein `ICON`-Name, `LtIcon`). `tools/stimme/erzeugen.mjs --aufraeumen` löscht Hör-Lernen-Dateien ohne Frage (aktuell 0). Fotos: keine ohne Produkt
 
+- 231: **Teigi begleitet beim Lernen und Spielen** (Nutzer wählte Begleiter + Sprüche): `src/ui/teigiBegleiter.tsx` (`TeigiBegleiter`, Sprüche `teigiSpruch`: Serie 3/5/10/15/20 immer, falsch meist, richtig ~35 %), nur wenn `h_teigi` gekauft, im Quiz (laufend) und allen Spiel-Reitern außer der Spiele-Auswahl. `AnswerFx` (`ui/antwortFx.tsx`) schickt bei jeder Antwort das Ereignis `lt-teigi` {ok, lauf} → gilt automatisch für alle Spiele mit AnswerFx (nicht Theken-Ansturm, Telefon). Position am Handy unten links (unten rechts sitzt „Fehler melden“), Sprechblase daneben, `body.lt-mit-teigi main` bekommt unten Platz; PC unten rechts. Antippen = bis zum nächsten App-Start weg (`sessionStorage lt_teigi_weg`)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

@@ -55,7 +55,13 @@ export function comboReset() { try { document.body.classList.remove('lt-hot'); }
 
 export function AnswerFx({ fx, streakIcon = '🔥' }: { fx: AnswerFxState; streakIcon?: string; pos?: 'top' | 'bottom' }) {
   const fxKey = fx ? `${fx.k}|${fx.ok}` : null;
-  useEffect(() => { if (fx) { comboRegister(!!fx.ok, fx.pts); try { document.body.classList.toggle('lt-hot', comboRun >= 5); } catch { /* egal */ } } }, [fxKey]);
+  useEffect(() => {
+    if (!fx) return;
+    comboRegister(!!fx.ok, fx.pts);
+    try { document.body.classList.toggle('lt-hot', comboRun >= 5); } catch { /* egal */ }
+    // Teigi-Begleiter (Version 231) bekommt jede Antwort mit
+    try { window.dispatchEvent(new CustomEvent('lt-teigi', { detail: { ok: !!fx.ok, lauf: fx.ok ? Math.max(comboRun, fx.streak || 0) : 0 } })); } catch { /* egal */ }
+  }, [fxKey]);
   if (!fx) return null;
   return (
     <div key={fx.k} className="lt-fx" aria-hidden="true">
