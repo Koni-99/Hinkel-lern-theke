@@ -568,6 +568,31 @@ async function offlineTests() {
     ok('Startseite neu: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 221: Tüten-Blitz: Produktname passt am Handy in die Karte, Punkte begrenzt (1 pro Tüte, ab 10 in Folge 2)
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 360, height: 780 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Tüten-Blitz' }).first()); await settle(d.page, 800);
+    await click(d.page.getByRole('button', { name: /Tüten-Blitz starten/ })); await settle(d.page, 600);
+    let gesehen = 0;
+    let zuBreit = 0, punkte = 0;
+    for (let i = 0; i < 25; i++) {
+      const name = d.page.locator('main div', { hasText: /.+/ }).filter({ has: d.page.locator('xpath=self::*[contains(@style,"clamp(24px")]') });
+      const breit = await d.page.evaluate(() => { const el = [...document.querySelectorAll('main div')].find((e) => (e.getAttribute('style') || '').includes('clamp(24px')); return el ? el.scrollWidth - el.clientWidth : 0; });
+      if (breit > 1) zuBreit++;
+      if (await d.page.evaluate(() => [...document.querySelectorAll('main div')].some((e) => (e.getAttribute('style') || '').includes('clamp(24px')))) gesehen++;
+      const knopf = d.page.locator('main button:visible', { hasText: /Nach (oben|unten)/ });
+      if (!(await knopf.count())) break;
+      await click(knopf.nth(i % 2)); await settle(d.page, 350);
+      void name;
+    }
+    punkte = Number((await d.page.locator('main').innerText()).match(/Punkte\s*(\d+)/)?.[1] || 0);
+    ok('Tüten-Blitz: Produktname passt am Handy in die Karte', gesehen >= 10 && zuBreit === 0, `${gesehen} Produkte gesehen, ${zuBreit} mal zu breit`);
+    ok('Tüten-Blitz: Punkte begrenzt (höchstens 2 pro Tüte)', punkte > 0 && punkte <= 50, `${punkte} Punkte nach 25 Tüten`);
+    ok('Tüten-Blitz: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;

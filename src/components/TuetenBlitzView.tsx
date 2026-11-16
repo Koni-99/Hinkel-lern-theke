@@ -64,7 +64,7 @@ export function TuetenBlitzView({
   useEffect(() => {
     if (gameState === 'playing' && timer === 0) {
       setGameState('result');
-      if (scoreRef.current > 0) onSaveScoreRef.current(scoreRef.current * 3, 'Tüten-Blitz 🛍️');
+      if (scoreRef.current > 0) onSaveScoreRef.current(scoreRef.current, 'Tüten-Blitz 🛍️');
     }
   }, [gameState, timer]);
 
@@ -85,15 +85,18 @@ export function TuetenBlitzView({
     nextRandomItem();
   };
 
+  // Punkte wie in den anderen Spielen (16.11. reduziert, vorher 10 + 2 × Serie ohne Grenze und am Ende × 3):
+  // 1 Punkt pro richtiger Tüte, ab 10 richtigen in Folge 2 Punkte
+  const proTuete = (serie: number) => (serie >= 10 ? 2 : 1);
   const handleChoice = (chosenCategory: 'heavy' | 'light') => {
     if (!currentItem || gameState !== 'playing' || feedback !== null) return;
 
     const isCorrect = currentItem.category === chosenCategory;
     if (isCorrect) setSeen(m => (m.some(x => x.name === currentItem.name) ? m : [...m, currentItem]));
 
-    setFx({ k: Date.now(), ok: isCorrect, pts: isCorrect ? 10 + streak * 2 : undefined, text: isCorrect ? `🛍️ +${10 + streak * 2}` : (chosenCategory === 'heavy' ? '✗ Gehört nach oben' : '✗ Gehört nach unten'), streak: isCorrect ? streak + 1 : 0 });
+    setFx({ k: Date.now(), ok: isCorrect, pts: isCorrect ? proTuete(streak) : undefined, text: isCorrect ? `🛍️ +${proTuete(streak)}` : (chosenCategory === 'heavy' ? '✗ Gehört nach oben' : '✗ Gehört nach unten'), streak: isCorrect ? streak + 1 : 0 });
     if (isCorrect) {
-      setScore(prev => prev + 10 + (streak * 2));
+      setScore(prev => prev + proTuete(streak));
       setStreak(prev => prev + 1);
       setFeedback('correct');
       triggerFeedback('correct');
@@ -140,7 +143,7 @@ export function TuetenBlitzView({
           <div className={feedback === 'correct' ? 'lt-correct' : feedback === 'wrong' ? 'lt-wrong' : undefined} style={{ ...cardStyle, backgroundColor: fbBg, border: `3px solid ${fbBorder}`, padding: '36px 24px', textAlign: 'center', transition: 'background-color .2s ease, border-color .2s ease', position: 'relative' }}>
             <AnswerFx fx={fx} />
             <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '2px' }}>Wohin damit?</div>
-            <div style={{ fontFamily: TH.serif, fontSize: '44px', lineHeight: 1.1, margin: '10px 0 12px' }}>{currentItem.name}</div>
+            <div style={{ fontFamily: TH.serif, fontSize: 'clamp(24px, 7.5vw, 44px)', lineHeight: 1.15, margin: '10px 0 12px', overflowWrap: 'anywhere', hyphens: 'auto' }} lang="de">{currentItem.name}</div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
             <button onClick={() => handleChoice('heavy')} style={{ minHeight: '96px', borderRadius: '20px', border: 'none', backgroundColor: TH.brown, color: dc('#FFF6E0'), cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
@@ -160,7 +163,7 @@ export function TuetenBlitzView({
           title="Tüte fertig gepackt"
           big={`${score} Punkte`}
           text="So viele Punkte hast du beim Tüten-Blitz geholt."
-          reward={score > 0 ? `+${score * 3} Punkte für die Bestenliste` : null}
+          reward={score > 0 ? `+${score} Punkte für die Bestenliste` : null}
           againLabel="Noch eine Runde"
           onAgain={startGame}
         />
