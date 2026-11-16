@@ -150,5 +150,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 222: **„Du wurdest überholt“ für alle Wertungen** (Nutzer bekam keine Meldung in einer Kategorie): vorher nur Gesamtpunkte. Jetzt `alleRanglisten()` in `src/hilfen/wertungen.ts` (Gesamt, Monat, jedes Spiel, Lernen & Quiz; auch von ScoreboardView benutzt: `cleanLabel`, `scoreGroup`, `GAME_NAMES`), Vergleich mit letztem Stand im Gerät (localStorage `lt_rang2_<name>`, übernimmt alten `lt_rank_<name>`), Toast „Ben hat dich bei „Tüten-Blitz“ überholt! Jetzt Platz 2.“, Karte auf der Startseite weiter nur für Gesamtpunkte. Meldung kommt beim Öffnen der App (kein Handy-Push, Nutzer will keine Erinnerung aufs Handy). Telefon-Bestellung fehlte in `GAME_NAMES` (landete unter Lernen & Quiz), jetzt eigene Wertung
 
+- 223: **Theken-Ansturm größere Fotos**: am Handy (bis 700px) 3 statt 4 pro Reihe (`.lt-ansturm-grid` in `theke-design.ts`), Kacheln 108 statt ~78px, alle 8 Waren passen weiter auf einen Bildschirm. Tablet/PC unverändert 4 (dort schon groß)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

@@ -630,7 +630,7 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
   .lt-root .lt-awning.lt-awning-sm{height:70px}.lt-root .lt-awning-sm .lt-logo{height:52px}
   .lt-dupnav{display:none !important}
   .lt-home-greet{display:contents !important}.lt-home>*{order:2}.lt-home-greet>div:first-child{order:0}.lt-home .lt-fact{order:0}.lt-home .lt-pod{order:1}.lt-home .lt-bake{order:1}.lt-home .lt-team{order:1}.lt-home .lt-hero-wrap{order:1}.lt-home .lt-herocard{order:2}
-  .lt-ansturm-grid{grid-template-columns:repeat(4,1fr) !important;gap:6px !important}.lt-ansturm-grid button{padding:3px !important;border-radius:10px !important;min-width:0 !important}.lt-ansturm-grid span{font-size:11px !important;overflow-wrap:anywhere;hyphens:auto}
+  .lt-ansturm-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:6px !important}.lt-ansturm-grid button{padding:2px !important;border-radius:10px !important;min-width:0 !important}.lt-ansturm-grid span{font-size:12px !important;overflow-wrap:anywhere;hyphens:auto}
   .lt-ansturm-order{position:sticky;top:6px;z-index:5;background:#FFFFFF;padding:6px 0;margin:-6px 0}
   .lt-statchip{min-width:0 !important;padding:6px 8px !important;border-radius:12px !important}.lt-statchip>div:first-child{font-size:11px !important;letter-spacing:0 !important}.lt-statchip>div:last-child{font-size:22px !important}
   .lt-float-report{writing-mode:horizontal-tb !important;transform:none !important;top:auto !important;bottom:96px !important;right:8px !important;border-radius:999px !important;border:2px solid #E2D2B6 !important;padding:6px 12px !important;font-size:13px !important;box-shadow:0 4px 12px rgba(75,42,20,.18)}

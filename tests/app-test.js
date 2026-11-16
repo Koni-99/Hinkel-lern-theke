@@ -593,6 +593,19 @@ async function offlineTests() {
     ok('Tüten-Blitz: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Ansturm' }).first()); await settle(d.page, 800);
+    await click(d.page.getByRole('button', { name: /Theke öffnen/ })); await settle(d.page, 800);
+    const breiten = await d.page.locator('.lt-ansturm-grid').evaluate((e) => [...e.children].map((c) => Math.round(c.getBoundingClientRect().width))).catch(() => []);
+    const ueber = await d.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+    ok('Theken-Ansturm: Fotos am Handy groß (3 pro Reihe)', breiten.length === 8 && Math.min(...breiten) >= 100 && ueber <= 1, `Breiten ${breiten.join(',')}, über ${ueber}px`);
+    ok('Theken-Ansturm: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
