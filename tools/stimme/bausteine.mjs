@@ -35,9 +35,19 @@ const T = req(path.join(tmp, 'games/telefonLogik.js'));
 const B = req(path.join(tmp, 'hilfen/bausteine.js'));
 rmSync(tmp, { recursive: true, force: true });
 
+// Manche Sätze hängen von Uhrzeit, Wochentag oder Monat ab (z. B. „Guten Morgen“): darum die Uhr der Probe-Gespräche
+// der Reihe nach über alle Stunden, Wochentage und Monate drehen
+const EchtesDatum = Date;
+let probeZeit = EchtesDatum.now();
+globalThis.Date = class extends EchtesDatum {
+  constructor(...a) { if (a.length) super(...a); else super(probeZeit); }
+  static now() { return probeZeit; }
+};
+const stelleUhr = (i) => { const d = new EchtesDatum(2026, i % 12, 1 + (i % 28), 5 + (i % 17), (i * 7) % 60); probeZeit = d.getTime(); };
 const teile = new Set();
 const sammle = (text) => B.zerlege(text).forEach((t) => teile.add(t));
 for (let i = 0; i < N_GESPR; i++) {
+  stelleUhr(i);
   const c = G.buildConversation();
   c.steps.forEach((s) => { s.customer.forEach(sammle); if (s.afterWrong) sammle(s.afterWrong); });
   c.endLines.forEach(sammle);
@@ -45,6 +55,7 @@ for (let i = 0; i < N_GESPR; i++) {
   if (i % 50 === 0) [20, 30, 50, 100].forEach((ct) => ['Danke, war nett!', 'Sehr nett, danke!', 'Für Sie.'].forEach((s) => sammle(`${(ct / 100).toFixed(2).replace('.', ',')} € ${s}`)));
 }
 const nachGespr = teile.size;
+globalThis.Date = EchtesDatum;
 for (let i = 0; i < N_ANRUF; i++) {
   const b = T.neueBestellung(T.STUFEN_RUNDE[i % T.STUFEN_RUNDE.length], new Set(), i % 12);
   sammle(b.text.join(' '));
@@ -86,6 +97,8 @@ await Promise.all(Array.from({ length: 3 }, async () => {
   }
 }));
 const gueltig = new Set(stimmen.flatMap((st) => [...teile].map((t) => B.teilKey(st, t))));
-const vorhanden = readdirSync(ZIEL).filter((f) => f.endsWith('.mp3')).map((f) => f.slice(0, -4)).filter((k) => gueltig.has(k)).sort();
+// Alle erzeugten Bausteine in die Liste (auch seltene aus früheren Durchläufen)
+const vorhanden = readdirSync(ZIEL).filter((f) => f.endsWith('.mp3')).map((f) => f.slice(0, -4)).sort();
+void gueltig;
 writeFileSync(path.join(ZIEL, 'index.json'), JSON.stringify(vorhanden));
 console.log(`Fertig: ${fertig} neue, ${vorhanden.length} Bausteine insgesamt in public/stimme/teile/`);
