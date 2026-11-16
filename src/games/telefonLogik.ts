@@ -31,10 +31,15 @@ const STUECK = new Set(['Monte Christo', 'Tarte Depart', 'Spuntino Mediterano', 
 type Art = { name: string; group: string };
 const gruppeVon = (n: string) => (SHOP_PRODUCTS.find((p) => p.name === n) || { group: '' }).group;
 export const istBrot = (n: string) => ['Brot', 'Stuten & Brioche'].includes(gruppeVon(n));
-/** Wird an der Maschine geschnitten: Brote und Stuten mit Schnittstärke, wie im Schneide-Profi.
- *  Süßes wie Wunderzopf, Striezel, Fein- und Dauergebäck wird nie geschnitten (Hinweis des Nutzers 16.11.) */
+/** Wird an der Maschine geschnitten: Brote (mit Schnittstärke) und ALLE Stuten-Sorten (Nutzer 16.11.).
+ *  Wunderzopf, Striezel, Fein- und Dauergebäck werden nie geschnitten (Hinweis des Nutzers 16.11.) */
 const NIE_SCHNEIDEN = ['Wunderzopf'];
-export const schneidbar = (n: string) => { const p = SHOP_PRODUCTS.find((x) => x.name === n); return !!p && !!p.breadType && ['Brot', 'Stuten & Brioche'].includes(p.group) && !NIE_SCHNEIDEN.includes(n); };
+export const schneidbar = (n: string) => {
+  const p = SHOP_PRODUCTS.find((x) => x.name === n);
+  if (!p || NIE_SCHNEIDEN.includes(n)) return false;
+  if (p.group === 'Stuten & Brioche') return true;
+  return p.group === 'Brot' && !!p.breadType;
+};
 const istBroetchen = (n: string) => gruppeVon(n) === 'Brötchen';
 
 /** Alles, was man heute (in diesem Monat) bestellen kann */
