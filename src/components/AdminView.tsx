@@ -1,4 +1,5 @@
 import { NachrichtSchreiben } from '../screens/NachrichtenSeite';
+import { neueAntworten } from '../hilfen/nachrichten';
 import { useState, FormEvent, CSSProperties } from 'react';
 import { dc, ALT_MAP } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from '../ui/basis';
@@ -727,7 +728,7 @@ export function AdminView({
     { id: 'team', label: `Mitarbeiter (${allKnownUserKeys.length})` },
     { id: 'reports', label: reports.length ? `Meldungen (${reports.length})` : 'Meldungen' },
     { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Rückmeldungen (${offeneKollegenSachen(cloudData.progress)})` : 'Rückmeldungen' },
-    { id: 'message', label: 'Nachricht & Umfrage' },
+    { id: 'message', label: neueAntworten(cloudData.progress, 'admin') ? `Nachricht & Umfrage (${neueAntworten(cloudData.progress, 'admin')} neu)` : 'Nachricht & Umfrage' },
     { id: 'content', label: 'Inhalte' },
     { id: 'stats', label: 'Auswertung' },
     { id: 'settings', label: 'Einstellungen' },

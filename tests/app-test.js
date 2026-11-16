@@ -689,10 +689,18 @@ async function offlineTests() {
   }
   // Version 224: Ausbilder schreibt Einzel-Nachrichten und vergibt das Recht dazu
   {
-    const d = await device({ admin: true, backup: SAMPLE });
+    // Version 225: neue Antwort auf eine Nachricht des Ausbilders zeigt „(1 neu)“ am Reiter
+    const NM = kompiliere(['src/hilfen/nachrichten.ts']).hilfen_nachrichten;
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const wer = Object.keys(probe.progress).find((k) => k !== 'admin');
+    probe.progress.admin = { ...(probe.progress.admin || {}), _nachrichten: { m1000: { an: { [wer]: wer }, t: 'Testnachricht', ts: 1000 } } };
+    probe.progress[wer]._postfach = { [NM.postfachKey('admin', 'm1000')]: { g: 2000, a: 'Alles klar', aTs: 2000 } };
+    const d = await device({ admin: true, backup: probe });
     await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
     for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
-    await click(d.page.getByRole('tab', { name: 'Nachricht & Umfrage' })); await settle(d.page, 500);
+    ok('Ausbilder: neue Antwort zeigt „(1 neu)“ am Reiter', (await d.page.getByRole('tab', { name: 'Nachricht & Umfrage (1 neu)' }).count()) === 1);
+    await click(d.page.getByRole('tab', { name: 'Nachricht & Umfrage' })); await settle(d.page, 800);
+    ok('Ausbilder: Antwort sichtbar, Zahl verschwindet nach dem Öffnen', (await d.page.locator('.lt-einzel-gesendet').innerText().catch(() => '')).includes('Alles klar') && (await d.page.getByRole('tab', { name: /neu\)/ }).count()) === 0);
     const recht = d.page.locator('.lt-einzel-recht button');
     ok('Ausbilder: „Nachricht an einzelne“ und „Wer darf schicken?“ da', (await d.page.locator('.lt-einzel-schreiben').count()) > 0 && (await recht.count()) > 0);
     if (await recht.count()) { await click(recht.first()); await settle(d.page, 300); }

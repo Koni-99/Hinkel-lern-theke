@@ -154,5 +154,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 224: **Einzel-Nachrichten** (Nutzer wählte: Pop-up + Postfach, kurze Antwort möglich, Admin + Koni fest, Admin vergibt weiteres Recht). Logik `src/hilfen/nachrichten.ts`, Seiten `src/screens/NachrichtenSeite.tsx` (`NachrichtSchreiben` auch im Ausbilder-Reiter „Nachricht & Umfrage“, `NachrichtenSeite` = Menü „Meine Nachrichten“ mit roter Zahl, `EinzelNachrichtPopup`). Speicher nur im eigenen Fortschritt: Absender `progress/<name>/_nachrichten` {m<ts>: {an: {schlüssel: name}, t, ts}} (Admin unter `progress/admin`), Empfänger `progress/<name>/_postfach` {postfachKey: {g, a, aTs}}, Recht `progress/admin/_nachrichtRecht` {schlüssel: true}, `IMMER_SCHREIBEN` = admin, koni. Absender sieht pro Person gelesen/Antwort, kann löschen. Keine neue Karte auf der Startseite. Neues Symbol `ICON.mail`. Hilfe-Thema „Persönliche Nachrichten“
 
+- 225: 11 Quizfragen zu den neuen Produkten (Kappeskopp, Zimtmonde, Tigertatze mit Allergie-Frage, Stollen-Konfekt), am Ende von `S` in `questions.ts` angehängt (IDs der alten bleiben). Stimmen nacherzeugt (Hör-Lernen 22, Sätze 43). Ausbilder-Reiter zeigt „Nachricht & Umfrage (N neu)“ bei neuen Antworten auf Einzel-Nachrichten. **Nutzer (16.11.): Testphase bis Januar, Start im neuen Jahr**
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
