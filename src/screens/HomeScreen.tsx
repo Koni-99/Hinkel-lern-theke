@@ -119,6 +119,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
   const [links, setLinks] = useState<string[]>([]);
   const [heuteRechts, setHeuteRechts] = useState(false); // „Heute für dich“ am PC in der rechten Spalte
   const [teamAuf, setTeamAuf] = useState(false); // „Wer heute gelernt hat“ aufgeklappt
+  const umstellungen = useRef<number[]>([]); // Zeitpunkte der letzten Spalten-Umstellungen (gegen Flackern)
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1180px)');
     const pruefe = () => {
@@ -133,15 +134,23 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
       const mBasis = m.getBoundingClientRect().height - verschoben - (heuteRechts ? 0 : h);
       const sBasis = sd.getBoundingClientRect().height + verschoben - (heuteRechts ? h : 0);
       // Alle Möglichkeiten durchprobieren: welche Karten nach links, „Heute für dich“ links oder rechts?
+      const wert = (wahl: string[], hr: boolean) => { const l = wahl.reduce((a, id) => a + hoehe(id), 0); return Math.abs(mBasis + l + (hr ? 0 : h) - (sBasis - l + (hr ? h : 0))) + wahl.length * 30 + (hr ? 40 : 0); };
       let best: string[] = [], bestRechts = false, bestDiff = Infinity;
       for (const hr of [false, true]) {
         for (let mask = 0; mask < 1 << ids.length; mask++) {
           const wahl = ids.filter((_, i) => mask & (1 << i));
-          const l = wahl.reduce((a, id) => a + hoehe(id), 0);
-          const d = Math.abs(mBasis + l + (hr ? 0 : h) - (sBasis - l + (hr ? h : 0))) + wahl.length * 30 + (hr ? 40 : 0);
+          const d = wert(wahl, hr);
           if (d < bestDiff) { bestDiff = d; best = wahl; bestRechts = hr; }
         }
       }
+      // Version 227: nicht hin und her springen (Tablet quer flackerte). Karten sind in der breiteren linken Spalte
+      // niedriger als rechts, deshalb nur umstellen, wenn es deutlich besser wird, und höchstens 4-mal in kurzer Zeit.
+      const jetzt = wert(links.filter((id) => ids.includes(id)), heuteRechts);
+      if (bestDiff > jetzt - 90) return;
+      const t = Date.now();
+      umstellungen.current = umstellungen.current.filter((x) => t - x < 4000);
+      if (umstellungen.current.length >= 4) return;
+      umstellungen.current.push(t);
       if (best.join() !== links.join()) setLinks(best);
       if (bestRechts !== heuteRechts) setHeuteRechts(bestRechts);
     };

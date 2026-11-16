@@ -208,6 +208,14 @@ async function offlineTests() {
     await clearPopups(d.page); await d.page.waitForTimeout(800);
     const hoehen = await d.page.evaluate(() => { const m = document.querySelector('.lt-home-main'), s = document.querySelector('.lt-home-side'); return m && s ? [m.getBoundingClientRect().height, s.getBoundingClientRect().height] : [0, 0]; });
     ok('Startseite am PC: beide Spalten fast gleich lang', hoehen[0] > 0 && Math.abs(hoehen[0] - hoehen[1]) < 300, hoehen.map(Math.round).join(' / '));
+    // Version 227: Karten dürfen nicht dauernd zwischen den Spalten hin und her springen (Tablet quer flackerte)
+    const wechsel = await d.page.evaluate(() => new Promise((res) => {
+      const lies = () => [...document.querySelectorAll('.lt-blk')].map((e) => e.getAttribute('data-blk') + (e.closest('.lt-home-side') ? 'R' : 'L')).join(',');
+      let last = lies(), n = 0;
+      const t = setInterval(() => { const x = lies(); if (x !== last) { n++; last = x; } }, 30);
+      setTimeout(() => { clearInterval(t); res(n); }, 3000);
+    }));
+    ok('Startseite am PC: Karten springen nicht hin und her', wechsel <= 1, `${wechsel} Wechsel in 3 s`);
     const striche = [];
     for (const seite of [() => click(nav(d.page).nth(0)), async () => { await click(d.page.getByRole('button', { name: 'Menü' }).first()); await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); }]) {
       await seite(); await settle(d.page, 600);
