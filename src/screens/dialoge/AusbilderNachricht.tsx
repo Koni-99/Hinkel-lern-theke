@@ -1,7 +1,6 @@
 // ═══ Pop-up: neue Nachricht vom Ausbilder (Pinnwand) ═══
 // Vorher mitten in App.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { dc } from '../../daten/data';
-import { SpeakButton } from '../../games/spielBasis';
 import { LT } from '../../basis/marke';
 import { LtIcon, ICON } from '../../basis/symbole';
 import type { PinboardMessage } from '../../types';
@@ -26,7 +25,6 @@ export function AusbilderNachricht({ activePinboard, markPinSeen }: AusbilderNac
         <div style={{ padding: '24px 22px 22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {activePinboard.image && <img src={activePinboard.image} alt="Foto vom Ausbilder" style={{ width: '100%', maxHeight: '40vh', objectFit: 'contain', borderRadius: '16px' }} />}
           <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.2, whiteSpace: 'pre-line', maxHeight: '50vh', overflowY: 'auto' }}>„{activePinboard.text}“</div>
-          <div><SpeakButton small text={`Nachricht vom Ausbilder: ${activePinboard.text}`} /></div>
           <button onClick={markPinSeen} autoFocus style={{ minHeight: '60px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '20px', fontWeight: 700, cursor: 'pointer' }}>{activePinboard.pflicht ? 'Gelesen und verstanden' : 'Gelesen, danke!'}</button>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult } 
 import { scrollToPlay } from '../ui/belohnungen';
 import { LtIcon, ICON } from '../basis/symbole';
 import { canSpeak, sprichKunde, stopSpeaking } from './spielBasis';
-import { neueBestellung, pruefe, istBrot, TAGE, ZEITEN, zeitText, Bestellung, Zettel, Pruefung, STUFEN_RUNDE, gesehenLesen, gesehenMerken, sortiment } from './telefonLogik';
+import { neueBestellung, pruefe, schneidbar, TAGE, ZEITEN, zeitText, Bestellung, Zettel, Pruefung, STUFEN_RUNDE, gesehenLesen, gesehenMerken, sortiment } from './telefonLogik';
 
 const ANRUFE = STUFEN_RUNDE.length;
 const TEMPO = 0.95; // etwas ruhiger, am Telefon versteht man schlechter
@@ -127,7 +127,7 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
                     <span style={{ minWidth: '34px', textAlign: 'center', fontSize: '20px', fontWeight: 700 }} aria-label={`${name}: ${n}`}>{n}</span>
                     <button type="button" aria-label={`${name} mehr`} disabled={phase !== 'anruf'} onClick={() => menge(name, 1)} style={rund}>+</button>
                     </div>
-                    {istBrot(name) && n > 0 && (
+                    {schneidbar(name) && n > 0 && (
                       <button type="button" disabled={phase !== 'anruf'} aria-pressed={!!z.geschnitten[name]} onClick={() => setZ({ ...z, geschnitten: { ...z.geschnitten, [name]: !z.geschnitten[name] } })} style={{ ...knopfStil(!!z.geschnitten[name]), alignSelf: 'flex-start' }}>{z.geschnitten[name] ? 'Brot: geschnitten' : 'Brot: am Stück (antippen = geschnitten)'}</button>
                     )}
                   </div>

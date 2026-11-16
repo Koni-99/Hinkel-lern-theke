@@ -680,7 +680,6 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
 .lt-board-ledge{position:absolute;left:-10px;right:-10px;bottom:-10px;height:12px;background:#6B4220;border-radius:0 0 8px 8px;box-shadow:0 3px 0 #4E2F16}
 .lt-board-piece{position:absolute;bottom:10px;right:34px;width:30px;height:8px;border-radius:3px;background:#F4F1E8;transform:rotate(-6deg);box-shadow:inset -3px 0 0 #D8D2C4}
 .lt-board-sponge{position:absolute;bottom:10px;left:26px;width:38px;height:13px;border-radius:3px;background:#5A3A22;box-shadow:inset 0 -5px 0 #C9B48A}
-.lt-board-speak{position:relative;margin-top:6px}
 /* v131: Statistik auf der Startseite */
 .lt-st{padding:18px;border-radius:22px;background:#FFFFFF;box-shadow:0 1px 2px rgba(31,20,12,.05),0 8px 20px -14px rgba(31,20,12,.3)}
 .lt-st-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}

@@ -31,6 +31,10 @@ const STUECK = new Set(['Monte Christo', 'Tarte Depart', 'Spuntino Mediterano', 
 type Art = { name: string; group: string };
 const gruppeVon = (n: string) => (SHOP_PRODUCTS.find((p) => p.name === n) || { group: '' }).group;
 export const istBrot = (n: string) => ['Brot', 'Stuten & Brioche'].includes(gruppeVon(n));
+/** Wird an der Maschine geschnitten: Brote und Stuten mit Schnittstärke, wie im Schneide-Profi.
+ *  Süßes wie Wunderzopf, Striezel, Fein- und Dauergebäck wird nie geschnitten (Hinweis des Nutzers 16.11.) */
+const NIE_SCHNEIDEN = ['Wunderzopf'];
+export const schneidbar = (n: string) => { const p = SHOP_PRODUCTS.find((x) => x.name === n); return !!p && !!p.breadType && ['Brot', 'Stuten & Brioche'].includes(p.group) && !NIE_SCHNEIDEN.includes(n); };
 const istBroetchen = (n: string) => gruppeVon(n) === 'Brötchen';
 
 /** Alles, was man heute (in diesem Monat) bestellen kann */
@@ -123,7 +127,7 @@ export function neueBestellung(stufe: Stufe = 'mittel', gesehen: Set<string> = n
   const nimm = (a: Art | null) => {
     if (!a) return;
     tage = tage.filter((t) => tageVon(a.name).includes(t));
-    positionen.push({ name: a.name, menge: menge(a.name, stufe), ...(istBrot(a.name) && stufe !== 'einfach' ? { geschnitten: Math.random() < 0.6 } : {}) });
+    positionen.push({ name: a.name, menge: menge(a.name, stufe), ...(schneidbar(a.name) && stufe !== 'einfach' ? { geschnitten: Math.random() < 0.6 } : {}) });
   };
   while (positionen.length < anzahl) {
     const vorher = positionen.length;

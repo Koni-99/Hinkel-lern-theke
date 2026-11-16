@@ -69,7 +69,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
       </button>
       {box(boxIcon(ICON.home), 'Wo finde ich was?', <>
         {ort('Hauptseiten', 'am Handy und Tablet unten, am Computer als Leiste links')}
-        {ort('Start', 'Tages-Challenge, Lob der Woche, Umfragen, Geburtstage')}
+        {ort('Start', 'Tages-Challenge, Team-Challenge, Lob der Woche, Umfragen, Geburtstage. Ganz unten zum Aufklappen: „Deine Zahlen“ mit Statistik, Lern-Bon, Serie und Abzeichen')}
         {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Hör-Lernen')}
         {ort('Spielen', 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr')}
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}

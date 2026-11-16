@@ -554,6 +554,20 @@ async function offlineTests() {
     ok('Natürliche Stimme: Quiz vorlesen (Frage und Antwort-Möglichkeiten), alle Sätze vorhanden', fehltQ.length === 0, `${fehltQ.length} fehlen: ${fehltQ.slice(0, 2).join(' | ')}`);
     ok('Vorlesen: Sätze ohne Satzzeichen am Ende', V.saetze('Das ist Feinbrot. Warengruppe: Brot.').join('|') === 'Das ist Feinbrot|Warengruppe: Brot');
   }
+  // Version 220: Startseite kürzer: Team-Challenge kompakt (aufklappbar), Statistik + Lern-Bon + Fortschritt in „Deine Zahlen“
+  {
+    const d = await device({ user: 'Anna' });
+    await clearPopups(d.page);
+    const zahlen = d.page.locator('details.lt-zahlen');
+    const zu = (await zahlen.count()) > 0 && !(await zahlen.evaluate((e) => e.open));
+    if (await zahlen.count()) { await click(zahlen.locator('summary')); await settle(d.page, 400); }
+    const inhalt = (await zahlen.innerText().catch(() => '')) || '';
+    ok('Startseite: „Deine Zahlen“ zugeklappt, enthält Statistik, Lern-Bon und Serie', zu && /Deine Statistik/.test(inhalt) && /BÄCKEREI HINKEL/.test(inhalt) && /Lern-Serie/i.test(inhalt), inhalt.slice(0, 80));
+    const team = d.page.locator('details.lt-teamgoal');
+    ok('Startseite: Team-Challenge kompakt mit Balken, Erklärung zum Aufklappen', (await team.count()) > 0 && (await team.locator('summary [role=progressbar]').count()) === 1);
+    ok('Startseite neu: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
   {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
@@ -570,6 +584,7 @@ async function offlineTests() {
       for (const p of b.positionen) {
         if (BACK[p.name] && !BACK[p.name].includes(b.tag)) fehler.push(`${p.name} an ${T.TAGE[b.tag]} gibt es nicht`);
         if (p.name === 'Landbaguette' && b.zeit < 11 * 60) fehler.push('Landbaguette vor 11 Uhr');
+        if (p.geschnitten !== undefined && !T.schneidbar(p.name)) fehler.push(`${p.name} wird nicht geschnitten`);
         if (/ (\d+|zwei|drei) (Großes|Kleines|Schweineohr |Innsbrucker Roggenlaib\b)/.test(satz)) fehler.push('Mehrzahl falsch: ' + satz);
       }
       if (!b.positionen.every((p) => b.auswahl.includes(p.name))) fehler.push('Bestelltes fehlt auf dem Zettel');
@@ -586,6 +601,7 @@ async function offlineTests() {
     while (alle.some((x) => !g.has(x)) && anrufe < 300) { T.neueBestellung(T.STUFEN_RUNDE[anrufe % 5], g, 10).positionen.forEach((p) => g.add(p.name)); anrufe++; }
     ok(`Telefon-Bestellung: ganzes Sortiment (${alle.length} Artikel) nach ${anrufe} Anrufen einmal dran`, anrufe < 100 && alle.every((x) => g.has(x)), `${anrufe} Anrufe`);
     ok('Telefon-Bestellung: 400 Anrufe (alle Stufen) sinnvoll, Prüfung stimmt', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+    ok('Telefon-Bestellung: Süßes wird nie geschnitten', !T.schneidbar('Wunderzopf') && !T.schneidbar('Rosinenstriezel') && !T.schneidbar('Heidesand') && !T.schneidbar('Berliner') && T.schneidbar('Münsterländer'));
     ok('Telefon-Bestellung: Name tolerant (Krueger = Krüger, ein Tippfehler)', T.nameStimmt('krueger', 'Krüger') && T.nameStimmt('Schmiz', 'Schmitz') && !T.nameStimmt('Weber', 'Becker'));
     ok('Telefon-Bestellung: Uhrzeit wie gesprochen', T.zeitGesprochen(8 * 60 + 30) === 'um halb neun' && T.zeitGesprochen(16 * 60) === 'um vier Uhr nachmittags' && T.zeitGesprochen(15 * 60 + 45) === 'um Viertel vor vier nachmittags');
     const d = await device({ user: 'Anna' });
