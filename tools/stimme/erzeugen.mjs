@@ -75,6 +75,14 @@ const texte = new Map(); // code → [Text, Stimme]
   const t = hoerTexte(q); const stimme = STIMMEN[i % STIMMEN.length];
   [t.frage, t.antwort].forEach((x) => { if (x && !texte.has(stimmeKey(x))) texte.set(stimmeKey(x), [x, stimme]); });
 });
+// --aufraeumen: Dateien löschen, die zu keiner Frage mehr gehören (z. B. nach geänderten Fragen), ohne Google
+if (args.includes('--aufraeumen')) {
+  const ziel = path.join(ROOT, 'public/stimme');
+  const weg = readdirSync(ziel).filter((f) => f.endsWith('.mp3') && !texte.has(f.slice(0, -4)));
+  weg.forEach((f) => rmSync(path.join(ziel, f)));
+  console.log(`${weg.length} alte Dateien gelöscht, ${texte.size} Texte gehören dazu.`);
+  process.exit(0);
+}
 if (args.includes('--zaehlen')) {
   const z = {}; for (const [, [t, st]] of texte) z[st] = (z[st] || 0) + t.length;
   console.log(texte.size, 'Texte, Zeichen je Stimme:', z, 'zusammen', Object.values(z).reduce((a, b) => a + b, 0));

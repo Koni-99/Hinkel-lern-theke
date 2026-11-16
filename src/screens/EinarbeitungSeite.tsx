@@ -5,6 +5,7 @@ import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from '../ui/basis';
 import { ONBOARDING_DAYS, APP_WEEK_DAYS } from '../ui/lernstand';
 import { LT } from '../basis/marke';
+import { LtIcon, ICON } from '../basis/symbole';
 import type { OnboardingItem } from '../ui/lernstand';
 
 export type EinarbeitungSeiteProps = {
@@ -53,7 +54,7 @@ export function EinarbeitungSeite({ activeTab, setActiveTab, obDay, setObDay, to
           const done = dayDone(d); const on = d.no === day.no;
           return (
             <button key={d.no} onClick={() => setObDay(d.no)} aria-pressed={on} style={{ position: 'relative', flex: '1 1 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
-              <span style={{ width: '58px', height: '58px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', backgroundColor: done ? TH.green : on ? LT.yellow : dc('#FFFFFF'), border: `3px solid ${done ? TH.green : on ? LT.brown : LT.line}`, boxShadow: on ? '0 6px 16px rgba(75,42,20,.22)' : 'none', transform: on ? 'scale(1.08)' : 'none', transition: 'transform .2s ease' }}>{done ? <span style={{ color: dc('#FFFFFF'), fontWeight: 700 }}>✓</span> : d.icon}</span>
+              <span style={{ width: '58px', height: '58px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', backgroundColor: done ? TH.green : on ? LT.yellow : dc('#FFFFFF'), border: `3px solid ${done ? TH.green : on ? LT.brown : LT.line}`, boxShadow: on ? '0 6px 16px rgba(75,42,20,.22)' : 'none', transform: on ? 'scale(1.08)' : 'none', transition: 'transform .2s ease' }}>{done ? <span style={{ color: dc('#FFFFFF'), fontWeight: 700 }}>✓</span> : <LtIcon paths={(ICON as any)[d.icon] || ICON.flag} size={26} />}</span>
               <span style={{ fontSize: '14px', fontWeight: 700, color: on ? LT.ink : LT.muted }}>Tag {d.no}</span>
               <span className="lt-hide-mobile" style={{ fontSize: '13px', color: LT.muted, textAlign: 'center', lineHeight: 1.2 }}>{d.title}</span>
             </button>
@@ -65,7 +66,7 @@ export function EinarbeitungSeite({ activeTab, setActiveTab, obDay, setObDay, to
     {/* Aufgaben des gewählten Tages */}
     <div key={day.no} className="lt-pop-in" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '40px' }} aria-hidden="true">{day.icon}</span>
+        <span aria-hidden="true" style={{ display: 'inline-flex', color: LT.brown }}><LtIcon paths={(ICON as any)[day.icon] || ICON.flag} size={40} /></span>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 700, color: LT.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Tag {day.no} von {DAYS.length}</div>
           <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>{day.title}</div>

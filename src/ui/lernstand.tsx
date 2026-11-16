@@ -51,13 +51,13 @@ export const ONBOARDING_ITEMS: OnboardingItem[] = [
   { id: 'serie', title: '3 Tage am Stück gelernt', desc: 'Drei Tage hintereinander mindestens eine Runde.' },
 ];
 
-/** „Meine erste Woche“ in 5 Tagen, jeder Tag mit einem Thema */
+/** „Meine erste Woche“ in 5 Tagen, jeder Tag mit einem Thema (icon = Name aus ICON, seit Version 230 keine Emojis) */
 export const ONBOARDING_DAYS: { no: number; icon: string; title: string; text: string; ids: string[] }[] = [
-  { no: 1, icon: '👋', title: 'Ankommen', text: 'Die wichtigsten Formalitäten und unsere Regeln im Team.', ids: ['gesund', 'hygiene', 'regeln'] },
-  { no: 2, icon: '🍞', title: 'Unsere Brote', text: 'Schnittstärken und die Brote auf einen Blick erkennen.', ids: ['schnitt', 'bilder'] },
-  { no: 3, icon: '💬', title: 'Beraten', text: 'Wie schmeckt was, und wie läuft ein Verkaufsgespräch?', ids: ['geschmack', 'theke'] },
-  { no: 4, icon: '🛡️', title: 'Allergien', text: 'Sicher beraten, wenn ein Kunde eine Allergie hat.', ids: ['allergene'] },
-  { no: 5, icon: '🏁', title: 'Fit für die Theke', text: 'Dranbleiben, dann gibt es den Theken-Führerschein.', ids: ['fragen', 'serie'] },
+  { no: 1, icon: 'users', title: 'Ankommen', text: 'Die wichtigsten Formalitäten und unsere Regeln im Team.', ids: ['gesund', 'hygiene', 'regeln'] },
+  { no: 2, icon: 'bread', title: 'Unsere Brote', text: 'Schnittstärken und die Brote auf einen Blick erkennen.', ids: ['schnitt', 'bilder'] },
+  { no: 3, icon: 'chat', title: 'Beraten', text: 'Wie schmeckt was, und wie läuft ein Verkaufsgespräch?', ids: ['geschmack', 'theke'] },
+  { no: 4, icon: 'shield', title: 'Allergien', text: 'Sicher beraten, wenn ein Kunde eine Allergie hat.', ids: ['allergene'] },
+  { no: 5, icon: 'flag', title: 'Fit für die Theke', text: 'Dranbleiben, dann gibt es den Theken-Führerschein.', ids: ['fragen', 'serie'] },
 ];
 
 /** „Meine erste Woche mit der App“ – für alle, die schon bei Hinkel sind: die App in Ruhe kennenlernen */
@@ -74,10 +74,10 @@ export const APP_WEEK_ITEMS: OnboardingItem[] = [
 ];
 
 export const APP_WEEK_DAYS: { no: number; icon: string; title: string; text: string; ids: string[] }[] = [
-  { no: 1, icon: '📚', title: 'Lernen', text: 'So funktionieren Quiz und Tages-Challenge.', ids: ['quiz', 'daily'] },
-  { no: 2, icon: '🔎', title: 'Nachschlagen', text: 'Alles über unsere Produkte und das Team.', ids: ['steckbrief', 'bestenliste'] },
-  { no: 3, icon: '🎮', title: 'Spielen', text: 'Lernen mit Spaß: Fotos, Verkaufsgespräche und Allergien.', ids: ['bilder', 'theke', 'allergene'] },
-  { no: 4, icon: '🏁', title: 'Dranbleiben', text: 'Ein paar Tage dranbleiben, dann kennst du die App.', ids: ['fragen', 'serie'] },
+  { no: 1, icon: 'book', title: 'Lernen', text: 'So funktionieren Quiz und Tages-Challenge.', ids: ['quiz', 'daily'] },
+  { no: 2, icon: 'search', title: 'Nachschlagen', text: 'Alles über unsere Produkte und das Team.', ids: ['steckbrief', 'bestenliste'] },
+  { no: 3, icon: 'game', title: 'Spielen', text: 'Lernen mit Spaß: Fotos, Verkaufsgespräche und Allergien.', ids: ['bilder', 'theke', 'allergene'] },
+  { no: 4, icon: 'flag', title: 'Dranbleiben', text: 'Ein paar Tage dranbleiben, dann kennst du die App.', ids: ['fragen', 'serie'] },
 ];
 
 /** Welche Punkte von „Meine erste Woche mit der App“ sind erledigt? */
