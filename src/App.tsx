@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 218;
+const APP_VERSION: number = 219;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -1708,6 +1708,10 @@ export default function App() {
     mutateCloudData((curr) => { if (curr.progress[k]) curr.progress[k]._monatSnap = snap; return curr; });
   }, [username, cloudConnected, isSyncing, cloudData.progress?.[username.toLowerCase()]?._monatSnap?.mo]);
 
+  // Seite, die es für diesen Nutzer gerade nicht gibt (Ausbildung nur für Azubis, „Mein Jahr“ nur Dezember/Januar),
+  // z. B. nach dem Neuladen: auf die Startseite statt einer leeren Seite (wird weiter unten beim Zeichnen gesetzt)
+  const leereSeiteRef = useRef(false);
+  useEffect(() => { if (leereSeiteRef.current) { leereSeiteRef.current = false; setActiveTab('home'); } });
   // Was wird genutzt? Geöffnete Seiten im Gerät mitzählen, gesammelt höchstens alle 10 Minuten hochladen
   useEffect(() => { if (username && username.toLowerCase() !== 'admin') zaehleSeite(activeTab); }, [activeTab, username]);
   const nutzungHochRef = useRef(Date.now() - 8 * 60 * 1000); // erstes Hochladen nach ca. 2 Minuten
@@ -2068,6 +2072,7 @@ export default function App() {
       battlesWon: bw, mastery, topCat: catPct && catPct.p > 0 ? catPct.c : undefined,
     };
   })();
+  leereSeiteRef.current = (activeTab === 'jahr' && !yearData) || (activeTab === 'ausbildung' && !azubiArea);
 
   // Profilseite (Tippen auf einen Namen in der Bestenliste)
   const profileData: ProfileData | null = (() => {
