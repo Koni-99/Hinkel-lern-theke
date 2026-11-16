@@ -172,5 +172,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 233: **Teigi für alle** (Nutzer): kein Kauf mehr (`h_teigi` nicht mehr im Laden; wer ihn gekauft hat, bekommt einmalig 15 € zurück, `_teigiErstattet`), aus- und einschalten ganz unten in der App (Knopf `.lt-teigi-schalter`, `_teigiAus` im eigenen Fortschritt). Gesicht jetzt immer mitten im Glas (vorher an der Füllhöhe, rutschte unters Glas). Laden-Abteilung **„Teigi“**: Hüte/Zubehör `teigihut` (Schleife, Blümchen, Bäckermütze, Sonnenbrille, Weihnachtsmütze nur Nov bis Jan, Krone → `_teigiHut`), Gläser `teigiglas` (Bernstein, Rosé, Minze, Gold → `_teigiGlas`, Farben `TEIGI_GLAS`), Tänze `teigitanz` bei richtigen Antworten (Pirouette, Freudentanz, Salto → `_teigiTanz`, CSS `lt-teigi-dreh/tanz/salto`). `TeigiGlas({stufe, laune, hut, glas})`
 
+- 234: Teigi-Begleiter ohne runden Kreis, nur goldener Schein ums Glas (`filter: drop-shadow` wie Logo). **Antippen blendet ihn nicht mehr aus** (Nutzer tippte drauf, Teigi war weg), sondern er hüpft und sagt etwas (`ANGETIPPT`). Ausschalten nur über den Knopf ganz unten (`_teigiAus`), `sessionStorage lt_teigi_weg` wird nicht mehr gelesen
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

@@ -715,8 +715,9 @@ async function offlineTests() {
     const r2 = (await opts2.allInnerTexts()).findIndex((t) => ziel2 && t.includes(ziel2));
     if (r2 >= 0) { await click(opts2.nth(r2)); await d.page.waitForTimeout(250); }
     ok('Teigi hüpft bei einer richtigen Antwort', (await d.page.locator('.lt-teigi-begleiter .lt-teigi-hops').count()) === 1);
-    await click(begleiter.locator('button')); await d.page.waitForTimeout(200);
-    ok('Teigi lässt sich antippen und ausblenden', (await begleiter.count()) === 0);
+    await d.page.waitForTimeout(800);
+    await click(begleiter.locator('button')); await d.page.waitForTimeout(250);
+    ok('Teigi antippen: bleibt da, hüpft und sagt etwas', (await begleiter.count()) === 1 && (await d.page.locator('.lt-teigi-sprech').count()) === 1);
     ok('Neue Joker: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
