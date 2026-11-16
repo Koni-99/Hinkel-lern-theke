@@ -15,7 +15,7 @@ export function AusbilderNachricht({ activePinboard, markPinSeen }: AusbilderNac
   return (
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Neue Nachricht vom Ausbilder" style={{ width: '100%', maxWidth: '460px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', overflow: 'hidden', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-        <div style={{ backgroundColor: LT.yellow, padding: '22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div className="lt-papier" style={{ backgroundColor: LT.yellow, color: LT.ink, padding: '22px', display: 'flex', alignItems: 'center', gap: '14px' }}>
           <span style={{ width: '56px', height: '56px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span aria-hidden="true" style={{ display: 'inline-flex', lineHeight: 1 }}><LtIcon paths={ICON.bell} size={30} /></span></span>
           <div>
             <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Neu vom Ausbilder</div>

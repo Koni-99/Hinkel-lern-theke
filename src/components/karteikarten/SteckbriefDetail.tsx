@@ -80,7 +80,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
   return (
     <div className="fc-overlay" onClick={() => setOpenProfileKey(null)} style={{ position: "fixed", inset: 0, zIndex: 120, backgroundColor: "rgba(43,23,10,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
       <div className="fc-sheet" role="dialog" aria-modal="true" aria-label={`Steckbrief ${prod.name}`} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", backgroundColor: TH.cream, borderRadius: "28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35)", textAlign: "left", color: TH.ink }}>
-        <div style={{ position: "sticky", top: 0, zIndex: 1, backgroundColor: TH.yellow, padding: "20px 22px", display: "flex", alignItems: "center", gap: "14px" }}>
+        <div className="lt-papier lt-sb-kopf" style={{ position: "sticky", top: 0, zIndex: 1, backgroundColor: TH.yellow, color: TH.ink, padding: "20px 22px", display: "flex", alignItems: "center", gap: "14px" }}>
           <span aria-hidden="true" style={{ flex: "0 0 64px", height: "64px", borderRadius: "18px", backgroundColor: TH.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px" }}>{getProductEmoji(prod.name, prod.group)}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: TH.serif, fontSize: "32px", lineHeight: 1.1 }}>{prod.name}</div>
@@ -128,9 +128,9 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: TH.red, textTransform: "uppercase", letterSpacing: "1px" }}>Allergene</div>
                 {sp.allergens.length > 0 ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "8px" }}>
+                  <div className="lt-allergen-raster" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 175px), 1fr))", gap: "8px" }}>
                     {sp.allergens.map((a) => { const { kopf, teil } = teileAllergen(a); const st = ALLERGEN_STIL[kopf] || { bg: TH.tintPeach, ink: TH.red }; return (
-                      <div key={a} className="lt-allergen" style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "12px 14px", borderRadius: "16px", backgroundColor: dc(st.bg), color: st.ink, border: `2px solid ${st.ink}22` }}>
+                      <div key={a} lang="de" className="lt-allergen lt-papier" style={{ minWidth: 0, overflowWrap: "anywhere", hyphens: "auto", display: "flex", alignItems: "flex-start", gap: "8px", padding: "12px 14px", borderRadius: "16px", backgroundColor: dc(st.bg), color: st.ink, border: `2px solid ${st.ink}22` }}>
                         {st.icon && <span aria-hidden="true" style={{ flex: "0 0 auto", marginTop: "1px" }}><LtIcon paths={st.icon} size={20} /></span>}
                         <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: "18px", fontWeight: 800, lineHeight: 1.2 }}>{kopf}</span>{teil && <span style={{ display: "block", fontSize: "15px", fontWeight: 700, marginTop: "2px" }}>{teil}</span>}</span>
                       </div>

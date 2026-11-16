@@ -160,5 +160,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 227: **Startseite flackerte auf Tablet quer/PC** (Video des Nutzers: Team-Challenge und Brotkorb sprangen rechts dauernd hin und her). Ursache: Spaltenausgleich in `HomeScreen` (Karten sind links breiter und damit niedriger, nach jedem Umstellen sah die andere Verteilung besser aus). Jetzt nur umstellen, wenn es um mehr als 90px besser wird, und höchstens 4-mal in 4 s (`umstellungen`). Gemessen ab 1180px: vorher ~60 Wechsel in 4 s, jetzt 0. Test zählt Wechsel
 
+- 228: **Steckbrief im dunklen Design** (Foto des Nutzers): Name/Gruppe auf dem gelben Kopf waren weiß (jetzt `lt-papier lt-sb-kopf` + `color: TH.ink`), Allergen-Kästchen behalten ihre Farben (`lt-papier`), „Schalenfrüchte“ stand über den Rand (Raster `minmax(min(100%, 175px), 1fr)`, Umbruch erlaubt). Gleiche helle-Schrift-auf-Gelb-Korrektur für die Pop-up-Köpfe InstallHilfe, AusbilderNachricht, RolleWaehlen, FrageMelden, NeuesAbzeichen, Einzel-Nachricht. **Regel**: gelbe Flächen mit Text immer `className="lt-papier"` + dunkle Schriftfarbe
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

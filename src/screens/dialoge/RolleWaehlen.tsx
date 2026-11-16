@@ -13,7 +13,7 @@ export function RolleWaehlen({ username, setMyRole }: RolleWaehlenProps) {
   return (
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1400, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Wer bist du?" style={{ width: '100%', maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-        <div style={{ backgroundColor: LT.yellow, padding: '22px' }}>
+        <div className="lt-papier" style={{ backgroundColor: LT.yellow, color: LT.ink, padding: '22px' }}>
           <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1.1 }}>Willkommen, {username}!</div>
           <div style={{ fontSize: '17px', marginTop: '4px' }}>Damit die App gut zu dir passt: Was trifft auf dich zu?</div>
         </div>

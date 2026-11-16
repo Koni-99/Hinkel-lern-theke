@@ -628,6 +628,25 @@ async function offlineTests() {
     const torte = L.TIP_SHOP.find((i) => i.id === 'a_torte');
     ok('Laden: keine Torte mehr (jetzt Berliner), viele neue Teile', torte.label === 'Berliner' && !L.TIP_SHOP.some((i) => /Torte/.test(i.label)) && L.TIP_SHOP.length >= 70, `${L.TIP_SHOP.length} Teile`);
   }
+  // Version 228: Steckbrief im dunklen Design: dunkle Schrift auf dem gelben Kopf, Allergen-Kästchen ohne Überstand
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 1000, height: 667 }, vorher: async (ctx) => ctx.addInitScript(() => { if (sessionStorage.getItem('__v228')) return; sessionStorage.setItem('__v228', '1'); localStorage.setItem('lt_design', 'nacht'); sessionStorage.setItem('lt_seite', 'nachschlagen'); }) });
+    await clearPopups(d.page);
+    const k = d.page.locator('button, [role=button], .lt-card', { hasText: /Steckbriefe/ }).first();
+    if (await k.count()) { await click(k); await settle(d.page, 600); }
+    await click(d.page.getByText('Abendschnitte', { exact: true }).first()); await settle(d.page, 800);
+    const info = await d.page.evaluate(() => {
+      const kopf = document.querySelector('.lt-sb-kopf');
+      const titel = kopf ? kopf.querySelector('div > div') : null;
+      const rgb = titel ? getComputedStyle(titel).color.match(/\d+/g).map(Number) : [255, 255, 255];
+      const ueber = [...document.querySelectorAll('.lt-allergen')].filter((e) => e.scrollWidth > e.clientWidth + 1).length;
+      return { hell: (rgb[0] + rgb[1] + rgb[2]) / 3, ueber, n: document.querySelectorAll('.lt-allergen').length };
+    });
+    ok('Steckbrief nachts: Name auf dem gelben Kopf in dunkler Schrift', info.hell < 90, `Helligkeit ${Math.round(info.hell)}`);
+    ok('Steckbrief: Allergen-Kästchen ohne überstehenden Text', info.n > 0 && info.ueber === 0, `${info.ueber} von ${info.n} stehen über`);
+    ok('Steckbrief nachts: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4
   {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });

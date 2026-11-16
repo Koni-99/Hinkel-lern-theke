@@ -22,7 +22,7 @@ export function FrageMelden({ submitReport, setReportQ, reportQ, reportReason, s
   return (
     <div className="lt-overlay" onClick={() => setReportQ(null)} style={{ position: 'fixed', inset: 0, zIndex: 1200, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Frage melden" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '480px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', boxShadow: '0 24px 60px rgba(0,0,0,0.35)' }}>
-        <div style={{ backgroundColor: LT.yellow, padding: '20px 22px' }}>
+        <div className="lt-papier" style={{ backgroundColor: LT.yellow, color: LT.ink, padding: '20px 22px' }}>
           <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.1 }}>⚑ {reportQ.__g ? 'Fehler melden' : 'Frage melden'}</div>
           <div style={{ fontSize: '16px', marginTop: '4px' }}>Der Ausbilder sieht deine Meldung und kümmert sich darum.</div>
         </div>

@@ -137,7 +137,7 @@ export function EinzelNachrichtPopup({ n, onFertig }: { n: { vonName: string; t:
   return (
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 108, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div className="lt-dialog lt-pop-in lt-einzel-popup" role="dialog" aria-modal="true" aria-label={`Nachricht von ${n.vonName}`} style={{ width: '100%', maxWidth: '440px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '24px', overflow: 'hidden' }}>
-        <div style={{ backgroundColor: LT.yellow, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="lt-papier" style={{ backgroundColor: LT.yellow, color: LT.ink, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><LtIcon paths={ICON.mail} size={26} /></span>
           <div>
             <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Nachricht an dich</div>

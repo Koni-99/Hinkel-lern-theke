@@ -14,7 +14,7 @@ export function NeuesAbzeichen({ username, newBadges, markBadgesSeen }: NeuesAbz
   return (
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1300, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="lt-dialog" role="dialog" aria-modal="true" aria-label="Neues Abzeichen" style={{ width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '28px', overflow: 'visible', boxShadow: '0 24px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
-        <div style={{ backgroundColor: LT.yellow, padding: '22px' }}>
+        <div className="lt-papier" style={{ backgroundColor: LT.yellow, color: LT.ink, padding: '22px' }}>
           <div style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{newBadges.length === 1 ? 'Neues Abzeichen' : `${newBadges.length} neue Abzeichen`}</div>
           <div style={{ fontFamily: LT.serif, fontSize: '32px', lineHeight: 1.1, marginTop: '4px' }}>Glückwunsch, {username}!</div>
         </div>
