@@ -176,5 +176,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 235: Wetter-Markise im dunklen Design: Lichtschein hinter dem Logo war dunkel (Inline-Farbe wurde umgerechnet) → Klasse `lt-papier lt-wx-halo` mit goldenem Verlauf in `theke-design.ts` (bei Ähren-Kopf etwas kleiner/kräftiger), Logo leuchtet wie ohne Wetter
 
+- 236: Teigi hat viel mehr Sprüche (33 richtig, 20 falsch, je 2 bis 4 pro Serie, 17 beim Antippen, 8 zum Start, viele mit Bäckerei-Witz), sagt nie zweimal hintereinander dasselbe (`zufall` merkt `letzter`), redet bei richtigen Antworten öfter (50 % statt 35 %)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

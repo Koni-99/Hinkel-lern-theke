@@ -8,24 +8,53 @@ import { TeigiGlas } from '../basis/laden';
 export const TEIGI_EVENT = 'lt-teigi';
 export type TeigiMeldung = { ok: boolean; lauf: number };
 
-const zufall = <T,>(liste: T[]) => liste[Math.floor(Math.random() * liste.length)];
-const RICHTIG = ['Lecker!', 'Genau so!', 'Stark!', 'Das sitzt!', 'Mmh, richtig!', 'Super gemacht!', 'Ich blubber vor Freude!'];
-const FALSCH = ['Nicht schlimm, nächstes Mal!', 'Lies dir die Erklärung durch.', 'Auch Teig braucht Zeit.', 'Kopf hoch, weiter geht’s!', 'Das merken wir uns.', 'Fehler machen schlau!'];
-const SERIE: Record<number, string[]> = {
-  3: ['3 in Folge, weiter so!', 'Drei richtig, du bist warm!'],
-  5: ['5 in Folge! Ich geh auf wie ein Hefeteig!', 'Fünf am Stück, toll!'],
-  10: ['10 in Folge! Du bist ein Profi!', 'Zehn! Ich platze gleich vor Stolz!'],
-  15: ['15 in Folge! Unglaublich!'],
-  20: ['20 in Folge! Meister-Niveau!'],
+// Zufälliger Spruch, aber nie zweimal derselbe hintereinander
+let letzter = '';
+const zufall = (liste: string[]) => {
+  const auswahl = liste.length > 1 ? liste.filter((t) => t !== letzter) : liste;
+  letzter = auswahl[Math.floor(Math.random() * auswahl.length)];
+  return letzter;
 };
-const ANGETIPPT = ['Hihi, das kitzelt!', 'Hallo! Ich bin Teigi.', 'Blubb!', 'Weiter geht’s!', 'Ich pass auf dich auf!', 'Füttern geht mit Lernen!'];
-const START = ['Ich bin dabei! Viel Erfolg!', 'Los geht’s, ich drück dir die Daumen!', 'Zusammen schaffen wir das!'];
+const RICHTIG = [
+  'Lecker!', 'Genau so!', 'Stark!', 'Das sitzt!', 'Mmh, richtig!', 'Super gemacht!', 'Ich blubber vor Freude!',
+  'Knusprig gelöst!', 'Goldbraun, perfekt!', 'Frisch aus dem Ofen: richtig!', 'Da geht mir der Teig auf!',
+  'Volltreffer!', 'Du weißt Bescheid!', 'Wie aus dem Bilderbuch!', 'Das hätte ich nicht besser gewusst!',
+  'Bravo, Brotfreund!', 'Ein echter Profi an der Theke!', 'Die Kunden werden dich lieben!', 'Butterweich gelöst!',
+  'Krümelfrei richtig!', 'Wie eine frische Brezel: perfekt!', 'Yeah, richtig!', 'Du bist ja ein Fuchs!',
+  'Das merkt man, du lernst fleißig!', 'Weiter so, ich bin stolz!', 'Ofenfrisch und richtig!', 'Ganz meine Meinung!',
+  'Da klatsche ich mit meinem Deckel!', 'Sauber!', 'Spitze!', 'Klasse!', 'Richtig gut!', 'Wow!',
+];
+const FALSCH = [
+  'Nicht schlimm, nächstes Mal!', 'Lies dir die Erklärung durch.', 'Auch Teig braucht Zeit.', 'Kopf hoch, weiter geht’s!',
+  'Das merken wir uns.', 'Fehler machen schlau!', 'Knapp daneben ist auch vorbei, aber egal!', 'Beim nächsten Mal sitzt es!',
+  'Auch der beste Bäcker hat mal ein Brot verbrannt.', 'Gleich nochmal, du schaffst das!', 'Hmm, das war knifflig.',
+  'Keine Sorge, ich glaub an dich!', 'Rom wurde auch nicht an einem Tag gebacken.', 'Das kommt in den Fehler-Stapel, dann übst du es nochmal.',
+  'Durchatmen und weiter!', 'Upps! Passiert den Besten.', 'Schau dir die richtige Antwort gut an.', 'Daraus lernen wir!',
+  'Nicht aufgeben, ich blubber für dich!', 'Kleiner Ausrutscher, weiter geht’s!',
+];
+const SERIE: Record<number, string[]> = {
+  3: ['3 in Folge, weiter so!', 'Drei richtig, du bist warm!', 'Drei am Stück, der Ofen läuft heiß!', 'Hattrick!'],
+  5: ['5 in Folge! Ich geh auf wie ein Hefeteig!', 'Fünf am Stück, toll!', 'Fünf richtig! Du bist nicht zu bremsen!', 'Fünfer-Serie! Ich hüpf vor Freude!'],
+  10: ['10 in Folge! Du bist ein Profi!', 'Zehn! Ich platze gleich vor Stolz!', 'Zehn am Stück! Hinkel-Meister in Sicht!'],
+  15: ['15 in Folge! Unglaublich!', '15! Du bist ja ein Lexikon auf zwei Beinen!'],
+  20: ['20 in Folge! Meister-Niveau!', '20! Das gibt’s doch nicht!'],
+};
+const ANGETIPPT = [
+  'Hihi, das kitzelt!', 'Hallo! Ich bin Teigi.', 'Blubb!', 'Weiter geht’s!', 'Ich pass auf dich auf!', 'Füttern geht mit Lernen!',
+  'Psst, ich bin ein Sauerteig!', 'Nicht schütteln, ich bin empfindlich!', 'Jeder Lerntag macht mich größer!', 'Blubb blubb!',
+  'Hast du heute schon gelernt?', 'Ich mag am liebsten Roggenmehl!', 'Im Laden gibt es Hüte für mich!', 'Hey, das bin ja ich!',
+  'Zusammen sind wir ein starkes Team!', 'Ich bin älter, als du denkst!', 'Gib mir eine Bäckermütze, bitte!',
+];
+const START = [
+  'Ich bin dabei! Viel Erfolg!', 'Los geht’s, ich drück dir die Daumen!', 'Zusammen schaffen wir das!', 'Auf geht’s, Brotfreund!',
+  'Ich hab schon Hunger aufs Lernen!', 'Konzentration, ich schau zu!', 'Lass uns loslegen!', 'Heute knacken wir die Fragen!',
+];
 
 export const teigiSpruch = (m: TeigiMeldung, zahl = Math.random()): string | null => {
   if (m.ok && SERIE[m.lauf]) return zufall(SERIE[m.lauf]);
   if (m.ok && m.lauf > 20 && m.lauf % 10 === 0) return `${m.lauf} in Folge! Wahnsinn!`;
-  if (!m.ok) return zahl < 0.7 ? zufall(FALSCH) : null;
-  return zahl < 0.35 ? zufall(RICHTIG) : null; // nicht bei jeder richtigen Antwort reden
+  if (!m.ok) return zahl < 0.75 ? zufall(FALSCH) : null;
+  return zahl < 0.5 ? zufall(RICHTIG) : null; // nicht bei jeder richtigen Antwort reden
 };
 
 export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?: string | null; glas?: string | null; tanz?: string | null }) {
