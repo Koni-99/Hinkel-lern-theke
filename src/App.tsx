@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 232;
+const APP_VERSION: number = 233;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -939,6 +939,7 @@ export default function App() {
         pr._shopOwned = [...owned, item.id];
         if (item.kind === 'avatar') pr._avatar = item.icon; else if (item.kind === 'theme') pr._theme = item.id; else if (item.kind === 'effect') pr._effect = item.id;
         else if (item.kind === 'schrift') pr._schrift = item.id; else if (item.kind === 'jubel') pr._jubel = item.id;
+        else if (item.kind === 'teigihut') pr._teigiHut = item.id; else if (item.kind === 'teigiglas') pr._teigiGlas = item.id; else if (item.kind === 'teigitanz') pr._teigiTanz = item.id;
         else if (item.kind === 'haustier') { if (!pr._teigiSeit) { pr._teigiSeit = dayKey(new Date()); pr._teigiStart = Number(pr._stamps) || 0; } }
         else pr._title = item.label;
       }
@@ -952,7 +953,8 @@ export default function App() {
     mutateCloudData((curr) => {
       const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username });
       if (kind === 'avatar') pr._avatar = value || null; else if (kind === 'theme') pr._theme = value || null; else if (kind === 'effect') pr._effect = value || null;
-      else if (kind === 'schrift') pr._schrift = value || null; else if (kind === 'jubel') pr._jubel = value || null; else pr._title = value || null;
+      else if (kind === 'schrift') pr._schrift = value || null; else if (kind === 'jubel') pr._jubel = value || null;
+      else if (kind === 'teigihut') pr._teigiHut = value || null; else if (kind === 'teigiglas') pr._teigiGlas = value || null; else if (kind === 'teigitanz') pr._teigiTanz = value || null; else pr._title = value || null;
       return curr;
     });
   };
@@ -1994,6 +1996,15 @@ export default function App() {
     setToast(n === 1 ? 'Serien-Schutz eingesetzt: Du hast einen Tag verpasst, deine Lern-Serie bleibt trotzdem.' : `Serien-Schutz eingesetzt: ${n} verpasste Tage sind geschützt, deine Lern-Serie bleibt.`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [schutzKey]);
+  // Version 233: Teigi ist jetzt für alle kostenlos. Wer ihn vorher gekauft hat, bekommt die 15 € einmal zurück.
+  const teigiErstatten = !!username && !isAdmin && cloudConnected && Array.isArray(schutzPr._shopOwned) && schutzPr._shopOwned.includes('h_teigi') && !schutzPr._teigiErstattet;
+  useEffect(() => {
+    if (!teigiErstatten || !username) return;
+    const k = username.toLowerCase();
+    mutateCloudData((curr) => { const pr = curr.progress[k]; if (!pr || pr._teigiErstattet) return curr; pr._tipSpent = Math.max(0, (Number(pr._tipSpent) || 0) - 1500); pr._teigiErstattet = true; return curr; });
+    setToast('Teigi gibt es jetzt für alle kostenlos. Deine 15,00 € sind wieder in deiner Kasse!');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teigiErstatten]);
   if (!username) return <LoginScreen {...{ tempUsername, setTempUsername, adminPinInput, setAdminPinInput, adminEmail, setAdminEmail, setAdminLoginMsg, adminLoginMsg, setPinError, pinError, loginStep, setLoginStep, loginPin, setLoginPin, loginBusy, setLoginBusy, setLoginMsg, loginMsg, resetLogin, cloudUrl, fetchCloudData, cloudDataRef, savePin, finishLogin, bigFont, toggleBigFont }} />;
 
   const overallPercent = getUserMasteryPercent(username);
@@ -2698,6 +2709,9 @@ export default function App() {
             {activeTab === 'home' && <button onClick={toggleAnim} aria-pressed={!animOn} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '999px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
               {animOn ? 'Animationen ausschalten' : 'Animationen einschalten'}
             </button>}
+            {!isAdmin && <button className="lt-teigi-schalter" onClick={() => { const k = username.toLowerCase(); const aus = !myProg._teigiAus; mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); pr._teigiAus = aus; return curr; }); setToast(aus ? 'Teigi ist ausgeblendet. Hier unten kannst du ihn jederzeit wieder einschalten.' : 'Teigi ist wieder dabei!'); }} aria-pressed={!!myProg._teigiAus} style={{ minHeight: '44px', padding: '0 14px', borderRadius: '999px', border: `2px solid ${LT.line}`, backgroundColor: dc('#FFFFFF'), color: LT.muted, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+              {myProg._teigiAus ? 'Teigi einschalten' : 'Teigi ausschalten'}
+            </button>}
             <span>{`Lern-Theke · Version ${APP_VERSION}`}</span>
           </div>
         );
@@ -2720,8 +2734,8 @@ export default function App() {
 
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
-      {!isAdmin && Array.isArray(myProg._shopOwned) && myProg._shopOwned.includes('h_teigi') && (GAME_TABS.includes(activeTab) && activeTab !== 'spielen' || (activeTab === 'quiz' && quizList.length > 0 && !quizFinished && selectedLevel !== null)) && (
-        <TeigiBegleiter stufe={teigiStand(Array.isArray(myProg._days) ? myProg._days : [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} />
+      {!isAdmin && !myProg._teigiAus && (GAME_TABS.includes(activeTab) && activeTab !== 'spielen' || (activeTab === 'quiz' && quizList.length > 0 && !quizFinished && selectedLevel !== null)) && (
+        <TeigiBegleiter stufe={teigiStand(Array.isArray(myProg._days) ? myProg._days : [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
       )}
       {tuetenInhalt && (
         <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>

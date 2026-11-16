@@ -8,8 +8,8 @@ import { useCountUp } from './serie';
 
 /** Einfaches Linien-Symbol (statt Emojis) */
 // ── Trinkgeld-Laden: Preise in Cent ──
-export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean };
-export type AnlegeArt = 'avatar' | 'title' | 'theme' | 'effect' | 'schrift' | 'jubel';
+export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier' | 'teigihut' | 'teigiglas' | 'teigitanz'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean };
+export type AnlegeArt = 'avatar' | 'title' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'teigihut' | 'teigiglas' | 'teigitanz';
 
 export const TIP_DAY_CAP = 600;
 
@@ -99,6 +99,20 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 'jb_brezel', kind: 'jubel', icon: '🥨', label: 'Brezelregen', price: 700, desc: 'Am Ende eines guten Quiz regnet es Brezeln.' },
   { id: 'jb_mehl', kind: 'jubel', icon: '☁️', label: 'Mehlwolke', price: 700, desc: 'Am Ende eines guten Quiz staubt eine Mehlwolke auf.' },
   { id: 'jb_sterne', kind: 'jubel', icon: '⭐', label: 'Sternenregen', price: 900, desc: 'Am Ende eines guten Quiz fallen goldene Sterne.' },
+  // Version 233: Teigi hat jetzt jeder. Im Laden gibt es Sachen für ihn.
+  { id: 'tz_schleife', kind: 'teigihut', icon: '🎀', label: 'Schleife', price: 400, desc: 'Eine Schleife für Teigis Deckel.' },
+  { id: 'tz_blume', kind: 'teigihut', icon: '🌼', label: 'Blümchen', price: 400, desc: 'Ein Blümchen auf dem Deckel.' },
+  { id: 'tz_muetze', kind: 'teigihut', icon: '👨‍🍳', label: 'Bäckermütze', price: 600, desc: 'Teigi wird zum echten Bäcker.' },
+  { id: 'tz_brille', kind: 'teigihut', icon: '🕶️', label: 'Sonnenbrille', price: 600, desc: 'Ganz schön lässig, der Teigi.' },
+  { id: 'tz_weihnacht', kind: 'teigihut', icon: '🎅', label: 'Weihnachtsmütze', price: 600, months: [11, 12, 1], desc: 'Nur in der Weihnachtszeit zu haben.' },
+  { id: 'tz_krone', kind: 'teigihut', icon: '👑', label: 'Krone', price: 1200, desc: 'Für den König unter den Sauerteigen.' },
+  { id: 'tg_bernstein', kind: 'teigiglas', icon: '🫙', label: 'Glas Bernstein', price: 600, desc: 'Teigi wohnt in einem bernsteinfarbenen Glas.' },
+  { id: 'tg_rose', kind: 'teigiglas', icon: '🫙', label: 'Glas Rosé', price: 600, desc: 'Teigi wohnt in einem rosa Glas.' },
+  { id: 'tg_mint', kind: 'teigiglas', icon: '🫙', label: 'Glas Minze', price: 600, desc: 'Teigi wohnt in einem mintgrünen Glas.' },
+  { id: 'tg_gold', kind: 'teigiglas', icon: '🫙', label: 'Goldglas', price: 1000, desc: 'Ein glänzendes Goldglas mit goldenem Deckel.' },
+  { id: 'tt_dreh', kind: 'teigitanz', icon: '🌀', label: 'Pirouette', price: 500, desc: 'Bei richtigen Antworten dreht sich Teigi einmal im Kreis.' },
+  { id: 'tt_tanz', kind: 'teigitanz', icon: '💃', label: 'Freudentanz', price: 600, desc: 'Bei richtigen Antworten tanzt Teigi hin und her.' },
+  { id: 'tt_salto', kind: 'teigitanz', icon: '🤸', label: 'Salto', price: 800, desc: 'Bei richtigen Antworten macht Teigi einen Salto.' },
   { id: 'h_teigi', kind: 'haustier', icon: '🫙', label: 'Sauerteig Teigi', price: 1500, desc: 'Dein eigener Sauerteig im Brotkorb. Jeder Lerntag füttert ihn, er wächst mit. Lernst du lange nicht, wird er schlapp.' },
   { id: 'w_igel', kind: 'avatar', icon: '🦔', label: 'Igel', price: 900, woche: true },
   { id: 'w_eichhorn', kind: 'avatar', icon: '🐿️', label: 'Eichhörnchen', price: 900, woche: true },
@@ -127,7 +141,7 @@ export const wochenTeile = (d = new Date()): string[] => {
   const a = (w * 5) % pool.length;
   return [pool[a], pool[(a + 1 + (w % (pool.length - 1))) % pool.length]];
 };
-export const imLaden = (it: ShopItem, d = new Date()) => (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
+export const imLaden = (it: ShopItem, d = new Date()) => it.kind !== 'haustier' && (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
 
 export const dealOfDay = (d = new Date()): ShopItem => {
   const pool = TIP_SHOP.filter(i => imLaden(i, d) && i.id !== 'j_tuete' && i.kind !== 'haustier');
@@ -182,7 +196,7 @@ export const nameClassOf = (pr: any): string | undefined => {
   return `${farbe} ${schrift}`.trim() || undefined;
 };
 
-export type ShopTab = 'zeichen' | 'bewegung' | 'titel' | 'farben' | 'joker' | 'schatz';
+export type ShopTab = 'zeichen' | 'teigi' | 'bewegung' | 'titel' | 'farben' | 'joker' | 'schatz';
 
 /** Schatzkammer: nur mit Punkten zu kaufen, die Punkte fehlen dann in der Gesamtwertung */
 export type PtItem = { id: string; kind: 'gold' | 'namecolor' | 'frame' | 'avatar' | 'markise' | 'spruch'; icon: string; label: string; price: number; desc: string };
@@ -249,16 +263,17 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
   const deal = dealOfDay();
   useEffect(() => { if (!bon) return; const t = window.setTimeout(() => setBon(null), 3200); return () => window.clearTimeout(t); }, [bon]);
   const tabs: { id: ShopTab; icon: string; label: string }[] = [
-    { id: 'zeichen', icon: '🥐', label: 'Zeichen' }, { id: 'bewegung', icon: '✨', label: 'Bewegung' }, { id: 'titel', icon: '🏷️', label: 'Titel' }, { id: 'farben', icon: '🎨', label: 'Farben' }, { id: 'joker', icon: '🃏', label: 'Joker' }, { id: 'schatz', icon: '💎', label: 'Schatzkammer' },
+    { id: 'zeichen', icon: '🥐', label: 'Zeichen' }, { id: 'teigi', icon: '🫙', label: 'Teigi' }, { id: 'bewegung', icon: '✨', label: 'Bewegung' }, { id: 'titel', icon: '🏷️', label: 'Titel' }, { id: 'farben', icon: '🎨', label: 'Farben' }, { id: 'joker', icon: '🃏', label: 'Joker' }, { id: 'schatz', icon: '💎', label: 'Schatzkammer' },
   ];
   const list = (t: ShopTab) => TIP_SHOP.filter(i =>
-    t === 'zeichen' ? (i.kind === 'avatar' || i.kind === 'haustier') && (imLaden(i) || owned.includes(i.id))
+    t === 'zeichen' ? i.kind === 'avatar' && (imLaden(i) || owned.includes(i.id))
+      : t === 'teigi' ? ['teigihut', 'teigiglas', 'teigitanz'].includes(i.kind) && (imLaden(i) || owned.includes(i.id))
       : t === 'bewegung' ? i.kind === 'effect' || i.kind === 'jubel' : t === 'titel' ? i.kind === 'title' : t === 'farben' ? i.kind === 'theme' || i.kind === 'schrift' : i.kind === 'joker')
     .sort((a, b) => (t === 'zeichen' ? Number(!!b.woche && !owned.includes(b.id)) - Number(!!a.woche && !owned.includes(a.id)) || Number(b.kind === 'haustier') - Number(a.kind === 'haustier') : 0));
   const themeSwatch: Record<string, string> = { th_schoko: '#6B3E1F', th_pistazie: '#9BC27A', th_erdbeere: '#F2667A', th_blaubeere: '#5B7FD6', th_vanille: '#F7E3A1', th_karamell: '#E0A458', th_himbeere: '#E8577A', th_minze: '#9FE0C9', th_lavendel: '#C7B4EC', th_zitrone: '#FFF07A' };
   const item = (it: ShopItem, i: number) => {
     const has = it.kind !== 'joker' && owned.includes(it.id);
-    const active = (it.kind === 'avatar' && prog._avatar === it.icon) || (it.kind === 'title' && prog._title === it.label) || (it.kind === 'theme' && prog._theme === it.id) || (it.kind === 'effect' && prog._effect === it.id) || (it.kind === 'schrift' && prog._schrift === it.id) || (it.kind === 'jubel' && prog._jubel === it.id) || (it.kind === 'haustier' && owned.includes(it.id));
+    const active = (it.kind === 'avatar' && prog._avatar === it.icon) || (it.kind === 'title' && prog._title === it.label) || (it.kind === 'theme' && prog._theme === it.id) || (it.kind === 'effect' && prog._effect === it.id) || (it.kind === 'schrift' && prog._schrift === it.id) || (it.kind === 'jubel' && prog._jubel === it.id) || (it.kind === 'haustier' && owned.includes(it.id)) || (it.kind === 'teigihut' && prog._teigiHut === it.id) || (it.kind === 'teigiglas' && prog._teigiGlas === it.id) || (it.kind === 'teigitanz' && prog._teigiTanz === it.id);
     const price = shopPrice(it); const isDeal = price < it.price; const afford = balance >= price;
     const count = it.kind === 'joker' ? Number(prog[JOKER_FIELD[it.id]]) || 0 : 0;
     const click = () => {
@@ -279,7 +294,10 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
               ? <span style={{ maxWidth: '100%', textAlign: 'center', padding: '8px 12px', borderRadius: '999px', backgroundColor: '#FFC72C', color: '#2B170A', fontSize: '15px', fontWeight: 800, boxShadow: '0 3px 0 #B98A0A, 0 8px 14px -8px rgba(31,20,12,.5)' }}>{it.icon} {it.label}</span>
               : it.kind === 'joker' ? <ShopIcon3D k={it.id} size={56} />
               : it.kind === 'schrift' ? <span className={`lt-sf-${it.id.replace('sf_', '')}`} style={{ fontSize: '24px', lineHeight: 1.1, maxWidth: '100%', overflowWrap: 'anywhere' }}>{prog._displayName || 'Name'}</span>
-              : it.kind === 'haustier' ? <TeigiGlas stufe={1} laune="froh" size={64} /> : <span className={`lt-shop-emo ${it.kind === 'effect' ? `lt-fx-${it.id.replace('fx_', '')}` : 'lt-emo-bob'}`} style={{ fontSize: '46px', lineHeight: 1, animationDelay: `${-(i % 5) * 0.4}s` }}>{it.kind === 'effect' ? (prog._avatar || '🥨') : it.icon}</span>}
+              : it.kind === 'haustier' ? <TeigiGlas stufe={1} laune="froh" size={64} />
+              : it.kind === 'teigihut' ? <TeigiGlas stufe={1} laune="froh" size={64} hut={it.id} glas={prog._teigiGlas} />
+              : it.kind === 'teigiglas' ? <TeigiGlas stufe={1} laune="froh" size={64} glas={it.id} hut={prog._teigiHut} />
+              : it.kind === 'teigitanz' ? <span className={`lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}`} style={{ display: 'inline-block', animationDelay: `${-(i % 3) * 0.5}s` }}><TeigiGlas stufe={1} laune="froh" size={64} hut={prog._teigiHut} glas={prog._teigiGlas} /></span> : <span className={`lt-shop-emo ${it.kind === 'effect' ? `lt-fx-${it.id.replace('fx_', '')}` : 'lt-emo-bob'}`} style={{ fontSize: '46px', lineHeight: 1, animationDelay: `${-(i % 5) * 0.4}s` }}>{it.kind === 'effect' ? (prog._avatar || '🥨') : it.icon}</span>}
         </span>
         {it.woche && !has && <span style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, padding: '3px 8px', borderRadius: '999px', backgroundColor: '#5B3A75', color: '#FFFFFF', fontSize: '11px', fontWeight: 800 }}>nur diese Woche</span>}
         {it.kind !== 'title' && <span style={{ fontSize: '14px', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{it.label}</span>}
@@ -335,6 +353,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
                   {v.art === 'tip' && it.kind === 'theme' && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 700 }}><span className="lt-shop-ball" style={{ ['--c' as any]: themeSwatch[it.id] || LT.yellow, width: '26px', height: '26px' }} />Farbe der App</span>}
                   {v.art === 'pts' && it.kind === 'frame' && <span className="lt-schatz-bon">{it.icon} {String(name).toUpperCase().slice(0, 10)} {it.icon}</span>}
                   {v.art === 'pts' && it.kind === 'markise' && <span className={`lt-mk-swatch lt-mk-sw-${it.id}`} style={{ width: '90px', height: '34px' }} />}
+                  {v.art === 'tip' && ['teigihut', 'teigiglas', 'teigitanz'].includes(it.kind) && <span className={it.kind === 'teigitanz' ? `lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}` : ''} style={{ display: 'inline-block' }}><TeigiGlas stufe={2} laune="froh" size={70} hut={it.kind === 'teigihut' ? it.id : prog._teigiHut} glas={it.kind === 'teigiglas' ? it.id : prog._teigiGlas} /></span>}
                 </div>
                 <div style={{ fontSize: '14px', color: LT.muted }}>{it.label}{it.desc ? ` · ${it.desc}` : ''}</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -364,7 +383,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
             ))}
           </div>
           <div style={{ fontSize: '15px', color: LT.brown }}>
-            {tab === 'schatz' ? 'Besondere Sachen, die es nur für Punkte gibt. Lohnt es sich, dafür in der Bestenliste ein paar Plätze abzurutschen?' : tab === 'zeichen' ? 'Steht vor deinem Namen, auf der Startseite und in der Bestenliste. Saison-Zeichen gibt es nur eine Zeit lang.' : tab === 'bewegung' ? 'Lässt dein Zeichen tanzen. Immer ein Effekt gleichzeitig.' : tab === 'titel' ? 'Steht unter deinem Namen auf der Startseite.' : tab === 'farben' ? 'Färbt Knöpfe, Balken und die Markise in deiner App. Nur du siehst es.' : 'Jeder Joker hilft einmal. Du kannst mehrere sammeln.'}
+            {tab === 'schatz' ? 'Besondere Sachen, die es nur für Punkte gibt. Lohnt es sich, dafür in der Bestenliste ein paar Plätze abzurutschen?' : tab === 'teigi' ? 'Sachen für deinen Begleiter Teigi: Hüte und Zubehör, ein neues Glas und Tänze bei richtigen Antworten. Antippen zum Anprobieren.' : tab === 'zeichen' ? 'Steht vor deinem Namen, auf der Startseite und in der Bestenliste. Saison-Zeichen gibt es nur eine Zeit lang.' : tab === 'bewegung' ? 'Lässt dein Zeichen tanzen. Immer ein Effekt gleichzeitig.' : tab === 'titel' ? 'Steht unter deinem Namen auf der Startseite.' : tab === 'farben' ? 'Färbt Knöpfe, Balken und die Markise in deiner App. Nur du siehst es.' : 'Jeder Joker hilft einmal. Du kannst mehrere sammeln.'}
           </div>
           {tab === 'schatz' && (() => {
             const ptsOwned: string[] = Array.isArray(prog._ptsOwned) ? prog._ptsOwned : [];
@@ -538,19 +557,36 @@ export function teigiStand(days: string[], futter: number, heute = new Date()) {
   return { futter, stufe, laune, name: ['Baby-Teigi', 'Junger Teigi', 'Kräftiger Teigi', 'Meister-Teigi'][stufe], naechste: [5, 15, 40, 0][stufe] };
 }
 
-/** Das Sauerteig-Glas von Teigi: Stufe 0 bis 3 (Füllhöhe), Laune froh/gut/schlapp */
-export function TeigiGlas({ stufe, laune, size = 56 }: { stufe: number; laune: 'froh' | 'gut' | 'schlapp'; size?: number }) {
-  const hoehe = [14, 20, 26, 32][Math.max(0, Math.min(3, stufe))];
+/** Das Sauerteig-Glas von Teigi: Stufe 0 bis 3 (Füllhöhe), Laune froh/gut/schlapp.
+ *  Version 233: Gesicht immer mitten im Glas (nicht mehr an der Füllhöhe), Glasfarbe und Hut/Zubehör aus dem Laden */
+export const TEIGI_GLAS: Record<string, { glas: string; rand: string; deckel: string }> = {
+  klar: { glas: '#E4F0F6', rand: '#5E7C8C', deckel: '#B98A0A' },
+  tg_bernstein: { glas: '#F6E1B8', rand: '#A8741E', deckel: '#7A4A10' },
+  tg_rose: { glas: '#F7DDE3', rand: '#B2607A', deckel: '#8A3E57' },
+  tg_mint: { glas: '#DDF3EA', rand: '#3F8E6E', deckel: '#2F6A52' },
+  tg_gold: { glas: '#FFF0B3', rand: '#B8860B', deckel: '#E0A400' },
+};
+export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: number; laune: 'froh' | 'gut' | 'schlapp'; size?: number; hut?: string | null; glas?: string | null }) {
+  const hoehe = [12, 18, 24, 30][Math.max(0, Math.min(3, stufe))];
   const teig = laune === 'schlapp' ? '#D8CDBB' : '#F3E3C0';
-  const y = 46 - hoehe;
+  const g = TEIGI_GLAS[glas || 'klar'] || TEIGI_GLAS.klar;
+  const y = 48 - hoehe;
   return (
     <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden="true" className={laune === 'froh' ? 'lt-papier lt-teigi lt-teigi-froh' : 'lt-papier lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
-      <rect x="14" y="4" width="28" height="7" rx="2" fill="#B98A0A" />
-      <path d="M12 12h32v32a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z" fill="#E4F0F6" stroke="#5E7C8C" strokeWidth="2.4" />
-      <path d={`M14 ${y + (laune === 'schlapp' ? 4 : 0)}q7 ${laune === 'schlapp' ? 2 : -4} 14 0t14 0V44a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5z`} fill={teig} />
-      {laune !== 'schlapp' && <g fill="#FFFFFF" opacity=".9"><circle className="lt-teigi-blase" cx="21" cy={y + 8} r="2" /><circle className="lt-teigi-blase lt-tb2" cx="33" cy={y + 12} r="1.6" /><circle className="lt-teigi-blase lt-tb3" cx="27" cy={y + 5} r="1.2" /></g>}
-      <g fill="#2B170A"><circle cx="23" cy={y + 16} r="1.6" /><circle cx="33" cy={y + 16} r="1.6" /></g>
-      <path d={laune === 'schlapp' ? `M24 ${y + 23}q4 -3 8 0` : `M24 ${y + 21}q4 ${laune === 'froh' ? 4 : 2} 8 0`} stroke="#2B170A" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+      <rect x="14" y="5" width="28" height="7" rx="2" fill={g.deckel} />
+      <path d="M12 13h32v31a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z" fill={g.glas} stroke={g.rand} strokeWidth="2.4" />
+      <path d={`M14 ${y + (laune === 'schlapp' ? 3 : 0)}q7 ${laune === 'schlapp' ? 2 : -3} 14 0t14 0V44a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5z`} fill={teig} />
+      {laune !== 'schlapp' && <g fill="#FFFFFF" opacity=".9"><circle className="lt-teigi-blase" cx="19" cy={y + 6} r="1.8" /><circle className="lt-teigi-blase lt-tb2" cx="37" cy={y + 9} r="1.5" /><circle className="lt-teigi-blase lt-tb3" cx="35" cy={y + 4} r="1.1" /></g>}
+      {/* Gesicht: immer mitten im Glas */}
+      <g fill="#2B170A"><ellipse cx="23" cy="30" rx="1.9" ry="2.2" /><ellipse cx="33" cy="30" rx="1.9" ry="2.2" /><circle cx="23.6" cy="29.3" r=".6" fill="#FFFFFF" /><circle cx="33.6" cy="29.3" r=".6" fill="#FFFFFF" /></g>
+      {laune !== 'schlapp' && <g fill="#F4A3A3" opacity=".7"><ellipse cx="19.5" cy="34" rx="2" ry="1.2" /><ellipse cx="36.5" cy="34" rx="2" ry="1.2" /></g>}
+      <path d={laune === 'schlapp' ? 'M24 37q4 -3 8 0' : `M24 34.5q4 ${laune === 'froh' ? 4.5 : 2.5} 8 0`} stroke="#2B170A" strokeWidth="1.7" fill="none" strokeLinecap="round" />
+      {hut === 'tz_brille' && <g><rect x="18" y="27" width="9" height="6" rx="2.5" fill="#1F140C" /><rect x="29" y="27" width="9" height="6" rx="2.5" fill="#1F140C" /><path d="M27 29h2M18 29l-4-2M38 29l4-2" stroke="#1F140C" strokeWidth="1.4" /></g>}
+      {hut === 'tz_muetze' && <g><rect x="17" y="1" width="22" height="6" rx="1.5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="20" cy="-2" r="5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="28" cy="-4" r="6" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="36" cy="-2" r="5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><rect x="15" y="2" width="26" height="5" fill="#FFFFFF" /></g>}
+      {hut === 'tz_weihnacht' && <g><path d="M17 5q8-16 22-12l-3 2q-2 4 3 10z" fill="#D92D20" /><rect x="14" y="2" width="28" height="6" rx="3" fill="#FFFFFF" /><circle cx="39" cy="-7" r="3.2" fill="#FFFFFF" /></g>}
+      {hut === 'tz_schleife' && <g fill="#E8577A"><path d="M28 6l-9-5v10z" /><path d="M28 6l9-5v10z" /><circle cx="28" cy="6" r="2.6" fill="#B2345A" /></g>}
+      {hut === 'tz_blume' && <g><g fill="#FFFFFF">{[0, 72, 144, 216, 288].map((a) => <circle key={a} cx={36 + Math.cos(a * Math.PI / 180) * 3.6} cy={4 + Math.sin(a * Math.PI / 180) * 3.6} r="2.6" />)}</g><circle cx="36" cy="4" r="2.2" fill="#FFC72C" /></g>}
+      {hut === 'tz_krone' && <g><path d="M17 7l2-10 5 6 4-8 4 8 5-6 2 10z" fill="#FFC72C" stroke="#B8860B" strokeWidth="1.2" strokeLinejoin="round" /><circle cx="28" cy="2" r="1.6" fill="#D92D20" /></g>}
     </svg>
   );
 }

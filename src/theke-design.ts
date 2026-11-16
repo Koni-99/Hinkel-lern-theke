@@ -426,7 +426,14 @@ body.lt-mit-teigi main{padding-bottom:100px}
 .lt-teigi-traurig{animation:ltTeigiTraurig .8s ease}
 @keyframes ltTeigiTraurig{0%,100%{transform:none}25%{transform:translateX(-4px) rotate(-4deg)}50%{transform:translateX(4px) rotate(4deg)}75%{transform:translateX(-2px)}}
 @media (min-width:1180px){.lt-teigi-begleiter{bottom:24px;left:auto;right:24px;flex-direction:row}.lt-papier .lt-teigi-sprech{border-radius:16px 16px 4px 16px}body.lt-mit-teigi main{padding-bottom:0}}
-@media (prefers-reduced-motion:reduce){.lt-teigi-hops,.lt-teigi-traurig{animation:none}}
+.lt-teigi-dreh{animation:ltTeigiDreh .8s cubic-bezier(.3,1.3,.5,1)}
+@keyframes ltTeigiDreh{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.lt-teigi-tanz{animation:ltTeigiTanz .9s ease-in-out}
+@keyframes ltTeigiTanz{0%,100%{transform:none}20%{transform:translateX(-6px) rotate(-10deg)}40%{transform:translateX(6px) rotate(10deg)}60%{transform:translateX(-6px) rotate(-10deg)}80%{transform:translateX(6px) rotate(10deg)}}
+.lt-teigi-salto{animation:ltTeigiSalto .9s cubic-bezier(.3,1.2,.5,1)}
+@keyframes ltTeigiSalto{0%{transform:translateY(0) rotate(0)}40%{transform:translateY(-22px) rotate(-180deg)}80%{transform:translateY(0) rotate(-360deg)}100%{transform:rotate(-360deg)}}
+.lt-teigi-vorfuehr.lt-teigi-dreh,.lt-teigi-vorfuehr.lt-teigi-tanz,.lt-teigi-vorfuehr.lt-teigi-salto{animation-iteration-count:infinite;animation-duration:2.4s}
+@media (prefers-reduced-motion:reduce){.lt-teigi-hops,.lt-teigi-traurig,.lt-teigi-dreh,.lt-teigi-tanz,.lt-teigi-salto{animation:none}}
 
 
 @keyframes ltDotPulse{0%{box-shadow:0 0 0 0 rgba(217,45,32,.6)}70%{box-shadow:0 0 0 10px rgba(217,45,32,0)}100%{box-shadow:0 0 0 0 rgba(217,45,32,0)}}

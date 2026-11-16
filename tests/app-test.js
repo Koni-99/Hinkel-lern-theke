@@ -660,12 +660,31 @@ async function offlineTests() {
     ok('Teigi: wächst mit Lerntagen und wird ohne Lernen schlapp', t0.stufe === 0 && t0.laune === 'froh' && t1.stufe === 2 && t1.laune === 'schlapp', `${t0.stufe}/${t0.laune}, ${t1.stufe}/${t1.laune}`);
     ok('Schrift am Namen: Klasse für Schrift und Farbe zusammen', L.nameClassOf({ _schrift: 'sf_kreide', _gold: true }) === 'lt-goldname lt-sf-kreide');
   }
+  // Version 233: Teigi für alle: Schalter ganz unten, Laden-Abteilung „Teigi“
+  {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    ok('Teigi im Brotkorb ohne Kauf', (await d.page.locator('.lt-teigi-zeile').count()) === 1);
+    await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);
+    ok('Schalter ganz unten blendet Teigi aus', (await d.page.locator('.lt-teigi-zeile').count()) === 0 && /einschalten/.test(await d.page.locator('button.lt-teigi-schalter').innerText()));
+    await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);
+    ok('Schalter blendet Teigi wieder ein', (await d.page.locator('.lt-teigi-zeile').count()) === 1);
+    await click(d.page.locator('button[title="Trinkgeld-Laden öffnen"]').first()); await settle(d.page, 600);
+    const laden = d.page.locator('[role=dialog][aria-label="Trinkgeld-Laden"]');
+    await click(laden.getByRole('tab', { name: 'Teigi' })); await settle(d.page, 300);
+    const teile = await laden.locator('button.lt-shop-item').allInnerTexts();
+    ok('Laden: Abteilung „Teigi“ mit Hüten, Gläsern und Tänzen', teile.some((t) => /Bäckermütze/.test(t)) && teile.some((t) => /Goldglas/.test(t)) && teile.some((t) => /Salto/.test(t)), `${teile.length} Teile`);
+    const gesicht = await d.page.evaluate(() => { const svg = document.querySelector('.lt-shelf svg.lt-teigi'); if (!svg) return false; const auge = svg.querySelector('ellipse'); return !!auge && Number(auge.getAttribute('cy')) > 13 && Number(auge.getAttribute('cy')) < 48; });
+    ok('Teigi: Gesicht sitzt im Glas', gesicht);
+    ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz
   {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
     const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
     const probe = JSON.parse(JSON.stringify(SAMPLE));
-    probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1, _shopOwned: ['h_teigi'], _teigiStart: 0 };
+    probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1 };
     const d = await device({ user: 'Anna', backup: probe });
     await clearPopups(d.page);
     await click(nav(d.page).nth(1)); await settle(d.page);
@@ -689,7 +708,7 @@ async function offlineTests() {
     ok('Zweite Chance: falsche Antwort zählt nicht, man darf nochmal', an && falsch >= 0 && nochOffen && (await opts.count()) === nachHinweis - 1 && (await d.page.locator('.lt-chance-an').count()) === 0, `an ${an}, offen ${nochOffen}, ${await opts.count()} Antworten`);
     // Version 231: Teigi begleitet im Quiz und reagiert auf Antworten
     const begleiter = d.page.locator('.lt-teigi-begleiter');
-    ok('Teigi begleitet im Quiz (wer ihn gekauft hat)', (await begleiter.count()) === 1);
+    ok('Teigi begleitet im Quiz (jeder hat ihn, ohne Kauf)', (await begleiter.count()) === 1);
     const opts2 = d.page.locator('button.lt-qopt:visible');
     const frage2 = (await d.page.locator('.lt-frage').first().innerText()).trim();
     const ziel2 = String(richtig.get(frage2) || '');

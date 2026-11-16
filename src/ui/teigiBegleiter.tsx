@@ -1,5 +1,5 @@
 // ═══ Teigi als Begleiter beim Lernen und Spielen (Version 231) ═══
-// Wer Sauerteig Teigi im Laden gekauft hat, sieht ihn im Quiz und in den Spielen unten rechts.
+// Seit Version 233 hat jeder Teigi (ausschaltbar unten in der App, _teigiAus). Er sitzt im Quiz und in den Spielen unten links.
 // Er reagiert auf jede Antwort: AnswerFx (ui/antwortFx.tsx) schickt das Ereignis „lt-teigi“ mit { ok, lauf }.
 // Antippen blendet ihn bis zum nächsten App-Start aus (sessionStorage), nichts wird gespeichert.
 import { useEffect, useRef, useState } from 'react';
@@ -27,7 +27,7 @@ export const teigiSpruch = (m: TeigiMeldung, zahl = Math.random()): string | nul
   return zahl < 0.35 ? zufall(RICHTIG) : null; // nicht bei jeder richtigen Antwort reden
 };
 
-export function TeigiBegleiter({ stufe }: { stufe: number }) {
+export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?: string | null; glas?: string | null; tanz?: string | null }) {
   const [weg, setWeg] = useState(() => { try { return sessionStorage.getItem('lt_teigi_weg') === '1'; } catch { return false; } });
   const [laune, setLaune] = useState<'froh' | 'gut' | 'schlapp'>('gut');
   const [jubel, setJubel] = useState(0);
@@ -53,8 +53,8 @@ export function TeigiBegleiter({ stufe }: { stufe: number }) {
     <div className="lt-teigi-begleiter lt-papier" role="status" aria-live="polite">
       {spruch && <span key={spruch.k} className="lt-teigi-sprech">{spruch.t}</span>}
       <button type="button" aria-label="Teigi ausblenden" title="Antippen zum Ausblenden" onClick={() => { setWeg(true); try { sessionStorage.setItem('lt_teigi_weg', '1'); } catch { /* egal */ } }}>
-        <span key={jubel} className={laune === 'froh' ? 'lt-teigi-hops' : laune === 'schlapp' ? 'lt-teigi-traurig' : ''} style={{ display: 'inline-block' }}>
-          <TeigiGlas stufe={stufe} laune={laune} size={64} />
+        <span key={jubel} className={laune === 'froh' ? (tanz ? `lt-teigi-${String(tanz).replace('tt_', '')}` : 'lt-teigi-hops') : laune === 'schlapp' ? 'lt-teigi-traurig' : ''} style={{ display: 'inline-block' }}>
+          <TeigiGlas stufe={stufe} laune={laune} size={64} hut={hut} glas={glas} />
         </span>
       </button>
     </div>
