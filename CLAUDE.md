@@ -184,5 +184,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 239: **Fachwissen-Lernkarten auch als Karteikarte mit Lernkasten** (`Lernkarten.tsx`, Schlüssel `frage-<id>` im selben `_lernkasten`, Sortierung nach Fach beim Öffnen, `.lt-kk-fragetext`). **Wechselnde natürliche Stimmen**: Produktkarten je Produkt Achernar/Iapetus/Laomedeia (`karteStimme` in `vorlesen.ts`, `satzKey(satz, stimme)`, `sprichSaetze(text, onEnd, stimme)`, `SpeakButton stimme`), Fachwissen nutzt die Hör-Lernen-Dateien (4 Stimmen im Wechsel). `saetze.mjs` erzeugt Kartensätze zusätzlich in der Kartenstimme (~14k Zeichen). Achtung: nie `forEach(dazu)`, sonst wird die Zählnummer als Stimme übergeben
 
+- 240: Dunkles Design: Knöpfe ohne eigene Schriftfarbe (Vorlesen im Wörterbuch, Schließen im Laden u. a.) hatten Browser-Schwarz → `:where(html) button{color:inherit}` in `theke-design.ts` (schwächste Regel, jede Klasse/Inline-Farbe gewinnt). Fachwissen-Lernkarten sind seit 239 helles Papier
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

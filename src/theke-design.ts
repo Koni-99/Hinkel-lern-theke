@@ -448,6 +448,8 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-kk-fach b,.lt-kk-fach small{position:relative;line-height:1.1}
 .lt-kk-fach b{font-size:16px}.lt-kk-fach small{font-size:11px;opacity:.8}
 .lt-kk-fach-an{outline:3px solid #2F7A3E;outline-offset:-3px}
+/* Version 240: Knöpfe ohne eigene Schriftfarbe bekamen vom Browser Schwarz (Symbole im dunklen Design unsichtbar). Jetzt erben sie die Farbe der Umgebung. :where = schwächste Regel, jede Klasse gewinnt */
+:where(html) button{color:inherit}
 .lt-papier .lt-kk-fragetext{font-family:'Fraunces',serif;font-size:clamp(21px,5.6vw,26px);line-height:32px;color:#2B170A;text-align:center;overflow-wrap:break-word}
 .lt-papier .lt-kk-stern{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;padding:0;min-height:auto;color:#C98A00}
 /* Version 235: Lichtschein hinter dem Logo bei Wetter-Markise: golden wie ohne Wetter, auch im dunklen Design (lt-papier = Farben bleiben) */
