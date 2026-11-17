@@ -1,5 +1,6 @@
+import { fachVon } from '../hilfen/lernkasten';
 import { stopSpeaking } from '../games/spielBasis';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { dc } from '../daten/data';
 import { SHOP_PRODUCTS } from "../daten/shopProducts";
 import { CustomProductItem } from "../types";
@@ -31,12 +32,16 @@ export function FlashcardView({
   onTipp,
   meineNotizen = {},
   onNotiz,
+  lernkasten = {},
+  onBewerten,
   onFoto,
 }: {
   /** Nur für den Ausbilder: Foto im Steckbrief aufnehmen oder austauschen */
   onFoto?: (name: string, file: File) => Promise<string>;
   meineNotizen?: Record<string, string>;
   onNotiz?: (produkt: string, text: string) => void;
+  lernkasten?: Record<string, number>;
+  onBewerten?: (produkt: string, gewusst: boolean) => void;
   kollegenTipps?: TippEintrag[];
   meineTipps?: TippEintrag[];
   onTipp?: (produkt: string, text: string) => void;
@@ -206,10 +211,24 @@ export function FlashcardView({
   const cardProducts = productProfiles.filter((p) => !!p.shop);
   const pcGroups = Array.from(new Set<string>(cardProducts.map((p) => String(p.group)))).sort((a, b) => a.localeCompare(b, "de"));
   const pcPool = cardProducts.filter((p) => (pcGroup === "Alle" || p.group === pcGroup) && (!searchQuery.trim() || p.name.toLowerCase().includes(searchQuery.trim().toLowerCase())));
-  const pcOrdered = pcOrder.length ? pcOrder.map((k) => pcPool.find((p) => p.name === k)).filter((p): p is Profile => !!p) : pcPool;
-  const pcList = pcOrdered.length === pcPool.length ? pcOrdered : pcPool;
+  // Lernkasten (Version 238): Karten aus den vorderen Fächern zuerst. Stand beim Öffnen merken, damit die Reihenfolge beim Bewerten nicht springt
+  const kastenStart = useRef(lernkasten);
+  const nachFach = [...pcPool].sort((a, b) => fachVon(kastenStart.current, a.name) - fachVon(kastenStart.current, b.name));
+  const pcOrdered = pcOrder.length ? pcOrder.map((k) => pcPool.find((p) => p.name === k)).filter((p): p is Profile => !!p) : nachFach;
+  const pcList = pcOrdered.length === pcPool.length ? pcOrdered : nachFach;
   const pcCurrent = pcList.length ? pcList[Math.min(pcIndex, pcList.length - 1)] : null;
   const pcGo = (delta: number) => { setPcFlipped(false); setPcIndex((i) => (pcList.length ? (Math.min(i, pcList.length - 1) + delta + pcList.length) % pcList.length : 0)); };
+  // „Wusste ich“: Fach weiter, nächste Karte. „Nochmal“: Fach 1 und die Karte kommt 3 Karten später wieder
+  const pcBewerten = (gewusst: boolean) => {
+    const p = pcCurrent; if (!p) return;
+    onBewerten?.(p.name, gewusst);
+    const idx = Math.min(pcIndex, pcList.length - 1);
+    if (!gewusst && pcList.length > 2) {
+      const namen = pcList.map((x) => x.name); namen.splice(idx, 1); namen.splice(Math.min(namen.length, idx + 3), 0, p.name);
+      setPcOrder(namen); setPcFlipped(false); return; // gleicher Platz, jetzt liegt dort die nächste Karte
+    }
+    pcGo(1);
+  };
   const pcShuffle = () => { const names = pcPool.map((p) => p.name); for (let i = names.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [names[i], names[j]] = [names[j], names[i]]; } setPcOrder(names); setPcIndex(0); setPcFlipped(false); };
 
   const filteredDictionary = DICT_ALL.filter((d) => {
@@ -326,7 +345,7 @@ export function FlashcardView({
       {/* 0. FACHWISSEN KOMPAKT (aus der Verkaufsmappe) */}
       {displayStyle === "pcards" ? (
         /* PRODUKT-LERNKARTEN: Foto/Name vorne, alle Infos hinten */
-        <ProduktKarten {...{ images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, pcMode, setPcMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }} />
+        <ProduktKarten {...{ lernkasten, pcBewerten, kannBewerten: !!onBewerten, images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, pcMode, setPcMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }} />
       ) : displayStyle === "fach" ? (
         <FachKompakt {...{ searchQuery, fachTerm, filteredFach }} />
       ) : displayStyle === "dictionary" ? (

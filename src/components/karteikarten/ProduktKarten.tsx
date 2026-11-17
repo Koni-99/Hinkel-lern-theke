@@ -7,7 +7,8 @@ import { dc } from '../../daten/data';
 import { TH, cardStyle, productImageKey, ProductImages } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
 import { SpeakButton, sprichSaetze, stopSpeaking } from '../../games/spielBasis';
-import { groupColor, Profile } from './daten';
+import { Profile } from './daten';
+import { fachVon, faecherZaehlen } from '../../hilfen/lernkasten';
 
 /** Fakten auf der Rückseite (auch fürs Vorlesen) */
 const faktenVon = (p: Profile) => {
@@ -16,6 +17,9 @@ const faktenVon = (p: Profile) => {
 };
 
 export type ProduktKartenProps = {
+  lernkasten: Record<string, number>;
+  pcBewerten: (gewusst: boolean) => void;
+  kannBewerten: boolean;
   images: ProductImages;
   pcGroup: string;
   setPcGroup: Dispatch<SetStateAction<string>>;
@@ -36,7 +40,7 @@ export type ProduktKartenProps = {
   pcShuffle: () => void;
 };
 
-export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }: ProduktKartenProps) {
+export function ProduktKarten({ lernkasten, pcBewerten, kannBewerten, images, pcGroup, setPcGroup, setPcIndex, pcIndex, setPcFlipped, pcFlipped, setAskMode, askMode, setPcOrder, cardProducts, pcGroups, pcList, pcCurrent, pcGo, pcShuffle }: ProduktKartenProps) {
   // „Vorlesen“ (Version 237): natürliche Stimme. Vorne Name und Frage, hinten die Infos der Karte
   useEffect(() => {
     if (!askMode || !pcCurrent || !pcCurrent.shop) { if (!askMode) stopSpeaking(); return; }
@@ -67,7 +71,7 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
               {askMode && <span style={{ fontSize: "14px", color: TH.muted, textAlign: "center" }}>Ich lese die Karte vor. Sag die Antwort laut, dann dreh die Karte um.</span>}
             </div>
           )}
-          <div key={p.name} className="fc-flip-in" style={{ width: "100%", maxWidth: "540px", height: "460px", perspective: "1400px" }}>
+          <div key={p.name} className="fc-flip-in lt-papier lt-kk-stapel" style={{ width: "100%", maxWidth: "540px", height: "440px", perspective: "1400px" }}>
             <div
               role="button"
               tabIndex={0}
@@ -76,50 +80,56 @@ export function ProduktKarten({ images, pcGroup, setPcGroup, setPcIndex, pcIndex
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPcFlipped(!pcFlipped); } }}
               style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .8s cubic-bezier(.34,1.42,.5,1)", transform: pcFlipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
             >
-              {/* Vorderseite */}
-              <div aria-hidden={pcFlipped} className="lt-paper" style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", backgroundColor: TH.white, borderRadius: "24px", border: `2px solid ${TH.line}`, boxShadow: "0 14px 30px -10px rgba(69,26,3,.18)", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", boxSizing: "border-box", textAlign: "center" }}>
-                <div style={{ alignSelf: "stretch", display: "flex", justifyContent: "space-between", fontSize: "15px", fontWeight: 700, color: dc('#8A5A00') }}>
-                  <span style={{ backgroundColor: groupColor(p.group), color: "#fff", padding: "4px 10px", borderRadius: "999px" }}>{p.group}</span>
-                  <span style={{ color: TH.muted }}>Karte {Math.min(pcIndex, pcList.length - 1) + 1} / {pcList.length}</span>
+              {/* Vorderseite: Karteikarte mit rotem Rand und Linien, nur der Name */}
+              <div aria-hidden={pcFlipped} className="lt-papier lt-kk lt-kk-vorne">
+                <div className="lt-kk-kopf"><span className="lt-kk-gruppe">{p.group}</span><span>Fach {fachVon(lernkasten, p.name)} · Karte {Math.min(pcIndex, pcList.length - 1) + 1} / {pcList.length}</span></div>
+                <div className="lt-kk-mitte">
+                  <div className="lt-kk-name">{p.name}</div>
+                  <div className="lt-kk-frage">Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.</div>
                 </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", gap: "14px" }}>
-                  <div style={{ fontFamily: TH.serif, fontSize: "38px", lineHeight: 1.1, textAlign: "center", overflowWrap: "anywhere" }}>{p.name}</div>
-                  <div style={{ fontSize: "18px", color: TH.muted, textAlign: "center" }}>Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.</div>
-                </div>
-                <div style={{ fontSize: "16px", color: dc('#8A5A00'), fontWeight: 700 }}>↻ Antippen zum Umdrehen</div>
+                <div className="lt-kk-fuss">Antippen zum Umdrehen</div>
               </div>
-              {/* Rückseite */}
-              <div aria-hidden={!pcFlipped} className="lt-paper" style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)", backgroundColor: dc('#F3F8F1'), borderRadius: "24px", border: `2px solid ${dc('#CFE3C9')}`, boxShadow: "0 14px 30px -10px rgba(69,26,3,.18)", padding: "20px", display: "flex", flexDirection: "column", gap: "10px", boxSizing: "border-box", textAlign: "left", overflow: "hidden" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  {img && <img src={img} alt="" style={{ flex: "0 0 64px", width: "64px", height: "64px", objectFit: "cover", borderRadius: "14px" }} />}
-                  <div>
-                    <div style={{ fontFamily: TH.serif, fontSize: "28px", lineHeight: 1.1 }}>{p.name}</div>
-                    <div style={{ fontSize: "15px", color: TH.muted }}>{p.group}{sp.vegan ? " · vegan" : ""}</div>
-                  </div>
-                </div>
-                <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {facts.length > 0 && (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "6px" }}>
-                      {facts.map(([l, v]) => (
-                        <div key={l} style={{ padding: "6px 10px", borderRadius: "12px", backgroundColor: TH.white }}>
-                          <div style={{ fontSize: "12px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>{l}</div>
-                          <div style={{ fontSize: "16px", fontWeight: 700 }}>{v}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div style={{ padding: "10px 12px", borderRadius: "12px", backgroundColor: TH.tintYellow }}>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Im Verkauf sagen</div>
-                    <div style={{ fontSize: "17px", fontWeight: 700, lineHeight: 1.4 }}>{sp.shortIngredients}</div>
-                  </div>
-                  <div style={{ fontSize: "16px", lineHeight: 1.45 }}><strong>Allergene:</strong> {sp.allergens.length ? sp.allergens.join(", ") : "keine angegeben"}{sp.allergenNote ? ` · ${sp.allergenNote}` : ""}</div>
-                  <span onClick={(e) => e.stopPropagation()} style={{ alignSelf: "flex-start" }}><SpeakButton small natuerlich text={produktKarteText(p.name, facts, sp)} /></span>
+              {/* Rückseite: Antwort in Handschrift als Stichpunkte */}
+              <div aria-hidden={!pcFlipped} className="lt-papier lt-kk lt-kk-hinten">
+                <div className="lt-kk-kopf"><span className="lt-kk-gruppe">{p.name}</span><span>{p.group}{sp.vegan ? " · vegan" : ""}</span></div>
+                <ul className="lt-kk-liste">
+                  {facts.map(([l, v]) => <li key={l}><b>{l}:</b> {v}</li>)}
+                  <li><b>Im Verkauf sagen:</b> {sp.shortIngredients}</li>
+                  <li><b>Allergene:</b> {sp.allergens.length ? sp.allergens.join(", ") : "keine angegeben"}</li>
+                  {sp.allergenNote && <li className="lt-kk-warn">{sp.allergenNote}</li>}
+                </ul>
+                <div className="lt-kk-werkzeug" onClick={(e) => e.stopPropagation()}>
+                  {img && <img src={img} alt="" className="lt-kk-foto" />}
+                  <SpeakButton small natuerlich text={produktKarteText(p.name, facts, sp)} />
                   <ReportContext report={{ game: "Produktkarten", product: p.name, text: `Produktkarte ${p.name}`, detail: `${facts.map(([l, v]) => `${l}: ${v}`).join(", ")}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` }} />
                 </div>
-                <div style={{ fontSize: "16px", color: TH.green, fontWeight: 700, textAlign: "center" }}>↺ Antippen, zurück</div>
               </div>
             </div>
           </div>
+          {kannBewerten && pcFlipped && (
+            <div className="lt-kk-bewerten" style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "540px" }}>
+              <button type="button" className="lt-kk-nochmal" onClick={() => pcBewerten(false)}>Nochmal</button>
+              <button type="button" className="lt-kk-gewusst" onClick={() => pcBewerten(true)}>Wusste ich</button>
+            </div>
+          )}
+          {kannBewerten && (() => {
+            const z = faecherZaehlen(pcList.map((x) => x.name), lernkasten);
+            const max = Math.max(1, ...z);
+            return (
+              <div className="lt-kk-kasten" aria-label="Lernkasten">
+                <span className="lt-kk-kasten-titel">Dein Lernkasten</span>
+                <div className="lt-kk-faecher">
+                  {z.map((n, i) => (
+                    <div key={i} className={`lt-kk-fach${fachVon(lernkasten, p.name) === i + 1 ? " lt-kk-fach-an" : ""}`} title={`Fach ${i + 1}: ${n} Karten`}>
+                      <span className="lt-kk-fach-stapel" style={{ height: `${Math.round((n / max) * 100)}%` }} />
+                      <b>{n}</b><small>Fach {i + 1}</small>
+                    </div>
+                  ))}
+                </div>
+                <span className="lt-kk-kasten-hilfe">Fach 1 = noch üben, Fach 5 = sitzt. Gewusste Karten wandern nach hinten.</span>
+              </div>
+            );
+          })()}
         </>);
       })()}
     

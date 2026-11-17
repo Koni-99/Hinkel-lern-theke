@@ -414,6 +414,40 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 @media (min-width:561px){.lt-shop-wide{grid-column:span 2}}
 @media (max-width:560px){.lt-shop-sign{margin-top:14px !important;padding:8px 12px !important}.lt-shop-sign>div:first-child{font-size:22px !important}.lt-register{margin-top:14px !important;padding:6px 12px !important;min-width:0 !important}.lt-register>div:last-child{font-size:22px !important}.lt-shop-bell{display:none !important}.lt-chalk{padding:10px 12px !important;border-width:6px !important}}
 .lt-preis-nowrap{white-space:nowrap}
+/* Version 238: Lernkarten wie echte Karteikarten (Papier, roter Rand, blaue Linien, Handschrift, Stapel dahinter) + Lernkasten */
+.lt-papier.lt-kk-stapel{position:relative;isolation:isolate}
+.lt-papier.lt-kk-stapel>[role=button]{z-index:2}
+.lt-papier.lt-kk-stapel::before,.lt-papier.lt-kk-stapel::after{content:"";position:absolute;inset:0;z-index:0;border-radius:10px;background:#F1E9D2;border:1px solid #DCCFAE;box-shadow:0 6px 14px -8px rgba(31,20,12,.35)}
+.lt-papier.lt-kk-stapel::before{transform:translate(9px,9px) rotate(2.2deg)}
+.lt-papier.lt-kk-stapel::after{transform:translate(4px,5px) rotate(-1.4deg);background:#F7F1DF}
+.lt-papier.lt-kk{position:absolute;inset:0;z-index:1;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:10px;border:1px solid #E2D6BA;box-shadow:0 14px 28px -12px rgba(31,20,12,.35);padding:14px 20px 14px 26px;display:flex;flex-direction:column;gap:6px;color:#2B170A;text-align:left;
+  background-color:#FFFDF4;background-image:linear-gradient(#E57373,#E57373),repeating-linear-gradient(180deg,transparent 0 31px,#CFE0F2 31px 32px);background-size:100% 2px,100% 100%;background-position:0 52px,0 54px;background-repeat:no-repeat,repeat}
+.lt-papier.lt-kk-hinten{transform:rotateY(180deg);background-color:#FFFEF8}
+.lt-papier .lt-kk-kopf{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:34px;font-size:13px;font-weight:700;color:#8A6A3A}
+.lt-papier .lt-kk-gruppe{font-size:14px;font-weight:800;color:#5B3A1A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt-papier .lt-kk-mitte{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.lt-papier .lt-kk-name{font-family:'Fraunces',serif;font-size:clamp(30px,8vw,42px);line-height:1.1;color:#2B170A;overflow-wrap:anywhere}
+.lt-papier .lt-kk-frage{font-family:'Caveat',cursive;font-size:24px;line-height:32px;color:#1F3A6B}
+.lt-papier .lt-kk-fuss{text-align:center;font-size:14px;font-weight:700;color:#8A6A3A}
+.lt-papier .lt-kk-liste{list-style:none;margin:6px 0 0;padding:0;flex:1;min-height:0;overflow-y:auto;font-family:'Caveat',cursive;font-size:23px;line-height:32px;color:#1F3A6B}
+.lt-papier .lt-kk-liste li{padding-left:16px;text-indent:-16px}
+.lt-papier .lt-kk-liste li::before{content:"• "}
+.lt-papier .lt-kk-liste b{font-weight:700;color:#14284D}
+.lt-papier .lt-kk-warn{color:#B42318}
+.lt-papier .lt-kk-werkzeug{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lt-papier .lt-kk-foto{width:46px;height:46px;object-fit:cover;border-radius:8px;border:2px solid #FFFFFF;box-shadow:0 2px 6px rgba(0,0,0,.2);transform:rotate(-4deg)}
+.lt-kk-bewerten button{flex:1;min-height:54px;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer;font-family:inherit}
+.lt-papier .lt-kk-nochmal,.lt-kk-bewerten .lt-kk-nochmal{background:#FFFFFF;color:#B42318;border:2px solid #E8A39B}
+.lt-kk-bewerten .lt-kk-gewusst{background:#2F7A3E;color:#FFFFFF;border:none;box-shadow:0 4px 0 #1F5A2C}
+.lt-kk-kasten{width:100%;max-width:540px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.6);border:2px solid rgba(139,90,43,.18)}
+.lt-kk-kasten-titel{font-weight:800;font-size:15px}
+.lt-kk-kasten-hilfe{font-size:13px;opacity:.75}
+.lt-kk-faecher{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;height:74px}
+.lt-kk-fach{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;border-radius:8px;background:rgba(139,90,43,.1);overflow:hidden;padding-bottom:2px}
+.lt-kk-fach-stapel{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#FFE58A,#E0B44A);opacity:.85}
+.lt-kk-fach b,.lt-kk-fach small{position:relative;line-height:1.1}
+.lt-kk-fach b{font-size:16px}.lt-kk-fach small{font-size:11px;opacity:.8}
+.lt-kk-fach-an{outline:3px solid #2F7A3E;outline-offset:-3px}
 /* Version 235: Lichtschein hinter dem Logo bei Wetter-Markise: golden wie ohne Wetter, auch im dunklen Design (lt-papier = Farben bleiben) */
 .lt-papier.lt-wx-halo{background:radial-gradient(closest-side,rgba(255,226,140,.9),rgba(255,199,44,.45) 55%,rgba(255,199,44,0))}
 .lt-kopf-aehren .lt-papier.lt-wx-halo,.lt-kopf-mitaehren .lt-papier.lt-wx-halo{width:190% !important;height:135% !important;background:radial-gradient(closest-side,rgba(255,199,44,.75),rgba(234,179,8,.35) 55%,rgba(234,179,8,0))}

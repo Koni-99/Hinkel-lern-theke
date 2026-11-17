@@ -180,5 +180,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 237: **Lernkarten**: Produkt-Lernkarten immer Name vorne (Umschalter Foto/Name entfernt, kein Emoji), Text vorne „Was weißt du darüber? Mehl, Zutaten, Allergene und Schnitt.“ (vorher „…“, Stimme brach ab). „Vorlesen“ jetzt mit natürlicher Stimme statt Handy-Stimme: Produktkarten `sprichSaetze(produktKarteVorne/produktKarteText)` (neu in `vorlesen.ts` + `saetze.mjs`, 2 Sätze erzeugt), Frage-Lernkarten `sprichHoerDatei` (Hör-Lernen-Dateien). Das alte Vorlesen über `innerText` + `speakGerman` in FlashcardView ist weg. **Teigi überall** (außer Ausbilder-Bereich), z-index 95 = unter Pop-ups
 
+- 238: **Produkt-Lernkarten wie echte Karteikarten** (Nutzer wählte Karteikarte + Lernkasten): Papier mit rotem Rand und blauen Linien, Stapel dahinter (`.lt-papier.lt-kk-stapel` ::before/::after), Vorderseite nur Name + Frage, Rückseite Stichpunkte in Handschrift (Caveat) mit kleinem Foto, Vorlesen, Melden. **Lernkasten** (`src/hilfen/lernkasten.ts`, 5 Fächer, `progress/<name>/_lernkasten {kastenKey: fach}`): „Wusste ich“ Fach +1, „Nochmal“ Fach 1 und Karte 3 Plätze später (`pcBewerten` in FlashcardView), Reihenfolge nach Fach (Stand beim Öffnen, `kastenStart`), Anzeige `.lt-kk-kasten` mit Fächer-Balken. Alle Farben über `lt-papier` (auch nachts hell)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

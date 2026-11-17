@@ -682,6 +682,28 @@ async function offlineTests() {
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 238: Lernkarten als Karteikarten mit Lernkasten
+  {
+    const K = kompiliere(['src/hilfen/lernkasten.ts']).hilfen_lernkasten;
+    const c = { progress: { anna: { _displayName: 'Anna' } } };
+    K.karteBewerten('anna', 'Anna', 'Abendschnitte', true)(c); K.karteBewerten('anna', 'Anna', 'Abendschnitte', true)(c);
+    const zwei = K.fachVon(K.lernkastenVon(c.progress, 'anna'), 'Abendschnitte');
+    K.karteBewerten('anna', 'Anna', 'Abendschnitte', false)(c);
+    ok('Lernkasten: „Wusste ich“ schiebt ein Fach weiter, „Nochmal“ zurück in Fach 1', zwei === 3 && K.fachVon(K.lernkastenVon(c.progress, 'anna'), 'Abendschnitte') === 1);
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => ctx.addInitScript(() => { if (sessionStorage.getItem('__v238')) return; sessionStorage.setItem('__v238', '1'); sessionStorage.setItem('lt_seite', 'nachschlagen'); }) });
+    await clearPopups(d.page);
+    const kp = d.page.locator('button, .lt-card', { hasText: /Produktkenntnis|Steckbriefe/ }).first(); if (await kp.count()) { await click(kp); await settle(d.page, 500); }
+    await click(d.page.getByRole('button', { name: /^Lernkarten/ }).first()); await settle(d.page, 700);
+    const karte = d.page.locator('.lt-kk-stapel').first();
+    ok('Lernkarten: echte Karteikarte, vorne nur der Name (kein Emoji)', (await karte.count()) === 1 && (await d.page.locator('.lt-kk-vorne .lt-kk-name').count()) === 1 && !/\p{Extended_Pictographic}/u.test(await d.page.locator('.lt-kk-vorne').innerText()));
+    await click(karte.locator('[role=button]')); await settle(d.page, 900);
+    ok('Lernkarten: hinten Stichpunkte, Knöpfe „Nochmal“ und „Wusste ich“', (await d.page.locator('.lt-kk-liste li').count()) >= 3 && (await d.page.locator('.lt-kk-gewusst').count()) === 1);
+    await click(d.page.locator('.lt-kk-gewusst')); await settle(d.page, 500);
+    const faecher = await d.page.locator('.lt-kk-fach b').allInnerTexts();
+    ok('Lernkasten: nach „Wusste ich“ liegt eine Karte in Fach 2', faecher[1] === '1', faecher.join(','));
+    ok('Lernkarten: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }
   // Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz
   {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
