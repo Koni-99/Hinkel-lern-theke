@@ -448,6 +448,8 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-kk-fach b,.lt-kk-fach small{position:relative;line-height:1.1}
 .lt-kk-fach b{font-size:16px}.lt-kk-fach small{font-size:11px;opacity:.8}
 .lt-kk-fach-an{outline:3px solid #2F7A3E;outline-offset:-3px}
+.lt-papier .lt-kk-fragetext{font-family:'Fraunces',serif;font-size:clamp(21px,5.6vw,26px);line-height:32px;color:#2B170A;text-align:center;overflow-wrap:break-word}
+.lt-papier .lt-kk-stern{background:none;border:none;font-size:24px;line-height:1;cursor:pointer;padding:0;min-height:auto;color:#C98A00}
 /* Version 235: Lichtschein hinter dem Logo bei Wetter-Markise: golden wie ohne Wetter, auch im dunklen Design (lt-papier = Farben bleiben) */
 .lt-papier.lt-wx-halo{background:radial-gradient(closest-side,rgba(255,226,140,.9),rgba(255,199,44,.45) 55%,rgba(255,199,44,0))}
 .lt-kopf-aehren .lt-papier.lt-wx-halo,.lt-kopf-mitaehren .lt-papier.lt-wx-halo{width:190% !important;height:135% !important;background:radial-gradient(closest-side,rgba(255,199,44,.75),rgba(234,179,8,.35) 55%,rgba(234,179,8,0))}

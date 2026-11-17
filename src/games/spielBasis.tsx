@@ -127,13 +127,13 @@ export async function sprichKunde(text: string, stimme: KundenStimme, tempo = 1.
   spieleFolge(lauf, keys.map((k) => `stimme/teile/${k}.mp3`), teile, tempo, tempo * 1.15, onEnd);
 }
 /** Liest einen festen Text Satz für Satz mit natürlicher Stimme (Frau 4) vor, sonst mit der Handy-Stimme */
-export async function sprichSaetze(text: string, onEnd?: () => void) {
+export async function sprichSaetze(text: string, onEnd?: () => void, stimme?: string) {
   stopSpeaking();
   const lauf = ++teilLauf;
   const index = await mitZeitlimit(ladeIndex('stimme/saetze/index.json'));
   if (lauf !== teilLauf) return;
   const s = saetze(text);
-  const keys = s.map(satzKey);
+  const keys = s.map((x) => satzKey(x, stimme));
   if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd); return; }
   spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd);
 }
@@ -149,7 +149,7 @@ export async function sprichHoerDatei(key: string, text: string, onEnd?: () => v
 
 /** Knopf „Vorlesen“ – liest den Text vor, zweiter Tipp stoppt */
 /** natuerlich: Satz für Satz mit natürlicher Stimme. hoerKey: fertige Hör-Lernen-Datei abspielen. */
-export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerKey }: { text: string; label?: string; small?: boolean; natuerlich?: boolean; hoerKey?: string }) {
+export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerKey, stimme }: { text: string; label?: string; small?: boolean; natuerlich?: boolean; hoerKey?: string; stimme?: string }) {
   const [on, setOn] = useState(false);
   useEffect(() => () => { stopSpeaking(); }, []);
   useEffect(() => { setOn(false); stopSpeaking(); }, [text]);
@@ -157,7 +157,7 @@ export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerK
   return (
     <button
       type="button"
-      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); const fertig = () => setOn(false); if (hoerKey) sprichHoerDatei(hoerKey, text, fertig); else if (natuerlich) sprichSaetze(text, fertig); else speakText(text, fertig); } }}
+      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); const fertig = () => setOn(false); if (hoerKey) sprichHoerDatei(hoerKey, text, fertig); else if (natuerlich) sprichSaetze(text, fertig, stimme); else speakText(text, fertig); } }}
       aria-pressed={on}
       title={on ? 'Vorlesen stoppen' : 'Vorlesen'}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: small ? '38px' : '44px', padding: small ? '0 10px' : '0 14px', borderRadius: '12px', border: `2px solid ${on ? TH.brown : TH.line}`, backgroundColor: on ? TH.tintYellow : TH.white, color: TH.ink, fontSize: small ? '14px' : '16px', fontWeight: 700, cursor: 'pointer', flex: '0 0 auto' }}

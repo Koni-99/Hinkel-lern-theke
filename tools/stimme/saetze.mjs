@@ -31,7 +31,7 @@ const ALT = req(path.join(tmp, 'components/AlternativenJaegerView.js'));
 rmSync(tmp, { recursive: true, force: true });
 
 const saetze = new Map(); // code → Satz
-const dazu = (text) => V.saetze(text).forEach((s) => saetze.set(V.satzKey(s), s));
+const dazu = (text, stimme = V.VORLESE_STIMME) => V.saetze(text).forEach((s) => saetze.set(V.satzKey(s, stimme), [s, stimme]));
 const MM = ['5,5 mm', '9 mm', '12 mm'];
 for (const sp of SHOP_PRODUCTS) {
   dazu(V.steckbriefText(sp));
@@ -39,6 +39,9 @@ for (const sp of SHOP_PRODUCTS) {
   const facts = [sp.flour ? ['Mehl', sp.flour] : null, slice ? ['Schnitt', slice] : null, sp.weight ? ['Gewicht', sp.weight] : null, sp.price ? ['Preis', sp.price] : null].filter(Boolean);
   dazu(V.produktKarteText(sp.name, facts, sp));
   dazu(V.produktKarteVorne(sp.name));
+  // Lernkarten sprechen abwechselnd (Version 239): dieselben Sätze zusätzlich in der Stimme der Karte
+  dazu(V.produktKarteText(sp.name, facts, sp), V.karteStimme(sp.name));
+  dazu(V.produktKarteVorne(sp.name), V.karteStimme(sp.name));
   dazu(V.bilderText(sp));
   if (sp.breadType) MM.forEach((mm) => dazu(V.schneideText(sp.name, mm)));
 }
@@ -55,17 +58,17 @@ for (const t of A.ALLERGEN_TESTS) {
 // Quiz und Adventskalender vor der Antwort: Frage, Buchstaben, Antwort-Möglichkeiten
 for (const q of [...(Q.questions || []), ...(Q.examQuestions || [])]) dazu(V.quizVorherText(q.question, q.options));
 // Alternativen-Jäger (mehrmals, weil die falschen Antworten zufällig gewählt werden)
-for (let i = 0; i < 20; i++) ALT.alternativenTexte().forEach(dazu);
-const zeichen = [...saetze.values()].reduce((a, s) => a + s.length, 0);
+for (let i = 0; i < 20; i++) ALT.alternativenTexte().forEach((t) => dazu(t));
+const zeichen = [...saetze.values()].reduce((a, [s]) => a + s.length, 0);
 console.log(`${saetze.size} Sätze, ${zeichen} Zeichen (Stimme ${V.VORLESE_STIMME})`);
 if (args.includes('--zaehlen')) process.exit(0);
 
-async function sprechen(text) {
+async function sprechen(text, stimme) {
   for (let versuch = 1; versuch <= 10; versuch++) {
     let res;
     try {
       res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: { text: `${text}.` }, voice: { languageCode: 'de-DE', name: V.VORLESE_STIMME }, audioConfig: { audioEncoding: 'MP3' } }) });
+        body: JSON.stringify({ input: { text: `${text}.` }, voice: { languageCode: 'de-DE', name: stimme }, audioConfig: { audioEncoding: 'MP3' } }) });
     } catch { await new Promise((r) => setTimeout(r, 5000 * versuch)); continue; }
     if (res.ok) return Buffer.from((await res.json()).audioContent, 'base64');
     if (res.status === 429 || res.status >= 500) { await new Promise((r) => setTimeout(r, 8000 * versuch)); continue; }
@@ -79,9 +82,9 @@ console.log(`Erzeuge ${auftrag.length} neue Dateien …`);
 let fertig = 0;
 await Promise.all(Array.from({ length: 3 }, async () => {
   while (auftrag.length) {
-    const [k, s] = auftrag.shift();
+    const [k, [s, st]] = auftrag.shift();
     await new Promise((r) => setTimeout(r, 600));
-    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(s)); } catch (e) { console.log('Übersprungen:', s.slice(0, 60), String(e.message).slice(0, 100)); continue; }
+    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(s, st)); } catch (e) { console.log('Übersprungen:', s.slice(0, 60), String(e.message).slice(0, 100)); continue; }
     if (++fertig % 200 === 0) console.log(`  ${fertig} fertig …`);
   }
 }));

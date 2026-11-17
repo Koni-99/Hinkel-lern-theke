@@ -281,7 +281,9 @@ export function FlashcardView({
     setFlipped(false);
   }, [filterMode, selectedCategory, searchQuery]);
 
-  const current = filteredCards[currentIndex];
+  // Fachwissen-Lernkarten (Version 239): wie die Produktkarten nach Fach im Lernkasten sortiert (Stand beim Öffnen)
+  const fragKarten = [...filteredCards].sort((a, b) => fachVon(kastenStart.current, `frage-${a.id}`) - fachVon(kastenStart.current, `frage-${b.id}`));
+  const current = fragKarten[currentIndex];
   const openProfile = openProfileKey ? productProfiles.find((p) => `${p.name}_${p.ids[0]}` === openProfileKey) || null : null;
   const isFav = current ? favorites.includes(current.id) : false;
 
@@ -379,7 +381,7 @@ export function FlashcardView({
           </p>
         </div>
       ) : (
-        <Lernkarten {...{ toggleFavorite, currentIndex, setCurrentIndex, flipped, setFlipped, setAskMode, askMode, filteredCards, current, isFav }} />
+        <Lernkarten {...{ lernkasten, onBewerten, toggleFavorite, currentIndex, setCurrentIndex, flipped, setFlipped, setAskMode, askMode, filteredCards: fragKarten, current, isFav }} />
       )}
 
       {/* ── Steckbrief-Detail ── */}

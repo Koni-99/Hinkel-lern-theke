@@ -12,7 +12,10 @@ type Prod = { name: string; description?: string; shortIngredients?: string; all
 export function saetze(text: string): string[] {
   return sauber(text).split(/(?<=[.!?])\s+/).map((s) => s.replace(/[.!?]+$/, '').trim()).filter((s) => /[A-Za-zÄÖÜäöüß0-9]/.test(s));
 }
-export const satzKey = (satz: string) => stimmeKey(`satz|${VORLESE_STIMME}|${satz}`);
+export const satzKey = (satz: string, stimme: string = VORLESE_STIMME) => stimmeKey(`satz|${stimme}|${satz}`);
+/** Lernkarten (Version 239): die Produkt-Lernkarten sprechen abwechselnd mit 3 Stimmen (Frau 4, Mann 10, Frau 10), fest pro Produkt */
+export const KARTEN_STIMMEN = ['de-DE-Chirp3-HD-Achernar', 'de-DE-Chirp3-HD-Iapetus', 'de-DE-Chirp3-HD-Laomedeia'];
+export const karteStimme = (name: string) => { let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return KARTEN_STIMMEN[h % KARTEN_STIMMEN.length]; };
 
 export const steckbriefText = (sp: Prod) =>
   `${sp.name}. ${sp.description || ''} Im Verkauf sagen: ${sp.shortIngredients}. Allergene: ${(sp.allergens || []).join(', ') || 'keine'}.${sp.price ? ` Preis: ${sp.price}.` : ''}`;

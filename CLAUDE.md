@@ -182,5 +182,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 238: **Produkt-Lernkarten wie echte Karteikarten** (Nutzer wählte Karteikarte + Lernkasten): Papier mit rotem Rand und blauen Linien, Stapel dahinter (`.lt-papier.lt-kk-stapel` ::before/::after), Vorderseite nur Name + Frage, Rückseite Stichpunkte in Handschrift (Caveat) mit kleinem Foto, Vorlesen, Melden. **Lernkasten** (`src/hilfen/lernkasten.ts`, 5 Fächer, `progress/<name>/_lernkasten {kastenKey: fach}`): „Wusste ich“ Fach +1, „Nochmal“ Fach 1 und Karte 3 Plätze später (`pcBewerten` in FlashcardView), Reihenfolge nach Fach (Stand beim Öffnen, `kastenStart`), Anzeige `.lt-kk-kasten` mit Fächer-Balken. Alle Farben über `lt-papier` (auch nachts hell)
 
+- 239: **Fachwissen-Lernkarten auch als Karteikarte mit Lernkasten** (`Lernkarten.tsx`, Schlüssel `frage-<id>` im selben `_lernkasten`, Sortierung nach Fach beim Öffnen, `.lt-kk-fragetext`). **Wechselnde natürliche Stimmen**: Produktkarten je Produkt Achernar/Iapetus/Laomedeia (`karteStimme` in `vorlesen.ts`, `satzKey(satz, stimme)`, `sprichSaetze(text, onEnd, stimme)`, `SpeakButton stimme`), Fachwissen nutzt die Hör-Lernen-Dateien (4 Stimmen im Wechsel). `saetze.mjs` erzeugt Kartensätze zusätzlich in der Kartenstimme (~14k Zeichen). Achtung: nie `forEach(dazu)`, sonst wird die Zählnummer als Stimme übergeben
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)

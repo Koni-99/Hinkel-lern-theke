@@ -682,6 +682,15 @@ async function offlineTests() {
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }
+  // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
+  {
+    const V = kompiliere(['src/hilfen/vorlesen.ts']).hilfen_vorlesen;
+    const stimmen = new Set(['Abendschnitte', 'Roggenstange', 'Laugenbrezel', 'Mohnbrötchen', 'Kürbiskernbrot', 'Butterhörnchen'].map((n) => V.karteStimme(n)));
+    ok('Lernkarten: Stimmen wechseln je Produkt (mindestens 2 verschiedene)', stimmen.size >= 2, [...stimmen].join(','));
+    const satz = V.saetze(V.produktKarteVorne('Abendschnitte'))[0];
+    const datei = require('path').join(__dirname, '..', 'public', 'stimme', 'saetze', V.satzKey(satz, V.karteStimme('Abendschnitte')) + '.mp3');
+    ok('Lernkarten: Satz in der Kartenstimme ist erzeugt', require('fs').existsSync(datei), datei);
+  }
   // Version 238: Lernkarten als Karteikarten mit Lernkasten
   {
     const K = kompiliere(['src/hilfen/lernkasten.ts']).hilfen_lernkasten;
@@ -701,6 +710,16 @@ async function offlineTests() {
     await click(d.page.locator('.lt-kk-gewusst')); await settle(d.page, 500);
     const faecher = await d.page.locator('.lt-kk-fach b').allInnerTexts();
     ok('Lernkasten: nach „Wusste ich“ liegt eine Karte in Fach 2', faecher[1] === '1', faecher.join(','));
+    // Version 239: Fachwissen-Lernkarten auch als Karteikarte mit Lernkasten
+    await click(d.page.locator('.fc-area button', { hasText: 'Fachwissen' })); await settle(d.page, 600);
+    const lk = d.page.getByRole('button', { name: /^Lernkarten/ }).first(); if (await lk.count()) { await click(lk); await settle(d.page, 700); }
+    const fk = d.page.locator('.lt-kk-stapel').first();
+    ok('Fachwissen-Lernkarten: echte Karteikarte mit Frage vorne', (await fk.count()) === 1 && (await d.page.locator('.lt-kk-vorne .lt-kk-fragetext').count()) === 1);
+    await click(fk.locator('[role=button]')); await settle(d.page, 900);
+    const vorher239 = (await d.page.locator('.lt-kk-fach b').allInnerTexts())[1];
+    await click(d.page.locator('.lt-kk-gewusst')); await settle(d.page, 500);
+    const nach239 = (await d.page.locator('.lt-kk-fach b').allInnerTexts())[1];
+    ok('Fachwissen-Lernkasten: „Wusste ich“ legt die Karte in Fach 2', Number(nach239) === Number(vorher239) + 1, `${vorher239} → ${nach239}`);
     ok('Lernkarten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }

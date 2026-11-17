@@ -2,7 +2,7 @@
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { produktKarteText, produktKarteVorne } from '../../hilfen/vorlesen';
+import { produktKarteText, produktKarteVorne, karteStimme } from '../../hilfen/vorlesen';
 import { dc } from '../../daten/data';
 import { TH, cardStyle, productImageKey, ProductImages } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
@@ -44,7 +44,7 @@ export function ProduktKarten({ lernkasten, pcBewerten, kannBewerten, images, pc
   // „Vorlesen“ (Version 237): natürliche Stimme. Vorne Name und Frage, hinten die Infos der Karte
   useEffect(() => {
     if (!askMode || !pcCurrent || !pcCurrent.shop) { if (!askMode) stopSpeaking(); return; }
-    const t = window.setTimeout(() => sprichSaetze(pcFlipped ? produktKarteText(pcCurrent.name, faktenVon(pcCurrent), pcCurrent.shop!) : produktKarteVorne(pcCurrent.name)), 650);
+    const t = window.setTimeout(() => sprichSaetze(pcFlipped ? produktKarteText(pcCurrent.name, faktenVon(pcCurrent), pcCurrent.shop!) : produktKarteVorne(pcCurrent.name), undefined, karteStimme(pcCurrent.name)), 650);
     return () => window.clearTimeout(t);
   }, [askMode, pcFlipped, pcCurrent]);
   return (
@@ -100,7 +100,7 @@ export function ProduktKarten({ lernkasten, pcBewerten, kannBewerten, images, pc
                 </ul>
                 <div className="lt-kk-werkzeug" onClick={(e) => e.stopPropagation()}>
                   {img && <img src={img} alt="" className="lt-kk-foto" />}
-                  <SpeakButton small natuerlich text={produktKarteText(p.name, facts, sp)} />
+                  <SpeakButton small natuerlich stimme={karteStimme(p.name)} text={produktKarteText(p.name, facts, sp)} />
                   <ReportContext report={{ game: "Produktkarten", product: p.name, text: `Produktkarte ${p.name}`, detail: `${facts.map(([l, v]) => `${l}: ${v}`).join(", ")}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` }} />
                 </div>
               </div>

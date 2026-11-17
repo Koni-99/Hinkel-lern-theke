@@ -8,8 +8,11 @@ import { getRightAnswerText } from '../../hilfen/allgemein';
 import { TH } from '../../ui/basis';
 import { ReportContext } from '../../ui/melden';
 import { SpeakButton, sprichHoerDatei, stopSpeaking } from '../../games/spielBasis';
+import { fachVon, faecherZaehlen } from '../../hilfen/lernkasten';
 
 export type LernkartenProps = {
+  lernkasten: Record<string, number>;
+  onBewerten?: (karte: string, gewusst: boolean) => void;
   toggleFavorite: (id: number) => void;
   currentIndex: number;
   setCurrentIndex: Dispatch<SetStateAction<number>>;
@@ -22,7 +25,7 @@ export type LernkartenProps = {
   isFav: boolean;
 };
 
-export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flipped, setFlipped, setAskMode, askMode, filteredCards, current, isFav }: LernkartenProps) {
+export function Lernkarten({ lernkasten, onBewerten, toggleFavorite, currentIndex, setCurrentIndex, flipped, setFlipped, setAskMode, askMode, filteredCards, current, isFav }: LernkartenProps) {
   // „Vorlesen“ (Version 237): natürliche Stimme aus dem Hör-Lernen (vorne Frage, hinten Antwort)
   useEffect(() => {
     if (!askMode || !current) { if (!askMode) stopSpeaking(); return; }
@@ -39,7 +42,7 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
               {askMode && <span style={{ fontSize: "14px", color: TH.muted, textAlign: "center" }}>Ich lese die Karte vor. Sag die Antwort laut, dann dreh die Karte um.</span>}
             </div>
           )}
-      <div key={current.id} className="fc-flip-in" style={{ width: "100%", maxWidth: "520px", height: "340px", perspective: "1400px" }}>
+      <div key={current.id} className="fc-flip-in lt-papier lt-kk-stapel" style={{ width: "100%", maxWidth: "540px", height: "400px", perspective: "1400px" }}>
         <div
           role="button"
           tabIndex={0}
@@ -48,43 +51,56 @@ export function Lernkarten({ toggleFavorite, currentIndex, setCurrentIndex, flip
           onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(!flipped); } }}
           style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform .8s cubic-bezier(.34,1.42,.5,1)", transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)", cursor: "pointer" }}
         >
-          {[false, true].map((back) => (
-            <div
-              key={back ? "back" : "front"}
-              aria-hidden={back ? !flipped : flipped}
-              className="lt-paper" style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: back ? "rotateY(180deg)" : "none", backgroundColor: back ? dc('#F3F8F1') : dc('#ffffff'), padding: "22px 24px", borderRadius: "22px", border: back ? `2px solid ${dc('#CFE3C9')}` : `2px solid ${dc('#F1E3C8')}`, boxShadow: "0 14px 30px -10px rgba(69, 26, 3, 0.18)", display: "flex", flexDirection: "column", gap: "10px", textAlign: "center", boxSizing: "border-box", overflow: "hidden" }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", fontSize: "16px", fontWeight: 700, color: dc('#8A5A00') }}>
-                <span style={{ backgroundColor: dc('#FFF0C2'), padding: "4px 10px", borderRadius: "999px" }}>{current.category}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: "8px", color: dc('#6B4A30') }}>
-                  Karte {currentIndex + 1} / {filteredCards.length}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); toggleFavorite(current.id); }}
-                    aria-label={isFav ? "Nicht mehr merken" : "Karte merken"}
-                    style={{ background: "none", border: "none", fontSize: "26px", cursor: "pointer", padding: 0, minHeight: "auto", lineHeight: 1 }}
-                  >
-                    {isFav ? "★" : "☆"}
-                  </button>
-                </span>
-              </div>
-              <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                {!back ? (
-                  <h3 style={{ fontSize: "24px", fontWeight: 700, color: dc('#2B170A'), margin: 0, lineHeight: 1.4 }}>{current.question}</h3>
-                ) : (
-                  <div>
-                    <span style={{ fontSize: "15px", color: dc('#2F5D3A'), fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Antwort & Erklärung</span>
-                    <p style={{ fontSize: "20px", fontWeight: 700, color: dc('#2F5D3A'), margin: "0 0 8px 0" }}>{getRightAnswerText(current)}</p>
-                    <p style={{ fontSize: "17px", color: dc('#6B4A30'), margin: 0, lineHeight: 1.45 }}>{current.explanation}</p>
-                    <span onClick={(e) => e.stopPropagation()} style={{ display: "inline-block", marginTop: "8px" }}><SpeakButton small hoerKey={stimmeKey(hoerTexte(current).antwort)} text={`${getRightAnswerText(current)}. ${current.explanation || ""}`} /></span>
-                    {typeof current.id === "number" && <ReportContext report={{ game: "Lernkarten", qid: current.id, product: (current as any).product, text: current.question }} />}
-                  </div>
-                )}
-              </div>
-              <div style={{ fontSize: "16px", color: dc('#8A5A00'), fontWeight: 700 }}>{back ? "↺ Antippen, zurück zur Frage" : "↻ Antippen zum Umdrehen"}</div>
+          {/* Vorderseite: die Frage */}
+          <div aria-hidden={flipped} className="lt-papier lt-kk lt-kk-vorne">
+            <div className="lt-kk-kopf">
+              <span className="lt-kk-gruppe">{current.category}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                Fach {fachVon(lernkasten, `frage-${current.id}`)} · Karte {currentIndex + 1} / {filteredCards.length}
+                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(current.id); }} aria-label={isFav ? "Nicht mehr merken" : "Karte merken"} className="lt-kk-stern">{isFav ? "★" : "☆"}</button>
+              </span>
             </div>
-          ))}
+            <div className="lt-kk-mitte"><div className="lt-kk-fragetext">{current.question}</div></div>
+            <div className="lt-kk-fuss">Antippen zum Umdrehen</div>
+          </div>
+          {/* Rückseite: Antwort in Handschrift */}
+          <div aria-hidden={!flipped} className="lt-papier lt-kk lt-kk-hinten">
+            <div className="lt-kk-kopf"><span className="lt-kk-gruppe">Antwort</span><span>{current.category}</span></div>
+            <ul className="lt-kk-liste">
+              <li><b>{getRightAnswerText(current)}</b></li>
+              {current.explanation && <li>{current.explanation}</li>}
+            </ul>
+            <div className="lt-kk-werkzeug" onClick={(e) => e.stopPropagation()}>
+              <SpeakButton small hoerKey={stimmeKey(hoerTexte(current).antwort)} text={`${getRightAnswerText(current)}. ${current.explanation || ""}`} />
+              {typeof current.id === "number" && <ReportContext report={{ game: "Lernkarten", qid: current.id, product: (current as any).product, text: current.question }} />}
+            </div>
+          </div>
         </div>
       </div>
+      {onBewerten && flipped && (
+        <div className="lt-kk-bewerten" style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "540px" }}>
+          <button type="button" className="lt-kk-nochmal" onClick={() => { onBewerten(`frage-${current.id}`, false); setFlipped(false); setCurrentIndex((prev) => (prev + 1) % filteredCards.length); }}>Nochmal</button>
+          <button type="button" className="lt-kk-gewusst" onClick={() => { onBewerten(`frage-${current.id}`, true); setFlipped(false); setCurrentIndex((prev) => (prev + 1) % filteredCards.length); }}>Wusste ich</button>
+        </div>
+      )}
+      {onBewerten && (() => {
+        const z = faecherZaehlen(filteredCards.map((q: any) => `frage-${q.id}`), lernkasten);
+        const max = Math.max(1, ...z);
+        return (
+          <div className="lt-kk-kasten" aria-label="Lernkasten">
+            <span className="lt-kk-kasten-titel">Dein Lernkasten</span>
+            <div className="lt-kk-faecher">
+              {z.map((n, i) => (
+                <div key={i} className={`lt-kk-fach${fachVon(lernkasten, `frage-${current.id}`) === i + 1 ? " lt-kk-fach-an" : ""}`} title={`Fach ${i + 1}: ${n} Karten`}>
+                  <span className="lt-kk-fach-stapel" style={{ height: `${Math.round((n / max) * 100)}%` }} />
+                  <b>{n}</b><small>Fach {i + 1}</small>
+                </div>
+              ))}
+            </div>
+            <span className="lt-kk-kasten-hilfe">Fach 1 = noch üben, Fach 5 = sitzt. Gewusste Karten wandern nach hinten.</span>
+          </div>
+        );
+      })()}
       <div style={{ display: "flex", gap: "12px" }}>
         <button
           onClick={() => {
