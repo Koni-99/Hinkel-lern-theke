@@ -702,8 +702,8 @@ async function offlineTests() {
     const ids = qs.map((q) => q.id);
     ok('Quiz: Fragen-Nummern eindeutig', new Set(ids).size === ids.length);
     const css = K.thema_artisan.ARTISAN_CSS;
-    const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-lernen-karten .lt-card.lt-tief', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
-    ok('Dunkles Design: Startseite, Lernen-Karten, Hör-Lernen-Anzeige, Schalter hellbraun bzw. gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
+    const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
+    ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
   {
