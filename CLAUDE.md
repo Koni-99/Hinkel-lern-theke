@@ -62,7 +62,7 @@ Mehr zum Aufbau: `README.md`.
    Mit Firebase-Emulator (Anmeldung, Live, Kundenfragen): im Ordner `tests/`
    `npx firebase-tools@15.36.0 emulators:exec --only database --project demo-hinkel "EMU=http://127.0.0.1:9000 node app-test.js http://127.0.0.1:5055/Hinkel-lern-theke/"`
    (In der Claude-Umgebung dafür die Proxy-Variablen weglassen: `env -u HTTPS_PROXY -u https_proxy -u GLOBAL_AGENT_HTTPS_PROXY -u NODE_OPTIONS`.)
-4. Neue Funktionen auch in `tests/app-test.js` aufnehmen. Pop-ups vorher mit `clearPopups` wegklicken.
+4. Neue Funktionen auch in `tests/app-test.js` aufnehmen, als eigener Teil `teile.push(['Name', async () => { … }])` in `offlineTests` (seit 242: 3 Teile laufen gleichzeitig, `GLEICHZEITIG=1` für hintereinander; Emulator-Teil `cloudTests` läuft hintereinander daneben; Dauer ~2,7 statt ~15 Min.). Nicht mit festen kurzen Wartezeiten prüfen, sondern in einer Schleife warten, bis es da ist. Pop-ups vorher mit `clearPopups` wegklicken.
    **Immer** (Wunsch des Nutzers): jede neue oder geänderte Funktion auch in „So funktioniert die Lern-Theke“ (`src/ui/hilfe.tsx`) erklären, bei Bedarf auch in „Wo finde ich was?“ und der Einführung; das Thema in den Hilfe-Test in `tests/app-test.js` aufnehmen.
 5. Browser-Ports 5060 sind gesperrt (unsicherer Port), lieber 5055–5059 oder 5070.
 
