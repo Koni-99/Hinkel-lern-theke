@@ -46,7 +46,8 @@ export const shiftDayKey = (n: number) => { const d = new Date(); d.setDate(d.ge
 
 export const TEAM_CAT = 'Team-Challenge 🤝';
 
-export const TEAM_REWARD = 75; // seit Version 199 ×1,5 (vorher 50)
+export const TEAM_REWARD = 500; // seit Version 242 (Wunsch des Nutzers), dazu Überraschungstüte + Rubbellos
+export const TEAM_REWARD_ALT = 75; // Belohnung bis Version 241 (wer die schon bekam, bekommt den Rest)
 
 export const weekIdNow = () => { const d = new Date(); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return dayKey(d); };
 
