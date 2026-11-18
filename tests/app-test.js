@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -884,6 +884,61 @@ async function offlineTests() {
     const ueber = await d.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok('Theken-Ansturm: Fotos am Handy groß (3 pro Reihe)', breiten.length === 8 && Math.min(...breiten) >= 100 && ueber <= 1, `Breiten ${breiten.join(',')}, über ${ueber}px`);
     ok('Theken-Ansturm: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 249: Ofen-Kette (fallende Produktfotos, 4 gleiche werden goldbraun)
+  teile.push(['Version 249: Ofen-Kette (fallende Produktfotos, 4 gleiche werden goldbraun)', async () => {
+    const O = kompiliere(['src/games/ofenLogik.ts']).games_ofenLogik;
+    let vier = 0; for (let i = 0; i < 2000; i++) { const t = O.neuesTeil(4 + (i % 7)); if (new Set(t.zellen.map((z) => z.p)).size < 2) vier++; }
+    ok('Ofen-Kette: ein Teil hat nie 4 gleiche Bilder', vier === 0, `${vier} Teile`);
+    const r = O.leeresRaster(), K = (p) => ({ p, glut: 0, alter: 0 });
+    r[11][0] = K(1); r[11][1] = K(1); r[10][1] = K(1); r[10][2] = K(1); r[11][2] = K(2);
+    const g1 = O.findeGruppen(r, (p) => p);
+    ok('Ofen-Kette: 4 gleiche zusammenhängend werden erkannt', g1.weg.size === 4 && g1.gruppen.length === 1, JSON.stringify([...g1.weg]));
+    r[10][2].alter = O.VERBRANNT_AB;
+    ok('Ofen-Kette: verbranntes Bild zählt nicht für 4 gleiche', O.findeGruppen(r, (p) => p).weg.size === 0);
+    for (let x = 0; x < O.COLS; x++) r[11][x] = r[11][x] || K(5);
+    ok('Ofen-Kette: volle Reihe erkannt (auch mit verbranntem Bild)', O.volleReihen(r).join() === '11');
+    const r2 = O.leeresRaster(); r2[3][0] = K(7); O.nachRutschen(r2);
+    ok('Ofen-Kette: Bilder rutschen nach unten', r2[11][0] && r2[11][0].p === 7 && !r2[3][0]);
+    const r3 = O.leeresRaster(); r3[11][3] = K(2); r3[11][6] = K(2); r3[11][0] = K(4); r3[10][3] = { p: -1, glut: 0, alter: 0, gold: true };
+    ok('Ofen-Kette: goldenes Brötchen backt alle gleichen darunter weg', O.goldZiel(r3, 3, 10, (p) => p).size === 3);
+    const P = kompiliere(['src/daten/shopProducts.ts']).daten_shopProducts.SHOP_PRODUCTS;
+    const kopf = (a) => a.replace(/\s*\(.*\)\s*$/, '').trim(); const fehlerA = [];
+    for (const p of P) for (let i = 0; i < 5; i++) {
+      const f = O.allergenFrage(p.name); if (!f) continue;
+      const drin = p.allergens.map(kopf);
+      if (!drin.includes(f.richtig) || f.optionen.filter((o) => drin.includes(o)).length !== 1 || f.optionen.length !== 3 || f.optionen.includes('Soja')) fehlerA.push(p.name + ': ' + f.optionen.join('/'));
+    }
+    ok('Ofen-Kette: Allergen-Frage hat genau eine richtige Antwort, nie Soja', fehlerA.length === 0, fehlerA.slice(0, 2).join(' | '));
+    const alle = O.ofenSortiment(10), a1 = O.tagesAuswahl(alle, new Date(2026, 10, 18)), a2 = O.tagesAuswahl(alle, new Date(2026, 10, 18)), a3 = O.tagesAuswahl(alle, new Date(2026, 10, 19));
+    ok('Ofen-Kette: 10 Produkte am Tag, für alle gleich, jeden Tag andere, mehrere Gruppen', a1.length === 10 && new Set(a1).size === 10 && a1.join() === a2.join() && a1.join() !== a3.join() && new Set(a1.map(O.gruppeVon)).size >= 4, a1.join(', '));
+    ok('Ofen-Kette: keine Weihnachtsware im Juni', !O.ofenSortiment(5).some((n) => O.gruppeVon(n) === 'Weihnachtsgebäck'));
+    ok('Ofen-Kette: höchstens 250 Punkte, ruhig zählt halb', O.bestenlistenPunkte(900, false) === 250 && O.bestenlistenPunkte(100, true) === 50 && O.bestenlistenPunkte(900, true) === 125);
+    ok('Ofen-Kette: Gruppen-Tag mittwochs und samstags', O.istGruppenTag(new Date(2026, 10, 18)) && O.istGruppenTag(new Date(2026, 10, 21)) && !O.istGruppenTag(new Date(2026, 10, 19)));
+    // In der App, am Handy
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Ofen-Kette' }).first()); await settle(d.page, 1200);
+    for (let w = 0; w < 50 && !(await d.page.locator('.lt-ok-heute img').count()); w++) await sleep(100);
+    ok('Ofen-Kette: „Heute im Ofen“ zeigt 10 Produkte mit Foto', (await d.page.locator('.lt-ok-heute img').count()) === 10, String(await d.page.locator('.lt-ok-heute img').count()));
+    await click(d.page.getByRole('button', { name: 'Ofen an', exact: true })); await settle(d.page, 800);
+    for (let w = 0; w < 50 && !(await d.page.locator('.lt-ok-ofen canvas').count()); w++) await sleep(100);
+    const cv = await d.page.locator('.lt-ok-ofen canvas').boundingBox();
+    ok('Ofen-Kette: Spielfeld groß genug (Bild mind. 36 Punkte breit), passt in die Breite', cv && cv.width / 7 >= 36 && cv.x >= 0 && cv.x + cv.width <= 390, JSON.stringify(cv));
+    ok('Ofen-Kette: Bestellung steht oben', /\d× \S/.test(await d.page.locator('.lt-ok-bestellung').innerText().catch(() => '')));
+    const fallen = d.page.getByRole('button', { name: 'Fallen lassen' });
+    if (process.env.OFEN_BILD) { await sleep(1500); await d.page.screenshot({ path: process.env.OFEN_BILD + '-1.png' }); }
+    for (let i = 0; i < 12; i++) { await clearPopups(d.page); await click(fallen); await sleep(900); if (await d.page.locator('.lt-ok-bon').count()) break; }
+    const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
+    ok('Ofen-Kette: nichts steht seitlich über', breit <= 392, String(breit));
+    if (!(await d.page.locator('.lt-ok-bon').count())) { await click(d.page.getByRole('button', { name: /Beenden/ })); await settle(d.page, 500); }
+    for (let w = 0; w < 50 && !(await d.page.locator('.lt-ok-bon').count()); w++) await sleep(100);
+    const bon = await d.page.locator('.lt-ok-bon').innerText().catch(() => '');
+    if (process.env.OFEN_BILD) await d.page.screenshot({ path: process.env.OFEN_BILD + '-2.png', fullPage: true });
+    ok('Ofen-Kette: Ergebnis als Kassenbon mit Summe', /SUMME/i.test(bon) && /Längste Kette/i.test(bon), bon.slice(0, 120));
+    ok('Ofen-Kette: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)

@@ -71,7 +71,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Hauptseiten', 'am Handy und Tablet unten, am Computer als Leiste links')}
         {ort('Start', 'Tages-Challenge, Team-Challenge, Lob der Woche, Umfragen, Geburtstage. Ganz unten zum Aufklappen: „Deine Zahlen“ mit Statistik, Lern-Bon, Serie und Abzeichen')}
         {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Hör-Lernen')}
-        {ort('Spielen', 'Theken-Simulator, Bilderquiz, Quiz Battle und mehr')}
+        {ort('Spielen', 'Theken-Simulator, Bilderquiz, Ofen-Kette, Quiz Battle und mehr')}
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
@@ -179,6 +179,14 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Zuhören:</strong> Schaltest du vor dem Start „Zuhören“ ein, spricht der Kunde laut. Seinen Satz siehst du erst, wenn du antippst oder antwortest. Mit „Nochmal hören“ wiederholt er ihn. Ton am Handy einschalten! Die Kunden sprechen mit natürlichen Stimmen (Kundinnen mit einer Frauen-, Kunden mit einer Männerstimme). Ohne Internet liest die Handy-Stimme.</div>
         <div><strong>Telefon-Bestellung:</strong> Unter Spielen ruft ein Kunde an und bestellt vor. Du füllst den Bestellzettel aus: Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. Pro Runde gibt es 5 Anrufe, von einfach bis kompliziert (der Kunde korrigiert sich, streicht etwas oder sagt „ein Dutzend“). Nach und nach kommt jeder Artikel aus dem Sortiment einmal dran. Wer nur zuhört und den Text nicht liest, bekommt einen Extra-Bonus. Am Telefon sprechen abwechselnd eine Frau und ein Mann mit natürlicher Stimme.</div>
       </>, 2)}
+      {box(boxIcon(ICON.flame), 'Ofen-Kette', <>
+        <div>Unter Spielen → „Ofen-Kette“ fallen Teile aus Produktfotos in den Ofen. Schieben, drehen, fallen lassen: mit den Knöpfen oder am Spielfeld (wischen schiebt, tippen dreht, schnell nach unten wischen lässt fallen).</div>
+        <div><strong>Goldbraun:</strong> 4 gleiche Produkte nebeneinander verschwinden, ihr Name leuchtet kurz auf. Eine volle Reihe ist fertig gebacken. Was nachrutscht, kann eine Kette auslösen, die zählt mehrfach.</div>
+        <div><strong>Bestellung:</strong> Oben steht nur der Name, zum Beispiel „6× Laugenbrezel“. Erkennst du das Produkt am Foto und backst es weg, zählt es doppelt. Du hast 60 Sekunden.</div>
+        <div><strong>Allergen-Frage:</strong> Ein Bild mit rotem Rand fragt, was drin ist. Antworte, bevor das Teil landet. <strong>Goldenes Brötchen:</strong> Es backt alle gleichen Produkte weg, auf denen es landet. <strong>Verbrannt:</strong> Bleibt ein Bild zu lange liegen, wird es dunkel. Dann holt es nur noch eine volle Reihe raus.</div>
+        <div><strong>Name vergessen?</strong> Finger auf ein Bild halten. <strong>Ablage:</strong> Antippen legt das fallende Teil zur Seite, nochmal antippen holt es zurück.</div>
+        <div>Jeden Tag kommen andere Produkte in den Ofen. Mittwochs und samstags ist <strong>Gruppen-Tag</strong>: Dann zählen alle Produkte einer Gruppe als gleich, zum Beispiel alle Brötchen. <strong>Ruhig backen</strong> geht ohne Zeit und ohne Bestellung, zählt aber nur halb. Pro Runde gibt es höchstens 250 Punkte (vor dem Bonus ×1,5). Am Ende kommt ein Kassenbon mit allem, was du gebacken hast.</div>
+      </>, 3)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>
         <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>
         <div>Der Ausbilder sieht deinen Lernstand, damit er dir gezielt helfen kann. Außerdem zählt die App, wie oft Seiten und Spiele geöffnet werden. Der Ausbilder sieht davon nur die Summe für das ganze Team, ohne Namen. So weiß er, was ihr wirklich nutzt.</div>

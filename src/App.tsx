@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 248;
+const APP_VERSION: number = 249;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -42,6 +42,7 @@ const MeinMonat = lazy(() => import('./screens/MeinMonat').then((m) => ({ defaul
 const KassenblitzView = lazy(() => import('./games/Kassenblitz').then((m) => ({ default: m.KassenblitzView })));
 const ThekenSimulatorView = lazy(() => import('./games/theke/ThekenSimulator').then((m) => ({ default: m.ThekenSimulatorView })));
 const AllergenTrainerView = lazy(() => import('./games/AllergenTrainer').then((m) => ({ default: m.AllergenTrainerView })));
+const OfenKetteView = lazy(() => import('./games/OfenKette').then((m) => ({ default: m.OfenKetteView })));
 const TelefonBestellungView = lazy(() => import('./games/TelefonBestellung').then((m) => ({ default: m.TelefonBestellungView })));
 const PreisDuellView = lazy(() => import('./games/PreisDuell').then((m) => ({ default: m.PreisDuellView })));
 const SchneideProfiView = lazy(() => import('./games/SchneideProfi').then((m) => ({ default: m.SchneideProfiView })));
@@ -1710,7 +1711,7 @@ export default function App() {
     const t = window.setTimeout(() => {
       [() => import('./components/FlashcardView'), () => import('./components/ScoreboardView'), () => import('./screens/HoerLernen'), () => import('./screens/MeinMonat'), () => import('./screens/KundenfragenSeite'),
         () => import('./ui/statistik'), () => import('./ui/ausbildung'), () => import('./screens/EinarbeitungSeite'), () => import('./games/Kassenblitz'), () => import('./games/theke/ThekenSimulator'),
-        () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/TelefonBestellung'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
+        () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/TelefonBestellung'), () => import('./games/OfenKette'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
         () => import('./components/TuetenBlitzView'), () => import('./components/AlternativenJaegerView')].forEach((f, i) => window.setTimeout(() => { f().catch(() => {}); }, i * 150));
     }, 4000);
     return () => window.clearTimeout(t);
@@ -2423,7 +2424,7 @@ export default function App() {
     });
   };
 
-  const GAME_TABS = ['spielen', 'ansturm', 'battle', 'kassenblitz', 'tueten', 'alternativen', 'theke', 'bilderquiz', 'allergene', 'preisduell', 'schneiden', 'advent', 'telefon'];
+  const GAME_TABS = ['spielen', 'ansturm', 'battle', 'kassenblitz', 'tueten', 'alternativen', 'theke', 'bilderquiz', 'allergene', 'preisduell', 'schneiden', 'advent', 'telefon', 'ofen'];
   const myRoleEarly = ((cloudData.progress || {})[username.toLowerCase()] || {})._role;
   const navItems = [
     { id: 'home', label: 'Start', icon: ICON.home, active: activeTab === 'home', action: () => setActiveTab('home'), mobile: true },
@@ -2619,6 +2620,7 @@ export default function App() {
         {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && <EinarbeitungSeite {...{ activeTab, setActiveTab, obDay, setObDay, toggleOnboarding, onboarding, appWeek, goOnboardingTarget }} />}
         {activeTab === 'kassenblitz' && <KassenblitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
+        {activeTab === 'ofen' && <OfenKetteView images={productImages} scores={cloudData.scores || []} userKey={userKeyLower} onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'schneiden' && <SchneideProfiView images={spielBilder} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'advent' && (
