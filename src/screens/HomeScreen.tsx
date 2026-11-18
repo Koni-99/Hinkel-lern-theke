@@ -109,10 +109,14 @@ export type HomeScreenProps = {
   masteredNow: number;
   pinGelesenAm?: number;
   onPinGelesen?: () => void;
+  /** Version 248: eigener Name für Teigi (freiwillig, leer = kein Name) */
+  onTeigiName?: (name: string) => void;
   teamKarten?: ReactNode;
 };
 
-export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow , pinGelesenAm = 0, onPinGelesen, teamKarten }: HomeScreenProps) {
+export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBakeDay, setSelectedBakeDay, setShowBakingCalendar, showBakingCalendar, productImages, questions, azubiArea, examAllowed, isAdmin, team, setActiveTab, setSpickArea, setSpickView, setShowTipShop, setShowWheel, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, openLos, weekProduct, weekProductDone, freshProducts, launchNewProducts, launchWeekProduct, launchDailyChallenge, seasonNow, seasonPool, launchSeasonQuiz, heuteDone, launchHeuteDran, bakeImg, launchPersonalWeaknessQuiz, handleResetMyProgress, setToast, setAdventPreview, overallPercent, myRank, myTotalScore, activePinboard, cloudScores, cloudProgress, cloudLastSeen, myWrongCount, fehlerDue, fullBakingSchedule, userKeyLower, greeting, todayLong, isDailyDone, heroKey, allProgress, catPercent, myDays, streak, weekDots, nextMilestone, isMeister, meisterLeft, streakToday, streakMult, goLernen, myProg, reviewYear, lastChamp, osterAktiv, osterFound, wheelReady, onboarding, onboardingComplete, simpleStart, showFullStart, showErsteWoche, appWeek, showAppWeek, badges, earnedBadges, myLevel, shownLevel, nowMonth, adventOpenNow, showAdventCard, masteredNow , pinGelesenAm = 0, onPinGelesen, teamKarten, onTeigiName }: HomeScreenProps) {
+  const [teigiNameAuf, setTeigiNameAuf] = useState(false);
+  const [teigiNameText, setTeigiNameText] = useState('');
   // Statistik und Lern-Bon (Version 201): am PC/Tablet quer in die kürzere der beiden Spalten, damit keine große Lücke bleibt
   const mainRef = useRef<HTMLDivElement>(null);
   const sideRef = useRef<HTMLDivElement>(null);
@@ -220,8 +224,15 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
                 <span className="lt-teigi-zeile" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingTop: '8px', borderTop: '1px dashed rgba(139,90,43,.35)' }}>
                   <TeigiGlas stufe={teigi.stufe} laune={teigi.laune} size={72} hut={myProg._teigiHut} glas={myProg._teigiGlas} />
                   <span style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', lineHeight: 1.3 }}>
-                    <b style={{ fontSize: '14px' }}>{teigi.name}</b>
+                    <b style={{ fontSize: '14px' }}>{myProg._teigiName ? `${myProg._teigiName} (${teigi.name})` : teigi.name}</b>
                     <span>{teigi.laune === 'froh' ? 'Heute gefüttert, er blubbert vor Freude.' : teigi.laune === 'gut' ? 'Hat Hunger: lern heute etwas, dann blubbert er.' : 'Ganz schlapp. Ein Lerntag macht ihn wieder munter.'}{teigi.naechste ? ` Noch ${teigi.naechste - teigi.futter} Lerntage bis er wächst.` : ''}</span>
+                  
+                    {onTeigiName && (teigiNameAuf
+                      ? <span className="lt-teigi-name" style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                          <input value={teigiNameText} maxLength={16} autoFocus aria-label="Name für Teigi" placeholder="z. B. Bruno" onChange={(e) => setTeigiNameText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { onTeigiName(teigiNameText); setTeigiNameAuf(false); } }} style={{ flex: '1 1 110px', minWidth: 0, minHeight: '40px', padding: '0 10px', borderRadius: '10px', border: '2px solid #E2CFA8', fontSize: '16px', backgroundColor: '#FFFFFF', color: '#2B170A' }} />
+                          <button type="button" onClick={() => { onTeigiName(teigiNameText); setTeigiNameAuf(false); }} style={{ minHeight: '40px', padding: '0 12px', borderRadius: '10px', border: 'none', backgroundColor: '#4B2A14', color: '#FFF6E0', fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Speichern</button>
+                        </span>
+                      : <button type="button" className="lt-teigi-name-knopf" onClick={() => { setTeigiNameText(String(myProg._teigiName || '')); setTeigiNameAuf(true); }} style={{ alignSelf: 'flex-start', marginTop: '4px', minHeight: '32px', padding: 0, border: 'none', background: 'none', color: 'inherit', fontSize: '13px', fontWeight: 700, textDecoration: 'underline', textUnderlineOffset: '3px', cursor: 'pointer' }}>{myProg._teigiName ? 'Namen ändern' : 'Teigi einen Namen geben'}</button>)}
                   </span>
                 </span>
               )}
