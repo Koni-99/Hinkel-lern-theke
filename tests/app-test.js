@@ -278,7 +278,9 @@ async function offlineTests() {
   // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
   teile.push(['Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis', async () => {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
-    const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
+    // Schlüssel = Fragetext + alle Antworten (es gibt Fragen mit gleichem Text, aber anderen Antworten)
+    const schluessel = (frage, antworten) => `${frage.trim()}|${antworten.map((t) => String(t).replace(/^[A-D]\n/, '').trim()).sort().join('|')}`;
+    const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(schluessel(q.question, q.options), q.options[q.correct]); });
     const d = await device({ user: 'Anna' });
     await clearPopups(d.page);
     // Küken-Geheimnis: Küken neben „Wusstest du?“ antippen
@@ -293,14 +295,15 @@ async function offlineTests() {
       if (!(await opts.count())) break;
       if (lauf >= 5 && (await d.page.locator('.lt-gluecksfrage').count())) { glueck = true; break; }
       const frage = (await d.page.locator('.lt-frage').first().innerText()).trim();
-      const ziel = richtig.get(frage);
       const texte = await opts.allInnerTexts();
+      const ziel = richtig.get(schluessel(frage, texte));
       const genau = ziel ? texte.findIndex((t) => t.replace(/^[A-D]\s*/, '').trim() === String(ziel).trim()) : -1;
       const idx = genau >= 0 ? genau : ziel ? texte.findIndex((t) => t.includes(String(ziel))) : -1;
       await click(opts.nth(idx >= 0 ? idx : 0)); await settle(d.page, 250); beantwortet++;
       // warten, bis die Antwort ausgewertet ist (bei voll ausgelastetem Rechner dauert das länger)
       await d.page.locator('.lt-qcard.lt-ans-ok, .lt-qcard.lt-ans-bad').first().waitFor({ timeout: 5000 }).catch(() => {});
       lauf = (await d.page.locator('.lt-qcard.lt-ans-ok').count()) ? lauf + 1 : 0;
+      if (process.env.DEBUG && !lauf) console.log('DEBUG falsch:', frage.slice(0, 60), '| ziel', ziel, '| texte', JSON.stringify(texte));
       const next = d.page.locator('button.lt-sticky-next:visible');
       if (!(await next.count())) break;
       await click(next.first()); await settle(d.page, 250);
@@ -1276,7 +1279,8 @@ async function cloudTests() {
   try {
     // Ohne Emulator: Teile gleichzeitig. Die Emulator-Prüfungen hängen voneinander ab (gemeinsame Datenbank),
     // darum laufen sie hintereinander, aber neben den anderen Teilen her.
-    const teile = await offlineTests();
+    // NUR=Suchwort: nur Teile prüfen, deren Name passt (zum schnellen Nachprüfen einzelner Teile)
+    const teile = (await offlineTests()).filter(([n]) => !process.env.NUR || new RegExp(process.env.NUR, 'i').test(n));
     const gleichzeitig = Number(process.env.GLEICHZEITIG) || 3;
     const start = Date.now();
     await Promise.all([
