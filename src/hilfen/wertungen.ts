@@ -6,7 +6,7 @@ import { monthTotals, monthKeyOf } from '../ui/kalender';
 export const cleanLabel = (cat: string) => cat.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[☀-➿️‍]/g, '').trim();
 
 // Wertungen bündeln: echte Spiele einzeln, alle Quiz-Runden zusammen, Glücksspiele gar nicht
-export const GAME_NAMES = ['Theken-Simulator', 'Theken-Ansturm', 'Kassenblitz', 'Bilderquiz', 'Allergene-Training', 'Teurer oder billiger', 'Schneide-Profi', 'Tüten-Blitz', 'Alternativen-Jäger', 'Adventskalender', 'Telefon-Bestellung'];
+export const GAME_NAMES = ['Theken-Simulator', 'Theken-Ansturm', 'Kassenblitz', 'Bilderquiz', 'Allergene-Training', 'Teurer oder billiger', 'Schneide-Profi', 'Tüten-Blitz', 'Alternativen-Jäger', 'Adventskalender', 'Telefon-Bestellung', 'Ofen-Kette'];
 export const QUIZ_KEY = 'Lernen & Quiz';
 export const scoreGroup = (cat: string): string | null => {
   const c = cleanLabel(cat || '');

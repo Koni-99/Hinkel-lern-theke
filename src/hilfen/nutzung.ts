@@ -13,7 +13,7 @@ const SPEICHER = 'lt_nutzung_offen';
 export const SEITEN: Record<string, string> = {
   home: 'Startseite', quiz: 'Quiz', pfad: 'Lernpfad', hoeren: 'Hör-Lernen', ausbildung: 'Ausbildung', einarbeitung: 'Erste Woche',
   nachschlagen: 'Nachschlagen', flashcards: 'Karteikarten', kundenfragen: 'Kundenfragen', kundenstimmen: 'Kundenstimmen', nachrichten: 'Meine Nachrichten',
-  spielen: 'Spiele-Auswahl', theke: 'Theken-Simulator', telefon: 'Telefon-Bestellung', kassenblitz: 'Kassenblitz', tueten: 'Tüten-Blitz', ansturm: 'Theken-Ansturm',
+  spielen: 'Spiele-Auswahl', theke: 'Theken-Simulator', telefon: 'Telefon-Bestellung', ofen: 'Ofen-Kette', kassenblitz: 'Kassenblitz', tueten: 'Tüten-Blitz', ansturm: 'Theken-Ansturm',
   preisduell: 'Teurer oder billiger?', bilderquiz: 'Welches Brot ist das?', schneiden: 'Schneide-Profi', allergene: 'Allergene-Training',
   alternativen: 'Alternativen-Jäger', battle: 'Quiz Battle', advent: 'Adventskalender',
   scoreboard: 'Bestenliste', profil: 'Profil', statistik: 'Statistik', monat: 'Mein Monat', jahr: 'Mein Jahr', appwoche: 'Wochenrückblick',
