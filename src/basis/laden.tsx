@@ -573,12 +573,19 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: numbe
   const u = (n: string) => `url(#${n}${id})`;
   const g = TEIGI_GLAS[glas || 'klar'] || TEIGI_GLAS.klar;
   const schlapp = laune === 'schlapp';
-  const y = [92, 80, 68, 60][Math.max(0, Math.min(3, stufe))];
+  // Version 247: Teigi wächst sichtbar. Stufe 0 Baby, 1 jung (Teig wölbt sich, mehr Bläschen), 2 kräftig (Teig drückt den Deckel schief),
+  // 3 Meister (Teig quillt oben heraus, Deckel obenauf, goldener Schimmer)
+  const st = Math.max(0, Math.min(3, stufe));
+  const y = [98, 80, 58, 46][st];
+  // Mit jeder Stufe wird Teigi auch größer (vom Boden aus skaliert), so sieht man das Wachsen auch klein
+  const gross = [0.76, 0.87, 1, 1][st];
+  const wolbung = schlapp ? 1 : [-6, -9, -10, -10][st];
+  const deckel = st === 3 ? 'translate(5 -13) rotate(-14 60 24)' : st === 2 ? 'translate(0 -3) rotate(-6 60 24)' : undefined;
   const glasForm = 'M28 40c0-7 4-10 11-10h42c7 0 11 3 11 10v62c0 12-7 18-19 18H47c-12 0-19-6-19-18z';
-  const teigForm = `M31 ${y + 2}q8 ${schlapp ? 1 : -6} 15 -1t15 0 15 0 13 -1V102c0 10-5 15-15 15H47c-10 0-16-5-16-15z`;
+  const teigForm = `M31 ${y + 2}q8 ${wolbung} 15 -1t15 0 15 0 13 -1V102c0 10-5 15-15 15H47c-10 0-16-5-16-15z`;
   const auge = (x: number) => schlapp
     ? <g key={x}><ellipse className="lt-teigi-auge" cx={x} cy="83" rx="6" ry="3.6" fill={u('auge')} /><path d={`M${x - 7} 80q7 -3 14 0`} stroke="#5A3418" strokeWidth="2" fill="none" strokeLinecap="round" /></g>
-    : <g key={x}><ellipse className="lt-teigi-auge" cx={x} cy="81" rx="6.2" ry="7.1" fill={u('auge')} /><ellipse cx={x - 1.8} cy="78.6" rx="2.4" ry="2.6" fill="#FFFFFF" /><circle cx={x + 2} cy="83.6" r="1" fill="#FFFFFF" opacity=".85" /></g>;
+    : <g key={x}><ellipse className="lt-teigi-auge" cx={x} cy="81" rx="7.2" ry="8.2" fill={u('auge')} /><ellipse cx={x - 2.2} cy="78" rx="2.8" ry="3" fill="#FFFFFF" /><circle cx={x + 2.4} cy="84.4" r="1.2" fill="#FFFFFF" opacity=".85" /></g>;
   const rillen = Array.from({ length: 18 }, (_, k) => <path key={k} d={`M${30 + (k + 1) * 3.2} 20v11`} stroke="#7A4A0A" strokeOpacity=".35" strokeWidth="1" />);
   return (
     <svg width={size} height={size} viewBox="2 6 116 116" aria-hidden="true" className={laune === 'froh' ? 'lt-papier lt-teigi lt-teigi-froh' : 'lt-papier lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
@@ -587,12 +594,12 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: numbe
         <filter id={`glow${id}`} x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6" /></filter>
         <linearGradient id={`gold${id}`} x1="0" x2="1"><stop offset="0" stopColor="#8C5A0A" /><stop offset=".18" stopColor="#E0A400" /><stop offset=".38" stopColor="#FFF4C2" /><stop offset=".55" stopColor="#FFC72C" /><stop offset=".8" stopColor="#B8860B" /><stop offset="1" stopColor="#6E440A" /></linearGradient>
         <linearGradient id={`goldTop${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF7D6" /><stop offset=".6" stopColor="#FFD24A" /><stop offset="1" stopColor="#C9901A" /></linearGradient>
-        <linearGradient id={`glas${id}`} x1="0" x2="1"><stop offset="0" stopColor={g.rand} stopOpacity=".55" /><stop offset=".12" stopColor={g.glas} stopOpacity=".35" /><stop offset=".5" stopColor="#FFFFFF" stopOpacity=".08" /><stop offset=".86" stopColor={g.glas} stopOpacity=".3" /><stop offset="1" stopColor={g.rand} stopOpacity=".6" /></linearGradient>
+        <linearGradient id={`glas${id}`} x1="0" x2="1"><stop offset="0" stopColor={g.rand} stopOpacity=".45" /><stop offset=".1" stopColor="#FFFFFF" stopOpacity=".25" /><stop offset=".5" stopColor="#FFFFFF" stopOpacity="0" /><stop offset=".9" stopColor="#FFFFFF" stopOpacity=".2" /><stop offset="1" stopColor={g.rand} stopOpacity=".5" /></linearGradient>
         <radialGradient id={`teig${id}`} cx="45%" cy="25%" r="85%">{schlapp
           ? <><stop offset="0" stopColor="#F4EEE2" /><stop offset=".5" stopColor="#E2D6BE" /><stop offset="1" stopColor="#B9A27C" /></>
-          : <><stop offset="0" stopColor="#FFF7E4" /><stop offset=".45" stopColor="#F7DFAE" /><stop offset=".8" stopColor="#E2B66E" /><stop offset="1" stopColor="#C38E44" /></>}</radialGradient>
+          : <><stop offset="0" stopColor="#FFF0C4" /><stop offset=".4" stopColor="#F8D27A" /><stop offset=".78" stopColor="#E8A93E" /><stop offset="1" stopColor="#C07A1E" /></>}</radialGradient>
         <radialGradient id={`blase${id}`} cx="35%" cy="30%" r="70%"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".55" stopColor="#FFF4DE" stopOpacity=".7" /><stop offset="1" stopColor="#C9954E" stopOpacity=".8" /></radialGradient>
-        <radialGradient id={`auge${id}`} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#5A3418" /><stop offset=".6" stopColor="#2B170A" /><stop offset="1" stopColor="#120904" /></radialGradient>
+        <radialGradient id={`auge${id}`} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#4A2810" /><stop offset=".55" stopColor="#1C0E05" /><stop offset="1" stopColor="#000000" /></radialGradient>
         <linearGradient id={`kante${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFFFFF" stopOpacity=".95" /><stop offset="1" stopColor="#FFFFFF" stopOpacity="0" /></linearGradient>
         <radialGradient id={`boden${id}`}><stop offset="0" stopColor="#000" stopOpacity=".5" /><stop offset="1" stopColor="#000" stopOpacity="0" /></radialGradient>
         <radialGradient id={`weiss${id}`} cx="35%" cy="25%" r="80%"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".7" stopColor="#F6F0E4" /><stop offset="1" stopColor="#D9CCB2" /></radialGradient>
@@ -600,35 +607,48 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: numbe
         <linearGradient id={`rosa${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFB3C7" /><stop offset=".6" stopColor="#E8577A" /><stop offset="1" stopColor="#A82A50" /></linearGradient>
         <linearGradient id={`linse${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4A3A30" /><stop offset="1" stopColor="#0E0907" /></linearGradient>
       </defs>
-      <ellipse cx="60" cy="121" rx="40" ry="7" fill={u('boden')} />
-      {!schlapp && <ellipse cx="60" cy="70" rx="44" ry="50" fill="#FFC72C" opacity=".2" filter={u('glow')} />}
-      <path d={glasForm} fill={g.glas} opacity=".72" />
+      <ellipse cx="60" cy="121" rx={40 * gross} ry="7" fill={u('boden')} />
+      <g transform={gross === 1 ? undefined : `translate(60 120) scale(${gross}) translate(-60 -120)`}>
+      {!schlapp && <ellipse cx="60" cy={st === 3 ? 62 : 70} rx={st === 3 ? 52 : 44} ry={st === 3 ? 58 : 50} fill="#FFC72C" opacity={st === 3 ? '.42' : '.2'} filter={u('glow')} />}
+      <path d={glasForm} fill="#FFFDF7" opacity=".92" /><path d={glasForm} fill={g.glas} opacity=".55" />
       <path d={teigForm} fill={u('teig')} />
       {!schlapp && <g>
         <circle className="lt-teigi-blase" cx="40" cy="96" r="3.4" fill={u('blase')} /><circle className="lt-teigi-blase lt-tb2" cx="80" cy="102" r="2.6" fill={u('blase')} />
         <circle className="lt-teigi-blase lt-tb3" cx="74" cy={Math.max(y + 10, 72)} r="2.1" fill={u('blase')} /><circle cx="62" cy="108" r="2" fill={u('blase')} />
+        {st >= 1 && <><circle className="lt-teigi-blase lt-tb2" cx="50" cy="106" r="2.8" fill={u('blase')} /><circle className="lt-teigi-blase" cx="84" cy="88" r="1.8" fill={u('blase')} /><circle cx="36" cy="104" r="1.6" fill={u('blase')} /></>}
+        {st >= 2 && <><circle className="lt-teigi-blase lt-tb3" cx="40" cy="68" r="2.4" fill={u('blase')} /><circle cx="70" cy="112" r="2.2" fill={u('blase')} /><circle className="lt-teigi-blase" cx="82" cy="70" r="1.6" fill={u('blase')} /></>}
       </g>}
-      {!schlapp && <g filter={u('weich')} fill="#FF8C8C" opacity=".55"><ellipse cx="41" cy="92" rx="6" ry="3.6" /><ellipse cx="79" cy="92" rx="6" ry="3.6" /></g>}
+      {!schlapp && <g filter={u('weich')} fill="#FF7A6E" opacity=".65"><ellipse cx="41" cy="92" rx="6" ry="3.6" /><ellipse cx="79" cy="92" rx="6" ry="3.6" /></g>}
       {[48, 72].map(auge)}
-      {laune === 'froh' && <g><path d="M52.5 92q7.5 8.6 15 0q-7.5 2.6 -15 0z" fill="#3A1A0A" /><path d="M56.6 96.6q3.4 -2.8 6.8 0q-3.4 2.2 -6.8 0z" fill="#E86A6A" /></g>}
-      {laune === 'gut' && <path d="M54 92.5q6 5 12 0" stroke="#3A1A0A" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
-      {schlapp && <path d="M54 97q6 -4 12 0" stroke="#3A1A0A" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
-      <path d={glasForm} fill={u('glas')} stroke={g.rand} strokeOpacity=".9" strokeWidth="2.2" />
+      {laune === 'froh' && <g><path d="M51 92q9 10.5 18 0q-9 3 -18 0z" fill="#1C0E05" /><path d="M56 97.4q4 -3.2 8 0q-4 2.6 -8 0z" fill="#E8534F" /></g>}
+      {laune === 'gut' && <path d="M53 92.5q7 6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
+      {schlapp && <path d="M53 97q7 -4.6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
+      <path d={glasForm} fill={u('glas')} stroke={g.rand} strokeWidth="3" />
       <path d="M35 40v58" stroke={u('kante')} strokeWidth="4.6" strokeLinecap="round" opacity=".9" />
       <path d="M42 42v12" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".7" />
       <path d="M88 46v52" stroke="#FFE7A8" strokeWidth="1.6" strokeLinecap="round" opacity=".6" />
-      {/* goldener Schraubdeckel */}
-      <rect x="30" y="17" width="60" height="14" rx="3" fill={u('gold')} />{rillen}
-      <ellipse cx="60" cy="18" rx="30" ry="3.6" fill={u('goldTop')} />
-      <path d="M35 16.6h44" stroke="#FFFFFF" strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
-      <rect x="30" y="29" width="60" height="2.2" fill="#6E440A" opacity=".45" />
-      {/* Hüte und Zubehör aus dem Laden */}
       {hut === 'tz_brille' && <g>
         <path d="M37 76q0-5 5-5h12q4 0 4 4v4q0 7-8 7h-5q-8 0-8-6z" fill={u('linse')} stroke="#C9901A" strokeWidth="1.6" />
         <path d="M83 76q0-5-5-5H66q-4 0-4 4v4q0 7 8 7h5q8 0 8-6z" fill={u('linse')} stroke="#C9901A" strokeWidth="1.6" />
         <path d="M58 75q2-2 4 0M37 74l-8-4M83 74l8-4" stroke="#C9901A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
         <path d="M41 75l5-2M67 75l5-2" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" opacity=".7" />
       </g>}
+      {/* Stufe 2: Teig drückt unter dem schiefen Deckel heraus */}
+      {st === 2 && <path d="M60 31q12 -9 29 -5q2 3 1 5z" fill={u('teig')} />}
+      {/* Stufe 3: Teig quillt oben aus dem Glas und läuft über den Rand */}
+      {st === 3 && <g>
+        <path d="M26 36C24 20 40 8 60 8S96 20 94 36C95 40 93 44 91 46C90 41 87 37 84 36C80 38 74 37 70 35C64 38 56 38 50 35C44 38 38 38 34 36C32 40 31 48 28 50C26 46 26 41 26 36Z" fill={u('teig')} />
+        <ellipse cx="46" cy="18" rx="12" ry="5" fill="#FFFFFF" opacity=".55" filter={u('weich')} />
+        <circle className="lt-teigi-blase" cx="70" cy="18" r="2.4" fill={u('blase')} /><circle className="lt-teigi-blase lt-tb2" cx="52" cy="26" r="1.8" fill={u('blase')} /><circle cx="80" cy="27" r="1.6" fill={u('blase')} />
+        {!schlapp && [[16, 30, 1], [104, 22, .8], [100, 62, .7], [20, 70, .6]].map(([sx, sy, sk], k) => <path key={k} d={`M${sx} ${sy - 6 * sk}L${sx + 1.6 * sk} ${sy - 1.6 * sk}L${sx + 6 * sk} ${sy}L${sx + 1.6 * sk} ${sy + 1.6 * sk}L${sx} ${sy + 6 * sk}L${sx - 1.6 * sk} ${sy + 1.6 * sk}L${sx - 6 * sk} ${sy}L${sx - 1.6 * sk} ${sy - 1.6 * sk}Z`} fill="#FFE27A" opacity=".95" />)}
+      </g>}
+      {/* goldener Schraubdeckel (mit Hut), ab Stufe 2 vom Teig angehoben */}
+      <g transform={deckel}>
+      <rect x="30" y="17" width="60" height="14" rx="3" fill={u('gold')} />{rillen}
+      <ellipse cx="60" cy="18" rx="30" ry="3.6" fill={u('goldTop')} />
+      <path d="M35 16.6h44" stroke="#FFFFFF" strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
+      <rect x="30" y="29" width="60" height="2.2" fill="#6E440A" opacity=".45" />
+      {/* Hüte und Zubehör aus dem Laden */}
       {hut === 'tz_muetze' && <g>
         <circle cx="46" cy="0" r="10" fill={u('weiss')} /><circle cx="74" cy="0" r="10" fill={u('weiss')} /><circle cx="60" cy="-5" r="12.5" fill={u('weiss')} />
         <path d="M42 4h36v10H42z" fill={u('weiss')} />
@@ -659,6 +679,8 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: numbe
         <circle cx="45" cy="9" r="2" fill="#2E7DD7" /><circle cx="75" cy="9" r="2" fill="#2FA36B" />
         <circle cx="41" cy="-3" r="2" fill={u('goldTop')} /><circle cx="60" cy="-8" r="2.2" fill={u('goldTop')} /><circle cx="79" cy="-3" r="2" fill={u('goldTop')} />
       </g>}
+      </g>
+      </g>
     </svg>
   );
 }
