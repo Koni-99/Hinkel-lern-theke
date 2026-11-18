@@ -733,6 +733,16 @@ async function offlineTests() {
     const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
     ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }]);
+  // Version 244: Hinkel-Küken als glatte 3D-Vektorgrafik (überall, wo vorher das kleine Bild war)
+  teile.push(['Version 244: Küken als 3D-Vektorbild', async () => {
+    const K = kompiliere(['src/basis/kuekenBild.ts']).basis_kuekenBild;
+    ok('Küken: Vektorbild, im CSS sicher eingebettet', K.KUEKEN_3D.startsWith('data:image/svg+xml,') && !/[()']/.test(K.KUEKEN_3D));
+    const d = await device({ user: 'Anna' });
+    const breite = await d.page.evaluate(() => { const i = document.querySelector('.lt-fact-kueken'); return i ? i.naturalWidth : 0; });
+    ok('Startseite: Küken neben „Wusstest du?“ wird angezeigt', breite > 0, String(breite));
+    ok('Küken: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
   teile.push(['Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt', async () => {
     const V = kompiliere(['src/hilfen/vorlesen.ts']).hilfen_vorlesen;
