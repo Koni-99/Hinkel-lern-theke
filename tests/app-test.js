@@ -720,6 +720,8 @@ async function offlineTests() {
     const P = kompiliere(['src/daten/shopProducts.ts']).daten_shopProducts.SHOP_PRODUCTS;
     const flor = P.find((x) => x.name === 'Florentiner'), ohr = P.find((x) => x.name === 'Schweineohr mit Schokolade');
     ok('Florentiner: Kuvertüre mit Sojalecithin, Allergen Soja', flor && /Kuvertüre/.test(flor.fullIngredients) && /SOJALEZITHIN/.test(flor.fullIngredients) && flor.allergens.includes('Soja'));
+    const taler = P.find((x) => x.name === 'Florentinertaler');
+    ok('Florentinertaler: Kuvertüre mit Sojalecithin, Allergen Soja', taler && /SOJALEZITHIN/.test(taler.fullIngredients) && taler.allergens.includes('Soja'));
     ok('Schweineohr mit Schokolade: erste Zutat Butter, Allergen Milch', ohr && /^BUTTER,/.test(ohr.fullIngredients) && ohr.allergens.includes('Milch'));
   }]);
   // Version 244: Hinkel-Küken als glatte 3D-Vektorgrafik (überall, wo vorher das kleine Bild war)
