@@ -37,6 +37,7 @@ html.lt-nacht,html.lt-nacht body{background:#14100C}
 .lt-nacht .lt-fortschritt{background-color:#6B5A48 !important}
 .lt-nacht .lt-fortschritt-balken{background-color:#EAB308 !important;box-shadow:0 0 10px rgba(234,179,8,.45)}
 .lt-nacht .lt-home .lt-fact-bubble::before{right:-24px;top:16px;width:28px;height:26px}
+.lt-nacht .lt-vergleich-anders{background:#47301F !important;border-color:rgba(253,230,138,.45) !important}
 .lt-nacht .lt-schalter{background-color:#7A6650 !important}
 .lt-nacht .lt-schalter.lt-schalter-an{background-color:#EAB308 !important;box-shadow:0 0 12px rgba(234,179,8,.45)}
 .lt-nacht .lt-schalter-knopf{background-color:#FBF7F0 !important;box-shadow:0 1px 3px rgba(0,0,0,.5)}

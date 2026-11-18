@@ -12,6 +12,7 @@ import { KollegenTipps } from './KollegenTipps';
 import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
 import { alleFotos } from '../../daten/fotos';
+import { ProduktVergleich } from './ProduktVergleich';
 
 
 // Mehrere Fotos pro Produkt (Version 193): zum Wischen, Punkte zeigen, welches Foto gerade da ist
@@ -64,6 +65,7 @@ export type SteckbriefDetailProps = {
 export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz, onFoto }: SteckbriefDetailProps) {
   const [fotoMsg, setFotoMsg] = useState('');
   const [fotoBusy, setFotoBusy] = useState(false);
+  const [vergleich, setVergleich] = useState(false);
   if (!openProfile) return null; // wie die Bedingung in components/FlashcardView.tsx
   const prod = openProfile;
   const idx = filteredProfiles.indexOf(prod);
@@ -120,7 +122,11 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
 
           {sp && (
             <>
-              <div style={{ alignSelf: "flex-start" }}><SpeakButton natuerlich text={steckbriefText(sp)} label="Steckbrief vorlesen" /></div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                <SpeakButton natuerlich text={steckbriefText(sp)} label="Steckbrief vorlesen" />
+                <button type="button" className="lt-vergleich-knopf" onClick={() => setVergleich(true)} style={{ display: "inline-flex", alignItems: "center", gap: "8px", minHeight: "46px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}><LtIcon paths={ICON.swap} size={20} />Vergleichen</button>
+              </div>
+              {vergleich && <ProduktVergleich a={sp} images={images} onClose={() => setVergleich(false)} />}
               <div style={{ padding: "16px 18px", borderRadius: "18px", backgroundColor: TH.tintYellow }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Im Verkauf sagen</div>
                 <div style={{ fontSize: "20px", fontWeight: 700, lineHeight: 1.45, marginTop: "4px" }}>{sp.shortIngredients}</div>

@@ -742,6 +742,33 @@ async function offlineTests() {
     ok('Florentinertaler: Kuvertüre mit Sojalecithin, Allergen Soja', taler && /SOJALEZITHIN/.test(taler.fullIngredients) && taler.allergens.includes('Soja'));
     ok('Schweineohr mit Schokolade: erste Zutat Butter, Allergen Milch', ohr && /^BUTTER,/.test(ohr.fullIngredients) && ohr.allergens.includes('Milch'));
   }]);
+  // Version 248: Teigi-Name (freiwillig) und Produkte vergleichen im Steckbrief
+  teile.push(['Version 248: Teigi-Name und Vergleichen', async () => {
+    const d = await device({ user: 'Anna' });
+    await clearPopups(d.page);
+    const knopf = d.page.locator('.lt-teigi-name-knopf');
+    ok('Teigi: Knopf „Teigi einen Namen geben“ im Brotkorb', (await knopf.count()) === 1);
+    if (await knopf.count()) {
+      await click(knopf); await settle(d.page, 300);
+      await d.page.locator('.lt-teigi-name input').fill('Bruno');
+      await click(d.page.locator('.lt-teigi-name button')); await settle(d.page, 500);
+    }
+    let name = false;
+    for (let i = 0; i < 30 && !name; i++) { name = (await d.page.locator('.lt-teigi-zeile', { hasText: 'Bruno (Baby-Teigi)' }).count()) > 0; if (!name) await d.page.waitForTimeout(100); }
+    ok('Teigi: eigener Name steht im Brotkorb', name);
+    await click(nav(d.page).nth(3)); await settle(d.page, 500);
+    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    const kachel = d.page.locator('.lt-foto-raster button').first();
+    for (let i = 0; i < 30 && !(await kachel.count()); i++) await d.page.waitForTimeout(100);
+    if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
+    const vgl = d.page.locator('.lt-vergleich-knopf');
+    ok('Steckbrief: Knopf „Vergleichen“', (await vgl.count()) > 0);
+    if (await vgl.count()) { await click(vgl.first()); await settle(d.page, 500); }
+    const zeilen = await d.page.locator('.lt-vergleich .lt-vergleich-zeile').count();
+    ok('Vergleichen: zwei Produkte mit Preis, Verkaufstext und Allergenen nebeneinander', zeilen >= 4, `${zeilen} Zeilen`);
+    ok('Teigi-Name/Vergleichen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 247: Teigi wächst sichtbar (größer, Deckel hebt sich, Teig quillt heraus)
   teile.push(['Version 247: Teigi-Stufen', async () => {
     const path = require('path');
