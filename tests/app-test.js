@@ -715,6 +715,13 @@ async function offlineTests() {
     const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
     ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }]);
+  // Version 245: Produktdaten nach PDF korrigiert (Florentiner mit Kuvertüre/Soja, Schweineohr mit Schokolade beginnt mit Butter)
+  teile.push(['Version 245: Florentiner und Schweineohr nach PDF', async () => {
+    const P = kompiliere(['src/daten/shopProducts.ts']).daten_shopProducts.SHOP_PRODUCTS;
+    const flor = P.find((x) => x.name === 'Florentiner'), ohr = P.find((x) => x.name === 'Schweineohr mit Schokolade');
+    ok('Florentiner: Kuvertüre mit Sojalecithin, Allergen Soja', flor && /Kuvertüre/.test(flor.fullIngredients) && /SOJALEZITHIN/.test(flor.fullIngredients) && flor.allergens.includes('Soja'));
+    ok('Schweineohr mit Schokolade: erste Zutat Butter, Allergen Milch', ohr && /^BUTTER,/.test(ohr.fullIngredients) && ohr.allergens.includes('Milch'));
+  }]);
   // Version 244: Hinkel-Küken als glatte 3D-Vektorgrafik (überall, wo vorher das kleine Bild war)
   teile.push(['Version 244: Küken als 3D-Vektorbild', async () => {
     const K = kompiliere(['src/basis/kuekenBild.ts']).basis_kuekenBild;
