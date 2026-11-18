@@ -742,6 +742,14 @@ async function offlineTests() {
     ok('Florentinertaler: Kuvertüre mit Sojalecithin, Allergen Soja', taler && /SOJALEZITHIN/.test(taler.fullIngredients) && taler.allergens.includes('Soja'));
     ok('Schweineohr mit Schokolade: erste Zutat Butter, Allergen Milch', ohr && /^BUTTER,/.test(ohr.fullIngredients) && ohr.allergens.includes('Milch'));
   }]);
+  // Version 247: Teigi wächst sichtbar (größer, Deckel hebt sich, Teig quillt heraus)
+  teile.push(['Version 247: Teigi-Stufen', async () => {
+    const path = require('path');
+    const React = require(path.resolve(__dirname, '../node_modules/react')), { renderToStaticMarkup } = require(path.resolve(__dirname, '../node_modules/react-dom/server'));
+    const L = kompiliere(['src/basis/laden.tsx']).basis_laden;
+    const bild = (stufe) => renderToStaticMarkup(React.createElement(L.TeigiGlas, { stufe, laune: 'froh', size: 72 }));
+    ok('Teigi: Baby kleiner als Meister, Meister mit übergequollenem Teig', /scale\(0\.76\)/.test(bild(0)) && !/scale\(/.test(bild(3)) && /rotate\(-14/.test(bild(3)));
+  }]);
   // Version 244: Hinkel-Küken als glatte 3D-Vektorgrafik (überall, wo vorher das kleine Bild war)
   teile.push(['Version 244: Küken als 3D-Vektorbild', async () => {
     const K = kompiliere(['src/basis/kuekenBild.ts']).basis_kuekenBild;
