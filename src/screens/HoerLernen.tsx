@@ -141,7 +141,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
       </div>
 
 
-      <section aria-live="polite" style={{ padding: '26px', borderRadius: '24px', backgroundColor: '#1F140C', color: '#FFF6E0', display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '180px' }}>
+      <section aria-live="polite" className="lt-hoer-anzeige" style={{ padding: '26px', borderRadius: '24px', backgroundColor: '#1F140C', color: '#FFF6E0', display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '180px' }}>
         {q ? (
           <>
             <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#FFD86B' }}>Frage {idx + 1} von {liste.length}{q.category ? ` · ${q.category}` : ''}</span>

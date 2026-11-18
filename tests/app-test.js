@@ -197,8 +197,10 @@ async function offlineTests() {
     await settle(d.page); await d.page.waitForTimeout(800);
     w = await wurzel();
     ok('Aussehen: „Backstube bei Nacht“ macht die App dunkel, Kopf bleibt', /lt-dark/.test(w.root) && /lt-nacht/.test(w.html) && /lt-kopf-mitaehren/.test(w.root) && w.bg === 'rgb(20, 16, 12)', JSON.stringify(w));
-    const papier = await d.page.evaluate(() => { const m = document.querySelector('.lt-menu.lt-papier'); return m ? getComputedStyle(m).backgroundColor : 'fehlt'; });
-    ok('Aussehen: Tageskarte bleibt nachts helles Papier', /rgb\(25[0-5], 25[0-5], 2[34]\d\)/.test(papier), papier);
+    // Version 241: Tageskarte nachts hellbraun wie „Heute dran“ (Wunsch des Nutzers), Schrift hell
+    const papier = await d.page.evaluate(() => { const m = document.querySelector('.lt-menu.lt-papier'); const z = m && m.querySelector('.lt-menu-row span span span'); return m ? [getComputedStyle(m).backgroundImage, z ? getComputedStyle(z).color : ''] : ['fehlt', '']; });
+    const hellText = (papier[1].match(/\d+/g) || [0]).map(Number)[0] > 200;
+    ok('Aussehen: Tageskarte nachts hellbraun mit heller Schrift', /rgb\(90, 56, 32\)/.test(papier[0]) && hellText, JSON.stringify(papier));
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }
@@ -681,6 +683,12 @@ async function offlineTests() {
     ok('Teigi: Gesicht sitzt im Glas', gesicht);
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }
+  // Version 241: dunkles Design: Startseite hellbraun, Fortschrittsbalken und Schalter gut sichtbar
+  {
+    const css = kompiliere(['src/thema/artisan.ts']).thema_artisan.ARTISAN_CSS;
+    const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
+    ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
   {

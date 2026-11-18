@@ -62,8 +62,8 @@ export function QuizCategories({ username, fetchCloudData, questions, isAdmin, s
             return (
               <button key={cat} onClick={() => { setCurrentQuizCategory(cat); setSelectedSubfilter('all'); setSelectedLevel(null); }} className="lt-card" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left', cursor: 'pointer', color: LT.ink, padding: '20px', backgroundColor: dc('#FFFFFF'), borderColor: cat === 'Alle' ? '#FFC72C' : LT.line, borderWidth: cat === 'Alle' ? '2px' : '1px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><span style={{ flex: '0 0 auto', width: '42px', height: '42px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={(CAT_STYLE[cat] || CAT_STYLE.Alle).icon} size={22} width={1.9} /></span><span style={{ fontWeight: 700, fontSize: '19px' }}>{cat === 'Alle' ? 'Alle Bereiche mischen' : cat}</span></span>
-                <div style={{ height: '10px', backgroundColor: dc('#F4EADB'), borderRadius: '999px', overflow: 'hidden' }}>
-                  <div className="lt-fill" style={{ width: `${pct}%`, height: '100%', backgroundColor: LT.brown, borderRadius: '999px', animationDelay: `${0.15 + ci * 0.08}s` }} />
+                <div className="lt-fortschritt" style={{ height: '10px', backgroundColor: dc('#F4EADB'), borderRadius: '999px', overflow: 'hidden' }}>
+                  <div className="lt-fill lt-fortschritt-balken" style={{ width: `${pct}%`, height: '100%', backgroundColor: LT.brown, borderRadius: '999px', animationDelay: `${0.15 + ci * 0.08}s` }} />
                 </div>
                 <span style={{ fontSize: '16px', color: LT.muted }}>{prog.totalAnswered} von {prog.total} gemeistert · {pct} %</span>
               </button>

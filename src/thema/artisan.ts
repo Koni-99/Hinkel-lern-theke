@@ -26,6 +26,21 @@ html.lt-nacht,html.lt-nacht body{background:#14100C}
 .lt-nacht .lt-menu.lt-papier{background:#FFFDF6 !important;box-shadow:0 0 0 1px rgba(253,230,138,.25),0 20px 40px -20px #000 !important}
 .lt-nacht .lt-papier .lt-menu-row{color:#2A1A0E}
 .lt-nacht .lt-papier .lt-menu-row+.lt-menu-row{border-top-color:rgba(75,42,20,.1)}
+/* Version 241: Tageskarte nachts hellbraun wie „Heute dran“ (Wunsch des Nutzers), Schrift wieder hell */
+.lt-nacht .lt-menu.lt-papier,.lt-nacht .lt-menu.lt-papier *{--papier:initial;--auf-hell:initial}
+.lt-nacht .lt-menu.lt-papier{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22) !important;color:#FBF7F0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 40px -20px #000 !important}
+.lt-nacht .lt-menu.lt-papier .lt-menu-row,.lt-nacht .lt-menu.lt-papier .lt-rc-mono{color:#FBF7F0}
+.lt-nacht .lt-menu.lt-papier .lt-menu-row+.lt-menu-row{border-top-color:rgba(253,230,138,.14)}
+.lt-nacht .lt-menu.lt-papier .lt-menu-lead{border-color:rgba(253,230,138,.3) !important}
+.lt-nacht .lt-home .lt-card.lt-tief,.lt-nacht .lt-knopf-hellbraun{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22) !important}
+.lt-nacht .lt-home .lt-fact-bubble,.lt-nacht .lt-home .lt-fact-bubble::before,.lt-nacht .lt-home .lt-basket,.lt-nacht .lt-home [style*="background-color: var(--pf-backgroundColor, #201b15)"]{background-color:#47301F !important}
+.lt-nacht .lt-fortschritt{background-color:#6B5A48 !important}
+.lt-nacht .lt-fortschritt-balken{background-color:#EAB308 !important;box-shadow:0 0 10px rgba(234,179,8,.45)}
+.lt-nacht .lt-home .lt-fact-bubble::before{right:-24px;top:16px;width:28px;height:26px}
+.lt-nacht .lt-schalter{background-color:#7A6650 !important}
+.lt-nacht .lt-schalter.lt-schalter-an{background-color:#EAB308 !important;box-shadow:0 0 12px rgba(234,179,8,.45)}
+.lt-nacht .lt-schalter-knopf{background-color:#FBF7F0 !important;box-shadow:0 1px 3px rgba(0,0,0,.5)}
+.lt-nacht .lt-hoer-anzeige{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22)}
 .lt-dark .lt-card.lt-tief.lt-papier{-webkit-backdrop-filter:none;backdrop-filter:none}
 .lt-nacht .lt-heute-balken{background-color:#FDE68A !important;box-shadow:0 0 14px rgba(234,179,8,.5) !important}
 .lt-dark ::selection{background:#EAB308;color:#14100C}

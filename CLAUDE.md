@@ -186,5 +186,7 @@ Mehr zum Aufbau: `README.md`.
 
 - 240: Dunkles Design: Knöpfe ohne eigene Schriftfarbe (Vorlesen im Wörterbuch, Schließen im Laden u. a.) hatten Browser-Schwarz → `:where(html) button{color:inherit}` in `theke-design.ts` (schwächste Regel, jede Klasse/Inline-Farbe gewinnt). Fachwissen-Lernkarten sind seit 239 helles Papier
 
+- 241: **Dunkles Design besser erkennbar** (Fotos des Nutzers, genau eingegrenzt): hellbraun (#47301F bzw. Verlauf #5A3820 → #462A18 wie „Heute dran“) NUR auf der Startseite (`.lt-home`: weiße Flächen per `[style*="--pf-backgroundColor, #201b15"]`, `.lt-fact-bubble` mit größerer Spitze zum Küken, `.lt-basket`, Glas-Karten, **Tageskarte jetzt hellbraun** mit heller Schrift über `--papier`/`--auf-hell: initial`), Knopf „Alle neuen Fragen am Stück“ (`.lt-knopf-hellbraun`) und obere Anzeige im Hör-Lernen (`.lt-hoer-anzeige`). Lernen-Seite: nur Fortschrittsbalken gold auf grauer Spur (`.lt-fortschritt`, `-balken`). Schalter „Nur neue Fragen“ gold/grau mit hellem Knopf (`.lt-schalter`). Unterer Hör-Lernen-Bereich, Lernen-Karten, Einfach/Schwer bleiben wie vorher (Nutzer: nicht gemeint). Alle Regeln in `thema/artisan.ts`. **Wartet auf Zweig `ccr-092ad974-i0wvh2`**: 39 neue Quizfragen (Wissenslücken) + 3 Theken-Situationen (Berliner oder Krapfen, Vollkorn, Berliner-Saison), brauchen erst Stimmen (Schlüssel fehlte in der Sitzung)
+
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
