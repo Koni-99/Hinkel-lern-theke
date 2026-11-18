@@ -197,8 +197,10 @@ async function offlineTests() {
     await settle(d.page); await d.page.waitForTimeout(800);
     w = await wurzel();
     ok('Aussehen: „Backstube bei Nacht“ macht die App dunkel, Kopf bleibt', /lt-dark/.test(w.root) && /lt-nacht/.test(w.html) && /lt-kopf-mitaehren/.test(w.root) && w.bg === 'rgb(20, 16, 12)', JSON.stringify(w));
-    const papier = await d.page.evaluate(() => { const m = document.querySelector('.lt-menu.lt-papier'); return m ? getComputedStyle(m).backgroundColor : 'fehlt'; });
-    ok('Aussehen: Tageskarte bleibt nachts helles Papier', /rgb\(25[0-5], 25[0-5], 2[34]\d\)/.test(papier), papier);
+    // Version 241: Tageskarte nachts hellbraun wie „Heute dran“ (Wunsch des Nutzers), Schrift hell
+    const papier = await d.page.evaluate(() => { const m = document.querySelector('.lt-menu.lt-papier'); const z = m && m.querySelector('.lt-menu-row span span span'); return m ? [getComputedStyle(m).backgroundImage, z ? getComputedStyle(z).color : ''] : ['fehlt', '']; });
+    const hellText = (papier[1].match(/\d+/g) || [0]).map(Number)[0] > 200;
+    ok('Aussehen: Tageskarte nachts hellbraun mit heller Schrift', /rgb\(90, 56, 32\)/.test(papier[0]) && hellText, JSON.stringify(papier));
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
   }
@@ -437,6 +439,13 @@ async function offlineTests() {
     const neu = ['Vorbestellung abholen', 'Falsche Ware bekommen', 'Allergene bei Saisonware'];
     const fehlt = neu.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
     ok('Theken-Simulator: neue Situationen (Abholung, falsche Ware, Saison-Allergene)', fehlt.length === 0, fehlt.join(', '));
+    // Version 241: Berliner oder Krapfen, Vollkorn (ganzes Jahr), Berliner-Saison (Silvester bis Aschermittwoch)
+    const neu241 = ['Berliner oder Krapfen', 'Vollkorn'];
+    const fehlt241 = neu241.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
+    ok('Theken-Simulator: neue Situationen (Berliner oder Krapfen, Vollkorn)', fehlt241.length === 0, fehlt241.join(', '));
+    const A = kompiliere(['src/games/theke/szenarienAlltag.tsx']).games_theke_szenarienAlltag;
+    const saison = [[2026, 11, 26], [2026, 11, 28], [2027, 0, 15], [2027, 1, 10], [2027, 1, 11], [2027, 5, 1]].map(([j, m, t]) => A.berlinerSaison(new Date(j, m, t, 12)));
+    ok('Theken-Simulator: Berliner-Saison nur von Silvester bis Aschermittwoch', JSON.stringify(saison) === JSON.stringify([null, 'silvester', 'karneval', 'karneval', null, null]), JSON.stringify(saison));
     const d = await device({ user: 'Anna' });
     await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
     let bausteinAbrufe = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) bausteinAbrufe++; });
@@ -681,6 +690,20 @@ async function offlineTests() {
     ok('Teigi: Gesicht sitzt im Glas', gesicht);
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }
+  // Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun
+  {
+    const K = kompiliere(['src/daten/questions.ts', 'src/thema/farben.ts']);
+    const qs = K.daten_questions.questions;
+    const hat = (t) => qs.some((q) => q.question === t);
+    const neu = ['Was kostet „Weinstock“ (250 g)?', 'Ein Kunde fragt, was in „Zeusstange“ steckt. Was sagst du?', 'Welche Allergene sind bei „Kappeskopp“ angegeben?'];
+    const vegan = qs.filter((q) => q.question === 'Ein Kunde lebt vegan. Welches dieser Brote kannst du ihm empfehlen?').length;
+    ok('Quiz: neue Fragen zu Preis, Zutaten, Allergenen und vegan', neu.every(hat) && vegan === 4, `fehlt: ${neu.filter((t) => !hat(t)).join(', ')}, vegan ${vegan}`);
+    const ids = qs.map((q) => q.id);
+    ok('Quiz: Fragen-Nummern eindeutig', new Set(ids).size === ids.length);
+    const weiss = K.thema_farben.flaecheWert('#FFFFFF').c;
+    const m = [1, 3, 5].map((i) => parseInt(weiss.slice(i, i + 2), 16));
+    ok('Dunkles Design: weiße Karten werden hellbraun (nicht fast schwarz)', m[0] > 60 && m[0] > m[2] + 20, weiss);
   }
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
   {
