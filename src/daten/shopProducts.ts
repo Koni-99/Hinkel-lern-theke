@@ -404,8 +404,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Florentiner sind feine Gebäcktaler aus einer goldbraun gerösteten Mandelmasse mit Honig, Zucker, Butter und Sahne. Fruchtige Belegkirschen sorgen für das gewisse Extra, während der Boden mit Zartbitterkuvertüre veredelt wird. Knusprig, aromatisch und voll im Geschmack.',
     shortIngredients: 'Mandeln, Zucker, Sahne, Honig, Zitronat & Orangeat, Butter, Zartbitter-Boden',
     fullIngredients:
-      'MANDELN, Zucker, Sahne (SAHNE, Carrageen), Honig, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure), BUTTER, natürliches Bourbon-Vanillearoma',
-    allergens: ['Milch', 'Schalenfrüchte (Mandeln)'],
+      'MANDELN, Zucker, Sahne (SAHNE, Carrageen), Honig, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure), BUTTER, Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), natürliches Bourbon-Vanillearoma',
+    allergens: ['Soja', 'Milch', 'Schalenfrüchte (Mandeln)'],
     note: 'Große Variante: Florentinertaler.'
   },
   {
@@ -1582,7 +1582,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Schweineohren sind ein klassisches Blätterteiggebäck aus reiner Butter, das in traditioneller Handarbeit touriert wird. Der feine Kristallzucker karamellisiert beim Backen zu einer herrlich knusprigen Kruste. Eine Hälfte wird in Zartbitterschokolade getaucht und macht das Öhrchen zu einem echten Genussmoment.',
     shortIngredients: 'Butter-Blätterteig, Zucker, halb in Zartbitterschokolade getaucht',
     fullIngredients:
-      'MILCH, Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), WEIZENMEHL, Wasser, Zucker, VOLLMILCHPULVER, Salz',
+      'BUTTER, Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille), WEIZENMEHL, Wasser, Zucker, VOLLMILCHPULVER, Salz',
     allergens: ['Gluten (Weizen)', 'Soja', 'Milch'],
     note: 'Gibt es auch ohne Schokolade (Schweineohr ohne Schokolade).'
   },
