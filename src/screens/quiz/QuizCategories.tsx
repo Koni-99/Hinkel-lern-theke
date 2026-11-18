@@ -47,7 +47,7 @@ export type QuizCategoriesProps = {
 
 export function QuizCategories({ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }: QuizCategoriesProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
+    <div className="lt-lernen-karten" style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       <PageHead title="Lernen" subtitle="Such dir einen Bereich aus und leg los. Nach jeder Antwort siehst du die Erklärung." />
     
       <section style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

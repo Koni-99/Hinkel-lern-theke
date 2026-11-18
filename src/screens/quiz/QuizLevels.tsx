@@ -41,8 +41,8 @@ export function QuizLevels({ questions, isAdmin, currentQuizCategory, setCurrent
         </div>
       )}
       <button onClick={toggleOnlyNew} role="switch" aria-checked={onlyNew} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', borderRadius: '18px', border: `2px solid ${onlyNew ? LT.brown : LT.line}`, backgroundColor: onlyNew ? TH.tintYellow : dc('#FFFFFF'), color: LT.ink, textAlign: 'left', cursor: 'pointer' }}>
-        <span aria-hidden="true" style={{ flex: '0 0 54px', height: '30px', borderRadius: '999px', backgroundColor: onlyNew ? LT.brown : dc('#D9CBB5'), position: 'relative', transition: 'background-color .2s ease' }}>
-          <span style={{ position: 'absolute', top: '3px', left: onlyNew ? '27px' : '3px', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), transition: 'left .2s ease' }} />
+        <span aria-hidden="true" className={`lt-schalter${onlyNew ? ' lt-schalter-an' : ''}`} style={{ flex: '0 0 54px', height: '30px', borderRadius: '999px', backgroundColor: onlyNew ? LT.brown : dc('#D9CBB5'), position: 'relative', transition: 'background-color .2s ease' }}>
+          <span className="lt-schalter-knopf" style={{ position: 'absolute', top: '3px', left: onlyNew ? '27px' : '3px', width: '24px', height: '24px', borderRadius: '50%', backgroundColor: dc('#FFFFFF'), transition: 'left .2s ease' }} />
         </span>
         <span style={{ flex: 1 }}>
           <span style={{ display: 'block', fontSize: '18px', fontWeight: 700 }}>Nur neue Fragen</span>
@@ -66,7 +66,7 @@ export function QuizLevels({ questions, isAdmin, currentQuizCategory, setCurrent
           );
         })}
       </div>
-      {(isAdmin || overallPercent >= 50) && <button onClick={() => launchQuizWithLevel('all_at_once')} style={{ ...btnSecondary, alignSelf: 'stretch' }}>{onlyNew ? `Alle neuen Fragen am Stück (${quizPool('all_at_once', true).length})` : 'Alle Fragen dieses Bereichs am Stück'}</button>}
+      {(isAdmin || overallPercent >= 50) && <button onClick={() => launchQuizWithLevel('all_at_once')} className="lt-knopf-hellbraun" style={{ ...btnSecondary, alignSelf: 'stretch' }}>{onlyNew ? `Alle neuen Fragen am Stück (${quizPool('all_at_once', true).length})` : 'Alle Fragen dieses Bereichs am Stück'}</button>}
     </div>
   );
 }

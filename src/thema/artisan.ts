@@ -32,13 +32,18 @@ html.lt-nacht,html.lt-nacht body{background:#14100C}
 .lt-nacht .lt-menu.lt-papier .lt-menu-row,.lt-nacht .lt-menu.lt-papier .lt-rc-mono{color:#FBF7F0}
 .lt-nacht .lt-menu.lt-papier .lt-menu-row+.lt-menu-row{border-top-color:rgba(253,230,138,.14)}
 .lt-nacht .lt-menu.lt-papier .lt-menu-lead{border-color:rgba(253,230,138,.3) !important}
+.lt-nacht .lt-home .lt-card.lt-tief,.lt-nacht .lt-lernen-karten .lt-card.lt-tief,.lt-nacht .lt-knopf-hellbraun{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22) !important}
+.lt-nacht .lt-home .lt-fact-bubble,.lt-nacht .lt-home .lt-fact-bubble::before,.lt-nacht .lt-home .lt-basket,.lt-nacht .lt-home [style*="background-color: var(--pf-backgroundColor, #201b15)"]{background-color:#47301F !important}
+.lt-nacht .lt-schalter{background-color:#7A6650 !important}
+.lt-nacht .lt-schalter.lt-schalter-an{background-color:#EAB308 !important;box-shadow:0 0 12px rgba(234,179,8,.45)}
+.lt-nacht .lt-schalter-knopf{background-color:#FBF7F0 !important;box-shadow:0 1px 3px rgba(0,0,0,.5)}
 .lt-nacht .lt-hoer-anzeige{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22)}
 .lt-dark .lt-card.lt-tief.lt-papier{-webkit-backdrop-filter:none;backdrop-filter:none}
 .lt-nacht .lt-heute-balken{background-color:#FDE68A !important;box-shadow:0 0 14px rgba(234,179,8,.5) !important}
 .lt-dark ::selection{background:#EAB308;color:#14100C}
 
 /* Glas-Karten mit feinem Goldrand und warmem Lichtschein */
-.lt-dark .lt-card.lt-tief{background:linear-gradient(155deg,#5A3820,#462A18 70%) !important;border:1px solid rgba(253,230,138,.22) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 28px 50px -30px rgba(0,0,0,.95),0 0 0 rgba(234,179,8,0) !important;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+.lt-dark .lt-card.lt-tief{background:linear-gradient(155deg,rgba(255,240,214,.085),rgba(255,240,214,.028) 60%) !important;border:1px solid rgba(253,230,138,.15) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 28px 50px -30px rgba(0,0,0,.95),0 0 0 rgba(234,179,8,0) !important;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
 @media (hover:hover){
   .lt-dark .lt-card.lt-tief{-webkit-backdrop-filter:blur(20px) saturate(1.2);backdrop-filter:blur(20px) saturate(1.2)}
   .lt-dark .lt-card.lt-tief:hover{border-color:rgba(253,230,138,.4) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 34px 60px -30px #000,0 0 46px -14px rgba(234,179,8,.5) !important}

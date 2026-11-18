@@ -52,11 +52,10 @@ function flaeche(f: Farbe): { c: string | null; k: Kontext } {
   const [h, s, l] = hsl(f);
   if (l >= 0.8) {
     if (f[3] >= 0.995 && SEITE.has(`${f[0]},${f[1]},${f[2]}`)) return { c: '#14100c', k: 'tief' };
-    // Version 241: Karten hellbraun wie „Heute dran“ (vorher fast schwarz #201B15, hoben sich kaum vom Hintergrund ab)
     const warm = s < 0.12 || (h >= 20 && h <= 62);
-    const nh = s < 0.12 ? 26 : warm ? 26 + (h - 26) * 0.4 : h;
-    const ns = warm ? Math.min(Math.max(s * 0.4, 0.4), 0.48) : Math.min(s, 0.36);
-    const nl = l >= 0.985 ? 0.2 : 0.21 + (0.985 - l) * 0.35;
+    const nh = s < 0.12 ? 30 : warm ? 30 + (h - 30) * 0.4 : h;
+    const ns = warm ? Math.min(Math.max(s * 0.3, 0.2), 0.32) : Math.min(s, 0.36);
+    const nl = l >= 0.985 ? 0.105 : 0.118 + (0.985 - l) * 0.5;
     return { c: ausHsl(nh, ns, nl, f[3]), k: f[3] >= 0.5 ? 'tief' : '' };
   }
   if (f[3] < 0.5) return { c: null, k: '' };

@@ -693,7 +693,7 @@ async function offlineTests() {
   }
   // Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun
   {
-    const K = kompiliere(['src/daten/questions.ts', 'src/thema/farben.ts']);
+    const K = kompiliere(['src/daten/questions.ts', 'src/thema/artisan.ts']);
     const qs = K.daten_questions.questions;
     const hat = (t) => qs.some((q) => q.question === t);
     const neu = ['Was kostet „Weinstock“ (250 g)?', 'Ein Kunde fragt, was in „Zeusstange“ steckt. Was sagst du?', 'Welche Allergene sind bei „Kappeskopp“ angegeben?'];
@@ -701,9 +701,9 @@ async function offlineTests() {
     ok('Quiz: neue Fragen zu Preis, Zutaten, Allergenen und vegan', neu.every(hat) && vegan === 4, `fehlt: ${neu.filter((t) => !hat(t)).join(', ')}, vegan ${vegan}`);
     const ids = qs.map((q) => q.id);
     ok('Quiz: Fragen-Nummern eindeutig', new Set(ids).size === ids.length);
-    const weiss = K.thema_farben.flaecheWert('#FFFFFF').c;
-    const m = [1, 3, 5].map((i) => parseInt(weiss.slice(i, i + 2), 16));
-    ok('Dunkles Design: weiße Karten werden hellbraun (nicht fast schwarz)', m[0] > 60 && m[0] > m[2] + 20, weiss);
+    const css = K.thema_artisan.ARTISAN_CSS;
+    const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-lernen-karten .lt-card.lt-tief', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
+    ok('Dunkles Design: Startseite, Lernen-Karten, Hör-Lernen-Anzeige, Schalter hellbraun bzw. gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
   {
