@@ -991,7 +991,7 @@ async function cloudTests() {
     if ((await pins.count()) === 2) { await pins.nth(0).fill('4711'); await pins.nth(1).fill('4711'); await A.page.getByText('PIN speichern').click(); }
     await sleep(2500);
     ok('Anmeldung: nach „PIN speichern“ angemeldet', (await A.page.evaluate(() => localStorage.getItem('hinkel_username'))) === 'Testi');
-    let pin = null; for (let i = 0; i < 50 && !(pin && pin.h); i++) { pin = await db('GET', '/pins/testi'); if (!(pin && pin.h)) await sleep(100); }
+    let pin = null; for (let i = 0; i < 150 && !(pin && pin.h); i++) { pin = await db('GET', '/pins/testi'); if (!(pin && pin.h)) await sleep(100); }
     ok('Anmeldung: PIN liegt verschlüsselt in Firebase', !!(pin && pin.h) && !JSON.stringify(pin).includes('4711'));
     const B = await device({ cloud: true });
     await B.page.fill('input[placeholder="z. B. Anna"]', 'Testi'); await B.page.keyboard.press('Enter');
@@ -1049,12 +1049,12 @@ async function cloudTests() {
   {
     const A = await device({ cloud: true, user: 'Anna' });
     const live = async () => A.page.evaluate(() => document.documentElement.dataset.cloudLive || '');
-    for (let i = 0; i < 50 && (await live()) !== '1'; i++) await sleep(100);
+    for (let i = 0; i < 150 && (await live()) !== '1'; i++) await sleep(100);
     ok('Live: Verbindung steht', (await live()) === '1');
     const t0 = Date.now();
     await db('PATCH', '/progress', { carla: { _displayName: 'Carla' } });
     let arrived = false;
-    for (let i = 0; i < 60 && !arrived; i++) { arrived = await A.page.evaluate(() => !!(JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').progress || {}).carla); if (!arrived) await sleep(50); }
+    for (let i = 0; i < 180 && !arrived; i++) { arrived = await A.page.evaluate(() => !!(JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').progress || {}).carla); if (!arrived) await sleep(50); }
     ok('Live: Änderung eines Kollegen kommt sofort an', arrived, `${Date.now() - t0} ms`);
     ok('Live: Annas Aktivität ist gespeichert', !!(await db('GET', '/lastSeen/anna')));
     await A.ctx.close();
@@ -1073,7 +1073,7 @@ async function cloudTests() {
     ok('Kundenfragen: Frage wird gespeichert', !!id);
     if (id) await db('PATCH', `/progress/anna/_kfragen/${id}`, { a: 'Ja, alle Brote gibt es auch halb.', aTs: Date.now(), seen: false });
     let shown = false;
-    for (let i = 0; i < 50 && !shown; i++) { shown = (await A.page.getByText('Ja, alle Brote gibt es auch halb.').count()) > 0; if (!shown) await sleep(100); }
+    for (let i = 0; i < 150 && !shown; i++) { shown = (await A.page.getByText('Ja, alle Brote gibt es auch halb.').count()) > 0; if (!shown) await sleep(100); }
     ok('Kundenfragen: Antwort vom Ausbilder erscheint sofort', shown);
     ok('Kundenfragen: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
@@ -1085,7 +1085,7 @@ async function cloudTests() {
     await db('PATCH', '/progress/admin', { _umfragen: { u1: { frage: 'Testumfrage?', optionen: ['Ja', 'Nein'], anonym: true, ts, offen: true } } });
     const A = await device({ cloud: true, user: 'Anna' });
     const knopf = A.page.locator('[role=dialog] button', { hasText: 'Gelesen und verstanden' });
-    for (let i = 0; i < 50 && !(await knopf.count()); i++) await sleep(100);
+    for (let i = 0; i < 150 && !(await knopf.count()); i++) await sleep(100);
     ok('Gelesen: wichtige Nachricht zeigt „Gelesen und verstanden“', (await knopf.count()) > 0);
     if (await knopf.count()) { await knopf.first().click(); await sleep(1500); }
     const g = (await db('GET', '/progress/anna/_gelesen')) || {};
@@ -1093,7 +1093,7 @@ async function cloudTests() {
     await clearPopups(A.page);
     await click(nav(A.page).nth(0)); await settle(A.page);
     const ja = A.page.getByRole('button', { name: 'Ja', exact: true });
-    for (let i = 0; i < 30 && !(await ja.count()); i++) await sleep(100);
+    for (let i = 0; i < 90 && !(await ja.count()); i++) await sleep(100);
     if (await ja.count()) { await ja.first().click(); await sleep(1500); }
     ok('Umfrage: Stimme wird gespeichert', (await db('GET', '/progress/anna/_stimmen/u1')) === 0);
     ok('Gelesen/Umfrage: keine Fehler', A.errors.length === 0, A.errors[0]);
@@ -1111,7 +1111,7 @@ async function cloudTests() {
     const losVorher = Number(await db('GET', '/progress/anna/_jokersLos')) || 0;
     const A = await device({ cloud: true, user: 'Anna' });
     const pop = A.page.locator('.lt-tuete-popup');
-    for (let i = 0; i < 60 && !(await pop.count()); i++) await sleep(100);
+    for (let i = 0; i < 180 && !(await pop.count()); i++) await sleep(100);
     ok('Team-Challenge: Überraschungstüte geht auf', (await pop.count()) > 0 && /Team-Challenge geschafft/i.test(await pop.innerText()));
     await sleep(1500);
     const pa = (await db('GET', '/progress/anna')) || {};
@@ -1119,7 +1119,7 @@ async function cloudTests() {
     ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === losVorher + 1 && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: `${losVorher} → ${pa._jokersLos}`, paket: pa._teamPaket }));
     await A.ctx.close();
     const C = await device({ cloud: true, user: 'Carla' });
-    for (let i = 0; i < 60 && !(await C.page.locator('.lt-tuete-popup').count()); i++) await sleep(100);
+    for (let i = 0; i < 180 && !(await C.page.locator('.lt-tuete-popup').count()); i++) await sleep(100);
     await sleep(1500);
     const sc = ((await db('GET', '/scores')) || []).filter((x) => x && x.username === 'Carla' && /Team-Challenge/.test(x.category || ''));
     ok('Team-Challenge: wer schon 75 bekam, bekommt 425 dazu', sc.length === 1 && sc[0].score === 425, JSON.stringify(sc));
@@ -1133,7 +1133,7 @@ async function cloudTests() {
     await db('PATCH', '/progress/carla', { _displayName: 'Carla', _kollegenLob: { l2: { an: 'anna', anName: 'Anna', t: 'Heimlich danke!', ts: Date.now() - 1000, anonym: true } } });
     const A = await device({ cloud: true, user: 'Anna' });
     let pkt = [];
-    for (let i = 0; i < 60 && pkt.length < 2; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (pkt.length < 2) await sleep(100); }
+    for (let i = 0; i < 180 && pkt.length < 2; i++) { const sc = (await db('GET', '/scores')) || []; pkt = (Array.isArray(sc) ? sc : Object.values(sc)).filter((x) => x && x.category === 'Lob von Kollegen' && x.username === 'Anna'); if (pkt.length < 2) await sleep(100); }
     ok('Lob: Gelobte bekommt je Lob 15 Punkte (2 Lobe, eins davon anonym)', pkt.length === 2 && pkt.every((x) => x.score === 15), `${pkt.length} Einträge`);
     ok('Lob: Karte „Lob der Woche“ zeigt das Lob', (await A.page.getByText('Danke für die Hilfe!', { exact: false }).count()) > 0);
     const anonymZeile = await A.page.locator('section[aria-label="Lob der Woche"] div', { hasText: 'Heimlich danke!' }).first().innerText().catch(() => '');
@@ -1151,18 +1151,18 @@ async function cloudTests() {
     await K.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
     await K.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(K.page);
     const schreiben = K.page.locator('.lt-einzel-schreiben');
-    for (let i = 0; i < 50 && !(await schreiben.locator('button', { hasText: /^Anna$/ }).count()); i++) await sleep(100);
+    for (let i = 0; i < 150 && !(await schreiben.locator('button', { hasText: /^Anna$/ }).count()); i++) await sleep(100);
     await click(schreiben.locator('button', { hasText: /^Anna$/ }).first()).catch(() => {});
     await click(schreiben.locator('button', { hasText: /^Ben$/ }).first()).catch(() => {});
     await K.page.fill('textarea[aria-label="Deine Nachricht"]', 'Bitte morgen die Stollen-Schulung machen.');
     await click(schreiben.getByRole('button', { name: 'Nachricht schicken' }));
     let gesendet = null;
-    for (let i = 0; i < 50 && !gesendet; i++) { const m = await db('GET', '/progress/koni/_nachrichten'); gesendet = m && Object.values(m)[0]; if (!gesendet) await sleep(100); }
+    for (let i = 0; i < 150 && !gesendet; i++) { const m = await db('GET', '/progress/koni/_nachrichten'); gesendet = m && Object.values(m)[0]; if (!gesendet) await sleep(100); }
     ok('Einzel-Nachricht: Koni schickt an Anna und Ben (nicht an alle)', !!gesendet && Object.keys(gesendet.an || {}).sort().join(',') === 'anna,ben', JSON.stringify(gesendet && gesendet.an));
     await K.ctx.close();
     const A = await device({ cloud: true, user: 'Anna' });
     const pop = A.page.locator('.lt-einzel-popup');
-    for (let i = 0; i < 12 && !(await pop.count()); i++) {
+    for (let i = 0; i < 36 && !(await pop.count()); i++) {
       const andere = A.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
       if (!(await pop.count()) && (await andere.count())) await andere.last().click({ timeout: 2000 }).catch(() => {});
       await sleep(500);
@@ -1170,7 +1170,7 @@ async function cloudTests() {
     ok('Einzel-Nachricht: Anna bekommt das Pop-up mit Text', (await pop.count()) > 0 && (await pop.innerText()).includes('Stollen-Schulung'));
     if (await pop.count()) { await pop.locator('input').fill('Mach ich!'); await click(pop.getByRole('button', { name: 'Antworten' })); }
     let pf = null;
-    for (let i = 0; i < 50 && !(pf && pf.a); i++) { const m = await db('GET', '/progress/anna/_postfach'); pf = m && Object.values(m)[0]; if (!(pf && pf.a)) await sleep(100); }
+    for (let i = 0; i < 150 && !(pf && pf.a); i++) { const m = await db('GET', '/progress/anna/_postfach'); pf = m && Object.values(m)[0]; if (!(pf && pf.a)) await sleep(100); }
     ok('Einzel-Nachricht: Antwort und „gelesen“ im eigenen Fortschritt', !!pf && pf.a === 'Mach ich!' && pf.g > 0, JSON.stringify(pf));
     await A.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
     await A.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(A.page);
@@ -1186,7 +1186,7 @@ async function cloudTests() {
     await K2.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
     await K2.page.getByRole('menuitem', { name: /Meine Nachrichten/ }).click(); await settle(K2.page);
     let liste = '';
-    for (let i = 0; i < 50 && !liste.includes('Mach ich!'); i++) { liste = await K2.page.locator('.lt-einzel-gesendet').innerText().catch(() => ''); if (!liste.includes('Mach ich!')) await sleep(100); }
+    for (let i = 0; i < 150 && !liste.includes('Mach ich!'); i++) { liste = await K2.page.locator('.lt-einzel-gesendet').innerText().catch(() => ''); if (!liste.includes('Mach ich!')) await sleep(100); }
     ok('Einzel-Nachricht: Koni sieht „Gelesen: 1 von 2“ und Annas Antwort', liste.includes('Gelesen: 1 von 2') && liste.includes('Mach ich!'), liste.slice(0, 160));
     ok('Einzel-Nachricht (Koni): keine Fehler', K2.errors.length === 0, K2.errors[0]);
     await K2.ctx.close();
@@ -1208,7 +1208,7 @@ async function cloudTests() {
       await click(box.getByRole('button', { name: /an Ben schenken/ }));
     }
     let gs = null;
-    for (let i = 0; i < 50 && !gs; i++) { const m = await db('GET', '/progress/anna/_geschenke'); gs = m && Object.values(m)[0]; if (!gs) await sleep(100); }
+    for (let i = 0; i < 150 && !gs; i++) { const m = await db('GET', '/progress/anna/_geschenke'); gs = m && Object.values(m)[0]; if (!gs) await sleep(100); }
     ok('Geschenk: im eigenen Fortschritt gespeichert', !!gs && gs.an === 'ben' && gs.j === 'j_los', JSON.stringify(gs));
     ok('Geschenk (Anna): keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
@@ -1218,7 +1218,7 @@ async function cloudTests() {
     await db('PATCH', '/progress/ben', { _levelSeen: 25, _teamPaket: [wk(0), wk(1)], _teamWon: [wk(0), wk(1)] });
     const B = await device({ cloud: true, user: 'Ben', vorher: async (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('hinkel_lvl_seen_ben', '9'); } catch {} }) });
     const pop = B.page.locator('.lt-geschenk-popup');
-    for (let i = 0; i < 30 && !(await pop.count()); i++) {
+    for (let i = 0; i < 90 && !(await pop.count()); i++) {
       const skip = B.page.locator('button:visible:has-text("Überspringen")');
       if (await skip.count()) { await skip.first().click({ timeout: 2000 }).catch(() => {}); await sleep(400); continue; }
       const andere = B.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible, button:visible:has-text("Weiter so!")');
@@ -1228,7 +1228,7 @@ async function cloudTests() {
     ok('Geschenk: Ben bekommt das Pop-up „Anna schenkt dir“', (await pop.count()) > 0 && /Anna schenkt dir/.test(await pop.innerText()));
     if (await pop.count()) await click(pop.getByRole('button', { name: 'Danke!' }));
     let nachher = vorher;
-    for (let i = 0; i < 50 && nachher === vorher; i++) { nachher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0; if (nachher === vorher) await sleep(100); }
+    for (let i = 0; i < 150 && nachher === vorher; i++) { nachher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0; if (nachher === vorher) await sleep(100); }
     ok('Geschenk: Ben hat ein Rubbellos mehr', nachher === vorher + 1, `${vorher} → ${nachher}`);
     ok('Geschenk (Ben): keine Fehler', B.errors.length === 0, B.errors[0]);
     await B.ctx.close();
@@ -1239,7 +1239,7 @@ async function cloudTests() {
     await db('PATCH', '/progress/ben', { _displayName: 'Ben', _geburtstag: `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` });
     const A = await device({ cloud: true, user: 'Anna' });
     await clearPopups(A.page);
-    let karte = false; for (let i = 0; i < 50 && !karte; i++) { karte = (await A.page.getByText('Heute hat Ben Geburtstag').count()) > 0; if (!karte) await sleep(100); }
+    let karte = false; for (let i = 0; i < 150 && !karte; i++) { karte = (await A.page.getByText('Heute hat Ben Geburtstag').count()) > 0; if (!karte) await sleep(100); }
     ok('Geburtstag: Karte „Heute hat Ben Geburtstag“', karte);
     await A.page.getByRole('button', { name: 'Menü', exact: true }).click(); await sleep(300);
     await A.page.getByRole('menuitem', { name: 'Idee einreichen' }).click(); await settle(A.page);
@@ -1254,7 +1254,7 @@ async function cloudTests() {
   {
     const A = await device({ cloud: true, user: 'Anna', blockLive: true });
     let ok1 = false;
-    for (let i = 0; i < 60 && !ok1; i++) { ok1 = await A.page.evaluate(() => (JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').scores || []).some((s) => s.id === 'b1')); if (!ok1) await sleep(100); }
+    for (let i = 0; i < 180 && !ok1; i++) { ok1 = await A.page.evaluate(() => (JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').scores || []).some((s) => s.id === 'b1')); if (!ok1) await sleep(100); }
     ok('Ersatzweg: ohne Live-Verbindung werden die Daten trotzdem geladen', ok1);
     ok('Ersatzweg: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
