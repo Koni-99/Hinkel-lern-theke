@@ -1108,6 +1108,7 @@ async function cloudTests() {
     scores.push({ id: 't242a', username: 'Ben', score: 90000, date: heute, category: 'Quiz' }, { id: 't242b', username: 'Anna', score: 100, date: heute, category: 'Quiz' }, { id: 't242c', username: 'Carla', score: 100, date: heute, category: 'Quiz' });
     await db('PUT', '/scores', scores);
     await db('PATCH', '/progress/carla', { _displayName: 'Carla', _teamWon: [woche] });
+    const losVorher = Number(await db('GET', '/progress/anna/_jokersLos')) || 0;
     const A = await device({ cloud: true, user: 'Anna' });
     const pop = A.page.locator('.lt-tuete-popup');
     for (let i = 0; i < 60 && !(await pop.count()); i++) await sleep(100);
@@ -1115,7 +1116,7 @@ async function cloudTests() {
     await sleep(1500);
     const pa = (await db('GET', '/progress/anna')) || {};
     const sa = ((await db('GET', '/scores')) || []).filter((x) => x && x.username === 'Anna' && /Team-Challenge/.test(x.category || ''));
-    ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === 1 && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: pa._jokersLos, paket: pa._teamPaket }));
+    ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === losVorher + 1 && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: `${losVorher} → ${pa._jokersLos}`, paket: pa._teamPaket }));
     await A.ctx.close();
     const C = await device({ cloud: true, user: 'Carla' });
     for (let i = 0; i < 60 && !(await C.page.locator('.lt-tuete-popup').count()); i++) await sleep(100);
