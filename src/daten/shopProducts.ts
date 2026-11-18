@@ -416,8 +416,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unser Florentinertaler vereint eine goldbraun geröstete Mandelmasse mit Honig, Zucker, Sahne und Butter. Belegkirschen sorgen für fruchtige Akzente, während die feine Zartbitter-Kuvertüre den perfekten Abschluss bildet.',
     shortIngredients: 'Mandeln, Zucker, Honig, Sahne, Butter, Zitronat & Orangeat, Zartbitter-Boden',
     fullIngredients:
-      'MANDELN, Zucker, Honig, Sahne (SAHNE, Carrageen), BUTTER, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure)',
-    allergens: ['Milch', 'Schalenfrüchte (Mandeln)']
+      'MANDELN, Zucker, Honig, Sahne (SAHNE, Carrageen), BUTTER, Zitromischung (Orangenschale, Zitronenschale, Glukose-Fruktose-Sirup, Zucker, Zitronensäure), Kuvertüre (Zucker, Kakaomasse, Kakaobutter, SOJALEZITHIN, natürliches Aroma Vanille)',
+    allergens: ['Soja', 'Milch', 'Schalenfrüchte (Mandeln)']
   },
   {
     name: 'Fränzchen',
