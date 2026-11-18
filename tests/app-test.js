@@ -708,7 +708,7 @@ async function offlineTests() {
     await click(laden.getByRole('tab', { name: 'Teigi' })); await settle(d.page, 300);
     const teile = await laden.locator('button.lt-shop-item').allInnerTexts();
     ok('Laden: Abteilung „Teigi“ mit Hüten, Gläsern und Tänzen', teile.some((t) => /Bäckermütze/.test(t)) && teile.some((t) => /Goldglas/.test(t)) && teile.some((t) => /Salto/.test(t)), `${teile.length} Teile`);
-    const gesicht = await d.page.evaluate(() => { const svg = document.querySelector('.lt-shelf svg.lt-teigi'); if (!svg) return false; const auge = svg.querySelector('ellipse'); return !!auge && Number(auge.getAttribute('cy')) > 13 && Number(auge.getAttribute('cy')) < 48; });
+    const gesicht = await d.page.evaluate(() => { const svg = document.querySelector('.lt-shelf svg.lt-teigi'); if (!svg) return false; const auge = svg.querySelector('.lt-teigi-auge'); return !!auge && Number(auge.getAttribute('cy')) > 40 && Number(auge.getAttribute('cy')) < 110; });
     ok('Teigi: Gesicht sitzt im Glas', gesicht);
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
