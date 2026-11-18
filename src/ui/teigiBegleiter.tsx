@@ -81,7 +81,7 @@ export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?
       {spruch && <span key={spruch.k} className="lt-teigi-sprech">{spruch.t}</span>}
       <button type="button" aria-label="Teigi antippen" title="Teigi" onClick={() => { setLaune('froh'); setJubel((j) => j + 1); sag(zufall(ANGETIPPT)); }}>
         <span key={jubel} className={laune === 'froh' ? (tanz ? `lt-teigi-${String(tanz).replace('tt_', '')}` : 'lt-teigi-hops') : laune === 'schlapp' ? 'lt-teigi-traurig' : ''} style={{ display: 'inline-block' }}>
-          <TeigiGlas stufe={stufe} laune={laune} size={64} hut={hut} glas={glas} />
+          <TeigiGlas stufe={stufe} laune={laune} size={76} hut={hut} glas={glas} />
         </span>
       </button>
     </div>

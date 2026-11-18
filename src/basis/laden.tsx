@@ -1,6 +1,6 @@
 // ═══ Laden: Trinkgeld-Laden, Schatzkammer, Preise, Namensfarben ═══
 // Vorher in appBasis.tsx. Inhalt unverändert übernommen.
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { TH } from '../ui/basis';
 import { LT } from './marke';
 import { LtIcon, ICON } from './symbole';
@@ -294,10 +294,10 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
               ? <span style={{ maxWidth: '100%', textAlign: 'center', padding: '8px 12px', borderRadius: '999px', backgroundColor: '#FFC72C', color: '#2B170A', fontSize: '15px', fontWeight: 800, boxShadow: '0 3px 0 #B98A0A, 0 8px 14px -8px rgba(31,20,12,.5)' }}>{it.icon} {it.label}</span>
               : it.kind === 'joker' ? <ShopIcon3D k={it.id} size={56} />
               : it.kind === 'schrift' ? <span className={`lt-sf-${it.id.replace('sf_', '')}`} style={{ fontSize: '24px', lineHeight: 1.1, maxWidth: '100%', overflowWrap: 'anywhere' }}>{prog._displayName || 'Name'}</span>
-              : it.kind === 'haustier' ? <TeigiGlas stufe={1} laune="froh" size={64} />
-              : it.kind === 'teigihut' ? <TeigiGlas stufe={1} laune="froh" size={64} hut={it.id} glas={prog._teigiGlas} />
-              : it.kind === 'teigiglas' ? <TeigiGlas stufe={1} laune="froh" size={64} glas={it.id} hut={prog._teigiHut} />
-              : it.kind === 'teigitanz' ? <span className={`lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}`} style={{ display: 'inline-block', animationDelay: `${-(i % 3) * 0.5}s` }}><TeigiGlas stufe={1} laune="froh" size={64} hut={prog._teigiHut} glas={prog._teigiGlas} /></span> : <span className={`lt-shop-emo ${it.kind === 'effect' ? `lt-fx-${it.id.replace('fx_', '')}` : 'lt-emo-bob'}`} style={{ fontSize: '46px', lineHeight: 1, animationDelay: `${-(i % 5) * 0.4}s` }}>{it.kind === 'effect' ? (prog._avatar || '🥨') : it.icon}</span>}
+              : it.kind === 'haustier' ? <TeigiGlas stufe={1} laune="froh" size={72} />
+              : it.kind === 'teigihut' ? <TeigiGlas stufe={1} laune="froh" size={72} hut={it.id} glas={prog._teigiGlas} />
+              : it.kind === 'teigiglas' ? <TeigiGlas stufe={1} laune="froh" size={72} glas={it.id} hut={prog._teigiHut} />
+              : it.kind === 'teigitanz' ? <span className={`lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}`} style={{ display: 'inline-block', animationDelay: `${-(i % 3) * 0.5}s` }}><TeigiGlas stufe={1} laune="froh" size={72} hut={prog._teigiHut} glas={prog._teigiGlas} /></span> : <span className={`lt-shop-emo ${it.kind === 'effect' ? `lt-fx-${it.id.replace('fx_', '')}` : 'lt-emo-bob'}`} style={{ fontSize: '46px', lineHeight: 1, animationDelay: `${-(i % 5) * 0.4}s` }}>{it.kind === 'effect' ? (prog._avatar || '🥨') : it.icon}</span>}
         </span>
         {it.woche && !has && <span style={{ position: 'absolute', top: '8px', right: '8px', zIndex: 2, padding: '3px 8px', borderRadius: '999px', backgroundColor: '#5B3A75', color: '#FFFFFF', fontSize: '11px', fontWeight: 800 }}>nur diese Woche</span>}
         {it.kind !== 'title' && <span style={{ fontSize: '14px', fontWeight: 700, textAlign: 'center', lineHeight: 1.2 }}>{it.label}</span>}
@@ -353,7 +353,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
                   {v.art === 'tip' && it.kind === 'theme' && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 700 }}><span className="lt-shop-ball" style={{ ['--c' as any]: themeSwatch[it.id] || LT.yellow, width: '26px', height: '26px' }} />Farbe der App</span>}
                   {v.art === 'pts' && it.kind === 'frame' && <span className="lt-schatz-bon">{it.icon} {String(name).toUpperCase().slice(0, 10)} {it.icon}</span>}
                   {v.art === 'pts' && it.kind === 'markise' && <span className={`lt-mk-swatch lt-mk-sw-${it.id}`} style={{ width: '90px', height: '34px' }} />}
-                  {v.art === 'tip' && ['teigihut', 'teigiglas', 'teigitanz'].includes(it.kind) && <span className={it.kind === 'teigitanz' ? `lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}` : ''} style={{ display: 'inline-block' }}><TeigiGlas stufe={2} laune="froh" size={70} hut={it.kind === 'teigihut' ? it.id : prog._teigiHut} glas={it.kind === 'teigiglas' ? it.id : prog._teigiGlas} /></span>}
+                  {v.art === 'tip' && ['teigihut', 'teigiglas', 'teigitanz'].includes(it.kind) && <span className={it.kind === 'teigitanz' ? `lt-teigi-vorfuehr lt-teigi-${it.id.replace('tt_', '')}` : ''} style={{ display: 'inline-block' }}><TeigiGlas stufe={2} laune="froh" size={84} hut={it.kind === 'teigihut' ? it.id : prog._teigiHut} glas={it.kind === 'teigiglas' ? it.id : prog._teigiGlas} /></span>}
                 </div>
                 <div style={{ fontSize: '14px', color: LT.muted }}>{it.label}{it.desc ? ` · ${it.desc}` : ''}</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -560,33 +560,105 @@ export function teigiStand(days: string[], futter: number, heute = new Date()) {
 /** Das Sauerteig-Glas von Teigi: Stufe 0 bis 3 (Füllhöhe), Laune froh/gut/schlapp.
  *  Version 233: Gesicht immer mitten im Glas (nicht mehr an der Füllhöhe), Glasfarbe und Hut/Zubehör aus dem Laden */
 export const TEIGI_GLAS: Record<string, { glas: string; rand: string; deckel: string }> = {
-  klar: { glas: '#E4F0F6', rand: '#5E7C8C', deckel: '#B98A0A' },
-  tg_bernstein: { glas: '#F6E1B8', rand: '#A8741E', deckel: '#7A4A10' },
-  tg_rose: { glas: '#F7DDE3', rand: '#B2607A', deckel: '#8A3E57' },
-  tg_mint: { glas: '#DDF3EA', rand: '#3F8E6E', deckel: '#2F6A52' },
-  tg_gold: { glas: '#FFF0B3', rand: '#B8860B', deckel: '#E0A400' },
+  klar: { glas: '#FFF3DC', rand: '#E7B65A', deckel: '#B98A0A' },
+  tg_bernstein: { glas: '#F6D9A0', rand: '#B8741E', deckel: '#7A4A10' },
+  tg_rose: { glas: '#F9D5DF', rand: '#C8708C', deckel: '#8A3E57' },
+  tg_mint: { glas: '#D3F1E4', rand: '#4FA582', deckel: '#2F6A52' },
+  tg_gold: { glas: '#FFE9A0', rand: '#D99A0A', deckel: '#E0A400' },
 };
+/** Version 243: Teigi als 3D-Figur (Entwurf 1 „Goldener Glas-Held“): bauchiges Glas mit Lichtbrechung, goldener Schraubdeckel,
+ *  Teig mit Tiefe und Bläschen, glänzende Augen, Schatten am Boden. Bildfläche 116 × 116 ab (2|6) (Glas von x 28 bis 92, Deckel oben bei y 17). */
 export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: number; laune: 'froh' | 'gut' | 'schlapp'; size?: number; hut?: string | null; glas?: string | null }) {
-  const hoehe = [12, 18, 24, 30][Math.max(0, Math.min(3, stufe))];
-  const teig = laune === 'schlapp' ? '#D8CDBB' : '#F3E3C0';
+  const id = 'tg' + useId().replace(/[^a-zA-Z0-9]/g, '');
+  const u = (n: string) => `url(#${n}${id})`;
   const g = TEIGI_GLAS[glas || 'klar'] || TEIGI_GLAS.klar;
-  const y = 48 - hoehe;
+  const schlapp = laune === 'schlapp';
+  const y = [92, 80, 68, 60][Math.max(0, Math.min(3, stufe))];
+  const glasForm = 'M28 40c0-7 4-10 11-10h42c7 0 11 3 11 10v62c0 12-7 18-19 18H47c-12 0-19-6-19-18z';
+  const teigForm = `M31 ${y + 2}q8 ${schlapp ? 1 : -6} 15 -1t15 0 15 0 13 -1V102c0 10-5 15-15 15H47c-10 0-16-5-16-15z`;
+  const auge = (x: number) => schlapp
+    ? <g key={x}><ellipse className="lt-teigi-auge" cx={x} cy="83" rx="6" ry="3.6" fill={u('auge')} /><path d={`M${x - 7} 80q7 -3 14 0`} stroke="#5A3418" strokeWidth="2" fill="none" strokeLinecap="round" /></g>
+    : <g key={x}><ellipse className="lt-teigi-auge" cx={x} cy="81" rx="6.2" ry="7.1" fill={u('auge')} /><ellipse cx={x - 1.8} cy="78.6" rx="2.4" ry="2.6" fill="#FFFFFF" /><circle cx={x + 2} cy="83.6" r="1" fill="#FFFFFF" opacity=".85" /></g>;
+  const rillen = Array.from({ length: 18 }, (_, k) => <path key={k} d={`M${30 + (k + 1) * 3.2} 20v11`} stroke="#7A4A0A" strokeOpacity=".35" strokeWidth="1" />);
   return (
-    <svg width={size} height={size} viewBox="0 0 56 56" aria-hidden="true" className={laune === 'froh' ? 'lt-papier lt-teigi lt-teigi-froh' : 'lt-papier lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
-      <rect x="14" y="5" width="28" height="7" rx="2" fill={g.deckel} />
-      <path d="M12 13h32v31a6 6 0 0 1-6 6H18a6 6 0 0 1-6-6z" fill={g.glas} stroke={g.rand} strokeWidth="2.4" />
-      <path d={`M14 ${y + (laune === 'schlapp' ? 3 : 0)}q7 ${laune === 'schlapp' ? 2 : -3} 14 0t14 0V44a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5z`} fill={teig} />
-      {laune !== 'schlapp' && <g fill="#FFFFFF" opacity=".9"><circle className="lt-teigi-blase" cx="19" cy={y + 6} r="1.8" /><circle className="lt-teigi-blase lt-tb2" cx="37" cy={y + 9} r="1.5" /><circle className="lt-teigi-blase lt-tb3" cx="35" cy={y + 4} r="1.1" /></g>}
-      {/* Gesicht: immer mitten im Glas */}
-      <g fill="#2B170A"><ellipse cx="23" cy="30" rx="1.9" ry="2.2" /><ellipse cx="33" cy="30" rx="1.9" ry="2.2" /><circle cx="23.6" cy="29.3" r=".6" fill="#FFFFFF" /><circle cx="33.6" cy="29.3" r=".6" fill="#FFFFFF" /></g>
-      {laune !== 'schlapp' && <g fill="#F4A3A3" opacity=".7"><ellipse cx="19.5" cy="34" rx="2" ry="1.2" /><ellipse cx="36.5" cy="34" rx="2" ry="1.2" /></g>}
-      <path d={laune === 'schlapp' ? 'M24 37q4 -3 8 0' : `M24 34.5q4 ${laune === 'froh' ? 4.5 : 2.5} 8 0`} stroke="#2B170A" strokeWidth="1.7" fill="none" strokeLinecap="round" />
-      {hut === 'tz_brille' && <g><rect x="18" y="27" width="9" height="6" rx="2.5" fill="#1F140C" /><rect x="29" y="27" width="9" height="6" rx="2.5" fill="#1F140C" /><path d="M27 29h2M18 29l-4-2M38 29l4-2" stroke="#1F140C" strokeWidth="1.4" /></g>}
-      {hut === 'tz_muetze' && <g><rect x="17" y="1" width="22" height="6" rx="1.5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="20" cy="-2" r="5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="28" cy="-4" r="6" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><circle cx="36" cy="-2" r="5" fill="#FFFFFF" stroke="#C9B89A" strokeWidth="1" /><rect x="15" y="2" width="26" height="5" fill="#FFFFFF" /></g>}
-      {hut === 'tz_weihnacht' && <g><path d="M17 5q8-16 22-12l-3 2q-2 4 3 10z" fill="#D92D20" /><rect x="14" y="2" width="28" height="6" rx="3" fill="#FFFFFF" /><circle cx="39" cy="-7" r="3.2" fill="#FFFFFF" /></g>}
-      {hut === 'tz_schleife' && <g fill="#E8577A"><path d="M28 6l-9-5v10z" /><path d="M28 6l9-5v10z" /><circle cx="28" cy="6" r="2.6" fill="#B2345A" /></g>}
-      {hut === 'tz_blume' && <g><g fill="#FFFFFF">{[0, 72, 144, 216, 288].map((a) => <circle key={a} cx={36 + Math.cos(a * Math.PI / 180) * 3.6} cy={4 + Math.sin(a * Math.PI / 180) * 3.6} r="2.6" />)}</g><circle cx="36" cy="4" r="2.2" fill="#FFC72C" /></g>}
-      {hut === 'tz_krone' && <g><path d="M17 7l2-10 5 6 4-8 4 8 5-6 2 10z" fill="#FFC72C" stroke="#B8860B" strokeWidth="1.2" strokeLinejoin="round" /><circle cx="28" cy="2" r="1.6" fill="#D92D20" /></g>}
+    <svg width={size} height={size} viewBox="2 6 116 116" aria-hidden="true" className={laune === 'froh' ? 'lt-papier lt-teigi lt-teigi-froh' : 'lt-papier lt-teigi'} style={{ display: 'block', overflow: 'visible' }}>
+      <defs>
+        <filter id={`weich${id}`} x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" /></filter>
+        <filter id={`glow${id}`} x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6" /></filter>
+        <linearGradient id={`gold${id}`} x1="0" x2="1"><stop offset="0" stopColor="#8C5A0A" /><stop offset=".18" stopColor="#E0A400" /><stop offset=".38" stopColor="#FFF4C2" /><stop offset=".55" stopColor="#FFC72C" /><stop offset=".8" stopColor="#B8860B" /><stop offset="1" stopColor="#6E440A" /></linearGradient>
+        <linearGradient id={`goldTop${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF7D6" /><stop offset=".6" stopColor="#FFD24A" /><stop offset="1" stopColor="#C9901A" /></linearGradient>
+        <linearGradient id={`glas${id}`} x1="0" x2="1"><stop offset="0" stopColor={g.rand} stopOpacity=".55" /><stop offset=".12" stopColor={g.glas} stopOpacity=".35" /><stop offset=".5" stopColor="#FFFFFF" stopOpacity=".08" /><stop offset=".86" stopColor={g.glas} stopOpacity=".3" /><stop offset="1" stopColor={g.rand} stopOpacity=".6" /></linearGradient>
+        <radialGradient id={`teig${id}`} cx="45%" cy="25%" r="85%">{schlapp
+          ? <><stop offset="0" stopColor="#F4EEE2" /><stop offset=".5" stopColor="#E2D6BE" /><stop offset="1" stopColor="#B9A27C" /></>
+          : <><stop offset="0" stopColor="#FFF7E4" /><stop offset=".45" stopColor="#F7DFAE" /><stop offset=".8" stopColor="#E2B66E" /><stop offset="1" stopColor="#C38E44" /></>}</radialGradient>
+        <radialGradient id={`blase${id}`} cx="35%" cy="30%" r="70%"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".55" stopColor="#FFF4DE" stopOpacity=".7" /><stop offset="1" stopColor="#C9954E" stopOpacity=".8" /></radialGradient>
+        <radialGradient id={`auge${id}`} cx="40%" cy="35%" r="70%"><stop offset="0" stopColor="#5A3418" /><stop offset=".6" stopColor="#2B170A" /><stop offset="1" stopColor="#120904" /></radialGradient>
+        <linearGradient id={`kante${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFFFFF" stopOpacity=".95" /><stop offset="1" stopColor="#FFFFFF" stopOpacity="0" /></linearGradient>
+        <radialGradient id={`boden${id}`}><stop offset="0" stopColor="#000" stopOpacity=".5" /><stop offset="1" stopColor="#000" stopOpacity="0" /></radialGradient>
+        <radialGradient id={`weiss${id}`} cx="35%" cy="25%" r="80%"><stop offset="0" stopColor="#FFFFFF" /><stop offset=".7" stopColor="#F6F0E4" /><stop offset="1" stopColor="#D9CCB2" /></radialGradient>
+        <linearGradient id={`rot${id}`} x1="0" x2="1"><stop offset="0" stopColor="#8E1B12" /><stop offset=".4" stopColor="#E0372A" /><stop offset="1" stopColor="#9A2015" /></linearGradient>
+        <linearGradient id={`rosa${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFB3C7" /><stop offset=".6" stopColor="#E8577A" /><stop offset="1" stopColor="#A82A50" /></linearGradient>
+        <linearGradient id={`linse${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#4A3A30" /><stop offset="1" stopColor="#0E0907" /></linearGradient>
+      </defs>
+      <ellipse cx="60" cy="121" rx="40" ry="7" fill={u('boden')} />
+      {!schlapp && <ellipse cx="60" cy="70" rx="44" ry="50" fill="#FFC72C" opacity=".2" filter={u('glow')} />}
+      <path d={glasForm} fill={g.glas} opacity=".72" />
+      <path d={teigForm} fill={u('teig')} />
+      {!schlapp && <g>
+        <circle className="lt-teigi-blase" cx="40" cy="96" r="3.4" fill={u('blase')} /><circle className="lt-teigi-blase lt-tb2" cx="80" cy="102" r="2.6" fill={u('blase')} />
+        <circle className="lt-teigi-blase lt-tb3" cx="74" cy={Math.max(y + 10, 72)} r="2.1" fill={u('blase')} /><circle cx="62" cy="108" r="2" fill={u('blase')} />
+      </g>}
+      {!schlapp && <g filter={u('weich')} fill="#FF8C8C" opacity=".55"><ellipse cx="41" cy="92" rx="6" ry="3.6" /><ellipse cx="79" cy="92" rx="6" ry="3.6" /></g>}
+      {[48, 72].map(auge)}
+      {laune === 'froh' && <g><path d="M52.5 92q7.5 8.6 15 0q-7.5 2.6 -15 0z" fill="#3A1A0A" /><path d="M56.6 96.6q3.4 -2.8 6.8 0q-3.4 2.2 -6.8 0z" fill="#E86A6A" /></g>}
+      {laune === 'gut' && <path d="M54 92.5q6 5 12 0" stroke="#3A1A0A" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
+      {schlapp && <path d="M54 97q6 -4 12 0" stroke="#3A1A0A" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
+      <path d={glasForm} fill={u('glas')} stroke={g.rand} strokeOpacity=".9" strokeWidth="2.2" />
+      <path d="M35 40v58" stroke={u('kante')} strokeWidth="4.6" strokeLinecap="round" opacity=".9" />
+      <path d="M42 42v12" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".7" />
+      <path d="M88 46v52" stroke="#FFE7A8" strokeWidth="1.6" strokeLinecap="round" opacity=".6" />
+      {/* goldener Schraubdeckel */}
+      <rect x="30" y="17" width="60" height="14" rx="3" fill={u('gold')} />{rillen}
+      <ellipse cx="60" cy="18" rx="30" ry="3.6" fill={u('goldTop')} />
+      <path d="M35 16.6h44" stroke="#FFFFFF" strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
+      <rect x="30" y="29" width="60" height="2.2" fill="#6E440A" opacity=".45" />
+      {/* Hüte und Zubehör aus dem Laden */}
+      {hut === 'tz_brille' && <g>
+        <path d="M37 76q0-5 5-5h12q4 0 4 4v4q0 7-8 7h-5q-8 0-8-6z" fill={u('linse')} stroke="#C9901A" strokeWidth="1.6" />
+        <path d="M83 76q0-5-5-5H66q-4 0-4 4v4q0 7 8 7h5q8 0 8-6z" fill={u('linse')} stroke="#C9901A" strokeWidth="1.6" />
+        <path d="M58 75q2-2 4 0M37 74l-8-4M83 74l8-4" stroke="#C9901A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+        <path d="M41 75l5-2M67 75l5-2" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" opacity=".7" />
+      </g>}
+      {hut === 'tz_muetze' && <g>
+        <circle cx="46" cy="0" r="10" fill={u('weiss')} /><circle cx="74" cy="0" r="10" fill={u('weiss')} /><circle cx="60" cy="-5" r="12.5" fill={u('weiss')} />
+        <path d="M42 4h36v10H42z" fill={u('weiss')} />
+        <rect x="40" y="8" width="40" height="9" rx="2" fill={u('weiss')} stroke="#D9CCB2" strokeWidth="1" />
+        <path d="M50 9v7M60 9v7M70 9v7" stroke="#D9CCB2" strokeWidth="1" />
+        <ellipse cx="55" cy="-10" rx="5" ry="2.6" fill="#FFFFFF" opacity=".9" />
+      </g>}
+      {hut === 'tz_weihnacht' && <g>
+        <path d="M36 14q6-28 30-30q16 2 20 18l-6 3q-4-10-12-10q-6 14-6 19z" fill={u('rot')} />
+        <rect x="32" y="9" width="56" height="10" rx="5" fill={u('weiss')} />
+        <circle cx="82" cy="8" r="6" fill={u('weiss')} />
+        <path d="M46 -6q6-6 12-7" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".5" fill="none" />
+      </g>}
+      {hut === 'tz_schleife' && <g transform="translate(78 16)">
+        <path d="M0 0l-14-9q-4 9 0 18z" fill={u('rosa')} /><path d="M0 0l14-9q4 9 0 18z" fill={u('rosa')} />
+        <path d="M-2 2l-5 12h4l3-8 3 8h4l-5-12z" fill="#C83E66" />
+        <circle cx="0" cy="0" r="4" fill="#B2345A" /><circle cx="-1.2" cy="-1.2" r="1.3" fill="#FFFFFF" opacity=".6" />
+        <path d="M-11 -5l5 3M11 -5l-5 3" stroke="#FFFFFF" strokeWidth="1.4" strokeLinecap="round" opacity=".55" />
+      </g>}
+      {hut === 'tz_blume' && <g transform="translate(78 12)">
+        {[0, 72, 144, 216, 288].map((w) => <ellipse key={w} cx={Math.cos(w * Math.PI / 180) * 6.5} cy={Math.sin(w * Math.PI / 180) * 6.5} rx="5.4" ry="4.4" transform={`rotate(${w} ${Math.cos(w * Math.PI / 180) * 6.5} ${Math.sin(w * Math.PI / 180) * 6.5})`} fill={u('weiss')} />)}
+        <circle cx="0" cy="0" r="4.6" fill={u('goldTop')} /><circle cx="-1.4" cy="-1.4" r="1.4" fill="#FFFFFF" opacity=".7" />
+      </g>}
+      {hut === 'tz_krone' && <g>
+        <path d="M38 17l3-20 10 10 9-15 9 15 10-10 3 20z" fill={u('gold')} stroke="#8C5A0A" strokeWidth="1.2" strokeLinejoin="round" />
+        <rect x="38" y="12" width="44" height="6" fill={u('goldTop')} />
+        <circle cx="60" cy="6" r="3.2" fill="#D92D20" /><circle cx="59" cy="5" r="1" fill="#FFFFFF" opacity=".8" />
+        <circle cx="45" cy="9" r="2" fill="#2E7DD7" /><circle cx="75" cy="9" r="2" fill="#2FA36B" />
+        <circle cx="41" cy="-3" r="2" fill={u('goldTop')} /><circle cx="60" cy="-8" r="2.2" fill={u('goldTop')} /><circle cx="79" cy="-3" r="2" fill={u('goldTop')} />
+      </g>}
     </svg>
   );
 }

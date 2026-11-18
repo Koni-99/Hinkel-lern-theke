@@ -218,7 +218,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               {meisterLeft > 0 && <span style={{ fontSize: '13px', fontWeight: 700, color: '#8A6A00' }}>Noch {meisterLeft} {meisterLeft === 1 ? 'Frage' : 'Fragen'} bis zum Hinkel-Meister</span>}
               {teigi && (
                 <span className="lt-teigi-zeile" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', paddingTop: '8px', borderTop: '1px dashed rgba(139,90,43,.35)' }}>
-                  <TeigiGlas stufe={teigi.stufe} laune={teigi.laune} size={54} hut={myProg._teigiHut} glas={myProg._teigiGlas} />
+                  <TeigiGlas stufe={teigi.stufe} laune={teigi.laune} size={72} hut={myProg._teigiHut} glas={myProg._teigiGlas} />
                   <span style={{ display: 'flex', flexDirection: 'column', fontSize: '13px', lineHeight: 1.3 }}>
                     <b style={{ fontSize: '14px' }}>{teigi.name}</b>
                     <span>{teigi.laune === 'froh' ? 'Heute gefüttert, er blubbert vor Freude.' : teigi.laune === 'gut' ? 'Hat Hunger: lern heute etwas, dann blubbert er.' : 'Ganz schlapp. Ein Lerntag macht ihn wieder munter.'}{teigi.naechste ? ` Noch ${teigi.naechste - teigi.futter} Lerntage bis er wächst.` : ''}</span>
