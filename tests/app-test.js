@@ -1106,11 +1106,14 @@ async function cloudTests() {
     const A = await device({ cloud: true, user: 'Anna' });
     const pop = A.page.locator('.lt-tuete-popup');
     for (let i = 0; i < 180 && !(await pop.count()); i++) await sleep(100);
-    ok('Team-Challenge: Überraschungstüte geht auf', (await pop.count()) > 0 && /Team-Challenge geschafft/i.test(await pop.innerText()));
+    const tueteText = (await pop.count()) ? await pop.innerText() : '';
+    ok('Team-Challenge: Überraschungstüte geht auf', /Team-Challenge geschafft/i.test(tueteText));
+    // Die Tüte kann selbst ein Rubbellos enthalten, dann sind es zwei
+    const losErwartet = losVorher + 1 + (/Rubbellos/.test(tueteText) ? 1 : 0);
     await sleep(1500);
     const pa = (await db('GET', '/progress/anna')) || {};
     const sa = ((await db('GET', '/scores')) || []).filter((x) => x && x.username === 'Anna' && /Team-Challenge/.test(x.category || ''));
-    ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === losVorher + 1 && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: `${losVorher} → ${pa._jokersLos}`, paket: pa._teamPaket }));
+    ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === losErwartet && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: `${losVorher} → ${pa._jokersLos}`, paket: pa._teamPaket }));
     await A.ctx.close();
     const C = await device({ cloud: true, user: 'Carla' });
     for (let i = 0; i < 180 && !(await C.page.locator('.lt-tuete-popup').count()); i++) await sleep(100);
