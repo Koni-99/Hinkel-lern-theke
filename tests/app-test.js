@@ -719,10 +719,13 @@ async function offlineTests() {
     const qs = K.daten_questions.questions;
     const hat = (t) => qs.some((q) => q.question === t);
     const neu = ['Was kostet „Weinstock“ (250 g)?', 'Ein Kunde fragt, was in „Zeusstange“ steckt. Was sagst du?', 'Welche Allergene sind bei „Kappeskopp“ angegeben?'];
-    const vegan = qs.filter((q) => q.question === 'Ein Kunde lebt vegan. Welches dieser Brote kannst du ihm empfehlen?').length;
+    const vegan = qs.filter((q) => /vegan/.test(q.question) && q.id >= 3727).length;
     ok('Quiz: neue Fragen zu Preis, Zutaten, Allergenen und vegan', neu.every(hat) && vegan === 4, `fehlt: ${neu.filter((t) => !hat(t)).join(', ')}, vegan ${vegan}`);
     const ids = qs.map((q) => q.id);
     ok('Quiz: Fragen-Nummern eindeutig', new Set(ids).size === ids.length);
+    const texte = qs.map((q) => q.question.trim());
+    const doppelt = texte.filter((t, i) => texte.indexOf(t) !== i);
+    ok('Quiz: neue Fragen haben keinen doppelten Fragetext', !qs.some((q) => q.id >= 3727 && doppelt.includes(q.question.trim())), doppelt.slice(0, 2).join(' | '));
     const css = K.thema_artisan.ARTISAN_CSS;
     const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
     ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
@@ -980,9 +983,10 @@ async function offlineTests() {
 }
 
 async function cloudTests() {
+  const teile = [];
   await db('PUT', '', { progress: { ben: { _displayName: 'Ben' } }, lastSeen: {}, scores: [{ id: 'b1', username: 'Ben', score: 50, date: '12.11.26, 08:00', category: 'Quiz' }] });
   // Anmeldung: neuer Name → PIN festlegen, zweites Gerät: falsche und richtige PIN
-  {
+  teile.push(['Anmeldung: neuer Name → PIN festlegen, zweites Gerät: falsche und richtige PIN', async () => {
     const A = await device({ cloud: true });
     await A.page.fill('input[placeholder="z. B. Anna"]', 'Testi'); await A.page.keyboard.press('Enter');
     await A.page.waitForSelector('input[placeholder="4 bis 6 Ziffern"]', { timeout: 10000 }).catch(() => {});
@@ -1002,9 +1006,9 @@ async function cloudTests() {
     ok('Anmeldung: richtige PIN meldet an', (await B.page.evaluate(() => localStorage.getItem('hinkel_username'))) === 'Testi');
     ok('Anmeldung: keine Fehler', !A.errors.length && !B.errors.length, A.errors[0] || B.errors[0]);
     await A.ctx.close(); await B.ctx.close();
-  }
+  }]);
   // Stufen-Feier: Kollegin mit genug Punkten für Stufe 3 sieht die Feier (andere Pop-ups vorher wegklicken)
-  {
+  teile.push(['Stufen-Feier: Kollegin mit genug Punkten für Stufe 3 sieht die Feier (andere Pop-ups vorher wegklicken)', async () => {
     await db('PATCH', '/progress', { lena: { _displayName: 'Lena', _role: 'verkauf', _intro: true, _levelSeen: 1 } });
     await db('PATCH', '', { scores: [{ id: 'b1', username: 'Ben', score: 50, date: '12.11.26, 08:00', category: 'Quiz' }, { id: 'l1', username: 'Lena', score: 450, date: '12.11.26, 09:00', category: 'Quiz' }] });
     const L = await device({ cloud: true, user: 'Lena' });
@@ -1024,9 +1028,9 @@ async function cloudTests() {
     ok('Stufen-Feier: erscheint mit neuem Titel und geht mit „Weiter so!“ zu', gesehen && titel.length > 2 && weg, `gesehen ${gesehen}, Titel „${titel}“, zu ${weg}`);
     ok('Stufen-Feier: keine Fehler', L.errors.length === 0, L.errors[0]);
     await L.ctx.close();
-  }
+  }]);
   // Version 222: „überholt“ auch in den einzelnen Wertungen (hier Tüten-Blitz), nicht nur in den Gesamtpunkten
-  {
+  teile.push(['Version 222: „überholt“ auch in den einzelnen Wertungen (hier Tüten-Blitz), nicht nur in den Gesamtpunkten', async () => {
     await db('PATCH', '', { scores: [{ id: 'b1', username: 'Ben', score: 50, date: '12.11.26, 08:00', category: 'Quiz' }, { id: 'l1', username: 'Lena', score: 450, date: '12.11.26, 09:00', category: 'Quiz' }, { id: 't1', username: 'Lena', score: 30, date: '13.11.26, 09:00', category: 'Tüten-Blitz 🛍️' }, { id: 't2', username: 'Ben', score: 60, date: '13.11.26, 10:00', category: 'Tüten-Blitz 🛍️' }] });
     const L = await device({ cloud: true, user: 'Lena', vorher: async (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('lt_rang2_lena', JSON.stringify({ 'cat:Tüten-Blitz': { place: 1, above: [] } })); localStorage.setItem('hinkel_lvl_seen_lena', '9'); } catch {} }) });
     let meldung = '';
@@ -1044,9 +1048,9 @@ async function cloudTests() {
     ok('Überholt: Meldung auch in einer Spiel-Wertung (Tüten-Blitz)', /Ben hat dich bei „Tüten-Blitz“ überholt/.test(meldung), meldung || 'keine Meldung');
     ok('Überholt: keine Fehler', L.errors.length === 0, L.errors[0]);
     await L.ctx.close();
-  }
+  }]);
   // Live-Updates: Änderung eines Kollegen kommt sofort an
-  {
+  teile.push(['Live-Updates: Änderung eines Kollegen kommt sofort an', async () => {
     const A = await device({ cloud: true, user: 'Anna' });
     const live = async () => A.page.evaluate(() => document.documentElement.dataset.cloudLive || '');
     for (let i = 0; i < 150 && (await live()) !== '1'; i++) await sleep(100);
@@ -1058,9 +1062,9 @@ async function cloudTests() {
     ok('Live: Änderung eines Kollegen kommt sofort an', arrived, `${Date.now() - t0} ms`);
     ok('Live: Annas Aktivität ist gespeichert', !!(await db('GET', '/lastSeen/anna')));
     await A.ctx.close();
-  }
+  }]);
   // Kundenfragen: Mitarbeiter fragt, Ausbilder antwortet, Antwort kommt live an
-  {
+  teile.push(['Kundenfragen: Mitarbeiter fragt, Ausbilder antwortet, Antwort kommt live an', async () => {
     await db('PATCH', '/pins', { anna: { h: 'x', s: 'y', ts: 1 } });
     const A = await device({ cloud: true, user: 'Anna' });
     await clearPopups(A.page);
@@ -1077,15 +1081,20 @@ async function cloudTests() {
     ok('Kundenfragen: Antwort vom Ausbilder erscheint sofort', shown);
     ok('Kundenfragen: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
-  }
+  }]);
   // Wichtige Nachricht bestätigen und Team-Umfrage abstimmen
-  {
+  teile.push(['Wichtige Nachricht bestätigen und Team-Umfrage abstimmen', async () => {
     const ts = Date.now();
     await db('PATCH', '', { pinboard: { text: 'Testnachricht wichtig', author: 'Ausbilder', updatedAt: 'heute', timestamp: ts, pflicht: true } });
     await db('PATCH', '/progress/admin', { _umfragen: { u1: { frage: 'Testumfrage?', optionen: ['Ja', 'Nein'], anonym: true, ts, offen: true } } });
     const A = await device({ cloud: true, user: 'Anna' });
     const knopf = A.page.locator('[role=dialog] button', { hasText: 'Gelesen und verstanden' });
-    for (let i = 0; i < 150 && !(await knopf.count()); i++) await sleep(100);
+    // Andere Pop-ups (Anmelde-Belohnung, Tüte …) können sich davorschieben: wie ein Mensch wegklicken
+    for (let i = 0; i < 150 && !(await knopf.count()); i++) {
+      const andere = A.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+      if (i % 10 === 9 && (await andere.count())) await andere.last().click({ timeout: 2000 }).catch(() => {});
+      await sleep(100);
+    }
     ok('Gelesen: wichtige Nachricht zeigt „Gelesen und verstanden“', (await knopf.count()) > 0);
     if (await knopf.count()) { await knopf.first().click(); await sleep(1500); }
     const g = (await db('GET', '/progress/anna/_gelesen')) || {};
@@ -1098,9 +1107,9 @@ async function cloudTests() {
     ok('Umfrage: Stimme wird gespeichert', (await db('GET', '/progress/anna/_stimmen/u1')) === 0);
     ok('Gelesen/Umfrage: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
-  }
+  }]);
   // Version 242: Team-Challenge geschafft: 500 Punkte + Überraschungstüte + Rubbellos (wer schon 75 bekam: 425 dazu)
-  {
+  teile.push(['Version 242: Team-Challenge geschafft: 500 Punkte + Überraschungstüte + Rubbellos (wer schon 75 bekam: 425 dazu)', async () => {
     const heute = new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
     const tag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const n = new Date(); const woche = tag(new Date(n.getFullYear(), n.getMonth(), n.getDate() - ((n.getDay() + 6) % 7)));
@@ -1126,9 +1135,9 @@ async function cloudTests() {
     ok('Team-Challenge: keine Fehler', A.errors.length === 0 && C.errors.length === 0, A.errors[0] || C.errors[0]);
     await C.ctx.close();
     await db('PUT', '/scores', scores.filter((x) => !/^t242/.test(x.id || '')));
-  }
+  }]);
   // Lob von Kollegen: der Gelobte bekommt die Punkte genau einmal
-  {
+  teile.push(['Lob von Kollegen: der Gelobte bekommt die Punkte genau einmal', async () => {
     await db('PATCH', '/progress/ben', { _displayName: 'Ben', _kollegenLob: { l1: { an: 'anna', anName: 'Anna', t: 'Danke für die Hilfe!', ts: Date.now() } } });
     await db('PATCH', '/progress/carla', { _displayName: 'Carla', _kollegenLob: { l2: { an: 'anna', anName: 'Anna', t: 'Heimlich danke!', ts: Date.now() - 1000, anonym: true } } });
     const A = await device({ cloud: true, user: 'Anna' });
@@ -1140,9 +1149,9 @@ async function cloudTests() {
     ok('Lob: anonymes Danke zeigt „Ein Kollege“ statt Namen', /Ein Kollege/.test(anonymZeile) && !/Carla/.test(anonymZeile), anonymZeile);
     ok('Lob: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
-  }
+  }]);
   // Version 224: Einzel-Nachrichten (Koni schreibt an Anna und Ben, Anna antwortet im Pop-up, Koni sieht die Antwort)
-  {
+  teile.push(['Version 224: Einzel-Nachrichten (Koni schreibt an Anna und Ben, Anna antwortet im Pop-up, Koni sieht die Antwort)', async () => {
     await db('PATCH', '/progress/ben', { _displayName: 'Ben' });
     await db('PATCH', '/progress/lena', { _displayName: 'Lena' });
     { const alle = (await db('GET', '/pins')) || {}; const einer = Object.values(alle)[0]; if (einer) await db('PATCH', '/pins', { koni: einer, lena: alle.lena || einer, ben: alle.ben || einer }); }
@@ -1190,9 +1199,9 @@ async function cloudTests() {
     ok('Einzel-Nachricht: Koni sieht „Gelesen: 1 von 2“ und Annas Antwort', liste.includes('Gelesen: 1 von 2') && liste.includes('Mach ich!'), liste.slice(0, 160));
     ok('Einzel-Nachricht (Koni): keine Fehler', K2.errors.length === 0, K2.errors[0]);
     await K2.ctx.close();
-  }
+  }]);
   // Version 226: Anna schenkt Ben im Laden ein Rubbellos, Ben bekommt das Pop-up
-  {
+  teile.push(['Version 226: Anna schenkt Ben im Laden ein Rubbellos, Ben bekommt das Pop-up', async () => {
     await db('PATCH', '/progress/anna', { _tipCents: 2000 });
     const A = await device({ cloud: true, user: 'Anna' });
     for (let r = 0; r < 4; r++) { await sleep(600); await clearPopups(A.page); }
@@ -1232,9 +1241,9 @@ async function cloudTests() {
     ok('Geschenk: Ben hat ein Rubbellos mehr', nachher === vorher + 1, `${vorher} → ${nachher}`);
     ok('Geschenk (Ben): keine Fehler', B.errors.length === 0, B.errors[0]);
     await B.ctx.close();
-  }
+  }]);
   // Geburtstag (freiwillig) und Ideen-Box
-  {
+  teile.push(['Geburtstag (freiwillig) und Ideen-Box', async () => {
     const d = new Date();
     await db('PATCH', '/progress/ben', { _displayName: 'Ben', _geburtstag: `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` });
     const A = await device({ cloud: true, user: 'Anna' });
@@ -1249,16 +1258,17 @@ async function cloudTests() {
     ok('Ideen-Box: Idee wird gespeichert', Object.values(ideen).some((x) => x && x.t === 'Testidee'));
     ok('Geburtstag/Ideen: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
-  }
+  }]);
   // Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem
-  {
+  teile.push(['Ersatzweg: Live-Verbindung blockiert → Daten kommen trotzdem', async () => {
     const A = await device({ cloud: true, user: 'Anna', blockLive: true });
     let ok1 = false;
     for (let i = 0; i < 180 && !ok1; i++) { ok1 = await A.page.evaluate(() => (JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').scores || []).some((s) => s.id === 'b1')); if (!ok1) await sleep(100); }
     ok('Ersatzweg: ohne Live-Verbindung werden die Daten trotzdem geladen', ok1);
     ok('Ersatzweg: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
-  }
+  }]);
+  await abarbeiten(teile, 1);
 }
 
 (async () => {
