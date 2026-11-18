@@ -12,10 +12,30 @@ const NS = 'demo-hinkel';
 const CLOUD = `${EMU}/hinkel_app.json?ns=${NS}`;
 
 const results = [];
+// Mehrere Teile laufen gleichzeitig (schneller). Jeder Teil sammelt seine Zeilen und gibt sie am Ende am Stück aus.
+const { AsyncLocalStorage } = require('async_hooks');
+const ausgabe = new AsyncLocalStorage();
 const ok = (name, cond, info = '') => {
   results.push({ name, pass: !!cond });
-  console.log(`${cond ? 'OK    ' : 'FEHLER'}  ${name}${info ? `  (${info})` : ''}`);
+  const zeile = `${cond ? 'OK    ' : 'FEHLER'}  ${name}${info ? `  (${info})` : ''}`;
+  const puffer = ausgabe.getStore();
+  if (puffer) puffer.push(zeile); else console.log(zeile);
 };
+/** Teile mit höchstens `gleichzeitig` Browsern zur selben Zeit abarbeiten. Ein Absturz in einem Teil stoppt die anderen nicht. */
+async function abarbeiten(teile, gleichzeitig) {
+  let naechster = 0;
+  const arbeiter = async () => {
+    while (naechster < teile.length) {
+      const [name, fn] = teile[naechster++];
+      const puffer = [];
+      await ausgabe.run(puffer, async () => {
+        try { await fn(); } catch (e) { ok(`${name}: lief ohne Abbruch durch`, false, String(e.message || e).split('\n')[0]); }
+      });
+      puffer.forEach((z) => console.log(z));
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, gleichzeitig) }, arbeiter));
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Unsichtbare Firebase-Anmeldung für den Emulator nachmachen (er prüft die Signatur nicht)
@@ -117,16 +137,17 @@ async function clearPopups(page) {
 }
 
 async function offlineTests() {
+  const teile = [];
   // Anmeldeseite
-  {
+  teile.push(['Anmeldeseite', async () => {
     const d = await device();
     ok('Anmeldeseite zeigt das Namensfeld', (await d.page.locator('input[placeholder="z. B. Anna"]').count()) === 1);
     ok('Anmeldeseite ohne Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Alle Hauptseiten, Handy und PC, Mitarbeiter und Ausbilder
   for (const vp of [{ width: 1100, height: 900, n: 'PC' }, { width: 390, height: 844, n: 'Handy' }]) {
-    for (const who of ['Anna', 'admin']) {
+    for (const who of ['Anna', 'admin']) teile.push([`Hauptseiten ${vp.n}, ${who}`, async () => {
       const d = await device({ user: who, admin: who === 'admin', backup: SAMPLE, viewport: vp });
       const n = await nav(d.page).count();
       let empty = 0;
@@ -137,10 +158,10 @@ async function offlineTests() {
       ok(`${vp.n}, ${who}: alle ${n} Hauptseiten öffnen sich mit Inhalt`, n >= 5 && empty === 0, `${empty} leer`);
       ok(`${vp.n}, ${who}: keine Fehler`, d.errors.length === 0, d.errors[0]);
       await d.ctx.close();
-    }
+    }]);
   }
   // Eine ganze Quizrunde
-  {
+  teile.push(['Eine ganze Quizrunde', async () => {
     const d = await device({ user: 'Anna' });
     await click(nav(d.page).nth(1)); await settle(d.page);
     await click(d.page.locator('button.lt-card:visible').first()); await settle(d.page);
@@ -158,25 +179,25 @@ async function offlineTests() {
     ok('Quiz: ganze Runde bis zur Auswertung', answered >= 5 && stillQuestion === 0, `${answered} Fragen beantwortet`);
     ok('Quiz: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Hör-Lernen: Seite geht auf, Auswahl und Abspiel-Knopf sind da
-  {
+  teile.push(['Hör-Lernen: Seite geht auf, Auswahl und Abspiel-Knopf sind da', async () => {
     const d = await device({ user: 'Anna' });
     await click(nav(d.page).nth(1)); await settle(d.page);
     await click(d.page.locator('button.lt-card', { hasText: 'Hör-Lernen' }).first()); await settle(d.page);
     ok('Hör-Lernen: Seite mit Abspiel-Knopf', (await d.page.getByRole('button', { name: 'Vorlesen starten' }).count()) > 0 && (await d.page.getByRole('button', { name: /^Alles \(/ }).count()) > 0);
     ok('Hör-Lernen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Anmeldung immer mit gelber Markise (Version 196)
-  {
+  teile.push(['Anmeldung immer mit gelber Markise (Version 196)', async () => {
     const d = await device({ viewport: { width: 390, height: 844 } });
     const kl = await d.page.evaluate(() => document.querySelector('.lt-root')?.className || '');
     ok('Anmeldung: gelbe Markise (ohne Ähren-Kopf)', !!kl && !/lt-kopf-/.test(kl), kl);
     await d.ctx.close().catch(() => {});
-  }
+  }]);
   // Aussehen (Version 187): hell ist Standard, „Backstube bei Nacht“ und Kopf mit Ähren wählbar
-  {
+  teile.push(['Aussehen (Version 187): hell ist Standard, „Backstube bei Nacht“ und Kopf mit Ähren wählbar', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     const wurzel = () => d.page.evaluate(() => ({ root: document.querySelector('.lt-root')?.className || '', html: document.documentElement.className, bg: getComputedStyle(document.body).backgroundColor }));
     let w = await wurzel();
@@ -203,9 +224,9 @@ async function offlineTests() {
     ok('Aussehen: Tageskarte nachts hellbraun mit heller Schrift', /rgb\(90, 56, 32\)/.test(papier[0]) && hellText, JSON.stringify(papier));
     await d.page.evaluate(() => { localStorage.setItem('lt_design', 'hell'); localStorage.setItem('lt_kopf', 'markise'); });
     await d.ctx.close().catch(() => {});
-  }
+  }]);
   // Keine Gedankenstriche in sichtbaren Texten (Wunsch des Nutzers) und am PC keine große Lücke auf der Startseite (Version 201)
-  {
+  teile.push(['Keine Gedankenstriche in sichtbaren Texten (Wunsch des Nutzers) und am PC keine große Lücke auf der Startseite (Version 201)', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 1300, height: 900 } });
     await clearPopups(d.page); await d.page.waitForTimeout(800);
     const hoehen = await d.page.evaluate(() => { const m = document.querySelector('.lt-home-main'), s = document.querySelector('.lt-home-side'); return m && s ? [m.getBoundingClientRect().height, s.getBoundingClientRect().height] : [0, 0]; });
@@ -227,9 +248,9 @@ async function offlineTests() {
     }
     ok('Keine Gedankenstriche in sichtbaren Texten (Startseite, Hilfe)', striche.length === 0, striche.slice(0, 3).join(' | '));
     await d.ctx.close();
-  }
+  }]);
   // Theken-Simulator wie ein echtes Gespräch (Version 202): fremde Kunden ohne Namen, keine Millimeter-Fragen
-  {
+  teile.push(['Theken-Simulator wie ein echtes Gespräch (Version 202): fremde Kunden ohne Namen, keine Millimeter-Fragen', async () => {
     const G = kompiliere(['src/games/theke/gespraech.tsx']).games_theke_gespraech;
     let fehler = [];
     for (let i = 0; i < 150; i++) {
@@ -253,9 +274,9 @@ async function offlineTests() {
       }
     }
     ok('Theken-Simulator: echte Gespräche (fremde Kunden ohne Namen, keine Millimeter-Fragen)', fehler.length === 0, fehler.slice(0, 2).join(' | '));
-  }
+  }]);
   // Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis
-  {
+  teile.push(['Extras im Quiz (Version 198): Glücksfrage nach 5 richtigen, Wissens-Pause, Küken-Geheimnis', async () => {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
     const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
     const d = await device({ user: 'Anna' });
@@ -299,9 +320,9 @@ async function offlineTests() {
     ok('Quiz: Kassenbon zeigt den Punkte-Bonus ×1,5', (await d.page.getByText(/Punkte-Bonus ×1,5/i).count()) > 0);
     ok('Quiz-Extras: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Hilfe für Neue: Orientierung und neue Funktionen erklärt, Einführung mit 7 Seiten
-  {
+  teile.push(['Hilfe für Neue: Orientierung und neue Funktionen erklärt, Einführung mit 7 Seiten', async () => {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
@@ -320,9 +341,9 @@ async function offlineTests() {
     ok('Einführung: 7 Seiten mit „Wo finde ich was?“ und „Gemeinsam im Team“', seiten === 7 && titel.some((t) => t.includes('Wo finde ich was?')) && titel.some((t) => t.includes('Gemeinsam im Team')), `${seiten} Seiten`);
     ok('Hilfe: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Trinkgeld-Laden: Antippen zeigt erst die Vorschau am Namen, gekauft wird erst mit „Kaufen“
-  {
+  teile.push(['Trinkgeld-Laden: Antippen zeigt erst die Vorschau am Namen, gekauft wird erst mit „Kaufen“', async () => {
     const d = await device({ user: 'Anna' });
     await click(d.page.locator('[title="Trinkgeld-Laden öffnen"]').first()); await settle(d.page, 600);
     await click(d.page.locator('.lt-shelf .lt-shop-item').first()); await settle(d.page, 400);
@@ -333,9 +354,9 @@ async function offlineTests() {
     ok('Laden: Vorschau am Namen vor dem Kauf', vorschau && zu, `Vorschau ${vorschau}, wieder zu ${zu}`);
     ok('Laden: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Zurück-Taste des Handys: eine Seite zurück, Steckbrief schließen, App nicht verlassen
-  {
+  teile.push(['Zurück-Taste des Handys: eine Seite zurück, Steckbrief schließen, App nicht verlassen', async () => {
     const d = await device({ user: 'Anna' });
     const titel = async () => (await d.page.locator('main h1').first().innerText().catch(() => '')).trim();
     await click(nav(d.page).nth(1)); await settle(d.page, 500);
@@ -364,9 +385,9 @@ async function offlineTests() {
     ok('Neu laden: bleibt auf der gleichen Seite', vorher.length > 0 && vorher === nachher, `vorher „${vorher}“, nachher „${nachher}“`);
     ok('Zurück-Taste: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Mein Monat: Seite geht auf (Menü) und die Rechnung stimmt
-  {
+  teile.push(['Mein Monat: Seite geht auf (Menü) und die Rechnung stimmt', async () => {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'Mein Monat' }).first()); await settle(d.page);
@@ -385,9 +406,9 @@ async function offlineTests() {
     ok('Mein Monat: Rechnung (Punkte, Platz, Tage, Lieblings-Spiel, neu gemeistert)', r.punkte === 180 && r.punkteVormonat === 80 && r.platz === 2 && r.mitspieler === 2 && r.lerntage === 2 && r.lieblingsSpiel === 'Quiz' && r.neuGemeistert === 4 && r.runden === 3 && r.besterTag && r.besterTag.punkte === 150, JSON.stringify(r));
     const s1 = M.neuerMonatSnap({ mo: '2020-01', m: 3 }, 9); const s2 = M.neuerMonatSnap({ mo: mk, m: 3 }, 9);
     ok('Mein Monat: Monats-Stand nur einmal pro Monat', s1 && s1.mo === mk && s1.m === 9 && !s1.vorher && s2 === null);
-  }
+  }]);
   // Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)
-  {
+  teile.push(['Hör-Lernen mit natürlicher Stimme: Tondateien werden abgespielt (Test-Töne statt echter Dateien)', async () => {
     const keys = stimmeKeys();
     // Version 215: zu jeder Frage und Antwort gibt es eine echte Tondatei (vier Stimmen im Wechsel)
     {
@@ -406,14 +427,15 @@ async function offlineTests() {
     await click(nav(d.page).nth(1)); await settle(d.page);
     await click(d.page.locator('button.lt-card', { hasText: 'Hör-Lernen' }).first()); await settle(d.page);
     await click(d.page.getByRole('button', { name: 'Vorlesen starten' }).first());
-    await d.page.waitForTimeout(9000);
+    // bis zu 20 s warten (bei gleichzeitig laufenden Teilen ist der Rechner langsamer), meist reichen 5 bis 9 s
+    for (let i = 0; i < 80 && tonAbrufe < 2; i++) await d.page.waitForTimeout(250);
     ok('Hör-Lernen: spielt Tondateien ab (Frage und Antwort)', tonAbrufe >= 2, `${tonAbrufe} Tondateien geladen`);
     await click(d.page.getByRole('button', { name: 'Vorlesen anhalten' }).first());
     ok('Hör-Lernen mit Tondateien: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Alle Spiele öffnen und ein paar Mal klicken
-  {
+  teile.push(['Alle Spiele öffnen und ein paar Mal klicken', async () => {
     const d0 = await device({ user: 'Anna' });
     await click(nav(d0.page).nth(2)); await settle(d0.page);
     const games = await d0.page.locator('button.lt-card:visible').allInnerTexts();
@@ -432,9 +454,9 @@ async function offlineTests() {
       await d.ctx.close();
     }
     ok(`Spiele: alle ${games.length} öffnen und laufen ohne Fehler`, games.length >= 8 && failed.length === 0, failed.join('; '));
-  }
+  }]);
   // Theken-Simulator (Version 208): neue Situationen und Zuhören (Kunde spricht, Text verdeckt bis antippen)
-  {
+  teile.push(['Theken-Simulator (Version 208): neue Situationen und Zuhören (Kunde spricht, Text verdeckt bis antippen)', async () => {
     const G = kompiliere(['src/games/theke/gespraech.tsx']).games_theke_gespraech;
     const neu = ['Vorbestellung abholen', 'Falsche Ware bekommen', 'Allergene bei Saisonware'];
     const fehlt = neu.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
@@ -468,9 +490,9 @@ async function offlineTests() {
     }
     ok('Theken-Simulator mit Zuhören: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Nachschlagen und Karteikarten
-  {
+  teile.push(['Nachschlagen und Karteikarten', async () => {
     const failed = [];
     for (let e = 0; e < 3; e++) {
       const d = await device({ user: 'Anna' });
@@ -488,9 +510,9 @@ async function offlineTests() {
       await d.ctx.close();
     }
     ok('Nachschlagen: Karteikarten und Filter ohne Fehler', failed.length === 0, failed.join('; '));
-  }
+  }]);
   // Englisch-Wörterbuch: neue Bereiche für den Verkauf
-  {
+  teile.push(['Englisch-Wörterbuch: neue Bereiche für den Verkauf', async () => {
     const d = await device({ user: 'Anna' });
     await click(nav(d.page).nth(3)); await settle(d.page);
     let gefunden = false;
@@ -507,9 +529,9 @@ async function offlineTests() {
     ok('Wörterbuch: Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“', gefunden && fehlt.length === 0, gefunden ? fehlt.join(', ') : 'Wörterbuch nicht gefunden');
     ok('Wörterbuch: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)
-  {
+  teile.push(['Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)', async () => {
     const d = await device({ user: 'Anna' });
     await d.page.waitForFunction(() => !!navigator.serviceWorker && !!navigator.serviceWorker.controller, null, { timeout: 15000 }).catch(() => {});
     const sw = await d.page.evaluate(() => !!(navigator.serviceWorker && navigator.serviceWorker.controller));
@@ -522,9 +544,9 @@ async function offlineTests() {
     ok('Offline: App geht ohne Internet auf, alle Hauptseiten mit Inhalt', n >= 5 && empty === 0, `${n} Seiten, ${empty} leer`);
     ok('Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 214: „... haben heute schon gelernt“ aufklappen, alle Namen sehen
-  {
+  teile.push(['Version 214: „... haben heute schon gelernt“ aufklappen, alle Namen sehen', async () => {
     const heute = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
     const probe = JSON.parse(JSON.stringify(SAMPLE));
     ['Claudia', 'Koni', 'Mia', 'Tom'].forEach((n) => { probe.progress[n.toLowerCase()] = { ...(probe.progress[n.toLowerCase()] || {}), _displayName: n, _days: [heute] }; });
@@ -537,9 +559,9 @@ async function offlineTests() {
     ok('Startseite: „heute gelernt“ aufklappen zeigt alle Namen', ['Claudia', 'Koni', 'Mia', 'Tom'].every((n) => liste.includes(n)), liste.replace(/\n/g, ' ').slice(0, 120) || 'keine Zeile (Tagesformat?)');
     ok('Startseite aufklappen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 216: natürliche Kundenstimme aus Bausteinen (Theken-Simulator, Telefon): fast jeder Satz ist abgedeckt
-  {
+  teile.push(['Version 216: natürliche Kundenstimme aus Bausteinen (Theken-Simulator, Telefon): fast jeder Satz ist abgedeckt', async () => {
     const fs = require('fs'), path = require('path');
     const M = kompiliere(['src/games/theke/gespraech.tsx', 'src/games/telefonLogik.ts', 'src/hilfen/bausteine.ts']);
     const G = M.games_theke_gespraech, T = M.games_telefonLogik, B = M.hilfen_bausteine;
@@ -555,9 +577,9 @@ async function offlineTests() {
     ok('Natürliche Stimme: Theken-Simulator, mind. 97 % der Kundensätze aus Bausteinen', ok1 / saetze >= 0.97, `${ok1} von ${saetze}`);
     ok('Natürliche Stimme: Telefon-Bestellung, mind. 99 % der Anrufe aus Bausteinen', ok2 / anrufe >= 0.99, `${ok2} von ${anrufe}`);
     ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
-  }
+  }]);
   // Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien
-  {
+  teile.push(['Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien', async () => {
     const fs = require('fs'), path = require('path');
     const M = kompiliere(['src/hilfen/vorlesen.ts', 'src/daten/shopProducts.ts']);
     const V = M.hilfen_vorlesen, P = M.daten_shopProducts.SHOP_PRODUCTS;
@@ -572,9 +594,9 @@ async function offlineTests() {
     [...(Qz.questions || []), ...(Qz.examQuestions || [])].forEach((q) => V.saetze(V.quizVorherText(q.question, q.options)).forEach((x) => { if (!idx.has(V.satzKey(x))) fehltQ.push(x); }));
     ok('Natürliche Stimme: Quiz vorlesen (Frage und Antwort-Möglichkeiten), alle Sätze vorhanden', fehltQ.length === 0, `${fehltQ.length} fehlen: ${fehltQ.slice(0, 2).join(' | ')}`);
     ok('Vorlesen: Sätze ohne Satzzeichen am Ende', V.saetze('Das ist Feinbrot. Warengruppe: Brot.').join('|') === 'Das ist Feinbrot|Warengruppe: Brot');
-  }
+  }]);
   // Version 220: Startseite kürzer: Team-Challenge kompakt (aufklappbar), Statistik + Lern-Bon + Fortschritt in „Deine Zahlen“
-  {
+  teile.push(['Version 220: Startseite kürzer: Team-Challenge kompakt (aufklappbar), Statistik + Lern-Bon + Fortschritt in „Deine Zahlen“', async () => {
     const d = await device({ user: 'Anna' });
     await clearPopups(d.page);
     const zahlen = d.page.locator('details.lt-zahlen');
@@ -586,9 +608,9 @@ async function offlineTests() {
     ok('Startseite: Team-Challenge kompakt mit Balken, Erklärung zum Aufklappen', (await team.count()) > 0 && (await team.locator('summary [role=progressbar]').count()) === 1);
     ok('Startseite neu: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 221: Tüten-Blitz: Produktname passt am Handy in die Karte, Punkte begrenzt (1 pro Tüte, ab 10 in Folge 2)
-  {
+  teile.push(['Version 221: Tüten-Blitz: Produktname passt am Handy in die Karte, Punkte begrenzt (1 pro Tüte, ab 10 in Folge 2)', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 360, height: 780 } });
     await clearPopups(d.page);
     await click(nav(d.page).nth(2)); await settle(d.page);
@@ -611,9 +633,9 @@ async function offlineTests() {
     ok('Tüten-Blitz: Punkte begrenzt (höchstens 2 pro Tüte)', punkte > 0 && punkte <= 50, `${punkte} Punkte nach 25 Tüten`);
     ok('Tüten-Blitz: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 226: Laden-Extras (Serien-Schutz, Geschenke, Sammel-Sets) ohne Browser prüfen
-  {
+  teile.push(['Version 226: Laden-Extras (Serien-Schutz, Geschenke, Sammel-Sets) ohne Browser prüfen', async () => {
     const M = kompiliere(['src/hilfen/geschenke.ts', 'src/basis/serie.tsx', 'src/basis/laden.tsx']);
     const S = M.basis_serie, G = M.hilfen_geschenke, L = M.basis_laden;
     const dk = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return S.dayKey(d); };
@@ -638,9 +660,9 @@ async function offlineTests() {
     ok('Sammel-Sets: Brotkorb voll, Süße Theke nicht', st.find((x) => x.id === 'brot').voll && !st.find((x) => x.id === 'suess').voll);
     const torte = L.TIP_SHOP.find((i) => i.id === 'a_torte');
     ok('Laden: keine Torte mehr (jetzt Berliner), viele neue Teile', torte.label === 'Berliner' && !L.TIP_SHOP.some((i) => /Torte/.test(i.label)) && L.TIP_SHOP.length >= 70, `${L.TIP_SHOP.length} Teile`);
-  }
+  }]);
   // Version 228: Steckbrief im dunklen Design: dunkle Schrift auf dem gelben Kopf, Allergen-Kästchen ohne Überstand
-  {
+  teile.push(['Version 228: Steckbrief im dunklen Design: dunkle Schrift auf dem gelben Kopf, Allergen-Kästchen ohne Überstand', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 1000, height: 667 }, vorher: async (ctx) => ctx.addInitScript(() => { if (sessionStorage.getItem('__v228')) return; sessionStorage.setItem('__v228', '1'); localStorage.setItem('lt_design', 'nacht'); sessionStorage.setItem('lt_seite', 'nachschlagen'); }) });
     await clearPopups(d.page);
     const k = d.page.locator('button, [role=button], .lt-card', { hasText: /Steckbriefe/ }).first();
@@ -657,9 +679,9 @@ async function offlineTests() {
     ok('Steckbrief: Allergen-Kästchen ohne überstehenden Text', info.n > 0 && info.ueber === 0, `${info.ueber} von ${info.n} stehen über`);
     ok('Steckbrief nachts: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 229: Laden-Neuheiten ohne Browser (Tüte, Wochen-Teile, Teigi, Schrift am Namen)
-  {
+  teile.push(['Version 229: Laden-Neuheiten ohne Browser (Tüte, Wochen-Teile, Teigi, Schrift am Namen)', async () => {
     const L = kompiliere(['src/basis/laden.tsx']).basis_laden;
     const alle = L.TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && i.price <= 1000).map((i) => i.id);
     let schlecht = 0, arten = new Set();
@@ -670,9 +692,9 @@ async function offlineTests() {
     const t0 = L.teigiStand(['2026-11-16'], 3, new Date(2026, 10, 16)), t1 = L.teigiStand(['2026-11-10'], 20, new Date(2026, 10, 16));
     ok('Teigi: wächst mit Lerntagen und wird ohne Lernen schlapp', t0.stufe === 0 && t0.laune === 'froh' && t1.stufe === 2 && t1.laune === 'schlapp', `${t0.stufe}/${t0.laune}, ${t1.stufe}/${t1.laune}`);
     ok('Schrift am Namen: Klasse für Schrift und Farbe zusammen', L.nameClassOf({ _schrift: 'sf_kreide', _gold: true }) === 'lt-goldname lt-sf-kreide');
-  }
+  }]);
   // Version 233: Teigi für alle: Schalter ganz unten, Laden-Abteilung „Teigi“
-  {
+  teile.push(['Version 233: Teigi für alle: Schalter ganz unten, Laden-Abteilung „Teigi“', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     ok('Teigi im Brotkorb ohne Kauf', (await d.page.locator('.lt-teigi-zeile').count()) === 1);
@@ -690,9 +712,9 @@ async function offlineTests() {
     ok('Teigi: Gesicht sitzt im Glas', gesicht);
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun
-  {
+  teile.push(['Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun', async () => {
     const K = kompiliere(['src/daten/questions.ts', 'src/thema/artisan.ts']);
     const qs = K.daten_questions.questions;
     const hat = (t) => qs.some((q) => q.question === t);
@@ -704,18 +726,18 @@ async function offlineTests() {
     const css = K.thema_artisan.ARTISAN_CSS;
     const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
     ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
-  }
+  }]);
   // Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt
-  {
+  teile.push(['Version 239: Produkt-Lernkarten mit wechselnden natürlichen Stimmen, alle Sätze erzeugt', async () => {
     const V = kompiliere(['src/hilfen/vorlesen.ts']).hilfen_vorlesen;
     const stimmen = new Set(['Abendschnitte', 'Roggenstange', 'Laugenbrezel', 'Mohnbrötchen', 'Kürbiskernbrot', 'Butterhörnchen'].map((n) => V.karteStimme(n)));
     ok('Lernkarten: Stimmen wechseln je Produkt (mindestens 2 verschiedene)', stimmen.size >= 2, [...stimmen].join(','));
     const satz = V.saetze(V.produktKarteVorne('Abendschnitte'))[0];
     const datei = require('path').join(__dirname, '..', 'public', 'stimme', 'saetze', V.satzKey(satz, V.karteStimme('Abendschnitte')) + '.mp3');
     ok('Lernkarten: Satz in der Kartenstimme ist erzeugt', require('fs').existsSync(datei), datei);
-  }
+  }]);
   // Version 238: Lernkarten als Karteikarten mit Lernkasten
-  {
+  teile.push(['Version 238: Lernkarten als Karteikarten mit Lernkasten', async () => {
     const K = kompiliere(['src/hilfen/lernkasten.ts']).hilfen_lernkasten;
     const c = { progress: { anna: { _displayName: 'Anna' } } };
     K.karteBewerten('anna', 'Anna', 'Abendschnitte', true)(c); K.karteBewerten('anna', 'Anna', 'Abendschnitte', true)(c);
@@ -745,9 +767,9 @@ async function offlineTests() {
     ok('Fachwissen-Lernkasten: „Wusste ich“ legt die Karte in Fach 2', Number(nach239) === Number(vorher239) + 1, `${vorher239} → ${nach239}`);
     ok('Lernkarten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz
-  {
+  teile.push(['Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz', async () => {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
     const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
     const probe = JSON.parse(JSON.stringify(SAMPLE));
@@ -780,16 +802,19 @@ async function offlineTests() {
     const frage2 = (await d.page.locator('.lt-frage').first().innerText()).trim();
     const ziel2 = String(richtig.get(frage2) || '');
     const r2 = (await opts2.allInnerTexts()).findIndex((t) => ziel2 && t.includes(ziel2));
-    if (r2 >= 0) { await click(opts2.nth(r2)); await d.page.waitForTimeout(250); }
-    ok('Teigi hüpft bei einer richtigen Antwort', (await d.page.locator('.lt-teigi-begleiter .lt-teigi-hops').count()) === 1);
+    let hops = 0;
+    if (r2 >= 0) { await click(opts2.nth(r2)); for (let i = 0; i < 40 && !hops; i++) { hops = await d.page.locator('.lt-teigi-begleiter .lt-teigi-hops').count(); if (!hops) await d.page.waitForTimeout(50); } }
+    ok('Teigi hüpft bei einer richtigen Antwort', hops === 1);
     await d.page.waitForTimeout(800);
-    await click(begleiter.locator('button')); await d.page.waitForTimeout(250);
-    ok('Teigi antippen: bleibt da, hüpft und sagt etwas', (await begleiter.count()) === 1 && (await d.page.locator('.lt-teigi-sprech').count()) === 1);
+    await click(begleiter.locator('button'));
+    let sprech = 0;
+    for (let i = 0; i < 40 && !sprech; i++) { sprech = await d.page.locator('.lt-teigi-sprech').count(); if (!sprech) await d.page.waitForTimeout(50); }
+    ok('Teigi antippen: bleibt da, hüpft und sagt etwas', (await begleiter.count()) === 1 && sprech === 1);
     ok('Neue Joker: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4
-  {
+  teile.push(['Version 223: Theken-Ansturm: am Handy 3 große Fotos pro Reihe statt 4', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     await click(nav(d.page).nth(2)); await settle(d.page);
@@ -800,9 +825,9 @@ async function offlineTests() {
     ok('Theken-Ansturm: Fotos am Handy groß (3 pro Reihe)', breiten.length === 8 && Math.min(...breiten) >= 100 && ueber <= 1, `Breiten ${breiten.join(',')}, über ${ueber}px`);
     ok('Theken-Ansturm: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)
-  {
+  teile.push(['Version 213: Telefon-Bestellung (Kunde ruft an, Bestellzettel ausfüllen)', async () => {
     const T = kompiliere(['src/games/telefonLogik.ts']).games_telefonLogik;
     const fehler = [];
     const BACK = { 'Burgunderstuten': [4], 'Jan-Wellem Stuten': [3], 'Chia-Brot': [0], 'Reines Roggen': [1, 3], 'Buchweizenbrot': [1, 3], 'Heidesand': [0], 'Kokosmakronen': [1, 3] };
@@ -854,9 +879,9 @@ async function offlineTests() {
     ok('Telefon-Bestellung: Prüfung zeigt richtig/falsch', (await d.page.locator('.lt-telefon-ergebnis').count()) > 0 && (await d.page.getByText(/richtig: /).count()) > 0);
     ok('Telefon-Bestellung: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 212: Was wird genutzt? (nur Summen, keine Namen) und Erinnerung an die Sicherung
-  {
+  teile.push(['Version 212: Was wird genutzt? (nur Summen, keine Namen) und Erinnerung an die Sicherung', async () => {
     const N = kompiliere(['src/hilfen/nutzung.ts']).hilfen_nutzung;
     const m = N.monatJetzt();
     const sum = N.addiereNutzung({ [m]: { quiz: 2 } }, { [m]: { quiz: 3, theke: 1 } });
@@ -881,9 +906,9 @@ async function offlineTests() {
     ok('Ausbilder: „Was wird genutzt?“ zeigt Theken-Simulator oben', (await box.count()) > 0 && (await box.locator('.lt-nutzung-zeile').first().innerText()).includes('Theken-Simulator'));
     ok('Nutzung und Sicherung: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Version 224: Ausbilder schreibt Einzel-Nachrichten und vergibt das Recht dazu
-  {
+  teile.push(['Version 224: Ausbilder schreibt Einzel-Nachrichten und vergibt das Recht dazu', async () => {
     // Version 225: neue Antwort auf eine Nachricht des Ausbilders zeigt „(1 neu)“ am Reiter
     const NM = kompiliere(['src/hilfen/nachrichten.ts']).hilfen_nachrichten;
     const probe = JSON.parse(JSON.stringify(SAMPLE));
@@ -902,9 +927,9 @@ async function offlineTests() {
     ok('Ausbilder: Recht vergeben schaltet um', (await recht.first().getAttribute('aria-pressed').catch(() => '')) === 'true');
     ok('Ausbilder Einzel-Nachrichten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
-  }
+  }]);
   // Ausbilder-Bereich: alle Reiter mit Beispieldaten
-  {
+  teile.push(['Ausbilder-Bereich: alle Reiter mit Beispieldaten', async () => {
     const d = await device({ admin: true, backup: SAMPLE });
     await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
     for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
@@ -950,7 +975,8 @@ async function offlineTests() {
     if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
     ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
     await d.ctx.close();
-  }
+  }]);
+  return teile;
 }
 
 async function cloudTests() {
@@ -1237,9 +1263,17 @@ async function cloudTests() {
 (async () => {
   browser = await chromium.launch();
   try {
-    await offlineTests();
-    if (EMU) await cloudTests();
-    else console.log('(Anmeldung und Live-Updates übersprungen: kein Firebase-Emulator, EMU nicht gesetzt)');
+    // Ohne Emulator: Teile gleichzeitig. Die Emulator-Prüfungen hängen voneinander ab (gemeinsame Datenbank),
+    // darum laufen sie hintereinander, aber neben den anderen Teilen her.
+    const teile = await offlineTests();
+    const gleichzeitig = Number(process.env.GLEICHZEITIG) || 3;
+    const start = Date.now();
+    await Promise.all([
+      abarbeiten(teile, gleichzeitig),
+      EMU ? (async () => { const puffer = []; await ausgabe.run(puffer, async () => { try { await cloudTests(); } catch (e) { ok('Emulator-Prüfungen liefen ohne Abbruch durch', false, String(e.message || e).split('\n')[0]); } }); puffer.forEach((z) => console.log(z)); })() : Promise.resolve(),
+    ]);
+    if (!EMU) console.log('(Anmeldung und Live-Updates übersprungen: kein Firebase-Emulator, EMU nicht gesetzt)');
+    console.log(`(Dauer der Prüfung: ${Math.round((Date.now() - start) / 1000)} s, ${gleichzeitig} Teile gleichzeitig)`);
   } catch (e) {
     ok('Prüfung lief ohne Abbruch durch', false, e.message.split('\n')[0]);
   }
