@@ -101,7 +101,8 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {row('Experten-Ecke und Produkt der Woche', '+20 / +40')}
         {row('Falsche Antwort (ab der zweiten Woche)', '−10 / −15')}
         <div>Eine Runde fällt nie unter 0 Punkte. Auch Spiele bringen Punkte für die Bestenliste.</div>
-        <div><strong>Punkte-Bonus ×1,5:</strong> Auf alle Punkte aus Quiz und Spielen kommt noch die Hälfte obendrauf. Aus 100 Punkten werden 150. Ein Sieg im Quiz Battle bringt 38 Punkte, ein Lob 15, das geschaffte Team-Ziel 75.</div>
+        <div><strong>Punkte-Bonus ×1,5:</strong> Auf alle Punkte aus Quiz und Spielen kommt noch die Hälfte obendrauf. Aus 100 Punkten werden 150. Ein Sieg im Quiz Battle bringt 38 Punkte, ein Lob 15.</div>
+        <div><strong>Team-Challenge:</strong> Schafft das Team das Wochenziel, bekommt jeder, der in der Woche mitgespielt hat, 500 Punkte, eine Überraschungstüte (geht sofort auf) und ein Rubbellos.</div>
         <div><strong>Combo-Bonus:</strong> In jedem Spiel und Quiz zählt, wie viele richtige Antworten du am Stück hast. Alle 5 richtigen in Folge gibt es mehr: ab 5 ×1,2, ab 10 ×1,4, ab 15 ×1,6, ab 20 ×1,8, ab 25 höchstens ×2,0. Jede Antwort zählt einzeln mit dem Faktor, den du gerade hast. Eine falsche Antwort setzt die Combo zurück.</div>
       </>, 0)}
       {box(boxIcon(ICON.trophy), 'Stufen', <>

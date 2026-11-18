@@ -1058,6 +1058,33 @@ async function cloudTests() {
     ok('Gelesen/Umfrage: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }
+  // Version 242: Team-Challenge geschafft: 500 Punkte + Überraschungstüte + Rubbellos (wer schon 75 bekam: 425 dazu)
+  {
+    const heute = new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+    const tag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const n = new Date(); const woche = tag(new Date(n.getFullYear(), n.getMonth(), n.getDate() - ((n.getDay() + 6) % 7)));
+    const scores = ((await db('GET', '/scores')) || []).filter(Boolean);
+    scores.push({ id: 't242a', username: 'Ben', score: 90000, date: heute, category: 'Quiz' }, { id: 't242b', username: 'Anna', score: 100, date: heute, category: 'Quiz' }, { id: 't242c', username: 'Carla', score: 100, date: heute, category: 'Quiz' });
+    await db('PUT', '/scores', scores);
+    await db('PATCH', '/progress/carla', { _displayName: 'Carla', _teamWon: [woche] });
+    const A = await device({ cloud: true, user: 'Anna' });
+    const pop = A.page.locator('.lt-tuete-popup');
+    for (let i = 0; i < 60 && !(await pop.count()); i++) await sleep(100);
+    ok('Team-Challenge: Überraschungstüte geht auf', (await pop.count()) > 0 && /Team-Challenge geschafft/i.test(await pop.innerText()));
+    await sleep(1500);
+    const pa = (await db('GET', '/progress/anna')) || {};
+    const sa = ((await db('GET', '/scores')) || []).filter((x) => x && x.username === 'Anna' && /Team-Challenge/.test(x.category || ''));
+    ok('Team-Challenge: 500 Punkte und ein Rubbellos', sa.length === 1 && sa[0].score === 500 && Number(pa._jokersLos) === 1 && (pa._teamPaket || []).includes(woche), JSON.stringify({ sa, los: pa._jokersLos, paket: pa._teamPaket }));
+    await A.ctx.close();
+    const C = await device({ cloud: true, user: 'Carla' });
+    for (let i = 0; i < 60 && !(await C.page.locator('.lt-tuete-popup').count()); i++) await sleep(100);
+    await sleep(1500);
+    const sc = ((await db('GET', '/scores')) || []).filter((x) => x && x.username === 'Carla' && /Team-Challenge/.test(x.category || ''));
+    ok('Team-Challenge: wer schon 75 bekam, bekommt 425 dazu', sc.length === 1 && sc[0].score === 425, JSON.stringify(sc));
+    ok('Team-Challenge: keine Fehler', A.errors.length === 0 && C.errors.length === 0, A.errors[0] || C.errors[0]);
+    await C.ctx.close();
+    await db('PUT', '/scores', scores.filter((x) => !/^t242/.test(x.id || '')));
+  }
   // Lob von Kollegen: der Gelobte bekommt die Punkte genau einmal
   {
     await db('PATCH', '/progress/ben', { _displayName: 'Ben', _kollegenLob: { l1: { an: 'anna', anName: 'Anna', t: 'Danke für die Hilfe!', ts: Date.now() } } });
@@ -1144,7 +1171,9 @@ async function cloudTests() {
     ok('Geschenk (Anna): keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
     const vorher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0;
-    await db('PATCH', '/progress/ben', { _levelSeen: 25 });
+    // Team-Belohnung (Tüte) würde sich vor das Geschenk-Pop-up schieben: für diese und letzte Woche als erhalten markieren
+    const wk = (w) => { const n = new Date(); const d = new Date(n.getFullYear(), n.getMonth(), n.getDate() - ((n.getDay() + 6) % 7) - 7 * w); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+    await db('PATCH', '/progress/ben', { _levelSeen: 25, _teamPaket: [wk(0), wk(1)], _teamWon: [wk(0), wk(1)] });
     const B = await device({ cloud: true, user: 'Ben', vorher: async (ctx) => ctx.addInitScript(() => { try { localStorage.setItem('hinkel_lvl_seen_ben', '9'); } catch {} }) });
     const pop = B.page.locator('.lt-geschenk-popup');
     for (let i = 0; i < 30 && !(await pop.count()); i++) {

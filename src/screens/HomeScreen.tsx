@@ -182,8 +182,8 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 18px 16px' }}>
               <p style={{ margin: 0, fontSize: '16px', color: LT.brown, lineHeight: 1.45 }}>
                 {team.reached
-                  ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte.`
-                  : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte.${!isAdmin && !mine ? ' Spiel eine Runde, dann bist du dabei.' : ''}`}
+                  ? `Das Team hat diese Woche ${team.points.toLocaleString('de-DE')} Punkte gesammelt. Alle, die mitgespielt haben, bekommen ${TEAM_REWARD} Extra-Punkte, eine Überraschungstüte und ein Rubbellos.`
+                  : `Sammelt diese Woche gemeinsam ${team.goal.toLocaleString('de-DE')} Punkte. Alle, die mitspielen, bekommen ${TEAM_REWARD} Extra-Punkte, eine Überraschungstüte und ein Rubbellos.${!isAdmin && !mine ? ' Spiel eine Runde, dann bist du dabei.' : ''}`}
               </p>
               {team.lastPoints > 0 && <div style={{ fontSize: '14px', color: LT.muted }}>Letzte Woche: {team.lastPoints.toLocaleString('de-DE')} von {team.lastGoal.toLocaleString('de-DE')} Punkten {team.lastReached ? '✓ geschafft' : ''}</div>}
             </div>

@@ -3,7 +3,7 @@ import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 241;
+const APP_VERSION: number = 242;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -68,7 +68,7 @@ import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELL
 import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, teigiStand, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
 import { wxKindOf, WxIcon } from './basis/fakten';
-import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
+import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, TEAM_REWARD_ALT, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
 import type { ShopItem, PtItem } from './basis/laden';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
@@ -408,26 +408,44 @@ export default function App() {
   useEffect(() => {
     if (!username || isAdmin || !cloudConnected) return;
     const k = username.toLowerCase();
-    const won: string[] = Array.isArray(focusProg._teamWon) ? focusProg._teamWon : [];
+    // Version 242: Belohnung 500 Punkte + Überraschungstüte + Rubbellos. Merker _teamPaket (neue Belohnung erhalten).
+    // Wer für die Woche schon die alte Belohnung bekam (_teamWon), bekommt den Rest: 425 Punkte, Tüte und Los.
+    const paket: string[] = Array.isArray(focusProg._teamPaket) ? focusProg._teamPaket : [];
     const due = [
       team.reached && team.players.has(k) ? team.week : '',
       team.lastReached && team.lastPlayers.has(k) ? team.lastWeek : '',
-    ].filter((w) => w && !won.includes(w) && !teamClaimRef.current.has(w));
+    ].filter((w) => w && !paket.includes(w) && !teamClaimRef.current.has(w));
     if (!due.length) return;
     due.forEach((w) => teamClaimRef.current.add(w));
+    const ownedJetzt: string[] = Array.isArray(focusProg._shopOwned) ? focusProg._shopOwned : [];
+    const tueten = due.map(() => tueteAuslosen(ownedJetzt));
+    const wonJetzt: string[] = Array.isArray(focusProg._teamWon) ? focusProg._teamWon : [];
+    const punkte = due.reduce((a, w) => a + (wonJetzt.includes(w) ? TEAM_REWARD - TEAM_REWARD_ALT : TEAM_REWARD), 0);
     mutateCloudData((curr) => {
       const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username });
-      const have: string[] = Array.isArray(pr._teamWon) ? pr._teamWon : [];
-      const fresh = due.filter((w) => !have.includes(w));
+      const havePaket: string[] = Array.isArray(pr._teamPaket) ? pr._teamPaket : [];
+      const won: string[] = Array.isArray(pr._teamWon) ? pr._teamWon : [];
+      const fresh = due.filter((w) => !havePaket.includes(w));
       if (!fresh.length) return curr;
-      pr._teamWon = [...have, ...fresh].slice(-12);
+      pr._teamPaket = [...havePaket, ...fresh].slice(-12);
+      pr._teamWon = [...won, ...fresh.filter((w) => !won.includes(w))].slice(-12);
       if (!Array.isArray(curr.scores)) curr.scores = [];
-      fresh.forEach((_w, i) => curr.scores.push({ id: `${k}_team_${Date.now() + i}`, username, score: TEAM_REWARD, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: TEAM_CAT }));
+      fresh.forEach((w, i) => {
+        const p = won.includes(w) ? TEAM_REWARD - TEAM_REWARD_ALT : TEAM_REWARD;
+        curr.scores.push({ id: `${k}_team_${Date.now() + i}`, username, score: p, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: TEAM_CAT });
+        pr._jokersLos = (Number(pr._jokersLos) || 0) + 1;
+        const t = tueten[i]; const owned: string[] = Array.isArray(pr._shopOwned) ? pr._shopOwned : [];
+        if (t.art === 'geld') pr._tipCents = (Number(pr._tipCents) || 0) + t.cents;
+        else if (t.art === 'joker') { const f = JOKER_FIELD[t.it.id]; pr[f] = (Number(pr[f]) || 0) + 1; }
+        else if (!owned.includes(t.it.id)) pr._shopOwned = [...owned, t.it.id];
+      });
       return curr;
     });
-    setToast(`Team-Challenge geschafft! +${TEAM_REWARD * due.length} Punkte für dich.`);
+    const n = due.length;
+    setToast(`Team-Challenge geschafft! +${punkte.toLocaleString('de-DE')} Punkte, ${n === 1 ? 'ein Rubbellos und eine Überraschungstüte' : `${n} Rubbellose und ${n} Überraschungstüten`} für dich.`);
+    setTuetenInhalt({ ...tueten[0], team: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [team.reached, team.lastReached, team.week, cloudConnected, username, isAdmin, focusWeakKey, JSON.stringify(focusProg._teamWon || [])]);
+  }, [team.reached, team.lastReached, team.week, cloudConnected, username, isAdmin, focusWeakKey, JSON.stringify(focusProg._teamPaket || [])]);
 
   // Beim Neuladen auf der gleichen Seite bleiben (gilt nur für diesen Tab/dieses Fenster, siehe sessionStorage)
   // Neu laden bleibt auf der Seite. Ausnahme „profil“: welches Profil offen war, ist nach dem Neuladen weg, dann zur Bestenliste (Fehler bis 196: leere Seite)
@@ -1714,7 +1732,7 @@ export default function App() {
   const reportSentRef = useRef<(() => void) | null>(null);
   const [toast, setToast] = useState<string>('');
   const [chanceOn, setChanceOn] = useState(false); // Zweite Chance für die aktuelle Frage eingeschaltet
-  const [tuetenInhalt, setTuetenInhalt] = useState<TuetenInhalt | null>(null); // Überraschungstüte: was war drin?
+  const [tuetenInhalt, setTuetenInhalt] = useState<(TuetenInhalt & { team?: boolean }) | null>(null); // Überraschungstüte: was war drin?
   // Monatsmeister: einmalig Abzeichen und 2 € Trinkgeld
   useEffect(() => {
     if (!username || username.toLowerCase() === 'admin' || !cloudConnected || isSyncing) return;
@@ -2742,11 +2760,11 @@ export default function App() {
         <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div className="lt-dialog lt-pop-in lt-tuete-popup" role="dialog" aria-modal="true" aria-label="Überraschungstüte" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '380px', backgroundColor: LT.cream, borderRadius: '24px', padding: '26px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>
             <ConfettiOverlay active />
-            <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>In deiner Überraschungstüte</div>
+            <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>{tuetenInhalt.team ? 'Team-Challenge geschafft! In deiner Tüte' : 'In deiner Überraschungstüte'}</div>
             <span className="lt-emo-bob" style={{ display: 'inline-flex', minHeight: '84px', alignItems: 'center' }}>
               {tuetenInhalt.art === 'geld' ? <ShopIcon3D k="coin" size={80} /> : tuetenInhalt.art === 'joker' ? <ShopIcon3D k={tuetenInhalt.it.id} size={80} /> : <span style={{ fontSize: '64px', lineHeight: 1 }}>{tuetenInhalt.it.kind === 'avatar' || tuetenInhalt.it.kind === 'jubel' ? tuetenInhalt.it.icon : tuetenInhalt.it.kind === 'schrift' ? 'Aa' : tuetenInhalt.it.kind === 'effect' ? (myProg._avatar || '🥨') : '🏷️'}</span>}
             </span>
-            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{tuetenInhalt.art === 'geld' ? `${tipEuro(tuetenInhalt.cents)} Trinkgeld zurück!` : tuetenInhalt.art === 'joker' ? `Ein ${tuetenInhalt.it.label}!` : `Neu für dich: ${tuetenInhalt.it.label}`}</div>
+            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{tuetenInhalt.art === 'geld' ? `${tipEuro(tuetenInhalt.cents)} Trinkgeld${tuetenInhalt.team ? ' für dich' : ' zurück'}!` : tuetenInhalt.art === 'joker' ? `Ein ${tuetenInhalt.it.label}!` : `Neu für dich: ${tuetenInhalt.it.label}`}</div>
             <div style={{ fontSize: '15px', color: LT.muted }}>{tuetenInhalt.art === 'teil' ? 'Liegt jetzt in deinem Laden bereit. Antippen zum Anlegen.' : tuetenInhalt.art === 'joker' ? tuetenInhalt.it.desc : 'Das Geld ist schon wieder in deiner Kasse.'}</div>
             <button onClick={() => setTuetenInhalt(null)} autoFocus style={{ minHeight: '50px', alignSelf: 'stretch', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Super!</button>
           </div>
