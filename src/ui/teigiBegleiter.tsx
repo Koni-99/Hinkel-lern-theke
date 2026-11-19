@@ -63,10 +63,11 @@ export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?
   const [jubel, setJubel] = useState(0);
   const [spruch, setSpruch] = useState<{ t: string; k: number } | null>(null);
   const [spricht, setSpricht] = useState(false);
-  // Version 261: liest eine Stimme vor, bewegt Teigi den Mund mit
-  useEffect(() => { const t = window.setInterval(() => { const s = sprichtGerade(); setSpricht((v) => (v === s ? v : s)); }, 150); return () => window.clearInterval(t); }, []);
+  // Version 261: liest eine Stimme vor, bewegt Teigi den Mund mit. Version 262: auch, solange seine Sprechblase etwas sagt
+  useEffect(() => { const t = window.setInterval(() => { const s = sprichtGerade() || Date.now() < plapperBis.current; setSpricht((v) => (v === s ? v : s)); }, 150); return () => window.clearInterval(t); }, []);
   const timer = useRef(0);
-  const sag = (t: string | null) => { if (!t) return; setSpruch({ t, k: Date.now() }); window.clearTimeout(timer.current); timer.current = window.setTimeout(() => setSpruch(null), 2800); };
+  const plapperBis = useRef(0);
+  const sag = (t: string | null) => { if (!t) return; plapperBis.current = Date.now() + Math.min(2600, 500 + t.length * 45); setSpruch({ t, k: Date.now() }); window.clearTimeout(timer.current); timer.current = window.setTimeout(() => setSpruch(null), 2800); };
   useEffect(() => {
     document.body.classList.add('lt-mit-teigi');
     sag(zufall(START));

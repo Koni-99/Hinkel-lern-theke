@@ -921,12 +921,60 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 262: Neustart der Bestenliste (nur Bestenliste, Stufe und Trinkgeld bleiben)
+  teile.push(['Version 262: Neustart der Bestenliste', async () => {
+    const W = kompiliere(['src/hilfen/wertungen.ts']).hilfen_wertungen;
+    const ts = new Date(2027, 0, 1, 6, 0).getTime();
+    const sc = [{ id: 'anna_1700000000000', username: 'Anna', score: 900, date: '20.12.26, 08:00', category: 'Quiz' }, { id: `ben_${ts + 5000}`, username: 'Ben', score: 50, date: '01.01.27, 06:00', category: 'Kassenblitz ⚡' }, { id: 'x', username: 'Anna', score: 30, date: '01.01.27, 06:00', category: 'Quiz' }];
+    const pr = { admin: { _bestenlisteNeu: { ts, ausgaben: { anna: 15000 } } }, anna: { _ptsSpent: 15500 }, ben: {} };
+    ok('Neustart: nur Einträge ab dem Neustart zählen', W.abNeustart(sc, pr).length === 2 && W.abNeustart(sc, {}).length === 3);
+    ok('Neustart: Schatzkammer zählt nur, was danach ausgegeben wurde', W.ausgabenInWertung(pr, 'anna') === 500 && W.ausgabenInWertung({ anna: { _ptsSpent: 700 } }, 'anna') === 700);
+    const r = W.alleRanglisten(sc, pr);
+    ok('Neustart: Gesamtwertung neu (Ben vorne, Anna mit Ausgaben im Minus fällt raus)', r.total.liste.join() === 'ben', r.total.liste.join());
+    // Ausbilder drückt den Knopf
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const a = await device({ admin: true, backup: probe });
+    a.page.on('dialog', (dlg) => dlg.accept());
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    for (let w = 0; w < 50 && !(await a.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(a.page.getByRole('tab', { name: /Einstellungen/ }).first()); await settle(a.page, 500);
+    await click(a.page.locator('.lt-neustart-knopf')); await settle(a.page, 400);
+    ok('Ausbilder: Neustart gespeichert („zählt seit …“)', /zählt seit/.test(await a.page.locator('.lt-neustart-stand').innerText().catch(() => '')));
+    await click(a.page.locator('[aria-label="Hauptmenü"] button[title="Bestenliste"]:visible').first()); await settle(a.page, 800);
+    const bon = await a.page.locator('.sb-bon').innerText().catch(() => '');
+    ok('Bestenliste nach Neustart: alte Punkte zählen nicht mehr, „Wertung seit“', /Wertung seit/.test(bon) && !/BEN/.test(bon) && /Noch keine Einträge/.test(bon), bon.slice(0, 200));
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    await click(a.page.getByRole('tab', { name: /Einstellungen/ }).first()); await settle(a.page, 500);
+    await click(a.page.locator('.lt-neustart-zurueck')); await settle(a.page, 400);
+    ok('Ausbilder: Neustart zurückgenommen', (await a.page.locator('.lt-neustart-knopf').count()) === 1);
+    ok('Neustart: keine Fehler beim Ausbilder', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    // Mitarbeiter: Stufe bleibt, Bestenliste zeigt nur Neues, ein Hinweis statt „überholt“
+    const p2 = JSON.parse(JSON.stringify(SAMPLE));
+    p2.progress.admin = { _bestenlisteNeu: { ts: Date.now() - 3600000, ausgaben: {} } };
+    p2.scores.push({ id: `anna_${Date.now() - 60000}`, username: 'Anna', score: 42, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Quiz' });
+    const d = await device({ user: 'Anna', backup: p2, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Bestenliste"]:visible').first()); await settle(d.page, 800);
+    const b2 = await d.page.locator('.sb-bon').innerText().catch(() => '');
+    ok('Mitarbeiter: Bestenliste zählt nur neue Punkte (Anna 42, Ben fehlt)', /ANNA[^\n]*\n?[^\n]*42/.test(b2) && !/BEN/.test(b2), b2.slice(0, 220));
+    ok('Neustart: keine Fehler beim Mitarbeiter', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 261: Teigi bewegt den Mund, solange eine Stimme vorliest
   teile.push(['Version 261: Teigi spricht mit', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     const mund = () => d.page.locator('.lt-teigi-begleiter .lt-teigi-mund-spricht').count();
-    ok('Teigi: ohne Stimme kein Sprechmund', (await mund()) === 0);
+    let m0 = 1;
+    for (let w = 0; w < 50 && m0; w++) { m0 = await mund(); if (m0) await sleep(100); }
+    ok('Teigi: ohne Stimme und ohne Sprechblase kein Sprechmund', m0 === 0);
+    await click(d.page.locator('.lt-teigi-begleiter button').first());
+    let mt = 0;
+    for (let w = 0; w < 20 && !mt; w++) { mt = await mund(); if (!mt) await sleep(100); }
+    ok('Teigi antippen: Sprechblase und Mund bewegt sich', mt === 1 && (await d.page.locator('.lt-teigi-sprech').count()) === 1);
+    for (let w = 0; w < 50 && mt; w++) { mt = await mund(); if (mt) await sleep(100); }
+    ok('Teigi antippen: Mund geht danach wieder zu', mt === 0);
     await d.page.evaluate(() => { window.__spricht = true; Object.defineProperty(window.speechSynthesis, 'speaking', { configurable: true, get: () => window.__spricht }); });
     let m = 0;
     for (let w = 0; w < 30 && !m; w++) { m = await mund(); if (!m) await sleep(100); }

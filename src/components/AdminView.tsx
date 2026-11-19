@@ -35,6 +35,7 @@ import { NachrichtTab } from '../admin/NachrichtTab';
 import { TeamTab } from '../admin/TeamTab';
 import { WochenRueckblick } from '../admin/WochenRueckblick';
 import { SortimentAus } from '../admin/SortimentAus';
+import { BestenlisteNeustart } from '../admin/BestenlisteNeustart';
 
 export function AdminView({
   cloudData,
@@ -871,6 +872,7 @@ export function AdminView({
         window.setTimeout(() => { const el = document.getElementById('lt-neue-quizfrage'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
         alert('Die Frage steht jetzt im Formular „Neue Quizfrage“. Bitte noch zwei oder drei falsche Antworten eintragen, Bereich wählen und speichern.');
       }} />}
+      {adminTab === 'settings' && <BestenlisteNeustart cloudData={cloudData} mutateCloudData={mutateCloudData} />}
       {adminTab === 'settings' && <FehlendeFotos images={productImages} onUpload={onUploadPhoto} />}
       {adminTab === 'settings' && <EinstellungenTab {...{ cloudData, setCloudUrl, cloudConnected, setCloudConnected, fetchCloudData, overwriteCloudDataDirectly, imageCount, onImportImages, setImageMsg, imageMsg, imageBusy, setImageBusy, backupMsg, downloadBackup, restoreBackup, tempCloudUrl, setTempCloudUrl, markDeleted, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
     </div>
