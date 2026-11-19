@@ -1,8 +1,10 @@
 import { falschImTeam } from '../hilfen/falscheAntworten';
+import { adminAufgaben, AdminZiel } from '../hilfen/adminAufgaben';
+import { LtIcon, ICON } from '../basis/symbole';
 import { preisMerken } from '../hilfen/steckbriefExtras';
 import { NachrichtSchreiben } from '../screens/NachrichtenSeite';
 import { neueAntworten } from '../hilfen/nachrichten';
-import { useState, FormEvent, CSSProperties } from 'react';
+import { useState, useEffect, FormEvent, CSSProperties } from 'react';
 import { dc, ALT_MAP } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from '../ui/basis';
 import { onboardingStatus, computeBadges, correctIdSet } from '../ui/lernstand';
@@ -49,6 +51,7 @@ export function AdminView({
   overwriteCloudDataDirectly,
   imageCount = 0,
   onImportImages,
+  onAusbildung,
   productImages = {},
   onUploadPhoto
 }: {
@@ -70,6 +73,8 @@ export function AdminView({
   onImportImages?: (file: File) => Promise<string>;
   productImages?: Record<string, string>;
   onUploadPhoto?: (name: string, file: File) => Promise<string>;
+  /** Version 259: zur Ausbildungs-Seite springen (aus „Zu erledigen“) */
+  onAusbildung?: () => void;
 }) {
   const [imageMsg, setImageMsg] = useState<string>('');
   const [imageBusy, setImageBusy] = useState<boolean>(false);
@@ -498,6 +503,14 @@ export function AdminView({
     );
   })();
 
+  // Version 259: neue Kundenstimmen gelten als gesehen, sobald der Reiter Rückmeldungen offen ist
+  const ksNeuste = Object.values(cloudData.progress || {}).reduce((m: number, p: any) => Math.max(m, ...Object.values((p && p._kundenstimmen) || {}).map((x: any) => Number(x && x.ts) || 0)), 0);
+  useEffect(() => {
+    if (adminTab !== 'kollegen' || !ksNeuste) return;
+    if ((Number((cloudData.progress?.admin || {})._kstimmenGesehen) || 0) >= ksNeuste) return;
+    mutateCloudData((curr) => { const pa: any = curr.progress.admin || (curr.progress.admin = { _displayName: 'admin' }); pa._kstimmenGesehen = Date.now(); return curr; });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminTab, ksNeuste]);
   const reportMap: Record<string, { qid: string; q: any; items: ReportItem[]; game?: string; ctx?: string; product?: string }> = {};
   Object.keys(cloudProgress).forEach(u => {
     const rp = (cloudProgress[u] || {})._reports || {};
@@ -746,6 +759,32 @@ export function AdminView({
         )}
       </div>
 
+      {/* ── Version 259: Zu erledigen (alles, was auf den Ausbilder wartet) ── */}
+      {(() => {
+        const liste = adminAufgaben(cloudData.progress);
+        const geh = (z: AdminZiel) => {
+          if (z === 'ausbildung') { onAusbildung?.(); return; }
+          if (z === 'oben') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+          setAdminTab(z as any);
+          window.setTimeout(() => document.querySelector('[role=tablist][aria-label="Ausbilder-Bereiche"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+        };
+        return (
+          <section className="lt-zu-erledigen" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '10px', border: `2px solid ${liste.length ? TH.yellow : TH.line}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span aria-hidden="true" style={{ display: 'inline-flex', color: liste.length ? TH.red : TH.green }}><LtIcon paths={ICON.bell} size={26} /></span>
+              <span style={{ flex: 1, fontFamily: TH.serif, fontSize: '28px', lineHeight: 1.1 }}>Zu erledigen</span>
+              {liste.length > 0 && <span style={{ minWidth: '32px', padding: '2px 10px', borderRadius: '999px', backgroundColor: TH.red, color: dc('#FFFFFF'), fontWeight: 800, fontSize: '16px', textAlign: 'center' }}>{liste.reduce((s, a) => s + a.n, 0)}</span>}
+            </div>
+            {liste.length === 0 ? <div style={{ fontSize: '17px', fontWeight: 700, color: TH.green }}>Alles erledigt. Nichts wartet auf dich.</div> : liste.map((a) => (
+              <div key={a.id} className="lt-aufgabe" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '10px 12px', borderRadius: '14px', backgroundColor: TH.tintYellow }}>
+                <span style={{ flex: '1 1 220px', fontSize: '17px', fontWeight: 700 }}>{a.text}</span>
+                {a.ziel !== 'oben' && <button type="button" onClick={() => geh(a.ziel)} style={smallBtn()}>{a.ziel === 'ausbildung' ? 'Zur Ausbildung' : 'Ansehen'}</button>}
+                {a.ziel === 'oben' && <span style={{ fontSize: '14px', color: TH.muted }}>direkt hier unten</span>}
+              </div>
+            ))}
+          </section>
+        );
+      })()}
             {(() => {
               const pend = Object.entries(cloudData.progress || {}).filter(([, pr]: [string, any]) => pr && pr._spruch && pr._spruch.status === 'pending');
               if (!pend.length) return null;

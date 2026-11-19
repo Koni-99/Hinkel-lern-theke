@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -920,6 +920,39 @@ async function offlineTests() {
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }]);
+  // Version 259: Ausbilder: „Zu erledigen“, rote Zahl am Knopf, Meldung bei Neuem
+  teile.push(['Version 259: Ausbilder-Benachrichtigungen', async () => {
+    const A = kompiliere(['src/hilfen/adminAufgaben.ts']).hilfen_adminAufgaben;
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const jetzt = Date.now();
+    probe.progress.anna._reports = { 4001: { r: 'Antwort falsch', t: 'Testmeldung', ts: jetzt } };
+    probe.progress.anna._kfragen = { f1: { q: 'Ist da Ei drin?', ts: jetzt } };
+    probe.progress.anna._kollegenLob = { l1: { an: 'ben', anName: 'Ben', t: 'Danke!', ts: jetzt, anonym: true, warte: true } };
+    probe.progress.anna._azubiPlan = { j1_hygiene: true };
+    probe.progress.admin = { _letzteSicherung: jetzt };
+    const liste = A.adminAufgaben(probe.progress, jetzt);
+    const ids = liste.map((x) => x.id);
+    ok('Zu erledigen: Meldung, Spruch, Lob, Kundenfrage, Ausbildungsplan erkannt, Sicherung nicht fällig', ['meldungen', 'sprueche', 'lob', 'kundenfragen', 'plan'].every((x) => ids.includes(x)) && !ids.includes('sicherung'), ids.join(','));
+    ok('Zu erledigen: Sicherung nach 7 Tagen', A.adminAufgaben({ admin: { _letzteSicherung: jetzt - 8 * 86400000 } }, jetzt).some((x) => x.id === 'sicherung'));
+    const a = await device({ admin: true, backup: probe });
+    for (let w = 0; w < 50 && !(await nav(a.page).filter({ hasText: 'Ausbilder' }).locator('.lt-duel-badge').count()); w++) await sleep(100);
+    const zahl = await nav(a.page).filter({ hasText: 'Ausbilder' }).locator('.lt-duel-badge').first().innerText().catch(() => '');
+    ok('Ausbilder-Knopf: rote Zahl mit offenen Sachen', Number(zahl) >= 5, zahl);
+    let toast = '';
+    for (let w = 0; w < 40 && !/Neu für dich/.test(toast); w++) { toast = await a.page.locator('body').innerText().catch(() => ''); await sleep(100); }
+    ok('Meldung beim Öffnen: „Neu für dich …“', /Neu für dich/.test(toast));
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    for (let w = 0; w < 50 && !(await a.page.locator('.lt-zu-erledigen').count()); w++) await sleep(100);
+    const liste2 = await a.page.locator('.lt-zu-erledigen .lt-aufgabe').allInnerTexts();
+    ok('Zu erledigen: Liste oben im Ausbilder-Bereich', liste2.length >= 5 && liste2.some((t) => /anonymes Lob/.test(t)), liste2.join(' | ').slice(0, 160));
+    await click(a.page.locator('.lt-zu-erledigen .lt-aufgabe', { hasText: 'anonymes Lob' }).locator('button')); await settle(a.page, 600);
+    ok('Zu erledigen: „Ansehen“ springt zur Freigabe', (await a.page.locator('.lt-lob-freigabe').count()) === 1);
+    await click(a.page.locator('.lt-zu-erledigen .lt-aufgabe', { hasText: 'Ausbildungsplan' }).locator('button')); await settle(a.page, 800);
+    for (let w = 0; w < 40 && !(await a.page.locator('.lt-azubi-bestaetigen').count()); w++) await sleep(100);
+    ok('Zu erledigen: „Zur Ausbildung“ öffnet die Bestätigung', (await a.page.locator('.lt-azubi-bestaetigen').count()) === 1);
+    ok('Ausbilder-Benachrichtigungen: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
   }]);
   // Version 258: anonymes Lob wartet auf den Ausbilder, er sieht den Absender
   teile.push(['Version 258: anonymes Lob nur nach Freigabe', async () => {

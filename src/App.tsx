@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 258;
+const APP_VERSION: number = 259;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -65,6 +65,7 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
+import { adminAufgaben } from './hilfen/adminAufgaben';
 import { lehrjahrAus, fragenZuPunkt, geuebtInWoche, wochenKey } from './hilfen/azubi';
 import { alleAzubiFragen, frageStellen, frageBeantworten, antwortenGelesen, frageLoeschen, zieleVon, zielSetzen, zielBewerten, istRueckblickZeit, rueckblick } from './hilfen/azubiExtras';
 import { FrageAnAusbilder, AzubiFragenAntworten, WochenzielKarte, RueckblickKarte } from './ui/azubiKarten';
@@ -2057,6 +2058,23 @@ export default function App() {
     setToast('Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kfNeuKey]);
+  // Version 259: Ausbilder: offene Aufgaben (rote Zahl am Knopf) und Meldung, wenn etwas Neues dazukommt
+  const adminListe = isAdmin && username ? adminAufgaben(cloudData.progress) : [];
+  const adminZahl = adminListe.filter(a => a.id !== 'sicherung').reduce((s, a) => s + a.n, 0);
+  const adminAusbildungZahl = adminListe.filter(a => a.ziel === 'ausbildung').reduce((s, a) => s + a.n, 0);
+  const adminNeuKey = adminListe.flatMap(a => a.keys).join(',');
+  useEffect(() => {
+    if (!isAdmin || !adminNeuKey) return;
+    let gesehen: string[] = [];
+    try { gesehen = JSON.parse(localStorage.getItem('lt_admin_gesehen') || '[]'); } catch {}
+    const alle = adminNeuKey.split(',');
+    const neu = adminListe.map(a => ({ a, n: a.keys.filter(k => !gesehen.includes(k)).length })).filter(x => x.n > 0);
+    try { localStorage.setItem('lt_admin_gesehen', JSON.stringify(Array.from(new Set([...gesehen.filter(k => alle.includes(k)), ...alle])).slice(-500))); } catch {}
+    if (!neu.length) return;
+    const t = window.setTimeout(() => setToast(`Neu für dich: ${neu.map(x => x.a.text).join(', ')}. Alles unter Ausbilder → „Zu erledigen“.`), 1500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminNeuKey, cloudConnected]);
   // Version 256: Azubi-Fragen an den Ausbilder: Hinweis auf neue Antworten (Azubi) bzw. neue Fragen (Ausbilder), Rückblick in den Sommerferien
   const azFragen = username ? alleAzubiFragen(cloudData.progress) : [];
   const azNeuKey = !username ? '' : isAdmin ? azFragen.filter(f => !f.a).map(f => f.user + f.id).join(',') : azFragen.filter(f => f.user === username.toLowerCase() && f.a && !f.gesehen).map(f => f.id).join(',');
@@ -2707,7 +2725,9 @@ export default function App() {
       <nav className="lt-desknav" aria-label="Hauptmenü" style={{ maxWidth: '1100px', width: '92%', marginTop: '18px', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {navItems.map(item => (
           <button key={item.id} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '50px', padding: '0 18px', borderRadius: '14px', border: item.active ? 'none' : `2px solid ${LT.line}`, backgroundColor: item.active ? LT.brown : dc('#FFFFFF'), color: item.active ? dc('#FFF6E0') : LT.ink, fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>
-            {item.id === 'spielen' && duelInvites > 0
+            {(item.id === 'admin' && adminZahl > 0) || (item.id === 'ausbildung' && isAdmin && adminAusbildungZahl > 0)
+              ? <span className="lt-admin-zahl" style={{ position: 'relative', display: 'inline-flex' }}><LtIcon paths={item.icon} size={20} /><DuelBadge n={item.id === 'admin' ? adminZahl : adminAusbildungZahl} /></span>
+              : item.id === 'spielen' && duelInvites > 0
               ? <span style={{ position: 'relative', display: 'inline-flex' }}><DuelSwords size={26} /><DuelBadge n={duelInvites} /></span>
               : item.id === 'scoreboard' && overtaken ? <span className="lt-overtake-ic" aria-hidden="true" style={{ fontSize: '20px', lineHeight: 1 }}>😱</span> : <LtIcon paths={item.icon} size={20} />}{item.label}{item.id === 'scoreboard' && overtaken && <span className="lt-dot-pulse" aria-label="Du wurdest überholt" style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#D92D20', marginLeft: '2px' }} />}
           </button>
@@ -2857,6 +2877,7 @@ export default function App() {
             onImportImages={importImagesFile}
             productImages={productImages}
             onUploadPhoto={uploadProductPhoto}
+            onAusbildung={() => setActiveTab('ausbildung')}
           />
           </Suspense>
         )}
@@ -2888,7 +2909,9 @@ export default function App() {
         <span className="lt-nav-ind" aria-hidden="true" style={{ width: `calc((100% - 16px) / ${dock.length})`, transform: `translateX(${Math.max(0, ai) * 100}%)`, opacity: ai < 0 ? 0 : 1, ['--i' as string]: Math.max(0, ai) } as React.CSSProperties} />
         {dock.map(item => (
           <button key={item.id} onClick={item.action} className={item.active ? 'lt-on lt-nav-pop' : undefined} title={item.label} aria-current={item.active ? 'page' : undefined} aria-label={item.id === 'spielen' && duelInvites > 0 ? `Spielen, ${duelInvites === 1 ? 'eine Einladung' : `${duelInvites} Einladungen`} zum Duell` : item.id === 'scoreboard' && overtaken ? 'Bestenliste, du wurdest überholt' : item.label}>
-            {item.id === 'spielen' && duelInvites > 0
+            {(item.id === 'admin' && adminZahl > 0) || (item.id === 'ausbildung' && isAdmin && adminAusbildungZahl > 0)
+              ? <span className="lt-admin-zahl" style={{ position: 'relative', display: 'inline-flex' }}><LtIcon paths={item.icon} size={25} width={item.active ? 2.4 : 2} /><DuelBadge n={item.id === 'admin' ? adminZahl : adminAusbildungZahl} /></span>
+              : item.id === 'spielen' && duelInvites > 0
               ? <span style={{ position: 'relative', display: 'inline-flex' }}><DuelSwords size={36} /><DuelBadge n={duelInvites} /></span>
               : item.id === 'scoreboard' && overtaken ? <span style={{ position: 'relative', display: 'inline-flex' }}><LtIcon paths={item.icon} size={25} width={item.active ? 2.4 : 2} /><span className="lt-dot-pulse" aria-hidden="true" style={{ position: 'absolute', top: '-3px', right: '-5px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#D92D20' }} /></span>
               : <LtIcon paths={item.icon} size={25} width={item.active ? 2.4 : 2} />}
