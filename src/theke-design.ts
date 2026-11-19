@@ -464,6 +464,10 @@ body.lt-mit-teigi main{padding-bottom:100px}
 .lt-papier .lt-teigi-sprech{max-width:200px;margin-bottom:30px;padding:8px 12px;border-radius:16px 16px 16px 4px;background:#FFFBF2;color:#2B170A;font-size:14px;font-weight:700;line-height:1.3;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);border:2px solid #FFC72C;animation:ltTeigiSprech 2.8s ease forwards}
 @keyframes ltTeigiSprech{0%{opacity:0;transform:translateX(-8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 .lt-teigi-hops{animation:ltTeigiHops .7s cubic-bezier(.3,1.6,.5,1)}
+.lt-teigi-begleiter.lt-teigi-spricht{z-index:130}
+.lt-papier .lt-teigi-mund-spricht{transform-box:fill-box;transform-origin:50% 35%;animation:ltTeigiPlapper .46s ease-in-out infinite}
+@keyframes ltTeigiPlapper{0%{transform:scaleY(.25)}25%{transform:scaleY(1)}45%{transform:scaleY(.45)}70%{transform:scaleY(.9)}100%{transform:scaleY(.25)}}
+@media (prefers-reduced-motion:reduce){.lt-papier .lt-teigi-mund-spricht{animation-duration:1.2s}}
 @keyframes ltTeigiHops{0%{transform:translateY(0)}35%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(0) rotate(4deg)}100%{transform:none}}
 .lt-teigi-traurig{animation:ltTeigiTraurig .8s ease}
 @keyframes ltTeigiTraurig{0%,100%{transform:none}25%{transform:translateX(-4px) rotate(-4deg)}50%{transform:translateX(4px) rotate(4deg)}75%{transform:translateX(-2px)}}

@@ -1,5 +1,6 @@
 // ═══ Gemeinsame Spiel-Bausteine (Vorlesen, Lern-Hinweise, „Nur neue“, Zufall mit festem Startwert) ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
+import { merkeAudio } from '../hilfen/sprechen';
 import { useState, useEffect } from 'react';
 import { dc } from '../daten/data';
 import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
@@ -101,7 +102,7 @@ export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause
 /** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei). */
 function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void) {
   const handy = (rest: string) => { if (lauf === teilLauf) speakText(rest, onEnd, handyTempo); };
-  const a = teilAudio || (teilAudio = new Audio());
+  const a = teilAudio || (teilAudio = merkeAudio(new Audio()));
   let i = 0;
   const weiter = () => {
     if (lauf !== teilLauf) return;
