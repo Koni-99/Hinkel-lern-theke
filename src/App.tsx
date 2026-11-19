@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 252;
+const APP_VERSION: number = 253;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -43,6 +43,7 @@ const MeinMonat = lazy(() => import('./screens/MeinMonat').then((m) => ({ defaul
 const KassenblitzView = lazy(() => import('./games/Kassenblitz').then((m) => ({ default: m.KassenblitzView })));
 const ThekenSimulatorView = lazy(() => import('./games/theke/ThekenSimulator').then((m) => ({ default: m.ThekenSimulatorView })));
 const AllergenTrainerView = lazy(() => import('./games/AllergenTrainer').then((m) => ({ default: m.AllergenTrainerView })));
+const RechenTrainerView = lazy(() => import('./games/RechenTrainer').then((m) => ({ default: m.RechenTrainerView })));
 const OfenKetteView = lazy(() => import('./games/OfenKette').then((m) => ({ default: m.OfenKetteView })));
 const TelefonBestellungView = lazy(() => import('./games/TelefonBestellung').then((m) => ({ default: m.TelefonBestellungView })));
 const PreisDuellView = lazy(() => import('./games/PreisDuell').then((m) => ({ default: m.PreisDuellView })));
@@ -64,6 +65,7 @@ import { IntroTour, HilfeView } from './ui/hilfe';
 import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
 import { lehrjahrAus, fragenZuPunkt, geuebtInWoche } from './hilfen/azubi';
+import { pruefungsThema } from './hilfen/pruefungThemen';
 import { urlaubsTage, urlaubHeute, willkommenZurueck } from './hilfen/urlaub';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
@@ -1414,6 +1416,16 @@ export default function App() {
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
     setActiveTab('quiz');
   };
+  // Version 253: nach einer Prüfung ein schwaches Thema gezielt üben (Prüfungsfragen dieses Themas)
+  const launchThemaQuiz = (thema: string) => {
+    const list = examQs.filter((q: any) => pruefungsThema(q) === thema && Array.isArray(q.options) && q.options.length >= 2 && !(Array.isArray(q.correctMulti) && q.correctMulti.length > 1));
+    if (!list.length) return;
+    setExamSim(false);
+    setCurrentQuizCategory('Prüfung üben'); setSelectedLevel('mixed');
+    setQuizList(shuffleArray(list).slice(0, 12).map(q => shuffleQuestionOptions(q)));
+    setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz');
+  };
   // Version 252: Azubi übt einen Punkt aus dem Ausbildungsplan
   const launchPlanQuiz = (id: string) => {
     const list = fragenZuPunkt(id, allFlashcards);
@@ -1492,6 +1504,7 @@ export default function App() {
     setCurrentQuizCategory(title); setSelectedLevel('exam'); setExamSecondsLeft(900);
     setQuizList(list.map(q => shuffleQuestionOptions(q)));
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz'); // Version 253: auch von der Ausbildungs-Seite aus ins Quiz wechseln
   };
 
   const retryWrongQuestions = () => {
@@ -1571,6 +1584,7 @@ export default function App() {
     setSelectedLevel('exam'); setExamSecondsLeft(30 * 60);
     setQuizList(list.map(q => shuffleQuestionOptions(q)));
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz');
   };
 
   const finishExamSim = (finalCorrect: number) => {
@@ -1748,7 +1762,7 @@ export default function App() {
     const t = window.setTimeout(() => {
       [() => import('./components/FlashcardView'), () => import('./components/ScoreboardView'), () => import('./screens/HoerLernen'), () => import('./screens/MeinMonat'), () => import('./screens/KundenfragenSeite'),
         () => import('./ui/statistik'), () => import('./ui/ausbildung'), () => import('./screens/EinarbeitungSeite'), () => import('./games/Kassenblitz'), () => import('./games/theke/ThekenSimulator'),
-        () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/TelefonBestellung'), () => import('./games/OfenKette'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
+        () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/TelefonBestellung'), () => import('./games/OfenKette'), () => import('./games/RechenTrainer'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
         () => import('./components/TuetenBlitzView'), () => import('./components/AlternativenJaegerView')].forEach((f, i) => window.setTimeout(() => { f().catch(() => {}); }, i * 150));
     }, 4000);
     return () => window.clearTimeout(t);
@@ -2477,7 +2491,7 @@ export default function App() {
     });
   };
 
-  const GAME_TABS = ['spielen', 'ansturm', 'battle', 'kassenblitz', 'tueten', 'alternativen', 'theke', 'bilderquiz', 'allergene', 'preisduell', 'schneiden', 'advent', 'telefon', 'ofen'];
+  const GAME_TABS = ['spielen', 'ansturm', 'battle', 'kassenblitz', 'tueten', 'alternativen', 'theke', 'bilderquiz', 'allergene', 'preisduell', 'schneiden', 'advent', 'telefon', 'ofen', 'rechnen'];
   const myRoleEarly = ((cloudData.progress || {})[username.toLowerCase()] || {})._role;
   const navItems = [
     { id: 'home', label: 'Start', icon: ICON.home, active: activeTab === 'home', action: () => setActiveTab('home'), mobile: true },
@@ -2668,13 +2682,14 @@ export default function App() {
         {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} favorites={favorites} toggleFavorite={isAdmin ? undefined : toggleFavorite} />}
 
         {/* ═════════ AUSWERTUNG ═════════ */}
-        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult jubel={myProg._jubel} {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
+        {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult jubel={myProg._jubel} onThemaUeben={launchThemaQuiz} {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
 
         {activeTab === 'bilderquiz' && <BilderQuizView images={spielBilder} known={Array.isArray((cloudProgress[userKeyLower] || {})._bilderOk) ? (cloudProgress[userKeyLower] || {})._bilderOk : []} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t, rec) => recordGameResult('bilder', r, t, rec)} onLearn={learnFromGame} />}
         {activeTab === 'allergene' && <AllergenTrainerView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onFinished={(r, t) => recordGameResult('allergen', r, t)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && <EinarbeitungSeite {...{ activeTab, setActiveTab, obDay, setObDay, toggleOnboarding, onboarding, appWeek, goOnboardingTarget }} />}
         {activeTab === 'kassenblitz' && <KassenblitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
+        {activeTab === 'rechnen' && <RechenTrainerView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'ofen' && <OfenKetteView images={productImages} scores={cloudData.scores || []} userKey={userKeyLower} onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'schneiden' && <SchneideProfiView images={spielBilder} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
