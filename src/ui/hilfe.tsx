@@ -200,6 +200,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
       {box(boxIcon(ICON.cap), 'Ausbildung (für Azubis)', <>
         <div><strong>Ausbildungsplan:</strong> Trag einmal ein, wann deine Ausbildung begonnen hat. Dann weiß die App dein Lehrjahr von selbst. Hake ab, was du kannst. Der Ausbilder bestätigt es, dann wird der Punkt grün. Unter vielen Punkten gibt es „Üben“: ein Quiz nur zu diesem Thema oder das passende Spiel.</div>
         <div><strong>Berichtsheft:</strong> Unter „Notizen der Woche“ notierst du, was du gemacht hast. Alles wird gespeichert, du kannst später zurückblättern und es ins Heft abschreiben. Die App zeigt auch, was du in der Woche in der Lern-Theke geübt hast, mit einem Tipp übernimmst du es in deine Notizen.</div>
+        <div><strong>Berufsschule: Lernkarten:</strong> Fachbegriffe aus Warenkunde, Verkauf, Hygiene und Recht, Rechnen und Ausbildung als Karteikarten mit Lernkasten. Mit „Eigene Karte schreiben“ legst du Karten aus dem Unterricht an. Der Ausbilder bestätigt sie, danach lernen alle Azubis damit.</div>
       </>, 3)}
       {box(boxIcon(ICON.calendar), 'Urlaub', <div>Im Menü unter „Urlaub“ trägst du freiwillig ein, wann du im Urlaub bist. In der Zeit reißt deine Lern-Serie nicht, es wird kein Serien-Schutz verbraucht und Teigi wird nicht schlapp. Höchstens 6 Wochen im Jahr. Bist du früher zurück, tippst du auf „Ich bin schon zurück“. Der Ausbilder sieht nur, dass du im Urlaub bist.</div>, 3)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>

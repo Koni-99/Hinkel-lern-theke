@@ -921,6 +921,53 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 254: Berufsschul-Lernkarten und eigene Karten (Ausbilder bestätigt)
+  teile.push(['Version 254: Berufsschul-Lernkarten, eigene Karten', async () => {
+    const M = kompiliere(['src/daten/berufsschule.ts', 'src/hilfen/eigeneKarten.ts']);
+    const B = M.daten_berufsschule, E = M.hilfen_eigeneKarten;
+    const ids = B.BERUFSSCHUL_KARTEN.map((k) => k.id);
+    ok('Berufsschule: über 50 Karten, ids eindeutig, jedes Fach dabei', ids.length >= 50 && new Set(ids).size === ids.length && B.BS_FAECHER.every((f) => B.BERUFSSCHUL_KARTEN.some((k) => k.fach === f)));
+    ok('Berufsschule: keine Gedankenstriche, keine Torten/Getränke', !B.BERUFSSCHUL_KARTEN.some((k) => /–|Torte|Getränk|belegte/.test(k.begriff + k.erklaerung)));
+    const c = { progress: {} };
+    E.karteSchreiben('anna', 'Anna', 'Teigausbeute', 'Teig aus 100 kg Mehl', 'Warenkunde', 5)(c);
+    const id = Object.keys(c.progress.anna._eigeneKarten)[0];
+    ok('Eigene Karte: wartet zuerst', E.alleEigenenKarten(c.progress)[0].s === 'warte');
+    E.karteEntscheiden('anna', id, true)(c);
+    ok('Eigene Karte: Ausbilder bestätigt', E.alleEigenenKarten(c.progress)[0].s === 'ok');
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.ben._role = 'azubi';
+    probe.progress.ben._eigeneKarten = { k1: { b: 'Testbegriff Ben', e: 'Erklärung von Ben', f: 'Warenkunde', ts: 1, s: 'warte' } };
+    const a = await device({ admin: true, backup: probe });
+    for (let w = 0; w < 40 && !(await nav(a.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(a.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await a.page.locator('.lt-karten-bestaetigen').count()); w++) await sleep(100);
+    ok('Ausbilder: Karte zum Bestätigen', /Testbegriff Ben/.test(await a.page.locator('.lt-karten-bestaetigen').innerText().catch(() => '')));
+    await click(a.page.locator('.lt-karten-bestaetigen button', { hasText: 'Bestätigen' }).first()); await settle(a.page, 400);
+    ok('Ausbilder: nach Bestätigen nichts mehr offen', (await a.page.locator('.lt-karten-bestaetigen').count()) === 0);
+    ok('Ausbilder Karten: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    probe.progress.ben._eigeneKarten.k1.s = 'ok';
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    for (let w = 0; w < 40 && !(await nav(d.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(d.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await d.page.locator('.lt-bs-karte').count()); w++) await sleep(100);
+    const karte = d.page.locator('.lt-bs-karte');
+    if (process.env.OFEN_BILD) await d.page.locator('.lt-bs-karten').screenshot({ path: process.env.OFEN_BILD + '-karten.png' }).catch(() => {});
+    ok('Berufsschul-Karte mit Begriff vorne', (await karte.locator('.lt-bs-begriff').count()) === 1);
+    await click(karte); await settle(d.page, 200);
+    ok('Karte umgedreht: Erklärung', (await karte.locator('.lt-bs-erklaerung').count()) === 1);
+    await click(d.page.locator('.lt-bs-karten button', { hasText: 'Wusste ich' })); await settle(d.page, 300);
+    await click(d.page.locator('.lt-bs-karten button', { hasText: 'Eigene Karten' }).first()); await settle(d.page, 300);
+    ok('Bestätigte Karte von Ben sichtbar', /Testbegriff Ben/.test(await karte.innerText().catch(() => '')));
+    await click(d.page.getByRole('button', { name: 'Eigene Karte schreiben' })); await settle(d.page, 200);
+    await d.page.getByLabel('Begriff').fill('Meine Testkarte');
+    await d.page.getByLabel('Erklärung', { exact: true }).fill('So erkläre ich es');
+    await click(d.page.getByRole('button', { name: 'Zum Bestätigen schicken' })); await settle(d.page, 400);
+    ok('Eigene Karte geschickt, wartet', /Meine Testkarte · wartet auf Bestätigung/.test(await d.page.locator('.lt-eigene-karte').innerText().catch(() => '')));
+    ok('Berufsschul-Karten: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 253: Rechen-Trainer und Prüfungs-Auswertung nach Themen
   teile.push(['Version 253: Rechen-Trainer, Prüfung nach Themen', async () => {
     const M = kompiliere(['src/games/rechenLogik.ts', 'src/hilfen/pruefungThemen.ts', 'src/daten/questions.ts']);
