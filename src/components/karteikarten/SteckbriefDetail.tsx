@@ -13,6 +13,7 @@ import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
 import { alleFotos } from '../../daten/fotos';
 import { ProduktVergleich } from './ProduktVergleich';
+import { FotoVollbild } from './FotoVollbild';
 import { backtageVon, preisGeaendert } from '../../hilfen/steckbriefExtras';
 
 
@@ -20,6 +21,7 @@ import { backtageVon, preisGeaendert } from '../../hilfen/steckbriefExtras';
 function FotoGalerie({ fotos, name }: { fotos: string[]; name: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [nr, setNr] = useState(0);
+  const [gross, setGross] = useState(false);
   const geh = (i: number) => { const el = ref.current; if (!el) return; const z = Math.max(0, Math.min(fotos.length - 1, i)); el.scrollTo({ left: z * el.clientWidth, behavior: 'smooth' }); };
   const pfeil = (links: boolean) => (
     <button className="lt-galerie-pfeil" aria-label={links ? 'Vorheriges Foto' : 'Nächstes Foto'} onClick={() => geh(nr + (links ? -1 : 1))} disabled={links ? nr === 0 : nr === fotos.length - 1}
@@ -29,8 +31,9 @@ function FotoGalerie({ fotos, name }: { fotos: string[]; name: string }) {
     <div style={{ position: 'relative' }}>
       <div ref={ref} className="lt-galerie" onScroll={(e) => { const el = e.currentTarget; setNr(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}
         style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', borderRadius: '22px', border: `2px solid ${TH.line}`, scrollbarWidth: 'none' }}>
-        {fotos.map((f, i) => <img key={f} src={f} alt={`${name}, Foto ${i + 1} von ${fotos.length}`} loading={i ? 'lazy' : 'eager'} className="lt-loaded" style={{ flex: '0 0 100%', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', scrollSnapAlign: 'center', display: 'block' }} />)}
+        {fotos.map((f, i) => <img key={f} src={f} alt={`${name}, Foto ${i + 1} von ${fotos.length}`} loading={i ? 'lazy' : 'eager'} className="lt-loaded lt-foto-gross" onClick={() => setGross(true)} style={{ flex: '0 0 100%', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', scrollSnapAlign: 'center', display: 'block', cursor: 'zoom-in' }} />)}
       </div>
+      {gross && <FotoVollbild fotos={fotos} start={nr} name={name} onClose={() => setGross(false)} />}
       {pfeil(true)}{pfeil(false)}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '10px', height: '12px' }}>
         {fotos.map((_, i) => <button key={i} aria-label={`Foto ${i + 1}`} onClick={() => geh(i)} style={{ width: i === nr ? '22px' : '9px', height: '9px', minHeight: 0, minWidth: 0, borderRadius: '999px', border: 'none', padding: 0, flex: '0 0 auto', backgroundColor: i === nr ? TH.yellow : TH.line, cursor: 'pointer', transition: 'width .2s' }} />)}
@@ -68,6 +71,7 @@ export type SteckbriefDetailProps = {
 
 export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz, onFoto, kollegen = [], onSchicken }: SteckbriefDetailProps) {
   const [fotoMsg, setFotoMsg] = useState('');
+  const [einzelGross, setEinzelGross] = useState(false);
   const [schickenAuf, setSchickenAuf] = useState(false);
   const [schickenAn, setSchickenAn] = useState('');
   const [geschickt, setGeschickt] = useState('');
@@ -106,8 +110,9 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
           {alleFotos(productImageKey(prod.name)).length > 1
             ? <FotoGalerie key={prod.name} fotos={alleFotos(productImageKey(prod.name))} name={prod.name} />
             : images[productImageKey(prod.name)] && (
-            <img src={images[productImageKey(prod.name)]} alt={prod.name} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}` }} />
+            <img src={images[productImageKey(prod.name)]} alt={prod.name} className="lt-foto-gross" onClick={() => setEinzelGross(true)} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}`, cursor: "zoom-in" }} />
           )}
+          {einzelGross && images[productImageKey(prod.name)] && <FotoVollbild fotos={[images[productImageKey(prod.name)]]} start={0} name={prod.name} onClose={() => setEinzelGross(false)} />}
           {onFoto && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", padding: "10px 12px", borderRadius: "14px", backgroundColor: TH.tintYellow }}>
               <label style={{ display: "inline-flex", alignItems: "center", gap: "8px", minHeight: "46px", padding: "0 16px", borderRadius: "999px", backgroundColor: TH.brown, color: dc('#FFF6E0'), fontSize: "16px", fontWeight: 700, cursor: fotoBusy ? "wait" : "pointer" }}>

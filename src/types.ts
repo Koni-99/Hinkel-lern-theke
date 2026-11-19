@@ -120,6 +120,8 @@ export interface ProductFix {
   /** Version 250: wann der Preis geändert wurde und was er vorher war (Steckbrief zeigt es 2 Wochen) */
   priceTs?: number;
   priceVorher?: string;
+  /** Version 260: nicht mehr im Sortiment (Steckbrief, Spiele und Quizfragen ausgeblendet) */
+  aus?: boolean;
   ts: number;
 }
 

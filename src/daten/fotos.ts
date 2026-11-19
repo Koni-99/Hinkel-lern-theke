@@ -33,3 +33,8 @@ export const kleinesFoto = (src?: string): string | undefined => {
   const m = src.match(KLEIN_RE);
   return m && SHOP_FOTOS.includes(m[1]) ? `${BASIS}fotos/klein/${m[1]}${m[2] || ''}.jpg` : src;
 };
+/** Version 260: alle Foto-Dateien (groß und klein) zum Speichern auf dem Gerät („Für ohne Internet laden“) */
+export const alleFotoDateien = (): string[] => SHOP_FOTOS.flatMap((k) => Array.from({ length: FOTO_ANZAHL[k] || 1 }, (_, i) => {
+  const n = i + 1; const end = `${k}${n > 1 ? `-${n}` : ''}.jpg`;
+  return [`${BASIS}fotos/${end}`, `${BASIS}fotos/klein/${end}`];
+}).flat());

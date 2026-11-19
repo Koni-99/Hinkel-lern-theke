@@ -14,6 +14,7 @@ import { LtIcon, ICON } from '../basis/symbole';
 import { falschVon, falschImTeam } from '../hilfen/falscheAntworten';
 import { urlaubHeute } from '../hilfen/urlaub';
 import { FalschGewaehlt } from './FalschGewaehlt';
+import { startStand } from '../hilfen/teamStart';
 import type { ScoreEntry } from '../types';
 
 export type TeamTabProps = {
@@ -54,6 +55,34 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
       <div style={cardStyle}><p style={{ margin: 0, fontSize: '18px', color: TH.muted }}>Noch keine Mitarbeiter angemeldet.</p></div>
     ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* ── Version 260: Start-Übersicht (wer ist angemeldet, wer hat schon losgelegt) ── */}
+        {(() => {
+          const zeilen = startStand(cloudProgress, cloudData.pins, allKnownUserKeys);
+          const offen = zeilen.filter((z) => z.offen);
+          const nameVon = (k: string) => cloudLastSeen[k]?.displayName || cloudProgress[k]?._displayName || k;
+          const haken = (ok: boolean, text: string) => <span style={{ padding: '2px 10px', borderRadius: '999px', fontSize: '14px', fontWeight: 700, backgroundColor: ok ? TH.tintSage : TH.tintPeach, color: ok ? TH.green : TH.red, whiteSpace: 'nowrap' }}>{ok ? '✓' : '✗'} {text}</span>;
+          return (
+            <details className="lt-start-uebersicht" style={{ ...cardStyle, padding: '16px 18px' }}>
+              <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ flex: '0 0 44px', height: '44px', borderRadius: '50%', backgroundColor: TH.yellow, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.flag} size={22} /></span>
+                <span style={{ flex: '1 1 200px' }}>
+                  <span style={{ display: 'block', fontWeight: 800, fontSize: '18px' }}>Start-Übersicht: {zeilen.length} angemeldet</span>
+                  <span style={{ display: 'block', fontSize: '15px', color: TH.muted }}>{offen.length ? `${offen.length} noch nicht richtig losgelegt` : 'Alle haben schon losgelegt'} · Antippen für Details</span>
+                </span>
+              </summary>
+              <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ fontSize: '15px', color: TH.muted }}>Wer hier fehlt, hat sich noch nie angemeldet. Oben stehen alle, die noch keine Rolle gewählt oder noch nie gelernt haben.</div>
+                {zeilen.map((z) => (
+                  <div key={z.key} className="lt-start-zeile" style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', padding: '8px 10px', borderRadius: '12px', backgroundColor: z.offen ? TH.tintPeach : 'transparent', borderBottom: `1px solid ${TH.line}` }}>
+                    <span style={{ flex: '1 1 160px', fontSize: '16px' }}><strong>{nameVon(z.key)}</strong> <span style={{ color: TH.muted }}>{z.seit ? `seit ${z.seit.split('-').reverse().join('.')}` : ''}</span></span>
+                    {haken(z.rolle, 'Rolle')}{haken(z.einfuehrung, 'Einführung')}{haken(z.pin, 'PIN')}{haken(z.handy, 'App auf dem Handy')}{haken(z.lerntage > 0, z.lerntage ? `${z.lerntage} ${z.lerntage === 1 ? 'Lerntag' : 'Lerntage'}` : 'noch nie gelernt')}
+                  </div>
+                ))}
+                <div style={{ fontSize: '14px', color: TH.muted }}>„App auf dem Handy“ erscheint, sobald die Person die Lern-Theke einmal über das Symbol auf dem Startbildschirm geöffnet hat.</div>
+              </div>
+            </details>
+          );
+        })()}
         {/* ── Lange nicht da: seit über zwei Wochen nicht gelernt (gezielt ansprechen) ── */}
         {(() => {
           const grenze = new Date(); grenze.setDate(grenze.getDate() - 14);

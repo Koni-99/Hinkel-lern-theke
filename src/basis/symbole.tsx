@@ -105,6 +105,7 @@ export const ICON = {
   pencil: ['M4 20h4L19 9l-4-4L4 16z', 'M13.5 6.5l4 4'],
   heart: ['M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z'],
   pause: ['M7 4h3v16H7z', 'M14 4h3v16h-3z'],
+  download: ['M12 3v12', 'm7 10 5 5 5-5', 'M5 21h14'],
   skipBack: ['M19 20 9 12l10-8z', 'M5 19V5'],
   skipFwd: ['M5 4l10 8-10 8z', 'M19 5v14'],
 };
