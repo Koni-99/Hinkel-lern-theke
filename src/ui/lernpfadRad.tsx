@@ -26,7 +26,6 @@ export function buildPfad(cats: string[]): PfadFeld[] {
   return Array.from({ length: 24 }, (_, i) => ({ no: i + 1, cat: cats[i % cats.length], level: i < 8 ? 'easy' : i < 16 ? 'mixed' : 'hard', milestone: ms[i + 1] }));
 }
 
-export const catIcon = (c: string) => /fach/i.test(c) ? '📚' : /sortiment|ware/i.test(c) ? '🥖' : /service|verkauf/i.test(c) ? '🤝' : /hygiene|sicher|recht/i.test(c) ? '🧼' : '❓';
 
 export function LernpfadView({ felder, done, avatar: _avatar, onPlay, lastResult }: { felder: PfadFeld[]; done: number; avatar: string; onPlay: (i: number) => void; lastResult?: string }) {
   const finished = done >= felder.length;

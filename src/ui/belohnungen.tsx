@@ -151,7 +151,7 @@ export function BadgeAlbumView({ badges, perPage = 6, eigen = true }: { badges: 
     const items = badges.slice(n * perPage, n * perPage + perPage);
     let neuIdx = 0;
     return (
-      <div className="lt-heft-seite">
+      <div className="lt-heft-seite lt-papier">
         <span className="lt-heft-spirale" aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <i key={i} />)}</span>
         <div className="lt-heft-raster">
           {items.map((b, i) => {

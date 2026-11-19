@@ -80,7 +80,7 @@ export function mondayOf(d: Date) { const x = new Date(d); const wd = (x.getDay(
 
 export const dmy = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {}, ok = {}, start = '', onSetStart, uebenZahl, onUeben, onSpiel, notizen = {}, onNotiz, geuebt, onBestaetigen, lernkarten, kartenPruefen }: {
+export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {}, ok = {}, start = '', onSetStart, uebenZahl, onUeben, onSpiel, notizen = {}, onNotiz, geuebt, onBestaetigen, lernkarten, kartenPruefen, oben, azubiExtra, onLehrjahrQuiz, lehrjahrQuizZahl = 0 }: {
   exam?: { ZP?: { best?: number }; AP?: { best?: number } };
   isAzubi: boolean; isAdmin: boolean; plan: Record<string, boolean>; lehrjahr: number;
   onToggle: (id: string) => void; onSetLehrjahr: (n: number) => void; examSection: ReactNode;
@@ -92,6 +92,8 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
   onBestaetigen?: (azubiKey: string, id: string, an: boolean) => void;
   /** Version 254: Berufsschul-Lernkarten (Azubi) und Karten zum Bestätigen (Ausbilder) */
   lernkarten?: ReactNode; kartenPruefen?: ReactNode;
+  /** Version 256: Rückblick/Fragen oben, Wochenziel + Frage an den Ausbilder, Lehrjahr-Quiz */
+  oben?: ReactNode; azubiExtra?: ReactNode; onLehrjahrQuiz?: () => void; lehrjahrQuizZahl?: number;
 }) {
   const [openYear, setOpenYear] = useState<number>(lehrjahr || 1);
   const [week, setWeek] = useState(0);
@@ -128,6 +130,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
       <PageHead title="Ausbildung" subtitle="Dein Ausbildungsplan zum Abhaken, Hilfe fürs Berichtsheft und die Prüfungen." />
+      {oben}
 
       {isAdmin && (
         <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -179,6 +182,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
           )}
         </div>
         <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>{canTick ? 'Hake ab, was du schon kannst. Dein Ausbilder bestätigt es, dann wird der Punkt grün. Mit „Üben“ trainierst du genau dieses Thema.' : 'So sieht der Plan für die Azubis aus. Abhaken können nur die Azubis selbst, bestätigen kannst du oben bei „Deine Azubis“.'}</div>
+        {canTick && onLehrjahrQuiz && lehrjahrQuizZahl >= 5 && <button type="button" className="lt-lehrjahr-quiz" onClick={onLehrjahrQuiz} style={{ ...btnPrimary, alignSelf: 'flex-start' }}>Quiz zu meinem Lehrjahr ({Math.min(15, lehrjahrQuizZahl)} Fragen)</button>}
         {AUSBILDUNGSPLAN.map(y => {
           const pct = yearPct(plan, y.jahr); const open = openYear === y.jahr;
           return (
@@ -231,6 +235,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
         </div>
       </section>
 
+      {azubiExtra}
       {canTick && (() => {
         const bs = azubiBadges(plan, exam);
         return (

@@ -15,7 +15,6 @@ export function treffer(text: string, suche: string, titel = ''): number {
   return p;
 }
 
-export type Fund<T> = { wert: T; punkte: number };
 /** Die besten Funde (höchstens max) */
 export function suchen<T>(liste: T[], suche: string, text: (x: T) => string, titel: (x: T) => string, max = 8): T[] {
   return liste.map((wert) => ({ wert, punkte: treffer(text(wert), suche, titel(wert)) })).filter((f) => f.punkte > 0)

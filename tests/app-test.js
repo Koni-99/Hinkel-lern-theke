@@ -903,6 +903,82 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 257: Aufräumen: Menü in Gruppen, Papier im dunklen Design hell (Lern-Bon, Stickerheft)
+  teile.push(['Version 257: Menü in Gruppen, Papier im dunklen Design', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 667 }, vorher: async (ctx) => ctx.addInitScript(() => { localStorage.setItem('lt_design', 'nacht'); }) });
+    await clearPopups(d.page);
+    await click(d.page.getByRole('button', { name: 'Menü' }).first()); await settle(d.page, 300);
+    const gruppen = await d.page.locator('.lt-menu-gruppe').allInnerTexts();
+    ok('Menü: drei Gruppen', gruppen.length === 3 && /Für mich/i.test(gruppen[0]) && /Mitmachen/i.test(gruppen[1]), gruppen.join(', '));
+    const menu = await d.page.locator('.lt-menu-pop').evaluate((e) => ({ h: e.getBoundingClientRect().height, sh: e.scrollHeight, ch: e.clientHeight }));
+    ok('Menü: passt auch auf kleine Handys (scrollt)', menu.h <= 667, JSON.stringify(menu));
+    await d.page.keyboard.press('Escape'); await clearPopups(d.page);
+    const hell = await d.page.evaluate(() => {
+      document.querySelectorAll('details.lt-zahlen').forEach((x) => { x.open = true; });
+      const papier = document.querySelector('.lt-zahlen-bon .lt-bon > div:nth-child(2)');
+      if (!papier) return -1;
+      const m = getComputedStyle(papier).backgroundColor.match(/\d+/g).map(Number);
+      return (m[0] + m[1] + m[2]) / 3;
+    });
+    ok('Dunkles Design: Lern-Bon bleibt helles Papier', hell > 200, String(hell));
+    ok('Aufräumen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 256: Frage an den Ausbilder, Wochenziel, Lehrjahr-Quiz, Rückblick, Gute Sätze, Prüfungsfragen im Hör-Lernen
+  teile.push(['Version 256: Azubi-Fragen, Wochenziel, Rückblick, Gute Sätze', async () => {
+    const X = kompiliere(['src/hilfen/azubiExtras.ts']).hilfen_azubiExtras;
+    const c = { progress: {} };
+    X.frageStellen('anna', 'Anna', 'Warum Sauerteig?', 10)(c);
+    const fid = Object.keys(c.progress.anna._azubiFragen)[0];
+    X.frageBeantworten('anna', fid, 'Weil Roggen sonst klebt.', 20)(c);
+    const f = X.alleAzubiFragen(c.progress)[0];
+    ok('Frage an den Ausbilder: Antwort kommt an, erst ungelesen', f.a === 'Weil Roggen sonst klebt.' && !f.gesehen);
+    X.antwortenGelesen('anna')(c);
+    ok('Frage an den Ausbilder: danach gelesen', X.alleAzubiFragen(c.progress)[0].gesehen === true);
+    X.zielSetzen('anna', 'Anna', '2026-11-16', 'Kasse abrechnen')(c); X.zielBewerten('anna', 'Anna', '2026-11-16', true)(c);
+    ok('Wochenziel: setzen und bewerten', X.zieleVon(c.progress.anna)['2026-11-16'].ok === true);
+    ok('Rückblick: nur in den Sommerferien (Juli/August)', X.istRueckblickZeit(new Date(2026, 6, 20)) && X.istRueckblickZeit(new Date(2026, 7, 31)) && !X.istRueckblickZeit(new Date(2026, 8, 1)) && !X.istRueckblickZeit(new Date(2026, 5, 30)));
+    const rb = X.rueckblick({ _days: ['2025-07-30', '2025-08-02', '2026-07-10'], _azubiPlan: { a: true, b: true }, _azubiOk: { a: 1 } }, ['a', 'b', 'c'], new Date(2026, 6, 20));
+    ok('Rückblick: Lerntage seit 1. August, bestätigte Planpunkte', rb.lerntage === 2 && rb.planOk === 1 && rb.planGesamt === 3, JSON.stringify(rb));
+    // Azubi: Ziel, Frage, Lehrjahr-Quiz
+    const d = await device({ user: 'Anna', backup: SAMPLE, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    for (let w = 0; w < 40 && !(await nav(d.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(d.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await d.page.locator('.lt-wochenziel').count()); w++) await sleep(100);
+    await d.page.getByLabel('Mein Wochenziel').fill('Kassenabrechnung alleine machen');
+    await click(d.page.getByRole('button', { name: 'Ziel speichern' })); await settle(d.page, 400);
+    ok('Wochenziel gespeichert', /Kassenabrechnung alleine machen/.test(await d.page.locator('.lt-wochenziel').innerText().catch(() => '')));
+    await d.page.getByLabel('Deine Frage an den Ausbilder').fill('Was ist eine Teigausbeute?');
+    await click(d.page.getByRole('button', { name: 'Frage schicken' })); await settle(d.page, 400);
+    ok('Frage an den Ausbilder: wartet auf Antwort', /Teigausbeute[\s\S]*Wartet auf die Antwort/.test(await d.page.locator('.lt-azubi-frage').innerText().catch(() => '')));
+    ok('Quiz zu meinem Lehrjahr: Knopf da', (await d.page.locator('.lt-lehrjahr-quiz').count()) === 1);
+    await click(d.page.locator('.lt-lehrjahr-quiz')); await settle(d.page, 700);
+    ok('Quiz zu meinem Lehrjahr startet', (await d.page.locator('button.lt-qopt').count()) > 0);
+    // Gute Sätze unter Nachschlagen
+    await click(nav(d.page).filter({ hasText: /Nachschlagen/ }).first()); await settle(d.page, 500);
+    await click(d.page.locator('button.lt-card', { hasText: 'Gute Sätze für die Theke' }).first()); await settle(d.page, 700);
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-satz').count()); w++) await sleep(100);
+    ok('Gute Sätze: Seite mit Sätzen', (await d.page.locator('.lt-satz').count()) >= 3);
+    // Hör-Lernen: Prüfungsfragen wählbar
+    await click(nav(d.page).nth(1)); await settle(d.page, 500);
+    await click(d.page.locator('main button', { hasText: 'Hör-Lernen' }).first()); await settle(d.page, 700);
+    ok('Hör-Lernen: Prüfungsfragen wählbar', (await d.page.locator('main button', { hasText: /^Prüfungsfragen \(\d+\)$/ }).count()) === 1);
+    ok('Azubi-Extras: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+    // Ausbilder beantwortet
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._azubiFragen = { f1: { q: 'Was ist Teigausbeute?', ts: 1 } };
+    const a = await device({ admin: true, backup: probe });
+    for (let w = 0; w < 40 && !(await nav(a.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(a.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await a.page.locator('.lt-azubi-fragen-admin').count()); w++) await sleep(100);
+    await a.page.getByLabel('Antwort an Anna').fill('Teig aus 100 kg Mehl.');
+    await click(a.page.locator('.lt-azubi-fragen-admin button', { hasText: 'Antworten' })); await settle(a.page, 400);
+    ok('Ausbilder: Frage beantwortet, steht unter „Beantwortet“', /Beantwortet \(1\)/.test(await a.page.locator('.lt-azubi-fragen-admin').innerText().catch(() => '')));
+    ok('Ausbilder Azubi-Fragen: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+  }]);
   // Version 255: Prüfungsgespräch im Theken-Simulator mit Bewertungsbogen
   teile.push(['Version 255: Prüfungsgespräch mit Bewertungsbogen', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });

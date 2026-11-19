@@ -196,7 +196,7 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   .lt-root .lt-awning:not(.lt-awning-sm) .lt-wxpill{position:absolute;left:16px;bottom:14px}
   .lt-root .lt-awning.lt-awning-sm{height:96px}.lt-root .lt-awning-sm .lt-logo{height:70px}
 }
-.lt-menu-pop{position:fixed;top:12px;right:12px;z-index:120;min-width:240px;padding:8px;border-radius:18px;background:#FFFFFF;box-shadow:0 24px 50px -16px rgba(31,20,12,.55);display:flex;flex-direction:column;gap:2px;animation:ltFadeUp .25s cubic-bezier(.2,.8,.2,1)}
+.lt-menu-pop{position:fixed;top:12px;right:12px;z-index:120;min-width:240px;max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;padding:8px;border-radius:18px;background:#FFFFFF;box-shadow:0 24px 50px -16px rgba(31,20,12,.55);display:flex;flex-direction:column;gap:2px;animation:ltFadeUp .25s cubic-bezier(.2,.8,.2,1)}
 .lt-menu-pop button{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 14px;border:none;border-radius:12px;background:transparent;color:#2B170A;font-size:16px;font-weight:700;text-align:left;cursor:pointer}
 .lt-menu-pop button:hover{background:#FBF6EC}
 .lt-menu-pop .lt-menu-who{padding:8px 14px 6px;font-size:13px;color:#7A6553}
