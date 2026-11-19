@@ -921,6 +921,36 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 261: Teigi bewegt den Mund, solange eine Stimme vorliest
+  teile.push(['Version 261: Teigi spricht mit', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    const mund = () => d.page.locator('.lt-teigi-begleiter .lt-teigi-mund-spricht').count();
+    ok('Teigi: ohne Stimme kein Sprechmund', (await mund()) === 0);
+    await d.page.evaluate(() => { window.__spricht = true; Object.defineProperty(window.speechSynthesis, 'speaking', { configurable: true, get: () => window.__spricht }); });
+    let m = 0;
+    for (let w = 0; w < 30 && !m; w++) { m = await mund(); if (!m) await sleep(100); }
+    ok('Teigi: bewegt den Mund, solange die Handy-Stimme spricht', m === 1 && (await d.page.locator('.lt-teigi-begleiter.lt-teigi-spricht').count()) === 1);
+    const anim = await d.page.locator('.lt-teigi-mund-spricht').first().evaluate((el) => { const alt = document.documentElement.classList.contains('lt-noanim'); document.documentElement.classList.remove('lt-noanim'); const n = getComputedStyle(el).animationName; if (alt) document.documentElement.classList.add('lt-noanim'); return n; });
+    ok('Teigi: Mund geht auf und zu (Bewegung läuft)', anim === 'ltTeigiPlapper', anim);
+    await d.page.evaluate(() => { window.__spricht = false; });
+    for (let w = 0; w < 30 && m; w++) { m = await mund(); if (m) await sleep(100); }
+    ok('Teigi: hört auf, wenn die Stimme fertig ist', m === 0);
+    // natürliche Stimme (Tondatei): Steckbrief vorlesen
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('laugenbrezel');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-produkt').count()); w++) await sleep(100);
+    await click(d.page.locator('.lt-suche-produkt').first()); await settle(d.page, 800);
+    const vorlesen = d.page.locator('.fc-sheet button', { hasText: /vorlesen/i }).first();
+    if (await vorlesen.count()) {
+      await vorlesen.click().catch(() => {});
+      let mm = 0;
+      for (let w = 0; w < 50 && !mm; w++) { mm = await mund(); if (!mm) await sleep(100); }
+      ok('Teigi: spricht auch mit der natürlichen Stimme (Steckbrief vorlesen)', mm === 1);
+    }
+    ok('Teigi spricht: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 260: Start-Übersicht, Wochen-Rückblick, Sortiment, Foto-Vollbild, „Zu mir springen“, Fotos für ohne Internet
   teile.push(['Version 260: Ausbilder Start-Übersicht, Rückblick und Sortiment', async () => {
     const T = kompiliere(['src/hilfen/teamStart.ts']).hilfen_teamStart;

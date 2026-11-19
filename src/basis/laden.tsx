@@ -568,7 +568,7 @@ export const TEIGI_GLAS: Record<string, { glas: string; rand: string; deckel: st
 };
 /** Version 243: Teigi als 3D-Figur (Entwurf 1 „Goldener Glas-Held“): bauchiges Glas mit Lichtbrechung, goldener Schraubdeckel,
  *  Teig mit Tiefe und Bläschen, glänzende Augen, Schatten am Boden. Bildfläche 116 × 116 ab (2|6) (Glas von x 28 bis 92, Deckel oben bei y 17). */
-export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: number; laune: 'froh' | 'gut' | 'schlapp'; size?: number; hut?: string | null; glas?: string | null }) {
+export function TeigiGlas({ stufe, laune, size = 56, hut, glas, spricht = false }: { stufe: number; laune: 'froh' | 'gut' | 'schlapp'; size?: number; hut?: string | null; glas?: string | null; spricht?: boolean }) {
   const id = 'tg' + useId().replace(/[^a-zA-Z0-9]/g, '');
   const u = (n: string) => `url(#${n}${id})`;
   const g = TEIGI_GLAS[glas || 'klar'] || TEIGI_GLAS.klar;
@@ -620,9 +620,11 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas }: { stufe: numbe
       </g>}
       {!schlapp && <g filter={u('weich')} fill="#FF7A6E" opacity=".65"><ellipse cx="41" cy="92" rx="6" ry="3.6" /><ellipse cx="79" cy="92" rx="6" ry="3.6" /></g>}
       {[48, 72].map(auge)}
-      {laune === 'froh' && <g><path d="M51 92q9 10.5 18 0q-9 3 -18 0z" fill="#1C0E05" /><path d="M56 97.4q4 -3.2 8 0q-4 2.6 -8 0z" fill="#E8534F" /></g>}
-      {laune === 'gut' && <path d="M53 92.5q7 6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
-      {schlapp && <path d="M53 97q7 -4.6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
+      {/* Version 261: Teigi spricht mit, solange eine Stimme vorliest (Mund geht auf und zu) */}
+      {spricht && <g className="lt-teigi-mund-spricht"><ellipse cx="60" cy="94.5" rx="7.5" ry="5.6" fill="#1C0E05" /><ellipse cx="60" cy="97.6" rx="4.4" ry="2.2" fill="#E8534F" /></g>}
+      {!spricht && laune === 'froh' && <g><path d="M51 92q9 10.5 18 0q-9 3 -18 0z" fill="#1C0E05" /><path d="M56 97.4q4 -3.2 8 0q-4 2.6 -8 0z" fill="#E8534F" /></g>}
+      {!spricht && laune === 'gut' && <path d="M53 92.5q7 6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
+      {!spricht && schlapp && <path d="M53 97q7 -4.6 14 0" stroke="#1C0E05" strokeWidth="3" fill="none" strokeLinecap="round" />}
       <path d={glasForm} fill={u('glas')} stroke={g.rand} strokeWidth="3" />
       <path d="M35 40v58" stroke={u('kante')} strokeWidth="4.6" strokeLinecap="round" opacity=".9" />
       <path d="M42 42v12" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".7" />

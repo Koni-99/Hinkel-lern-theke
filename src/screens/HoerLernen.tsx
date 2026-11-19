@@ -1,6 +1,7 @@
 // ═══ Hör-Lernen: Fragen und Antworten werden nacheinander vorgelesen, wie ein Hörbuch ═══
 // Ablauf je Frage: Frage vorlesen → Denkpause → richtige Antwort (+ Erklärung) vorlesen → kurze Pause → nächste.
 // Solange vorgelesen wird, bleibt der Bildschirm an (wenn das Handy das erlaubt).
+import { merkeAudio } from '../hilfen/sprechen';
 import { useState, useEffect, useRef } from 'react';
 import { dc } from '../daten/data';
 import { LT } from '../basis/marke';
@@ -62,7 +63,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
     // Gibt es eine Tondatei mit der natürlichen Stimme? Dann die abspielen, sonst die Handy-Stimme.
     const key = stimmeKey(text);
     if (datei && dateien.current.has(key)) {
-      const a = audio.current || (audio.current = new Audio());
+      const a = audio.current || (audio.current = merkeAudio(new Audio()));
       a.onended = () => { if (my === lauf.current) fertig(); };
       a.onerror = () => { if (my === lauf.current) sprich(text, fertig, false); };
       a.src = `${import.meta.env.BASE_URL}stimme/${key}.mp3`;

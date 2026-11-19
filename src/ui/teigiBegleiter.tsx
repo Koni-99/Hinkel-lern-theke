@@ -2,6 +2,7 @@
 // Seit Version 233 hat jeder Teigi (ausschaltbar unten in der App, _teigiAus). Seit Version 237 auf allen Seiten (außer Ausbilder-Bereich), unter den Pop-ups.
 // Er reagiert auf jede Antwort: AnswerFx (ui/antwortFx.tsx) schickt das Ereignis „lt-teigi“ mit { ok, lauf }.
 // Antippen lässt ihn hüpfen und etwas sagen. Ausschalten nur ganz unten in der App (Version 234).
+import { sprichtGerade } from '../hilfen/sprechen';
 import { useEffect, useRef, useState } from 'react';
 import { TeigiGlas } from '../basis/laden';
 
@@ -61,6 +62,9 @@ export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?
   const [laune, setLaune] = useState<'froh' | 'gut' | 'schlapp'>('gut');
   const [jubel, setJubel] = useState(0);
   const [spruch, setSpruch] = useState<{ t: string; k: number } | null>(null);
+  const [spricht, setSpricht] = useState(false);
+  // Version 261: liest eine Stimme vor, bewegt Teigi den Mund mit
+  useEffect(() => { const t = window.setInterval(() => { const s = sprichtGerade(); setSpricht((v) => (v === s ? v : s)); }, 150); return () => window.clearInterval(t); }, []);
   const timer = useRef(0);
   const sag = (t: string | null) => { if (!t) return; setSpruch({ t, k: Date.now() }); window.clearTimeout(timer.current); timer.current = window.setTimeout(() => setSpruch(null), 2800); };
   useEffect(() => {
@@ -77,11 +81,11 @@ export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <div className="lt-teigi-begleiter lt-papier" role="status" aria-live="polite">
+    <div className={spricht ? "lt-teigi-begleiter lt-papier lt-teigi-spricht" : "lt-teigi-begleiter lt-papier"} role="status" aria-live="polite">
       {spruch && <span key={spruch.k} className="lt-teigi-sprech">{spruch.t}</span>}
       <button type="button" aria-label="Teigi antippen" title="Teigi" onClick={() => { setLaune('froh'); setJubel((j) => j + 1); sag(zufall(ANGETIPPT)); }}>
         <span key={jubel} className={laune === 'froh' ? (tanz ? `lt-teigi-${String(tanz).replace('tt_', '')}` : 'lt-teigi-hops') : laune === 'schlapp' ? 'lt-teigi-traurig' : ''} style={{ display: 'inline-block' }}>
-          <TeigiGlas stufe={stufe} laune={laune} size={76} hut={hut} glas={glas} />
+          <TeigiGlas stufe={stufe} laune={laune} size={76} hut={hut} glas={glas} spricht={spricht} />
         </span>
       </button>
     </div>
