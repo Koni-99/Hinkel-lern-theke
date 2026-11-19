@@ -88,7 +88,9 @@ export const abstimmen = (userKey: string, name: string, id: string, wahl: numbe
 // Der Absender speichert das Lob in seinem Fortschritt (_kollegenLob). Der Gelobte schreibt sich die
 // Punkte selbst gut, sobald seine App das Lob sieht (_lobGutgeschrieben). So schreibt niemand für andere.
 // (Nicht verwechseln mit _lob: das ist das Lob vom Ausbilder, das als Pop-up erscheint.)
-export type KLob = { an: string; anName: string; t: string; ts: number; anonym?: boolean };
+// Version 258: anonymes Lob wartet auf den Ausbilder (warte: true), erst nach Freigabe sehen es Kollegen und der Gelobte.
+// Der Ausbilder sieht immer den echten Absender. Alte anonyme Lobe ohne „warte“ gelten als freigegeben.
+export type KLob = { an: string; anName: string; t: string; ts: number; anonym?: boolean; warte?: boolean };
 export type KLobEintrag = KLob & { id: string; von: string; vonName: string };
 export const LOB_PUNKTE = 15; // seit Version 199 ×1,5 (vorher 10)
 export const LOB_MAX = 140;
@@ -118,13 +120,13 @@ export const lobSchicken = (userKey: string, name: string, an: string, anName: s
   const pr = prOf(curr, userKey, name);
   // nur die letzten 30 eigenen Lobe behalten
   const alt = Object.entries(pr._kollegenLob || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 29);
-  pr._kollegenLob = { ...Object.fromEntries(alt), [`l${now}`]: anonym ? { an, anName, t, ts: now, anonym: true } : { an, anName, t, ts: now } };
+  pr._kollegenLob = { ...Object.fromEntries(alt), [`l${now}`]: anonym ? { an, anName, t, ts: now, anonym: true, warte: true } : { an, anName, t, ts: now } };
   return curr;
 };
 /** Noch nicht gutgeschriebene Lobe an mich */
 export function offeneLobPunkte(progress: CloudPayload['progress'] | undefined, userKey: string): KLobEintrag[] {
   const done = (progress && progress[userKey] && (progress[userKey] as any)._lobGutgeschrieben) || {};
-  return alleLobs(progress).filter((l) => l.an === userKey && !done[`${l.von}_${l.id}`]);
+  return alleLobs(progress).filter((l) => l.an === userKey && !l.warte && !done[`${l.von}_${l.id}`]);
 }
 export const lobPunkteGutschreiben = (userKey: string, name: string, lobs: KLobEintrag[], now = Date.now()): Upd => (curr) => {
   const pr = prOf(curr, userKey, name);
@@ -137,6 +139,18 @@ export const lobPunkteGutschreiben = (userKey: string, name: string, lobs: KLobE
     curr.scores.push({ id: `${userKey}_lob_${now + i}`, username: name, score: LOB_PUNKTE, date: datum, category: 'Lob von Kollegen' });
   });
   pr._lobGutgeschrieben = done;
+  return curr;
+};
+/** Für alle sichtbar (nicht mehr wartend) */
+export const lobSichtbar = (l: KLobEintrag) => !l.warte;
+/** Anonyme Lobe, die auf den Ausbilder warten */
+export const lobeZurFreigabe = (progress: CloudPayload['progress'] | undefined) => alleLobs(progress).filter((l) => l.warte);
+/** Ausbilder gibt ein anonymes Lob frei (schreibt in den Fortschritt des Absenders) */
+export const lobFreigeben = (vonKey: string, id: string): Upd => (curr) => {
+  const pr: any = curr.progress[vonKey];
+  if (!pr || !pr._kollegenLob || !pr._kollegenLob[id]) return curr;
+  const l = { ...pr._kollegenLob[id] }; delete l.warte;
+  pr._kollegenLob = { ...pr._kollegenLob, [id]: l };
   return curr;
 };
 export const lobLoeschen = (vonKey: string, id: string): Upd => (curr) => {

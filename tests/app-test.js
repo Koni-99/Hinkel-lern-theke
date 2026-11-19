@@ -921,6 +921,35 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 258: anonymes Lob wartet auf den Ausbilder, er sieht den Absender
+  teile.push(['Version 258: anonymes Lob nur nach Freigabe', async () => {
+    const T = kompiliere(['src/hilfen/team.ts']).hilfen_team;
+    const c = { progress: { anna: { _displayName: 'Anna' }, ben: { _displayName: 'Ben' } }, scores: [] };
+    T.lobSchicken('anna', 'Anna', 'ben', 'Ben', 'Danke fürs Einspringen!', 1000, true)(c);
+    ok('Anonymes Lob: wartet, Ben bekommt noch nichts', T.lobeZurFreigabe(c.progress).length === 1 && T.offeneLobPunkte(c.progress, 'ben').length === 0);
+    const l = T.lobeZurFreigabe(c.progress)[0];
+    T.lobFreigeben(l.von, l.id)(c);
+    ok('Anonymes Lob: nach Freigabe sichtbar, Ben bekommt Punkte, Name bleibt geheim', T.lobeZurFreigabe(c.progress).length === 0 && T.offeneLobPunkte(c.progress, 'ben').length === 1 && T.lobVon(T.alleLobs(c.progress)[0]) === 'Ein Kollege');
+    T.lobSchicken('ben', 'Ben', 'anna', 'Anna', 'Super gemacht', 999999999, false)(c);
+    ok('Normales Lob: sofort sichtbar', T.offeneLobPunkte(c.progress, 'anna').length === 1);
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._kollegenLob = { l1: { an: 'ben', anName: 'Ben', t: 'Anonymer Testdank', ts: Date.now(), anonym: true, warte: true } };
+    const a = await device({ admin: true, backup: probe });
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    for (let w = 0; w < 50 && !(await a.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(a.page.getByRole('tab', { name: /Rückmeldungen/ }).first()); await settle(a.page, 600);
+    const fr = await a.page.locator('.lt-lob-freigabe').innerText().catch(() => '');
+    ok('Ausbilder: anonymes Lob mit echtem Namen zur Freigabe', /Anna/.test(fr) && /anonym/.test(fr) && /Anonymer Testdank/.test(fr), fr.slice(0, 100));
+    await click(a.page.locator('.lt-lob-freigabe button', { hasText: 'Freigeben' }).first()); await settle(a.page, 400);
+    ok('Ausbilder: nach Freigabe nichts mehr offen', (await a.page.locator('.lt-lob-freigabe').count()) === 0);
+    ok('Lob-Freigabe: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    const d = await device({ user: 'Ben', backup: probe });
+    await clearPopups(d.page);
+    const karte = await d.page.locator('section[aria-label="Lob der Woche"]').innerText().catch(() => '');
+    ok('Kollegen sehen wartendes anonymes Lob nicht', !/Anonymer Testdank/.test(karte));
+    await d.ctx.close();
+  }]);
   // Version 257: Aufräumen: Menü in Gruppen, Papier im dunklen Design hell (Lern-Bon, Stickerheft)
   teile.push(['Version 257: Menü in Gruppen, Papier im dunklen Design', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 667 }, vorher: async (ctx) => ctx.addInitScript(() => { localStorage.setItem('lt_design', 'nacht'); }) });
