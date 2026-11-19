@@ -5,6 +5,7 @@ import { CSSProperties } from 'react';
 import { TH, cardStyle } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { getRightAnswerText } from '../hilfen/allgemein';
+import { FalschGewaehlt } from './FalschGewaehlt';
 
 export type AuswertungSchwachstellenProps = {
   overwriteCloudDataDirectly: (updater: (curr: CloudPayload) => CloudPayload) => void;
@@ -17,9 +18,11 @@ export type AuswertungSchwachstellenProps = {
   rateBar: (rate: number) => JSX.Element;
   smallBtn: (tone?: "plain" | "danger" | "warn") => CSSProperties;
   sectionTitle: (title: string, sub?: string | undefined) => JSX.Element;
+  falschTeam: (id: number) => { text: string; n: number; wer: string[] }[];
+  nameOf: (userKey: string) => string;
 };
 
-export function AuswertungSchwachstellen({ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }: AuswertungSchwachstellenProps) {
+export function AuswertungSchwachstellen({ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle, falschTeam, nameOf }: AuswertungSchwachstellenProps) {
   return (
     <div style={cardStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', flexWrap: 'wrap' }}>
@@ -31,7 +34,7 @@ export function AuswertungSchwachstellen({ overwriteCloudDataDirectly, allQById,
               if (!confirm('Die Fehler-Statistik des ganzen Teams auf 0 zurücksetzen? (Der Fehler-Stapel der Mitarbeiter bleibt.)')) return;
               overwriteCloudDataDirectly((curr) => {
                 curr.wrongStats = {};
-                Object.keys(curr.progress || {}).forEach(uKey => { if (curr.progress[uKey]) { curr.progress[uKey].wrongStats = {}; curr.progress[uKey]._qs = {}; } });
+                Object.keys(curr.progress || {}).forEach(uKey => { if (curr.progress[uKey]) { curr.progress[uKey].wrongStats = {}; curr.progress[uKey]._qs = {}; curr.progress[uKey]._falschGewaehlt = {}; } });
                 return curr;
               });
             }}
@@ -88,6 +91,7 @@ export function AuswertungSchwachstellen({ overwriteCloudDataDirectly, allQById,
                       <div style={{ fontWeight: 700 }}>{foundQ.question}</div>
                       <div style={{ color: TH.muted, fontSize: '15px' }}>{foundQ.category || (foundQ.examGroup === 'ZP' ? 'Zwischenprüfung' : 'Abschlussprüfung')}{foundQ.product ? ` · ${foundQ.product}` : ''}</div>
                       <div style={{ color: TH.green, marginTop: '4px' }}>Richtig: <strong>{getRightAnswerText(foundQ)}</strong></div>
+                      <FalschGewaehlt liste={falschTeam(qId)} nameOf={nameOf} />
                     </div>
                     <span style={{ padding: '6px 12px', borderRadius: '12px', backgroundColor: TH.white, fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'right', fontSize: '15px', lineHeight: 1.4 }}>
                       {st.w}× falsch{st.r ? ` · ${rate} %` : ''}<br /><span style={{ fontWeight: 400, color: TH.muted }}>bei {st.users} {st.users === 1 ? 'Person' : 'Personen'}</span>

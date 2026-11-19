@@ -14,7 +14,7 @@ export const ANTWORT_MAX = 300;
 /** Diese Konten dürfen immer schreiben */
 export const IMMER_SCHREIBEN = ['admin', 'koni'];
 
-export type Nachricht = { an: Record<string, string>; t: string; ts: number };
+export type Nachricht = { an: Record<string, string>; t: string; ts: number; sb?: string };
 export type NachrichtEintrag = Nachricht & { id: string; von: string; vonName: string };
 export type PostfachEintrag = { g?: number; a?: string; aTs?: number };
 
@@ -93,6 +93,15 @@ export const nachrichtSchicken = (userKey: string, name: string, an: Record<stri
   // nur die letzten 50 eigenen Nachrichten behalten
   const alt = Object.entries(pr._nachrichten || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 49);
   pr._nachrichten = { ...Object.fromEntries(alt), [`m${now}`]: { an: empf, t, ts: now } };
+  return curr;
+};
+/** Version 250: einen Steckbrief an einen Kollegen schicken. Darf jeder, aber nur mit festem Text (kein freies Schreiben). */
+export const steckbriefText = (produkt: string) => `Schau dir mal den Steckbrief „${produkt}“ an.`;
+export const steckbriefSchicken = (userKey: string, name: string, anKey: string, anName: string, produkt: string, now = Date.now()): Upd => (curr) => {
+  if (!anKey || anKey === userKey || anKey === 'admin' || !produkt) return curr;
+  const pr = prOf(curr, userKey, name);
+  const alt = Object.entries(pr._nachrichten || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 49);
+  pr._nachrichten = { ...Object.fromEntries(alt), [`m${now}`]: { an: { [anKey]: anName }, t: steckbriefText(produkt), ts: now, sb: produkt } };
   return curr;
 };
 export const nachrichtLoeschen = (userKey: string, id: string): Upd => (curr) => {

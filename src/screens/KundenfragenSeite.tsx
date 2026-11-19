@@ -6,6 +6,7 @@ import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, PageHead } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { alleKundenfragen, kfrageStellen, kfragenGesehen, KFRAGE_MAX } from '../hilfen/kollegen';
+import { produkteImText } from '../hilfen/steckbriefExtras';
 
 export type KundenfragenSeiteProps = {
   cloudData: CloudPayload;
@@ -13,11 +14,13 @@ export type KundenfragenSeiteProps = {
   isAdmin: boolean;
   mutateCloudData: (updater: (curr: CloudPayload) => CloudPayload) => void;
   setToast: (t: string) => void;
+  /** Version 250: passenden Steckbrief öffnen */
+  onSteckbrief?: (produkt: string) => void;
 };
 
 const datum = (ts: number) => new Date(ts).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
 
-export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudData, setToast }: KundenfragenSeiteProps) {
+export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudData, setToast, onSteckbrief }: KundenfragenSeiteProps) {
   const [text, setText] = useState('');
   const [suche, setSuche] = useState('');
   const me = (username || '').toLowerCase();
@@ -85,6 +88,11 @@ export function KundenfragenSeite({ cloudData, username, isAdmin, mutateCloudDat
             <div style={{ fontWeight: 700, fontSize: '17px' }}>{f.q}</div>
             <div style={{ marginTop: '6px' }}><strong>Antwort:</strong> {f.a}</div>
             <div style={{ marginTop: '6px', fontSize: '14px', color: TH.muted }}>gefragt von {f.name} · {datum(f.ts)}</div>
+            {onSteckbrief && produkteImText(`${f.q} ${f.a || ''}`).length > 0 && (
+              <div className="lt-kf-steckbrief" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                {produkteImText(`${f.q} ${f.a || ''}`).map((p) => <button key={p} type="button" onClick={() => onSteckbrief(p)} style={{ minHeight: '42px', padding: '0 14px', borderRadius: '999px', border: 'none', backgroundColor: TH.tintYellow, color: TH.ink, fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Steckbrief: {p}</button>)}
+              </div>
+            )}
           </div>
         ))}
       </div>

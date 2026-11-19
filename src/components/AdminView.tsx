@@ -1,3 +1,5 @@
+import { falschImTeam } from '../hilfen/falscheAntworten';
+import { preisMerken } from '../hilfen/steckbriefExtras';
 import { NachrichtSchreiben } from '../screens/NachrichtenSeite';
 import { neueAntworten } from '../hilfen/nachrichten';
 import { useState, FormEvent, CSSProperties } from 'react';
@@ -345,7 +347,7 @@ export function AdminView({
   const adminResetUserWrongStats = (targetUserKey: string, dispName: string) => {
     if (!confirm('Möchtest du den Fehler-Stapel von "' + dispName + '" wirklich leeren?')) return;
     overwriteCloudDataDirectly((curr) => {
-      if (curr.progress && curr.progress[targetUserKey]) { curr.progress[targetUserKey].wrongStats = {}; curr.progress[targetUserKey]._fehler = {}; }
+      if (curr.progress && curr.progress[targetUserKey]) { curr.progress[targetUserKey].wrongStats = {}; curr.progress[targetUserKey]._fehler = {}; curr.progress[targetUserKey]._falschGewaehlt = {}; }
       markDeleted(curr, 'wrongReset', targetUserKey);
       return curr;
     });
@@ -560,6 +562,7 @@ export function AdminView({
     const alt: any = pFixes[name] && !pFixes[name].restored ? pFixes[name] : {};
     ['pricePerKg', 'allergenNote', 'fullIngredients', 'description', 'vegan', 'weight'].forEach((k) => { if (alt[k] !== undefined) fix[k] = alt[k]; });
     const changed = Object.keys(fix).length > 1;
+    preisMerken(fix, alt, SHOP_PRODUCTS.find((x) => x.name === name)?.price);
     mutateCloudData((curr) => {
       curr.productFixes = { ...(curr.productFixes || {}), [name]: changed ? fix : { restored: true, ts: Date.now() } };
       if (rk) clearReports(curr, rk);
@@ -813,7 +816,7 @@ export function AdminView({
 
       {adminTab === 'stats' && <AuswertungNutzung progress={cloudData.progress} sectionTitle={sectionTitle} />}
 
-      {adminTab === 'stats' && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} />}
+      {adminTab === 'stats' && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} falschTeam={(id: number) => falschImTeam(cloudProgress, allKnownUserKeys, id)} nameOf={nameOf} />}
 
       {/* ═════════ EINSTELLUNGEN ═════════ */}
       {adminTab === 'kollegen' && <KollegenTab cloudData={cloudData} mutateCloudData={mutateCloudData} onAlsQuizfrage={(frage, antwort) => {

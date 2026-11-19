@@ -11,9 +11,27 @@ export type SteckbriefListeProps = {
   images: ProductImages;
   setOpenProfileKey: Dispatch<SetStateAction<string | null>>;
   filteredProfiles: Profile[];
+  /** Version 250: zuletzt angesehene Steckbriefe (Spickzettel) */
+  zuletzt?: Profile[];
 };
 
-export function SteckbriefListe({ favorites, images, setOpenProfileKey, filteredProfiles }: SteckbriefListeProps) {
+export function SteckbriefListe({ favorites, images, setOpenProfileKey, filteredProfiles, zuletzt = [] }: SteckbriefListeProps) {
+  const spickzettel = zuletzt.length > 0 && (
+    <div className="lt-zuletzt" style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" }}>
+      <div style={{ fontSize: "15px", fontWeight: 800, letterSpacing: "1px", textTransform: "uppercase", color: TH.muted }}>Zuletzt angesehen</div>
+      <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "thin" }}>
+        {zuletzt.map((p) => {
+          const bild = images[productImageKey(p.name)];
+          return (
+            <button key={p.name} onClick={() => setOpenProfileKey(`${p.name}_${p.ids[0]}`)} aria-label={`Steckbrief ${p.name}`} style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: "8px", minHeight: "48px", padding: "4px 14px 4px 4px", borderRadius: "999px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "15px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {bild ? <img src={kleinesFoto(bild)} alt="" style={{ width: "38px", height: "38px", borderRadius: "50%", objectFit: "cover" }} /> : <span aria-hidden="true" style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: TH.tintYellow, display: "flex", alignItems: "center", justifyContent: "center" }}>{getProductEmoji(p.name, p.group)}</span>}
+              {p.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
   return (
     filteredProfiles.length === 0 ? (
       <div style={{ ...cardStyle, width: "100%", textAlign: "center" }}>
@@ -21,6 +39,7 @@ export function SteckbriefListe({ favorites, images, setOpenProfileKey, filtered
       </div>
     ) : (
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+        {spickzettel}
         <div style={{ fontSize: "17px", color: TH.muted, textAlign: "left" }}>
           {(() => { const extra = filteredProfiles.filter((p: any) => ['Sonstiges', 'Backmischung'].includes(p.shop?.group || p.group)).length; const prod = filteredProfiles.length - extra; return `${prod} ${prod === 1 ? 'Produkt' : 'Produkte'}${extra ? ` und ${extra} ${extra === 1 ? 'Backmischung oder Sonstiges' : 'Backmischungen und Sonstiges'}` : ''}, tippe auf einen Steckbrief für alle Infos.`; })()}
         </div>

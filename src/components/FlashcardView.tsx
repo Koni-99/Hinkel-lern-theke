@@ -18,6 +18,7 @@ import { SteckbriefListe } from './karteikarten/SteckbriefListe';
 import { ProduktKarten } from './karteikarten/ProduktKarten';
 import { useZurueckSchliesst } from '../hilfen/zurueck';
 import { FilterLeiste } from './karteikarten/FilterLeiste';
+import { zuletztLesen, zuletztMerken } from '../hilfen/steckbriefExtras';
 
 export function FlashcardView({
   questions,
@@ -35,7 +36,14 @@ export function FlashcardView({
   lernkasten = {},
   onBewerten,
   onFoto,
+  oeffneProdukt,
+  kollegen,
+  onSchicken,
 }: {
+  /** Version 250: diesen Steckbrief gleich öffnen (z. B. aus einer Nachricht oder der Suche) */
+  oeffneProdukt?: string;
+  kollegen?: { k: string; name: string }[];
+  onSchicken?: (anKey: string, anName: string, produkt: string) => void;
   /** Nur für den Ausbilder: Foto im Steckbrief aufnehmen oder austauschen */
   onFoto?: (name: string, file: File) => Promise<string>;
   meineNotizen?: Record<string, string>;
@@ -285,6 +293,16 @@ export function FlashcardView({
   const fragKarten = [...filteredCards].sort((a, b) => fachVon(kastenStart.current, `frage-${a.id}`) - fachVon(kastenStart.current, `frage-${b.id}`));
   const current = fragKarten[currentIndex];
   const openProfile = openProfileKey ? productProfiles.find((p) => `${p.name}_${p.ids[0]}` === openProfileKey) || null : null;
+  // Version 250: Steckbrief von außen öffnen und zuletzt angesehene merken (Spickzettel)
+  const profilVon = (name: string) => productProfiles.find((p) => p.name === name || p.shop?.name === name) || null;
+  useEffect(() => {
+    if (!oeffneProdukt) return;
+    const p = profilVon(oeffneProdukt);
+    if (p) setOpenProfileKey(`${p.name}_${p.ids[0]}`);
+  }, [oeffneProdukt]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [zuletzt, setZuletzt] = useState<string[]>(() => zuletztLesen());
+  useEffect(() => { if (openProfile) setZuletzt(zuletztMerken(openProfile.name)); }, [openProfile?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+  const zuletztProfile = zuletzt.map(profilVon).filter((p): p is Profile => !!p);
   const isFav = current ? favorites.includes(current.id) : false;
 
   return (
@@ -357,7 +375,7 @@ export function FlashcardView({
         <Leitfaeden {...{  }} />
       ) : displayStyle === "profiles" ? (
         /* 3. PRODUKT-STECKBRIEFE, kompakte Liste, Details als Karte zum Aufklappen */
-        <SteckbriefListe {...{ favorites, images, setOpenProfileKey, filteredProfiles }} />
+        <SteckbriefListe {...{ favorites, images, setOpenProfileKey, filteredProfiles }} zuletzt={zuletztProfile} />
       ) : displayStyle === "lexicon" ? (
         /* 4. FRAGEN-KATALOG */
         <Fragenkatalog {...{ favorites, toggleFavorite, filteredCards }} />
@@ -385,7 +403,7 @@ export function FlashcardView({
       )}
 
       {/* ── Steckbrief-Detail ── */}
-      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp, meineNotizen, onNotiz, onFoto }} />}
+      {openProfile && <SteckbriefDetail {...{ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps, meineTipps, onTipp, meineNotizen, onNotiz, onFoto, kollegen, onSchicken }} />}
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { TH, cardStyle, btnPrimary } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import { vergleichen, IMPORT_FELDER, ImportFeld } from '../hilfen/produktImport';
+import { preisMerken } from '../hilfen/steckbriefExtras';
 
 const knopf: CSSProperties = { minHeight: '48px', padding: '0 16px', borderRadius: '14px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '16px', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', fontFamily: 'inherit' };
 const kurz = (t: string, n = 140) => (t.length > n ? t.slice(0, n) + ' …' : t);
@@ -54,7 +55,7 @@ export function ProduktImport({ mutateCloudData }: { mutateCloudData: (updater: 
       const fixes = { ...(curr.productFixes || {}) };
       Object.keys(proName).forEach((name) => {
         const alt = fixes[name] && !fixes[name].restored ? fixes[name] : {};
-        fixes[name] = { ...alt, ...proName[name], ts: Date.now() } as any;
+        fixes[name] = preisMerken({ ...alt, ...proName[name], ts: Date.now() }, alt, SHOP_PRODUCTS.find((x) => x.name === name)?.price) as any;
       });
       curr.productFixes = fixes;
       return curr;

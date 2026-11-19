@@ -11,6 +11,8 @@ import { getRankByPercentage, cleanStatNumber, getRightAnswerText } from '../hil
 import { CATS } from '../daten/questions';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import { LtIcon, ICON } from '../basis/symbole';
+import { falschVon, falschImTeam } from '../hilfen/falscheAntworten';
+import { FalschGewaehlt } from './FalschGewaehlt';
 import type { ScoreEntry } from '../types';
 
 export type TeamTabProps = {
@@ -97,7 +99,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
           const shared = items.filter(x => x.users.length > 1).length;
           const copyTeam = async () => {
             const lines = [`Offene Fehler im Team${cat ? ` (${cat})` : ''}: ${shown.length} Fragen`, ''];
-            shown.slice(0, 20).forEach((x, i) => lines.push(`${i + 1}. ${x.q.question}\n   Richtig: ${getRightAnswerText(x.q)}\n   Offen bei: ${x.users.map(nameOf).join(', ')}`));
+            shown.slice(0, 20).forEach((x, i) => { const f = falschImTeam(cloudProgress, x.users, x.id); lines.push(`${i + 1}. ${x.q.question}\n   Richtig: ${getRightAnswerText(x.q)}${f.length ? `\n   Falsch gewählt: ${f.map((e) => `${e.text} (${e.n}×)`).join('; ')}` : ''}\n   Offen bei: ${x.users.map(nameOf).join(', ')}`); });
             const txt = lines.join('\n');
             try { await navigator.clipboard.writeText(txt); alert('Liste kopiert, z. B. für die Teambesprechung oder WhatsApp.'); } catch { window.prompt('Liste zum Kopieren:', txt); }
           };
@@ -132,6 +134,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                           </div>
                           <div style={{ fontSize: '14px', color: TH.muted }}>{catOf(x.q)}{x.q.product ? ` · ${x.q.product}` : ''}</div>
                           <div style={{ color: TH.green }}>Richtig: <strong>{getRightAnswerText(x.q)}</strong></div>
+                          <FalschGewaehlt liste={falschImTeam(cloudProgress, x.users, x.id)} nameOf={nameOf} />
                           <div style={{ fontSize: '15px' }}>Offen bei: {x.users.map(nameOf).join(', ')}</div>
                         </div>
                       ))}
@@ -316,6 +319,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                             <div key={qId} style={{ padding: '8px 12px', borderRadius: '12px', backgroundColor: TH.white, fontSize: '16px', lineHeight: 1.4 }}>
                               <div><strong>{cleanUserWrongMap[qId]}× falsch:</strong> {foundQ.question}</div>
                               <div style={{ color: TH.green, marginTop: '2px' }}>Richtig: <strong>{getRightAnswerText(foundQ)}</strong></div>
+                              <FalschGewaehlt liste={falschVon(userProgObj, qId).map((e) => ({ ...e, wer: [] }))} />
                             </div>
                           );
                         })}

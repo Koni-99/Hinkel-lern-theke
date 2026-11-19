@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
+import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 249;
+const APP_VERSION: number = 250;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -17,7 +18,7 @@ import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, 
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
-import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen } from './hilfen/nachrichten';
+import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen, steckbriefSchicken } from './hilfen/nachrichten';
 import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
@@ -456,6 +457,8 @@ export default function App() {
   const [obDay, setObDay] = useState<number | null>(null);
   const [spickArea, setSpickArea] = useState<'produkt' | 'fach'>('produkt');
   const [spickView, setSpickView] = useState<'dictionary' | undefined>(undefined);
+  const [steckbriefZiel, setSteckbriefZiel] = useState<{ name: string; n: number } | null>(null); // Version 250: Steckbrief von überall öffnen
+  const zeigeSteckbrief = (name: string) => { setSpickArea('produkt'); setSpickView(undefined); setSteckbriefZiel((z) => ({ name, n: (z?.n || 0) + 1 })); setActiveTab('flashcards'); };
 
   // Größere Schrift (A+), wird pro Gerät gemerkt
   const [kopf, setKopfState] = useState<Kopf>(kopfGespeichert);
@@ -696,7 +699,7 @@ export default function App() {
     // Echte Katalog-Fragen zählen auch im Battle für den Lernstand (Foto-Fragen nicht)
     if (bq && typeof bq.id === 'number' && !bq.imageKey) {
       const cat = bq.examGroup ? (bq.examGroup === 'ZP' ? 'Zwischenprüfungen' : 'Abschlussprüfungen') : bq.category;
-      if (cat) recordAnsweredQuestion(cat, bq.level || 'easy', bq.id, isRight);
+      if (cat) recordAnsweredQuestion(cat, bq.level || 'easy', bq.id, isRight, gewaehlterText(bq, idx));
     }
     setSelectedAnswer(idx); setIsAnswered(true);
     setBattleCorrects(totalCorrect);
@@ -733,13 +736,14 @@ export default function App() {
   };
 
   // Eine Antwort im Lernstand eintragen (gemeistert, Fehler-Stapel, Richtig/Falsch-Zähler)
-  const applyAnswer = (curr: CloudPayload, userKey: string, cat: string, level: string, questionId: number, isCorrect: boolean) => {
+  const applyAnswer = (curr: CloudPayload, userKey: string, cat: string, level: string, questionId: number, isCorrect: boolean, gewaehlt?: string) => {
     if (!curr.progress[userKey]) curr.progress[userKey] = { _displayName: username };
     const key = `${cat}_${level}`;
     const existing: number[] = Array.isArray(curr.progress[userKey][key]) ? curr.progress[userKey][key] : [];
     if (isCorrect && !existing.includes(questionId)) curr.progress[userKey][key] = [...existing, questionId];
     if (!curr.progress[userKey].wrongStats) curr.progress[userKey].wrongStats = {};
     if (!isCorrect) curr.progress[userKey].wrongStats[questionId] = (curr.progress[userKey].wrongStats[questionId] || 0) + 1;
+    if (!isCorrect && gewaehlt) merkeFalsch(curr.progress[userKey], questionId, gewaehlt); // Version 250: was wurde falsch gewählt?
     else if (curr.progress[userKey].wrongStats[questionId]) {
       curr.progress[userKey].wrongStats[questionId] = Math.max(0, curr.progress[userKey].wrongStats[questionId] - 1);
       if (curr.progress[userKey].wrongStats[questionId] === 0) delete curr.progress[userKey].wrongStats[questionId];
@@ -766,12 +770,12 @@ export default function App() {
     curr.progress[userKey]._qs = qs;
   };
 
-  const recordAnsweredQuestion = (cat: string, level: string, questionId: number, isCorrect: boolean) => {
+  const recordAnsweredQuestion = (cat: string, level: string, questionId: number, isCorrect: boolean, gewaehlt?: string) => {
     if (!username) return;
     const userKey = username.toLowerCase();
     const nowStr = new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
     mutateCloudData((curr) => {
-      applyAnswer(curr, userKey, cat, level, questionId, isCorrect);
+      applyAnswer(curr, userKey, cat, level, questionId, isCorrect, gewaehlt);
       curr.lastSeen[userKey] = { displayName: username, time: nowStr, timestamp: Date.now() };
       markLearnDay(curr, userKey, username);
       return curr;
@@ -1467,7 +1471,7 @@ export default function App() {
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
   };
 
-  const evaluateSubmission = (isCorrect: boolean, currentQ: any) => {
+  const evaluateSubmission = (isCorrect: boolean, currentQ: any, gewaehlt?: string) => {
     let newScore = score;
     if (isExamMode) {
       if (isCorrect) { newScore += 10; setCorrectCount(prev => prev + 1); }
@@ -1501,7 +1505,7 @@ export default function App() {
     setQuizRun(r => (isCorrect ? r + 1 : 0));
     setScore(newScore);
     const progCat = currentQ.examGroup ? (currentQ.examGroup === 'ZP' ? 'Zwischenprüfungen' : 'Abschlussprüfungen') : currentQ.category;
-    recordAnsweredQuestion(progCat, currentQ.level || 'easy', currentQ.id, isCorrect);
+    recordAnsweredQuestion(progCat, currentQ.level || 'easy', currentQ.id, isCorrect, gewaehlt);
     setIsAnswered(true);
   };
 
@@ -1523,7 +1527,7 @@ export default function App() {
         return;
       }
       setSelectedAnswer(index);
-      evaluateSubmission(index === currentQ.correct, currentQ);
+      evaluateSubmission(index === currentQ.correct, currentQ, gewaehlterText(currentQ, index));
     }
   };
 
@@ -1572,7 +1576,7 @@ export default function App() {
     const newCorrect = correctCount + (ok ? 1 : 0);
     if (ok) setCorrectCount(newCorrect);
     else setWrongQuestions(prev => prev.some(w => w.id === q.id) ? prev : [...prev, q]);
-    if (answered) recordAnsweredQuestion(q.examGroup === 'ZP' ? 'Zwischenprüfungen' : 'Abschlussprüfungen', q.level || 'easy', q.id, ok);
+    if (answered) recordAnsweredQuestion(q.examGroup === 'ZP' ? 'Zwischenprüfungen' : 'Abschlussprüfungen', q.level || 'easy', q.id, ok, gewaehlterText(q, multi ? selectedMulti : selectedAnswer));
     if (currentIndex + 1 < quizList.length) { setCurrentIndex(currentIndex + 1); setSelectedAnswer(null); setSelectedMulti([]); }
     else finishExamSim(newCorrect);
   };
@@ -1584,7 +1588,7 @@ export default function App() {
     const sortedSel = [...selectedMulti].sort((a, b) => a - b);
     const sortedReq = [...required].sort((a, b) => a - b);
     const isCorrect = sortedSel.length === sortedReq.length && sortedSel.every((val, idx) => val === sortedReq[idx]);
-    evaluateSubmission(isCorrect, currentQ);
+    evaluateSubmission(isCorrect, currentQ, gewaehlterText(currentQ, selectedMulti));
   };
 
   const handleResetMyProgress = () => {
@@ -2091,6 +2095,7 @@ export default function App() {
 
   // ── Werte für die Lern-Theke ──
   const userKeyLower = username.toLowerCase();
+  const kollegenListe = allKnownUserKeys.filter((k) => k !== userKeyLower && k !== 'admin').map((k) => ({ k, name: String(cloudLastSeen[k]?.displayName || cloudProgress[k]?._displayName || k) })).sort((a, b) => a.name.localeCompare(b.name, 'de'));
   const hourNow = new Date().getHours();
   const greeting = hourNow < 4 ? 'Hallo' : hourNow < 11 ? 'Guten Morgen' : hourNow < 18 ? 'Hallo' : 'Guten Abend';
   const todayLong = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -2400,7 +2405,7 @@ export default function App() {
     else if (go === 'theke') setActiveTab('theke');
     else if (go === 'allergene') setActiveTab('allergene');
     else if (go === 'lernen') goLernen();
-    else if (go === 'steckbriefe') { setSpickArea('produkt'); setSpickView(undefined); setActiveTab('flashcards'); }
+    else if (go === 'steckbriefe') { setSpickArea('produkt'); setSpickView(undefined); setSteckbriefZiel(null); setActiveTab('flashcards'); }
     else if (go === 'bestenliste') { setActiveTab('scoreboard'); fetchCloudData(); }
     else if (go === 'daily') { setActiveTab('quiz'); launchDailyChallenge(); }
     else if (go === 'spielen') setActiveTab('spielen');
@@ -2640,14 +2645,14 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
-        {activeTab === 'nachrichten' && <NachrichtenSeite cloudData={cloudData} username={username} alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={setToast} />}
+        {activeTab === 'nachrichten' && <NachrichtenSeite cloudData={cloudData} username={username} alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} />}
         {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'kundenstimmen' && <KundenstimmenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} produkte={Array.from(new Set(SHOP_PRODUCTS.map((p: any) => String(p.name)))).sort()} />}
         {activeTab === 'monat' && <MeinMonat username={username} scores={cloudData.scores || []} tage={myDays} snap={myProg._monatSnap} gemeistertJetzt={masteredNow}
           tipp={fehlerDue > 0 ? `In deinem Fehler-Stapel warten ${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'}, damit startest du am besten.` : weakestCat ? `Nimm dir „${weakestCat.c}“ vor, da hast du erst ${weakestCat.p} % geschafft.` : ''} />}
         {activeTab === 'geburtstag' && <GeburtstagSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
-        {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} />}
+        {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} />}
         {activeTab === 'hilfe' && <HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
         {activeTab === 'statistik' && (
           <StatistikView name={username} avatar={myProg._avatar} avatarClass={myProg._effect ? `lt-fx-${String(myProg._effect).replace('fx_', '')}` : 'lt-emo-bob'}
@@ -2679,7 +2684,7 @@ export default function App() {
         {activeTab === 'flashcards' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <PageHead title="Spickzettel" subtitle="Produktkenntnis und Fachwissen, alles zum Nachsehen." onBack={() => setActiveTab('nachschlagen')} backLabel="Zurück zu Nachschlagen" />
-            <div key={`${spickArea}-${spickView || ''}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} images={productImages} onFoto={isAdmin ? uploadProductPhoto : undefined} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} meineNotizen={meineNotizen(cloudData.progress, (username || '').toLowerCase())} onNotiz={isAdmin ? undefined : (produkt: string, text: string) => mutateCloudData(notizSpeichern(username.toLowerCase(), username, produkt, text))} lernkasten={lernkastenVon(cloudData.progress, (username || '').toLowerCase())} onBewerten={isAdmin ? undefined : (produkt: string, gewusst: boolean) => mutateCloudData(karteBewerten(username.toLowerCase(), username, produkt, gewusst))} /></div>
+            <div key={`${spickArea}-${spickView || ''}-${steckbriefZiel?.n || 0}`} style={{ display: 'contents' }}><FlashcardView initialArea={spickArea} initialView={spickView} oeffneProdukt={steckbriefZiel?.name} kollegen={kollegenListe} onSchicken={(anKey: string, anName: string, produkt: string) => { if (!username) return; mutateCloudData(steckbriefSchicken(userKeyLower, username, anKey, anName, produkt)); setToast(`Steckbrief „${produkt}“ an ${anName} geschickt.`); }} images={productImages} onFoto={isAdmin ? uploadProductPhoto : undefined} questions={allFlashcards} customProducts={customProducts} favorites={favorites} toggleFavorite={toggleFavorite} kollegenTipps={alleTipps(cloudData.progress, undefined, 'ok')} meineTipps={alleTipps(cloudData.progress).filter(t => t.user === (username || '').toLowerCase())} onTipp={isAdmin ? undefined : sendTipp} meineNotizen={meineNotizen(cloudData.progress, (username || '').toLowerCase())} onNotiz={isAdmin ? undefined : (produkt: string, text: string) => mutateCloudData(notizSpeichern(username.toLowerCase(), username, produkt, text))} lernkasten={lernkastenVon(cloudData.progress, (username || '').toLowerCase())} onBewerten={isAdmin ? undefined : (produkt: string, gewusst: boolean) => mutateCloudData(karteBewerten(username.toLowerCase(), username, produkt, gewusst))} /></div>
           </div>
         )}
         {activeTab === 'scoreboard' && overtaken && (
@@ -2802,7 +2807,7 @@ export default function App() {
         </div>
       )}
       {einzelNeu.length > 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && activeTab !== 'nachrichten' && (
-        <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} />
+        <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} onSteckbrief={zeigeSteckbrief} />
       )}
       {geschenkNeu.length > 0 && einzelNeu.length === 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && (
         <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 108, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>

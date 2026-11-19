@@ -886,6 +886,58 @@ async function offlineTests() {
     ok('Theken-Ansturm: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 250: falsch gewählte Antwort für den Ausbilder, Steckbrief mit Backtagen, Preis geändert, Spickzettel, an Kollegen schicken
+  teile.push(['Version 250: falsch gewählte Antworten, Steckbrief-Extras', async () => {
+    const M = kompiliere(['src/hilfen/falscheAntworten.ts', 'src/hilfen/steckbriefExtras.ts']);
+    const F = M.hilfen_falscheAntworten, S = M.hilfen_steckbriefExtras;
+    const pr = {}; F.merkeFalsch(pr, 7, 'Roggen'); F.merkeFalsch(pr, 7, 'Roggen'); F.merkeFalsch(pr, 7, 'Dinkel');
+    ok('Falsche Antwort: wird gezählt, häufigste zuerst', JSON.stringify(F.falschVon(pr, 7)) === JSON.stringify([{ text: 'Roggen', n: 2 }, { text: 'Dinkel', n: 1 }]), JSON.stringify(F.falschVon(pr, 7)));
+    for (let i = 0; i < 6; i++) F.merkeFalsch(pr, 8, 'A' + i);
+    ok('Falsche Antwort: höchstens 4 pro Frage', F.falschVon(pr, 8).length === 4);
+    const team = F.falschImTeam({ a: pr, b: { _falschGewaehlt: { 7: [['Roggen', 1, 1]] } } }, ['a', 'b'], 7);
+    ok('Falsche Antwort: Team zusammengezählt mit Namen', team[0].text === 'Roggen' && team[0].n === 3 && team[0].wer.join() === 'a,b', JSON.stringify(team));
+    ok('Falsche Antwort: Text der Auswahl (auch mehrere)', F.gewaehlterText({ options: ['x', 'y', 'z'] }, 1) === 'y' && F.gewaehlterText({ options: ['x', 'y', 'z'] }, [2, 0]) === 'x + z');
+    const bt = (n) => (S.backtageVon(n) || { tage: [] }).tage.join(',');
+    ok('Backtage aus dem Backkalender', bt('Chia-Brot') === 'Mo' && bt('Kartäuser').split(',').length >= 2 && bt('Bärentatze') !== '' && bt('Laugenbrezel') === '', `Chia ${bt('Chia-Brot')}, Kartäuser ${bt('Kartäuser')}, Bärentatze ${bt('Bärentatze')}, Brezel ${bt('Laugenbrezel')}`);
+    const fx = S.preisMerken({ price: '2,50 €' }, undefined, '2,30 €', 1000);
+    const fx2 = S.preisMerken({ price: '2,50 €' }, fx, '2,50 €', 5000);
+    ok('Preis geändert: Datum und alter Preis gemerkt, bleibt beim nächsten Speichern', fx.priceTs === 1000 && fx.priceVorher === '2,30 €' && fx2.priceTs === 1000 && fx2.priceVorher === '2,30 €');
+    const pit = S.produkteImText('Sind in den Laugenbrezeln Nüsse? Und im Chia-Brot?');
+    ok('Kundenfrage: passende Steckbriefe im Text gefunden', pit.includes('Laugenbrezel') && pit.includes('Chia-Brot') && S.produkteImText('Wie spät ist es?').length === 0, pit.join(', '));
+    // Ausbilder sieht die falsche Antwort
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._falschGewaehlt = { 4001: [['Falsche Testantwort', 2, Date.now()]] };
+    probe.progress.ben._nachrichten = { m5000: { an: { anna: 'Anna' }, t: 'Schau dir mal den Steckbrief „Chia-Brot“ an.', ts: 5000, sb: 'Chia-Brot' } };
+    const a = await device({ admin: true, backup: probe });
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    for (let w = 0; w < 50 && !(await a.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(a.page.locator('button', { hasText: 'Ganzes Team' }).first()); await settle(a.page, 500);
+    const txt = await a.page.locator('.lt-falsch-gewaehlt').first().innerText().catch(() => '');
+    ok('Ausbilder: „Falsch gewählt“ mit Antwort und Name', /Falsche Testantwort/.test(txt) && /Anna/.test(txt), txt.slice(0, 80));
+    ok('Ausbilder falsche Antworten: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    // Mitarbeiter: Steckbrief per Nachricht bekommen, Backtage, Spickzettel, an Kollegen schicken
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    let pop = false;
+    for (let i = 0; i < 20 && !pop; i++) { pop = (await d.page.locator('.lt-einzel-popup').count()) > 0; if (!pop) { const o = d.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible'); if (await o.count()) await o.last().click({ timeout: 2000 }).catch(() => {}); await sleep(400); } }
+    ok('Steckbrief-Nachricht: Pop-up mit „Steckbrief ansehen“', pop && (await d.page.locator('.lt-einzel-popup .lt-sb-ansehen').count()) === 1);
+    if (pop) { await click(d.page.locator('.lt-einzel-popup .lt-sb-ansehen')); await settle(d.page, 800); }
+    for (let w = 0; w < 40 && !(await d.page.locator('.fc-sheet').count()); w++) await sleep(100);
+    const kopf = await d.page.locator('.lt-sb-kopf').innerText().catch(() => '');
+    ok('Steckbrief-Nachricht öffnet den Steckbrief', /Chia-Brot/.test(kopf), kopf.slice(0, 40));
+    const back = await d.page.locator('.lt-backtage').innerText().catch(() => '');
+    ok('Steckbrief: Backtage stehen drin', /Backtage/i.test(back) && /Mo/.test(back), back.slice(0, 60));
+    ok('Steckbrief: „An Kollegen schicken“ da', (await d.page.getByRole('button', { name: 'An Kollegen schicken' }).count()) === 1);
+    await click(d.page.getByRole('button', { name: 'An Kollegen schicken' })); await settle(d.page, 300);
+    await d.page.getByLabel('Kollege').selectOption({ label: 'Ben' }).catch(() => {});
+    await click(d.page.getByRole('button', { name: 'Schicken', exact: true })); await settle(d.page, 400);
+    ok('Steckbrief an Kollegen geschickt', (await d.page.locator('.lt-sb-schicken').innerText().catch(() => '')).includes('an Ben geschickt'));
+    await click(d.page.getByRole('button', { name: 'Schließen' }).first()); await settle(d.page, 500);
+    const zul = await d.page.locator('.lt-zuletzt').innerText().catch(() => '');
+    ok('Spickzettel: „Zuletzt angesehen“ zeigt Chia-Brot', /Chia-Brot/.test(zul), zul.slice(0, 60));
+    ok('Steckbrief-Extras: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 249: Ofen-Kette (fallende Produktfotos, 4 gleiche werden goldbraun)
   teile.push(['Version 249: Ofen-Kette (fallende Produktfotos, 4 gleiche werden goldbraun)', async () => {
     const O = kompiliere(['src/games/ofenLogik.ts']).games_ofenLogik;
