@@ -46,7 +46,7 @@ const SB_CSS = `
 }
 `;
 
-import { cleanLabel, QUIZ_KEY, scoreGroup } from '../hilfen/wertungen';
+import { cleanLabel, QUIZ_KEY, scoreGroup, abNeustart, neustartVon, ausgabenInWertung } from '../hilfen/wertungen';
 
 type BonRow = { key: string; name: string; value: string; sub?: string };
 
@@ -83,6 +83,9 @@ export function ScoreboardView({
   const [showAll, setShowAll] = useState<boolean>(false);
   const [gamesOpen, setGamesOpen] = useState<boolean>(false);
   const myKey = currentUsername.toLowerCase();
+  // Version 262: nach einem Neustart zählen in den Wertungen nur neue Punkte (Hall of Fame und Rahmen bleiben)
+  const wertung = abNeustart(cloudScores, cloudProgress);
+  const neu = neustartVon(cloudProgress);
   const champs = monthChampions(cloudScores as any);
   const lastChamp = champs.length && champs[0].month === prevMonthKey() ? champs[0] : null;
 
@@ -100,13 +103,13 @@ export function ScoreboardView({
   // Einzelwertungen: alle Kategorien, in denen es Punkte gibt (ohne Battle und ausgeschlossene)
   const singleCategories = Array.from(
     new Set(
-      cloudScores
+      wertung
         .filter((s) => s.category && !isLeaderboardExcludedCategory(s.category))
         .map((s) => scoreGroup(s.category || ""))
         .filter((c): c is string => !!c && c !== QUIZ_KEY)
     )
   ).sort((a, b) => a.localeCompare(b, "de"));
-  const hasQuiz = cloudScores.some((s) => s.category && !isLeaderboardExcludedCategory(s.category) && scoreGroup(s.category) === QUIZ_KEY);
+  const hasQuiz = wertung.some((s) => s.category && !isLeaderboardExcludedCategory(s.category) && scoreGroup(s.category) === QUIZ_KEY);
 
   const keys: { id: string; label: string }[] = [
     { id: "total", label: "Gesamtpunkte" },
@@ -126,7 +129,7 @@ export function ScoreboardView({
 
   if (activeMode === "total") {
     const sums = new Map<string, { name: string; sum: number }>();
-    cloudScores.forEach((s) => {
+    wertung.forEach((s) => {
       if (!s?.username) return;
       const k = s.username.toLowerCase();
       const cur = sums.get(k) || { name: displayName(k, s.username), sum: 0 };
@@ -134,18 +137,18 @@ export function ScoreboardView({
       sums.set(k, cur);
     });
     // In der Schatzkammer ausgegebene Punkte fehlen in der Gesamtwertung
-    sums.forEach((v, k) => { v.sum -= Number(cloudProgress[k]?._ptsSpent) || 0; });
+    sums.forEach((v, k) => { v.sum -= ausgabenInWertung(cloudProgress, k); });
     const list = Array.from(sums.entries())
       .filter(([k]) => k !== "admin")
       .sort((a, b) => b[1].sum - a[1].sum);
-    rows = list.map(([k, v]) => ({ key: k, name: v.name, value: v.sum.toLocaleString("de-DE"), sub: Number(cloudProgress[k]?._ptsSpent) > 0 ? `💎 ${Number(cloudProgress[k]?._ptsSpent).toLocaleString("de-DE")} Pkt in der Schatzkammer` : undefined }));
+    rows = list.map(([k, v]) => ({ key: k, name: v.name, value: v.sum.toLocaleString("de-DE"), sub: ausgabenInWertung(cloudProgress, k) > 0 ? `💎 ${ausgabenInWertung(cloudProgress, k).toLocaleString("de-DE")} Pkt in der Schatzkammer` : undefined }));
     const team = list.reduce((t, [, v]) => t + v.sum, 0);
     footer = [
       { left: "TEAM GESAMT", right: `${team.toLocaleString("de-DE")} PKT` },
       { left: "Mitspieler", right: String(list.length) },
     ];
   } else if (activeMode === "month") {
-    const tot = monthTotals(cloudScores as any)[monthKeyOf()] || {};
+    const tot = monthTotals(wertung as any)[monthKeyOf()] || {};
     const list = Object.entries(tot).sort((a, b) => b[1] - a[1]);
     rows = list.map(([k, v]) => ({ key: k, name: displayName(k), value: v.toLocaleString("de-DE") }));
     const d = new Date(); const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
@@ -204,7 +207,7 @@ export function ScoreboardView({
     // Alle Runden zählen: Punkte werden pro Spiel aufaddiert (so ist nicht irgendwann jeder Erster)
     const cat = activeMode === "quiz" ? QUIZ_KEY : activeMode.slice(4);
     const agg = new Map<string, { name: string; sum: number; rounds: number; best: number }>();
-    cloudScores
+    wertung
       .filter((s) => s.username && s.category && !isLeaderboardExcludedCategory(s.category) && scoreGroup(s.category) === cat)
       .forEach((s) => {
         const k = s.username.toLowerCase();
@@ -288,6 +291,7 @@ export function ScoreboardView({
             <div style={{ textAlign: "center", fontWeight: 700, fontSize: "1.2em", letterSpacing: "2px" }}>BÄCKEREI HINKEL</div>
             <div style={{ textAlign: "center", fontSize: "0.85em" }}>Bestenliste · {activeLabel}</div>
             <div style={{ textAlign: "center", fontSize: "0.85em" }}>Stand {stamp}</div>
+            {neu && <div className="sb-neustart" style={{ textAlign: "center", fontSize: "0.85em" }}>Wertung seit {new Date(neu.ts).toLocaleDateString("de-DE")}</div>}
             {/* Version 260: direkt zum eigenen Platz springen, Zeile blinkt kurz auf */}
             {(() => {
               const platz = rows.findIndex((r) => r.key === myKey);

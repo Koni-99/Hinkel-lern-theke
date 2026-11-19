@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 261;
+const APP_VERSION: number = 262;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -25,7 +25,7 @@ import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSei
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
 import { geschenkSchicken, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
-import { alleRanglisten } from './hilfen/wertungen';
+import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
@@ -2006,8 +2006,8 @@ export default function App() {
   // ── Überholt in der Bestenliste? (Gesamtpunkte, gilt auf diesem Gerät) ──
   const rankTable = (() => {
     const sums: Record<string, number> = {};
-    (cloudData.scores || []).forEach(x => { if (!x?.username) return; const k = x.username.toLowerCase(); if (k === 'admin') return; sums[k] = (sums[k] || 0) + (Number(x.score) || 0); });
-    Object.keys(sums).forEach(k => { sums[k] -= Number(((cloudData.progress || {})[k] || {})._ptsSpent) || 0; });
+    abNeustart(cloudData.scores || [], cloudData.progress).forEach(x => { if (!x?.username) return; const k = x.username.toLowerCase(); if (k === 'admin') return; sums[k] = (sums[k] || 0) + (Number(x.score) || 0); });
+    Object.keys(sums).forEach(k => { sums[k] -= ausgabenInWertung(cloudData.progress, k); });
     return Object.entries(sums).sort((a, b) => b[1] - a[1]);
   })();
   const myRankIdx = rankTable.findIndex(([k]) => k === username.toLowerCase());
@@ -2022,7 +2022,11 @@ export default function App() {
     let prev: Record<string, { place: number; above: string[] }> = {};
     try { prev = JSON.parse(localStorage.getItem(key) || 'null') || {}; } catch {}
     if (!prev.total) { try { const alt = JSON.parse(localStorage.getItem(`lt_rank_${me}`) || 'null'); if (alt && Array.isArray(alt.above)) prev.total = alt; } catch {} }
-    const jetzt: Record<string, { place: number; above: string[] }> = { ...prev };
+    // Version 262: nach einem Neustart der Bestenliste nicht „überholt“ melden, sondern einmal den Neustart erklären
+    const neuTs = neustartVon(cloudData.progress)?.ts || 0;
+    let neustartHinweis = false;
+    if (neuTs && Number((prev as any)._neu) !== neuTs) { prev = {}; neustartHinweis = true; }
+    const jetzt: Record<string, any> = { ...prev, _neu: neuTs || undefined };
     const meldungen: { id: string; label: string; names: string[]; place: number }[] = [];
     const nameVon = (k: string) => (cloudData.lastSeen || {})[k]?.displayName || (cloudData.progress || {})[k]?._displayName || k;
     for (const [id, r] of Object.entries(ranglisten)) {
@@ -2037,6 +2041,7 @@ export default function App() {
       jetzt[id] = { place: idx + 1, above };
     }
     try { localStorage.setItem(key, JSON.stringify(jetzt)); } catch {}
+    if (neustartHinweis) { if (Date.now() - neuTs < 30 * 86400000) setToast('Neustart der Bestenliste: Ab jetzt zählen alle Punkte neu, alle starten bei 0. Deine Stufe, dein Trinkgeld und alles Gelernte bleiben.'); return; }
     if (!meldungen.length) return;
     const gesamt = meldungen.find((m) => m.id === 'total');
     if (gesamt && myRankIdx >= 0) {
