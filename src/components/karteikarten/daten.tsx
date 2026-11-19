@@ -36,19 +36,6 @@ export const DICT_ORDER = ["Bedienung", "Das sagen Kunden", "Bezahlen", "Unsere 
 
 export const DICT_CATS = ["Alle", ...Array.from(new Set(DICT_ALL.map(d => d.cat))).sort((a, b) => { const r = (x: string) => { const i = DICT_ORDER.indexOf(x); return i < 0 ? 99 : i; }; return r(a) - r(b); })];
 
-export let deVoice: SpeechSynthesisVoice | null = null;
-
-/** Deutsch vorlesen (für „Frag mich ab“) */
-export function speakGerman(text: string) {
-  try {
-    const synth = window.speechSynthesis; if (!synth) return;
-    synth.cancel();
-    if (!deVoice) { const vs = synth.getVoices().filter(v => /^de/i.test(v.lang)); deVoice = vs.find(v => /google|natural|premium|anna|katja/i.test(v.name)) || vs[0] || null; }
-    const u = new SpeechSynthesisUtterance(text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, ' ').replace(/\s+/g, ' ').trim());
-    u.lang = deVoice ? deVoice.lang : 'de-DE'; if (deVoice) u.voice = deVoice; u.rate = 0.95;
-    synth.speak(u);
-  } catch { /* ohne Sprachausgabe */ }
-}
 
 export let enVoice: SpeechSynthesisVoice | null = null;
 

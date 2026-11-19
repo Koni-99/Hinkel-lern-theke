@@ -170,7 +170,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {['alle', ...bereiche, 'fehler'].filter((a) => anzahl(a) > 0).map((a) => (
             <button key={a} type="button" onClick={() => { halt(); setAuswahl(a); setListe([]); setIdx(0); }} style={chip(auswahl === a)}>
-              {a === 'alle' ? 'Alles' : a === 'fehler' ? 'Mein Fehler-Stapel' : a} ({anzahl(a)})
+              {a === 'alle' ? 'Alles' : a === 'fehler' ? 'Mein Fehler-Stapel' : a === 'Prüfung' ? 'Prüfungsfragen' : a} ({anzahl(a)})
             </button>
           ))}
         </div>

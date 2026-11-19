@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 255;
+const APP_VERSION: number = 257;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -43,6 +43,7 @@ const MeinMonat = lazy(() => import('./screens/MeinMonat').then((m) => ({ defaul
 const KassenblitzView = lazy(() => import('./games/Kassenblitz').then((m) => ({ default: m.KassenblitzView })));
 const ThekenSimulatorView = lazy(() => import('./games/theke/ThekenSimulator').then((m) => ({ default: m.ThekenSimulatorView })));
 const AllergenTrainerView = lazy(() => import('./games/AllergenTrainer').then((m) => ({ default: m.AllergenTrainerView })));
+const ThekenSaetzeSeite = lazy(() => import('./screens/ThekenSaetze').then((m) => ({ default: m.ThekenSaetzeSeite })));
 const RechenTrainerView = lazy(() => import('./games/RechenTrainer').then((m) => ({ default: m.RechenTrainerView })));
 const OfenKetteView = lazy(() => import('./games/OfenKette').then((m) => ({ default: m.OfenKetteView })));
 const TelefonBestellungView = lazy(() => import('./games/TelefonBestellung').then((m) => ({ default: m.TelefonBestellungView })));
@@ -64,7 +65,10 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
-import { lehrjahrAus, fragenZuPunkt, geuebtInWoche } from './hilfen/azubi';
+import { lehrjahrAus, fragenZuPunkt, geuebtInWoche, wochenKey } from './hilfen/azubi';
+import { alleAzubiFragen, frageStellen, frageBeantworten, antwortenGelesen, frageLoeschen, zieleVon, zielSetzen, zielBewerten, istRueckblickZeit, rueckblick } from './hilfen/azubiExtras';
+import { FrageAnAusbilder, AzubiFragenAntworten, WochenzielKarte, RueckblickKarte } from './ui/azubiKarten';
+import { AUSBILDUNGSPLAN } from './ui/ausbildung';
 import { pruefungsThema } from './hilfen/pruefungThemen';
 import { BerufsschulKarten, KartenBestaetigen } from './ui/berufsschulKarten';
 import { alleEigenenKarten, karteSchreiben, karteEntscheiden, karteLoeschen } from './hilfen/eigeneKarten';
@@ -1429,6 +1433,22 @@ export default function App() {
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
     setActiveTab('quiz');
   };
+  // Version 256: Quiz zu meinem Lehrjahr (alle passenden Fragen der Planpunkte bis zum eigenen Lehrjahr)
+  const lehrjahrFragen = (lj: number) => {
+    const ids = AUSBILDUNGSPLAN.filter(y => y.jahr <= Math.max(1, lj || 1)).flatMap(y => y.items.map(i => i.id));
+    const m = new Map<number, any>();
+    ids.forEach(id => fragenZuPunkt(id, allFlashcards).forEach((q: any) => m.set(q.id, q)));
+    return [...m.values()];
+  };
+  const launchLehrjahrQuiz = (lj: number) => {
+    const list = lehrjahrFragen(lj);
+    if (list.length < 5) return;
+    setExamSim(false);
+    setCurrentQuizCategory('Lehrjahr-Quiz'); setSelectedLevel('mixed');
+    setQuizList(shuffleArray(list).slice(0, 15).map(q => shuffleQuestionOptions(q)));
+    setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz');
+  };
   // Version 252: Azubi übt einen Punkt aus dem Ausbildungsplan
   const launchPlanQuiz = (id: string) => {
     const list = fragenZuPunkt(id, allFlashcards);
@@ -2037,6 +2057,34 @@ export default function App() {
     setToast('Der Ausbilder hat deine Kundenfrage beantwortet. Du findest die Antwort unter Nachschlagen → „Das hat ein Kunde gefragt“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kfNeuKey]);
+  // Version 256: Azubi-Fragen an den Ausbilder: Hinweis auf neue Antworten (Azubi) bzw. neue Fragen (Ausbilder), Rückblick in den Sommerferien
+  const azFragen = username ? alleAzubiFragen(cloudData.progress) : [];
+  const azNeuKey = !username ? '' : isAdmin ? azFragen.filter(f => !f.a).map(f => f.user + f.id).join(',') : azFragen.filter(f => f.user === username.toLowerCase() && f.a && !f.gesehen).map(f => f.id).join(',');
+  useEffect(() => {
+    if (!azNeuKey || activeTab === 'ausbildung') return;
+    let shown: string[] = [];
+    try { shown = JSON.parse(localStorage.getItem('lt_azfrage_hinweis') || '[]'); } catch {}
+    const fresh = azNeuKey.split(',').filter(id => !shown.includes(id));
+    if (!fresh.length) return;
+    try { localStorage.setItem('lt_azfrage_hinweis', JSON.stringify([...shown, ...fresh].slice(-50))); } catch {}
+    setToast(isAdmin ? `${fresh.length === 1 ? 'Ein Azubi hat dir eine Frage gestellt' : `${fresh.length} neue Fragen von Azubis`}. Du findest sie unter „Ausbildung“.` : 'Dein Ausbilder hat deine Frage beantwortet. Die Antwort steht unter „Ausbildung“.');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [azNeuKey]);
+  useEffect(() => {
+    if (activeTab !== 'ausbildung' || isAdmin || !username) return;
+    if (azFragen.some(f => f.user === username.toLowerCase() && f.a && !f.gesehen)) mutateCloudData(antwortenGelesen(username.toLowerCase()));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, azNeuKey]);
+  const rbPr: any = username && !isAdmin ? ((cloudData.progress || {})[username.toLowerCase()] || {}) : {};
+  const rueckblickFaellig = !!username && !isAdmin && cloudConnected && rbPr._role === 'azubi' && istRueckblickZeit() && rbPr._rueckblick !== String(new Date().getFullYear());
+  useEffect(() => {
+    if (!rueckblickFaellig || !username) return;
+    const k = username.toLowerCase();
+    mutateCloudData((curr) => { const pr = curr.progress[k]; if (pr) pr._rueckblick = String(new Date().getFullYear()); return curr; });
+    const t = window.setTimeout(() => setToast('Schöne Sommerferien! Dein Rückblick auf das Lehrjahr steht unter „Ausbildung“.'), 3000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rueckblickFaellig]);
   // Lob von Kollegen: Punkte selbst gutschreiben, sobald ein neues Lob an mich da ist (siehe hilfen/team.ts)
   const lobNeu = isAdmin || !username ? [] : offeneLobPunkte(cloudData.progress, username.toLowerCase());
   const lobNeuKey = lobNeu.map(l => `${l.von}_${l.id}`).join(',');
@@ -2506,7 +2554,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'nachrichten' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'urlaub' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'nachrichten' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'urlaub' || activeTab === 'saetze' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2627,16 +2675,19 @@ export default function App() {
         <div onClick={() => setHdrMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 119, backgroundColor: 'rgba(31,20,12,.25)' }}>
           <div className="lt-menu-pop" role="menu" onClick={(e) => e.stopPropagation()}>
             <div className="lt-menu-who">{isAdmin ? 'Ausbilder-Modus' : username} · {isSyncing ? 'synchronisiert …' : cloudConnected ? 'online' : 'offline'}</div>
-            <button role="menuitem" onClick={() => { toggleBigFont(); }} aria-pressed={bigFont}><span style={{ width: '24px', fontWeight: 800 }}>A+</span>{bigFont ? 'Normale Schrift' : 'Größere Schrift'}</button>
-            {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
+            {!isAdmin && <div className="lt-menu-gruppe" role="presentation" style={{ padding: '10px 14px 2px', fontSize: '12px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', opacity: 0.6 }}>Für mich</div>}
+            {!isAdmin && <button role="menuitem" className="lt-menu-nachrichten" onClick={() => { setHdrMenu(false); setActiveTab('nachrichten'); }}><LtIcon paths={ICON.mail} size={22} />Meine Nachrichten{einzelNeu.length + einzelAntworten > 0 && <span className="lt-menu-zahl" style={{ marginLeft: 'auto', minWidth: '24px', height: '24px', padding: '0 7px', borderRadius: '999px', backgroundColor: '#B42318', color: '#FFFFFF', fontSize: '14px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{einzelNeu.length + einzelAntworten}</span>}</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('statistik'); }}><LtIcon paths={ICON.medal} size={22} />Meine Statistik</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('monat'); }}><LtIcon paths={ICON.calendar} size={22} />Mein Monat</button>}
-            {!isAdmin && <button role="menuitem" className="lt-menu-nachrichten" onClick={() => { setHdrMenu(false); setActiveTab('nachrichten'); }}><LtIcon paths={ICON.mail} size={22} />Meine Nachrichten{einzelNeu.length + einzelAntworten > 0 && <span className="lt-menu-zahl" style={{ marginLeft: 'auto', minWidth: '24px', height: '24px', padding: '0 7px', borderRadius: '999px', backgroundColor: '#B42318', color: '#FFFFFF', fontSize: '14px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{einzelNeu.length + einzelAntworten}</span>}</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('urlaub'); }}><LtIcon paths={ICON.sun} size={22} />Urlaub</button>}
+            {!isAdmin && <div className="lt-menu-gruppe" role="presentation" style={{ padding: '10px 14px 2px', fontSize: '12px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', opacity: 0.6 }}>Mitmachen</div>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
-            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
-            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('urlaub'); }}><LtIcon paths={ICON.calendar} size={22} />Urlaub</button>}
-            <button role="menuitem" onClick={() => { setHdrMenu(false); setShowAussehen(true); }}><LtIcon paths={ICON.sun} size={22} />Aussehen</button>
+            <div className="lt-menu-gruppe" role="presentation" style={{ padding: '10px 14px 2px', fontSize: '12px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', opacity: 0.6 }}>Einstellungen und Hilfe</div>
+            <button role="menuitem" onClick={() => { toggleBigFont(); }} aria-pressed={bigFont}><span style={{ width: '24px', fontWeight: 800 }}>A+</span>{bigFont ? 'Normale Schrift' : 'Größere Schrift'}</button>
+            <button role="menuitem" onClick={() => { setHdrMenu(false); setShowAussehen(true); }}><LtIcon paths={ICON.sliders} size={22} />Aussehen</button>
+            {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
             <button role="menuitem" onClick={() => { setHdrMenu(false); setHilfeThema(undefined); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); if (isAdmin) adminSignOut(); setUsername(''); setTempUsername(''); setAdminPinInput(''); setPinError(false); resetLogin(); setActiveTab('home'); localStorage.removeItem('hinkel_username'); }} style={{ color: '#B42318' }}><LtIcon paths={ICON.logout} size={22} />Abmelden</button>
           </div>
@@ -2692,6 +2743,7 @@ export default function App() {
         {(activeTab === 'einarbeitung' || activeTab === 'appwoche') && <EinarbeitungSeite {...{ activeTab, setActiveTab, obDay, setObDay, toggleOnboarding, onboarding, appWeek, goOnboardingTarget }} />}
         {activeTab === 'kassenblitz' && <KassenblitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
+        {activeTab === 'saetze' && <ThekenSaetzeSeite onBack={() => setActiveTab('nachschlagen')} />}
         {activeTab === 'rechnen' && <RechenTrainerView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'ofen' && <OfenKetteView images={productImages} scores={cloudData.scores || []} userKey={userKeyLower} onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
@@ -2720,7 +2772,7 @@ export default function App() {
           tipp={fehlerDue > 0 ? `In deinem Fehler-Stapel warten ${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'}, damit startest du am besten.` : weakestCat ? `Nimm dir „${weakestCat.c}“ vor, da hast du erst ${weakestCat.p} % geschafft.` : ''} />}
         {activeTab === 'geburtstag' && <GeburtstagSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'urlaub' && <UrlaubSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
-        {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
+        {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={[...CATS, 'Prüfung']} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
         {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} />}
         {activeTab === 'hilfe' && <HilfeView thema={hilfeThema} onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
         {activeTab === 'statistik' && (
@@ -2740,6 +2792,14 @@ export default function App() {
             notizen={myProg._berichtNotiz || {}} geuebt={(m: Date) => geuebtInWoche(cloudData.scores || [], userKeyLower, m)}
             onNotiz={(w: string, n: any) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); const alt = { ...(pr._berichtNotiz || {}), [w]: n }; pr._berichtNotiz = Object.fromEntries(Object.entries(alt).sort((x, y) => y[0].localeCompare(x[0])).slice(0, 80)); return curr; }); }}
             onBestaetigen={isAdmin ? (azubiKey: string, id: string, an: boolean) => mutateCloudData((curr) => { const pr = curr.progress[azubiKey]; if (!pr) return curr; const o = { ...(pr._azubiOk || {}) }; if (an) o[id] = Date.now(); else delete o[id]; pr._azubiOk = o; return curr; }) : undefined}
+            oben={isAdmin ? <AzubiFragenAntworten fragen={azFragen} onAntwort={(u: string, id: string, t: string) => mutateCloudData(frageBeantworten(u, id, t))} />
+              : myRole === 'azubi' && istRueckblickZeit() ? <RueckblickKarte r={rueckblick(myProg, AUSBILDUNGSPLAN.flatMap(y => y.items.map(i => i.id)))} lehrjahr={lehrjahrAus(myProg._ausbildungStart) || Number(myProg._lehrjahr) || 0} /> : undefined}
+            azubiExtra={myRole === 'azubi' && !isAdmin ? <>
+              <WochenzielKarte dieseWoche={wochenKey(mondayOf(new Date()))} letzteWoche={wochenKey(mondayOf(new Date(Date.now() - 7 * 86400000)))} ziele={zieleVon(myProg)}
+                onSetzen={(w: string, t: string) => mutateCloudData(zielSetzen(userKeyLower, username, w, t))} onBewerten={(w: string, ok: boolean) => mutateCloudData(zielBewerten(userKeyLower, username, w, ok))} />
+              <FrageAnAusbilder fragen={azFragen.filter(f => f.user === userKeyLower)} onFrage={(t: string) => mutateCloudData(frageStellen(userKeyLower, username, t))} onLoeschen={(id: string) => mutateCloudData(frageLoeschen(userKeyLower, id))} />
+            </> : undefined}
+            onLehrjahrQuiz={() => launchLehrjahrQuiz(lehrjahrAus(myProg._ausbildungStart) || Number(myProg._lehrjahr) || 1)} lehrjahrQuizZahl={lehrjahrFragen(lehrjahrAus(myProg._ausbildungStart) || Number(myProg._lehrjahr) || 1).length}
             lernkarten={<BerufsschulKarten meKey={userKeyLower} lernkasten={lernkastenVon(cloudData.progress, userKeyLower)} eigene={alleEigenenKarten(cloudData.progress)}
               onBewerten={isAdmin ? undefined : (key: string, gewusst: boolean) => mutateCloudData(karteBewerten(userKeyLower, username, key, gewusst))}
               onSchreiben={myRole === 'azubi' && !isAdmin ? (b: string, e: string, f: string) => mutateCloudData(karteSchreiben(userKeyLower, username, b, e, f)) : undefined}

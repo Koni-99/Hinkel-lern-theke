@@ -72,15 +72,15 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
       {box(boxIcon(ICON.home), 'Wo finde ich was?', <>
         {ort('Hauptseiten', 'am Handy und Tablet unten, am Computer als Leiste links')}
         {ort('Start', 'Tages-Challenge, Team-Challenge, Lob der Woche, Umfragen, Geburtstage. Ganz unten zum Aufklappen: „Deine Zahlen“ mit Statistik, Lern-Bon, Serie und Abzeichen')}
-        {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Hör-Lernen')}
-        {ort('Spielen', 'Theken-Simulator, Bilderquiz, Ofen-Kette, Quiz Battle und mehr')}
+        {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Lieblingsfragen, Hör-Lernen, Lernpfad')}
+        {ort('Spielen', 'Theken-Simulator, Telefon-Bestellung, Bilderquiz, Ofen-Kette, Rechen-Trainer, Quiz Battle und mehr')}
         {ort('Lupe oben', 'Sucht überall: Produkte, Fragen aus dem Quiz, Hilfe-Themen und Seiten. Mit dem Mikrofon kannst du auch sprechen, das geht auch im Suchfeld unter Nachschlagen.')}
-        {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}
+        {ort('Nachschlagen', 'Steckbriefe der Produkte, Fachwissen, Englisch, Kundenfragen, Gute Sätze für die Theke, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
         {ort('Neu laden', 'du bleibst auf der Seite, auf der du gerade warst')}
-        {ort('Menü (oben rechts, drei Striche)', 'Statistik, Mein Monat, Meine Nachrichten, Idee einreichen, Kundenstimme, Geburtstag, Aussehen, Hilfe, größere Schrift')}
-        <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>.</div>
+        {ort('Menü (oben rechts, drei Striche)', 'Für mich: Nachrichten, Statistik, Mein Monat, Geburtstag, Urlaub. Mitmachen: Idee einreichen, Kundenstimme. Einstellungen: Schrift, Aussehen, Hilfe')}
+        <div>Azubis haben zusätzlich die Seite <strong>Ausbildung</strong>: Ausbildungsplan, Wochenziel, Frage an den Ausbilder, Notizen fürs Berichtsheft, Berufsschul-Lernkarten und Prüfungen.</div>
       </>, 0, true)}
       {box(boxIcon(ICON.bulb), 'Was ist was? Kurz erklärt', <>
         {ort('Punkte', 'für die Bestenliste und deine Stufe')}
@@ -146,6 +146,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
       {box(boxIcon(ICON.bread), 'Steckbriefe der Produkte', <div>Unter Nachschlagen → Produktkenntnis siehst du alle Produkte als Fotos nebeneinander. Antippen öffnet den Steckbrief: großes Foto, Preis, was du im Verkauf sagst und die Allergene. Die Allergene stehen als farbige Kästchen da, damit du sie an der Theke sofort siehst: Gluten gelb, Milch blau, Eier hellgelb, Nüsse braun. Viele Produkte haben mehrere Fotos aus unserem Online-Shop: zur Seite wischen oder die Pfeile antippen. Hat der Ausbilder selbst ein Foto gemacht, wird seins gezeigt. Mit „Vergleichen“ siehst du zwei Produkte nebeneinander, zum Beispiel Schweizer und Münsterländer: Preis, Schnitt, Mehl, was du im Verkauf sagst und die Allergene. Allergene, die nur eins der beiden hat, stehen rot da. In den Spielen kommt zur Abwechslung mal das eine, mal das andere Foto. Steht ein roter Hinweis darunter, bitte bei Allergikern besonders vorsichtig sein. Ganz unten steht die vollständige Zutatenliste. Mit „Steckbrief vorlesen“ liest dir eine natürliche Stimme alles vor, genauso im Quiz, in den Lernkarten und in den Spielen. Die Produkt-Lernkarten sehen aus wie echte Karteikarten: vorne der Name, hinten die Antwort in Stichpunkten. Nach dem Umdrehen tippst du „Wusste ich“ oder „Nochmal“. Darunter steht dein Lernkasten mit 5 Fächern: Gewusste Karten wandern ein Fach weiter nach hinten, bei „Nochmal“ kommt die Karte zurück in Fach 1 und taucht ein paar Karten später wieder auf. Karten aus Fach 1 kommen zuerst dran. Mit „Frag mich ab“ hörst du vorne den Namen und die Frage, nach dem Umdrehen die Antwort. Die Fachwissen-Lernkarten funktionieren genauso: vorne die Frage, hinten die Antwort in Handschrift, mit eigenem Lernkasten. Beim Vorlesen wechseln sich verschiedene natürliche Stimmen ab, Frauen- und Männerstimmen. <strong>Backtage:</strong> Gibt es ein Produkt nur an bestimmten Tagen, steht im Steckbrief, an welchen. <strong>Preis geändert:</strong> Hat sich der Preis geändert, steht zwei Wochen lang das Datum und der alte Preis dabei. <strong>Zuletzt angesehen:</strong> Oben in der Liste stehen die Steckbriefe, die du zuletzt geöffnet hast, zum schnellen Nachsehen an der Theke. <strong>An Kollegen schicken:</strong> Unten im Steckbrief wählst du einen Kollegen aus. Er bekommt eine Nachricht und kann den Steckbrief mit einem Tipp öffnen.</div>, 11)}
       {box(boxIcon(ICON.chat), 'Kundenfragen und Verkaufstipps', <>
         <div><strong>Kundenfragen:</strong> Unter Nachschlagen → „Das hat ein Kunde gefragt“. Wenn dich ein Kunde etwas fragt, das du nicht wusstest, schreib es dort hinein. Der Ausbilder antwortet, danach sehen alle Frage und Antwort und lernen mit. Geht es um ein Produkt, führt ein Knopf direkt zu seinem Steckbrief.</div>
+        <div><strong>Gute Sätze für die Theke:</strong> Unter Nachschlagen. Formulierungen fürs Begrüßen, Beraten, Zusatzverkauf, Allergien, Reklamation, Kassieren und Verabschieden. Mit Vorlesen hörst du, wie es klingt.</div>
         <div><strong>Verkaufstipps:</strong> In jedem Produkt-Steckbrief kannst du einen Tipp für die Kollegen hinterlassen, zum Beispiel „passt super zu Frischkäse“.</div>
       </>, 11)}
       {box(boxIcon(ICON.heart), 'Lob, Umfragen und wichtige Nachrichten', <>
@@ -155,7 +156,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>
       </>, 12)}
       {box(boxIcon(ICON.headphones), 'Hör-Lernen und eigene Notizen', <>
-        <div><strong>Hör-Lernen:</strong> Unter Lernen → „Hör-Lernen“. Die App liest dir eine Frage vor, lässt dir kurz Zeit zum Nachdenken und sagt dann die Antwort. Gut für unterwegs, mit Kopfhörern. Tempo und Thema kannst du einstellen. Gesprochen wird mit natürlichen Stimmen, zwei Frauen und zwei Männer im Wechsel. Nur bei Fragen, die der Ausbilder neu angelegt hat, liest die Handy-Stimme.</div>
+        <div><strong>Hör-Lernen:</strong> Unter Lernen → „Hör-Lernen“. Die App liest dir eine Frage vor, lässt dir kurz Zeit zum Nachdenken und sagt dann die Antwort. Gut für unterwegs, mit Kopfhörern. Tempo und Thema kannst du einstellen. Gesprochen wird mit natürlichen Stimmen, zwei Frauen und zwei Männer im Wechsel. Nur bei Fragen, die der Ausbilder neu angelegt hat, liest die Handy-Stimme. Unter „Prüfungsfragen“ hörst du auch die Fragen aus Zwischen- und Abschlussprüfung.</div>
         <div><strong>Eigene Notiz:</strong> In jedem Produkt-Steckbrief kannst du dir eine Notiz schreiben, zum Beispiel eine Eselsbrücke. Sie ist nur für dich gedacht.</div>
       </>, 13)}
       {box(boxIcon(ICON.pencil), 'Ideen-Box, Kundenstimmen, Geburtstag', <>
@@ -201,6 +202,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
       {box(boxIcon(ICON.cap), 'Ausbildung (für Azubis)', <>
         <div><strong>Ausbildungsplan:</strong> Trag einmal ein, wann deine Ausbildung begonnen hat. Dann weiß die App dein Lehrjahr von selbst. Hake ab, was du kannst. Der Ausbilder bestätigt es, dann wird der Punkt grün. Unter vielen Punkten gibt es „Üben“: ein Quiz nur zu diesem Thema oder das passende Spiel.</div>
         <div><strong>Berichtsheft:</strong> Unter „Notizen der Woche“ notierst du, was du gemacht hast. Alles wird gespeichert, du kannst später zurückblättern und es ins Heft abschreiben. Die App zeigt auch, was du in der Woche in der Lern-Theke geübt hast, mit einem Tipp übernimmst du es in deine Notizen.</div>
+        <div><strong>Wochenziel und Fragen:</strong> Setz dir jede Woche ein Ziel, in der nächsten Woche fragt die App, ob du es geschafft hast. Mit „Frage an den Ausbilder“ fragst du etwas, das nur er sieht. Seine Antwort steht dann dort. „Quiz zu meinem Lehrjahr“ mischt Fragen zu allem, was in deinem Lehrjahr dran ist. In den Sommerferien gibt es einen Rückblick auf dein Lehrjahr.</div>
         <div><strong>Berufsschule: Lernkarten:</strong> Fachbegriffe aus Warenkunde, Verkauf, Hygiene und Recht, Rechnen und Ausbildung als Karteikarten mit Lernkasten. Mit „Eigene Karte schreiben“ legst du Karten aus dem Unterricht an. Der Ausbilder bestätigt sie, danach lernen alle Azubis damit.</div>
       </>, 3)}
       {box(boxIcon(ICON.calendar), 'Urlaub', <div>Im Menü unter „Urlaub“ trägst du freiwillig ein, wann du im Urlaub bist. In der Zeit reißt deine Lern-Serie nicht, es wird kein Serien-Schutz verbraucht und Teigi wird nicht schlapp. Höchstens 6 Wochen im Jahr. Bist du früher zurück, tippst du auf „Ich bin schon zurück“. Der Ausbilder sieht nur, dass du im Urlaub bist.</div>, 3)}

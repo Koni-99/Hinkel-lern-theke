@@ -33,8 +33,6 @@ export const urlaubImJahr = (pr: any, jahr: number) => urlaubsTage(pr).filter((k
 
 /** Ist heute Urlaub? Dann der Eintrag */
 export const urlaubHeute = (pr: any, heute = new Date()): Urlaub | null => urlaubeVon(pr).find((u) => u.von <= dk(heute) && dk(heute) <= u.bis) || null;
-/** Nächster Urlaub (heute oder später) */
-export const urlaubKommend = (pr: any, heute = new Date()): Urlaub | null => urlaubeVon(pr).find((u) => u.bis >= dk(heute)) || null;
 
 /** Prüft einen neuen Urlaub: Text mit dem Problem oder '' wenn alles passt */
 export function urlaubPruefen(pr: any, von: string, bis: string, heute = new Date()): string {

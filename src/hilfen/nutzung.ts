@@ -12,7 +12,7 @@ const SPEICHER = 'lt_nutzung_offen';
 /** Lesbare Namen der Seiten (was nicht hier steht, wird nicht gezählt) */
 export const SEITEN: Record<string, string> = {
   home: 'Startseite', quiz: 'Quiz', pfad: 'Lernpfad', hoeren: 'Hör-Lernen', ausbildung: 'Ausbildung', einarbeitung: 'Erste Woche',
-  nachschlagen: 'Nachschlagen', flashcards: 'Karteikarten', kundenfragen: 'Kundenfragen', kundenstimmen: 'Kundenstimmen', nachrichten: 'Meine Nachrichten',
+  nachschlagen: 'Nachschlagen', flashcards: 'Karteikarten', kundenfragen: 'Kundenfragen', saetze: 'Gute Sätze für die Theke', kundenstimmen: 'Kundenstimmen', nachrichten: 'Meine Nachrichten',
   spielen: 'Spiele-Auswahl', theke: 'Theken-Simulator', telefon: 'Telefon-Bestellung', ofen: 'Ofen-Kette', rechnen: 'Rechen-Trainer', kassenblitz: 'Kassenblitz', tueten: 'Tüten-Blitz', ansturm: 'Theken-Ansturm',
   preisduell: 'Teurer oder billiger?', bilderquiz: 'Welches Brot ist das?', schneiden: 'Schneide-Profi', allergene: 'Allergene-Training',
   alternativen: 'Alternativen-Jäger', battle: 'Quiz Battle', advent: 'Adventskalender',
