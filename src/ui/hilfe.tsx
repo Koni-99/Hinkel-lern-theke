@@ -1,6 +1,6 @@
 // ═══ Einführung, Hilfe-Seite ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, KUEKEN_IMG } from './basis';
 import { LtIcon, ICON } from '../basis/symbole';
 
@@ -45,9 +45,11 @@ export function IntroTour({ name, onDone }: { name: string; onDone: () => void }
 }
 
 // ───────────────────────── Hilfe: So funktioniert die Lern-Theke ─────────────────────────
-export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { levels: { min: number; title: string; icon: string }[]; jokers: { icon: string; label: string; desc?: string }[]; onTour: () => void; onBack: () => void; onInstall: () => void }) {
+export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: { thema?: string; levels: { min: number; title: string; icon: string }[]; jokers: { icon: string; label: string; desc?: string }[]; onTour: () => void; onBack: () => void; onInstall: () => void }) {
+  // Version 251: aus der Suche direkt ein Thema öffnen
+  useEffect(() => { if (!thema) return; const t = window.setTimeout(() => { const el = [...document.querySelectorAll('main details[data-thema]')].find((d) => d.getAttribute('data-thema') === thema); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250); return () => window.clearTimeout(t); }, [thema]);
   const box = (icon: ReactNode, title: string, body: ReactNode, i: number, open = false) => (
-    <details key={title} className="lt-fold lt-tile" open={open} style={{ ...cardStyle, padding: 0, animationDelay: `${i * 0.04}s` }}>
+    <details key={title} className="lt-fold lt-tile" data-thema={title} open={open || title === thema} style={{ ...cardStyle, padding: 0, animationDelay: `${i * 0.04}s` }}>
       <summary style={{ cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', minHeight: '60px' }}>
         <span className="lt-cat-emo" style={{ fontSize: '30px', lineHeight: 1, animationDelay: `${-i * 0.4}s` }} aria-hidden="true">{icon}</span>
         <span style={{ flex: 1, fontFamily: TH.serif, fontSize: '24px', lineHeight: 1.1 }}>{title}</span>
@@ -72,6 +74,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         {ort('Start', 'Tages-Challenge, Team-Challenge, Lob der Woche, Umfragen, Geburtstage. Ganz unten zum Aufklappen: „Deine Zahlen“ mit Statistik, Lern-Bon, Serie und Abzeichen')}
         {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Hör-Lernen')}
         {ort('Spielen', 'Theken-Simulator, Bilderquiz, Ofen-Kette, Quiz Battle und mehr')}
+        {ort('Lupe oben', 'Sucht überall: Produkte, Fragen aus dem Quiz, Hilfe-Themen und Seiten. Mit dem Mikrofon kannst du auch sprechen, das geht auch im Suchfeld unter Nachschlagen.')}
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Kundenfragen, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
         {ort('Zurück-Taste am Handy', 'geht eine Seite zurück und schließt offene Steckbriefe, statt die App zu beenden')}
@@ -172,6 +175,8 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Glücksfrage:</strong> Hast du 5 Fragen hintereinander richtig, wird die nächste eine Glücksfrage. Sie zählt dreifach, und falsch gibt es keinen Abzug.</div>
         <div><strong>Comeback-Bonus:</strong> Schaffst du eine Frage, die in deinem Fehler-Stapel fällig war, gibt es doppelte Punkte.</div>
         <div><strong>Wissens-Pause:</strong> Auf dem Kassenbon nach jeder Runde steht ein kurzer Fakt aus der Backstube.</div>
+        <div><strong>Lieblingsfragen:</strong> Tippe im Quiz auf den Stern neben der Frage. Unter Lernen → „Lieblingsfragen“ übst du alle gemerkten Fragen am Stück. Nochmal tippen nimmt den Stern wieder weg.</div>
+        <div><strong>Willkommen zurück:</strong> Hast du 7 Tage oder länger nicht gelernt, gibt es am ersten Tag zurück für alles doppelte Punkte.</div>
         <div><strong>Küken-Geheimnis:</strong> Tipp auf der Startseite auf das Küken neben „Wusstest du?“. Es verrät dir einen Profi-Kniff aus Backstube und Verkauf.</div>
       </>, 15)}
       {box(boxIcon(ICON.chat), 'Theken-Simulator', <>
@@ -188,6 +193,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall }: { level
         <div><strong>Name vergessen?</strong> Finger auf ein Bild halten. <strong>Ablage:</strong> Antippen legt das fallende Teil zur Seite, nochmal antippen holt es zurück.</div>
         <div>Jeden Tag kommen andere Produkte in den Ofen. Mittwochs und samstags ist <strong>Gruppen-Tag</strong>: Dann zählen alle Produkte einer Gruppe als gleich, zum Beispiel alle Brötchen. <strong>Ruhig backen</strong> geht ohne Zeit und ohne Bestellung, zählt aber nur halb. Pro Runde gibt es höchstens 250 Punkte (vor dem Bonus ×1,5). Am Ende kommt ein Kassenbon mit allem, was du gebacken hast.</div>
       </>, 3)}
+      {box(boxIcon(ICON.calendar), 'Urlaub', <div>Im Menü unter „Urlaub“ trägst du freiwillig ein, wann du im Urlaub bist. In der Zeit reißt deine Lern-Serie nicht, es wird kein Serien-Schutz verbraucht und Teigi wird nicht schlapp. Höchstens 6 Wochen im Jahr. Bist du früher zurück, tippst du auf „Ich bin schon zurück“. Der Ausbilder sieht nur, dass du im Urlaub bist.</div>, 3)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>
         <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest und welche falsche Antwort du gewählt hast), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>
         <div>Der Ausbilder sieht deinen Lernstand, damit er dir gezielt helfen kann. Bei falschen Antworten sieht er auch, was du gewählt hast. So kann er erklären, wo die Verwechslung liegt. Außerdem zählt die App, wie oft Seiten und Spiele geöffnet werden. Der Ausbilder sieht davon nur die Summe für das ganze Team, ohne Namen. So weiß er, was ihr wirklich nutzt.</div>

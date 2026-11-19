@@ -17,7 +17,7 @@ export const SEITEN: Record<string, string> = {
   preisduell: 'Teurer oder billiger?', bilderquiz: 'Welches Brot ist das?', schneiden: 'Schneide-Profi', allergene: 'Allergene-Training',
   alternativen: 'Alternativen-Jäger', battle: 'Quiz Battle', advent: 'Adventskalender',
   scoreboard: 'Bestenliste', profil: 'Profil', statistik: 'Statistik', monat: 'Mein Monat', jahr: 'Mein Jahr', appwoche: 'Wochenrückblick',
-  hilfe: 'Hilfe', ideen: 'Ideen-Box', geburtstag: 'Mein Geburtstag',
+  hilfe: 'Hilfe', ideen: 'Ideen-Box', geburtstag: 'Mein Geburtstag', urlaub: 'Urlaub',
 };
 
 export const monatJetzt = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;

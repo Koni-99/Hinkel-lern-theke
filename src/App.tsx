@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 250;
+const APP_VERSION: number = 251;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -61,6 +61,9 @@ import { onboardingStatus, computeBadges, correctIdSet, appWeekStatus, StaffRole
 import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
 import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
+import { SucheDialog } from './screens/dialoge/Suche';
+import { UrlaubSeite } from './screens/UrlaubSeite';
+import { urlaubsTage, urlaubHeute, willkommenZurueck } from './hilfen/urlaub';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
 import { mitShopFotos, mitZufallsFotos, setEigeneFotos } from './daten/fotos';
@@ -458,6 +461,8 @@ export default function App() {
   const [spickArea, setSpickArea] = useState<'produkt' | 'fach'>('produkt');
   const [spickView, setSpickView] = useState<'dictionary' | undefined>(undefined);
   const [steckbriefZiel, setSteckbriefZiel] = useState<{ name: string; n: number } | null>(null); // Version 250: Steckbrief von überall öffnen
+  const [sucheAuf, setSucheAuf] = useState(false); // Version 251: Suche überall
+  const [hilfeThema, setHilfeThema] = useState<string | undefined>(undefined);
   const zeigeSteckbrief = (name: string) => { setSpickArea('produkt'); setSpickView(undefined); setSteckbriefZiel((z) => ({ name, n: (z?.n || 0) + 1 })); setActiveTab('flashcards'); };
 
   // Größere Schrift (A+), wird pro Gerät gemerkt
@@ -831,6 +836,11 @@ export default function App() {
     const withBonus = Math.round((finalScore + comboExtra) * mult * (finalScore > 0 ? PUNKTE_FAKTOR : 1));
     if (withBonus > finalScore && activeTab !== 'quiz') setToast(`${comboExtra > 0 ? `Combo-Bonus +${comboExtra} · ` : ''}${mult > 1 ? `Serien-Bonus ×${mult.toFixed(1).replace('.', ',')} · ` : ''}Punkte-Bonus ×1,5: ${withBonus} statt ${finalScore} Punkte!`);
     finalScore = withBonus;
+    // Willkommen zurück (Version 251): nach 7 Tagen Pause gibt es am ersten Tag zurück doppelte Punkte
+    const pr0: any = (cloudData.progress || {})[userKey] || {};
+    const willkommenDa = finalScore > 0 && willkommenZurueck(Array.isArray(pr0._days) ? pr0._days : [])
+      && !['Rubbellos', 'Glücksrad', 'Bonus vom Ausbilder', 'Lob von Kollegen', 'Quiz Battle', TEAM_CAT].includes(catName);
+    if (willkommenDa) { const vorher = finalScore; finalScore = finalScore * 2; window.setTimeout(() => setToast(`Willkommen zurück: doppelte Punkte! ${finalScore} statt ${vorher}.`), activeTab === 'quiz' ? 0 : 1600); }
     // Punkte-Magnet (Version 229): nächstes Spiel/Quiz +25 %, wird automatisch eingesetzt
     const magnetDa = finalScore > 0 && (Number(((cloudData.progress || {})[userKey] || {})._jokersMagnet) || 0) > 0
       && !['Rubbellos', 'Glücksrad', 'Bonus vom Ausbilder', 'Lob von Kollegen', 'Quiz Battle', TEAM_CAT].includes(catName);
@@ -1391,6 +1401,18 @@ export default function App() {
     setActiveTab('quiz');
   };
 
+  // Version 251: Lieblingsfragen (mit dem Stern im Quiz gemerkt) am Stück üben
+  // als Funktion, weil „favorites“ erst weiter unten angelegt wird
+  const lieblingsFragen = () => allFlashcards.filter((q: any) => favorites.includes(q.id) && Array.isArray(q.options) && q.options.length >= 2);
+  const launchLieblingsQuiz = () => {
+    const lieblings = lieblingsFragen();
+    if (!lieblings.length) return;
+    setExamSim(false);
+    setCurrentQuizCategory('Lieblingsfragen'); setSelectedLevel('mixed');
+    setQuizList(shuffleArray(lieblings).slice(0, 20).map(q => shuffleQuestionOptions(q)));
+    setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz');
+  };
   // Gezielt die Produkte üben, die im Zähler noch fehlen
   const launchProductQuiz = (names: string[]) => {
     const list = questions.filter((q: any) => names.includes(q.product) && !(Array.isArray(q.correctMulti) && q.correctMulti.length > 1));
@@ -2009,6 +2031,20 @@ export default function App() {
     setToast('Der Ausbilder hat auf deine Idee geantwortet. Du findest die Antwort im Menü unter „Idee einreichen“.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ideeNeuKey]);
+  // Version 251: beim Öffnen einmal am Tag sagen, dass heute doppelte Punkte gibt (Willkommen zurück) oder Urlaub ist
+  const wzPr: any = username && !isAdmin ? ((cloudData.progress || {})[username.toLowerCase()] || {}) : {};
+  const wzHeute = !!username && !isAdmin && cloudConnected && willkommenZurueck(Array.isArray(wzPr._days) ? wzPr._days : []);
+  const urlaubJetzt = username && !isAdmin ? urlaubHeute(wzPr) : null;
+  useEffect(() => {
+    if (!username || isAdmin || (!wzHeute && !urlaubJetzt)) return;
+    const key = `lt_wz_${username.toLowerCase()}_${dayKey(new Date())}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* egal */ }
+    const t = window.setTimeout(() => setToast(urlaubJetzt
+      ? `Schönen Urlaub! Deine Lern-Serie und Teigi pausieren bis ${urlaubJetzt.bis.split('-').reverse().join('.')}.`
+      : 'Willkommen zurück! Heute gibt es für alles doppelte Punkte.'), 2500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wzHeute, urlaubJetzt?.bis, username]);
   // Serien-Schutz (Version 226): verpasste Tage automatisch schützen, wenn genug Joker da sind
   const schutzPr: any = username && !isAdmin ? ((cloudData.progress || {})[username.toLowerCase()] || {}) : {};
   const schutzTage = username && !isAdmin && cloudConnected ? schutzNoetig(schutzPr) : [];
@@ -2108,7 +2144,8 @@ export default function App() {
     return p.total > 0 ? Math.round((p.totalAnswered / p.total) * 100) : 0;
   };
   const myDays: string[] = Array.isArray((cloudProgress[userKeyLower] || {})._days) ? (cloudProgress[userKeyLower] || {})._days : [];
-  const streak = computeStreak(myDays, (cloudProgress[userKeyLower] || {})._schutzTage || []);
+  const myUrlaubTage = urlaubsTage(cloudProgress[userKeyLower] || {}, dayKey(new Date())); // Version 251: Urlaub zählt wie geschützt
+  const streak = computeStreak(myDays, [...((cloudProgress[userKeyLower] || {})._schutzTage || []), ...myUrlaubTage]);
   const weekDots = (() => {
     const now = new Date();
     const monday = new Date(now);
@@ -2212,7 +2249,7 @@ export default function App() {
     const cnt: Record<string, number> = {};
     sc.forEach(x => { const c = String((x as any).category || ''); if (GAME_EMOJI[c] !== undefined && c !== 'Rubbellos' && c !== 'Glücksrad') cnt[c] = (cnt[c] || 0) + (Number(x.n) || 1); });
     const fav = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-    const st = computeStreak(Array.isArray(pr._days) ? pr._days : [], pr._schutzTage || []);
+    const st = computeStreak(Array.isArray(pr._days) ? pr._days : [], [...(pr._schutzTage || []), ...urlaubsTage(pr, dayKey(new Date()))]);
     const bt = { w: 0, l: 0, d: 0 };
     Object.values(cloudBattles || {}).forEach((b: any) => {
       if (!b || (b.challengerKey !== k && b.opponentKey !== k)) return;
@@ -2441,7 +2478,7 @@ export default function App() {
     ...(isAdmin ? [{ id: 'admin', label: 'Ausbilder', icon: ICON.sliders, active: activeTab === 'admin', action: () => { setActiveTab('admin'); fetchCloudData(); }, mobile: true }] : [])
   ];
 
-  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'nachrichten' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
+  const isWidePage = activeTab === 'hilfe' || activeTab === 'kundenfragen' || activeTab === 'hoeren' || activeTab === 'ideen' || activeTab === 'nachrichten' || activeTab === 'kundenstimmen' || activeTab === 'geburtstag' || activeTab === 'urlaub' || activeTab === 'monat' || activeTab === 'statistik' || activeTab === 'home' || activeTab === 'spielen' || activeTab === 'nachschlagen' || activeTab === 'scoreboard' || activeTab === 'flashcards' || activeTab === 'admin' || activeTab === 'ausbildung' || activeTab === 'pfad' || activeTab === 'album' || (activeTab === 'quiz' && currentQuizCategory === null);
   const examSection = (
           <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
@@ -2548,6 +2585,7 @@ export default function App() {
                 
               </button>
             )}
+              <button onClick={() => setSucheAuf(true)} className="lt-pill lt-pill-round lt-suche-knopf" aria-label="Suchen" title="Suchen"><LtIcon paths={ICON.search} size={19} width={2.4} /></button>
               <button onClick={() => setHdrMenu(true)} className="lt-pill lt-pill-round" aria-label="Menü" aria-expanded={hdrMenu} title="Menü"><LtIcon paths={['M4 7h16', 'M4 12h16', 'M4 17h16']} size={20} width={2.4} /></button>
             </div>
           </div>
@@ -2569,8 +2607,9 @@ export default function App() {
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('ideen'); }}><LtIcon paths={ICON.pencil} size={22} />Idee einreichen</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('kundenstimmen'); }}><LtIcon paths={ICON.heart} size={22} />Kundenstimme notieren</button>}
             {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('geburtstag'); }}><LtIcon paths={ICON.cake} size={22} />Mein Geburtstag</button>}
+            {!isAdmin && <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('urlaub'); }}><LtIcon paths={ICON.calendar} size={22} />Urlaub</button>}
             <button role="menuitem" onClick={() => { setHdrMenu(false); setShowAussehen(true); }}><LtIcon paths={ICON.sun} size={22} />Aussehen</button>
-            <button role="menuitem" onClick={() => { setHdrMenu(false); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
+            <button role="menuitem" onClick={() => { setHdrMenu(false); setHilfeThema(undefined); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); if (isAdmin) adminSignOut(); setUsername(''); setTempUsername(''); setAdminPinInput(''); setPinError(false); resetLogin(); setActiveTab('home'); localStorage.removeItem('hinkel_username'); }} style={{ color: '#B42318' }}><LtIcon paths={ICON.logout} size={22} />Abmelden</button>
           </div>
         </div>
@@ -2609,13 +2648,13 @@ export default function App() {
         {activeTab === 'nachschlagen' && <NachschlagenSeite kundenfragenNeu={kfNeu.length} {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
 
         {/* ═════════ LERNEN-ÜBERSICHT ═════════ */}
-        {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }} />}
+        {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }}  lieblingsZahl={isAdmin ? 0 : lieblingsFragen().length} onLieblings={launchLieblingsQuiz} />}
 
         {/* ═════════ SCHWIERIGKEIT WÄHLEN ═════════ */}
         {activeTab === 'quiz' && currentQuizCategory !== null && selectedLevel === null && <QuizLevels {...{ questions, isAdmin, currentQuizCategory, setCurrentQuizCategory, selectedSubfilter, setSelectedSubfilter, onlyNew, toggleOnlyNew, quizPool, launchQuizWithLevel, overallPercent, myProg }} />}
 
         {/* ═════════ FRAGE ═════════ */}
-        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} />}
+        {activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0 && !quizFinished && <QuizQuestion {...{ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg , gluecksfrage: currentIndex === gluecksIdx, quizBonus}} favorites={favorites} toggleFavorite={isAdmin ? undefined : toggleFavorite} />}
 
         {/* ═════════ AUSWERTUNG ═════════ */}
         {activeTab === 'quiz' && quizFinished && currentQuizCategory !== null && <QuizResult jubel={myProg._jubel} {...{ fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }} />}
@@ -2651,9 +2690,10 @@ export default function App() {
         {activeTab === 'monat' && <MeinMonat username={username} scores={cloudData.scores || []} tage={myDays} snap={myProg._monatSnap} gemeistertJetzt={masteredNow}
           tipp={fehlerDue > 0 ? `In deinem Fehler-Stapel warten ${fehlerDue} ${fehlerDue === 1 ? 'Frage' : 'Fragen'}, damit startest du am besten.` : weakestCat ? `Nimm dir „${weakestCat.c}“ vor, da hast du erst ${weakestCat.p} % geschafft.` : ''} />}
         {activeTab === 'geburtstag' && <GeburtstagSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
+        {activeTab === 'urlaub' && <UrlaubSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'hoeren' && <HoerLernen fragen={allFlashcards} bereiche={CATS} fehlerIds={Object.keys(((cloudData.progress || {})[userKeyLower] || {}).wrongStats || {}).map(Number).filter(n => !isNaN(n))} onZurueck={() => setActiveTab('quiz')} />}
         {activeTab === 'kundenfragen' && <KundenfragenSeite cloudData={cloudData} username={username} isAdmin={isAdmin} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} />}
-        {activeTab === 'hilfe' && <HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
+        {activeTab === 'hilfe' && <HilfeView thema={hilfeThema} onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
         {activeTab === 'statistik' && (
           <StatistikView name={username} avatar={myProg._avatar} avatarClass={myProg._effect ? `lt-fx-${String(myProg._effect).replace('fx_', '')}` : 'lt-emo-bob'}
             levelTitle={`Stufe ${myLevel.no}: ${myLevel.title}`} levelIcon={myLevel.icon} levelPct={myLevel.pct} points={myTotalScore}
@@ -2761,7 +2801,7 @@ export default function App() {
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
       {!isAdmin && !myProg._teigiAus && activeTab !== 'admin' && (
-        <TeigiBegleiter stufe={teigiStand(Array.isArray(myProg._days) ? myProg._days : [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
+        <TeigiBegleiter stufe={teigiStand([...(Array.isArray(myProg._days) ? myProg._days : []), ...myUrlaubTage], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
       )}
       {tuetenInhalt && (
         <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -2806,6 +2846,11 @@ export default function App() {
           </div>
         </div>
       )}
+      {sucheAuf && username && <SucheDialog fragen={allFlashcards} images={productImages} onClose={() => setSucheAuf(false)}
+        hilfe={<HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
+        onSteckbrief={(n: string) => { setSucheAuf(false); zeigeSteckbrief(n); }}
+        onSeite={(t: string) => { setSucheAuf(false); setActiveTab(t); }}
+        onHilfe={(t: string) => { setSucheAuf(false); setHilfeThema(t); setActiveTab('hilfe'); }} />}
       {einzelNeu.length > 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && activeTab !== 'nachrichten' && (
         <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} onSteckbrief={zeigeSteckbrief} />
       )}

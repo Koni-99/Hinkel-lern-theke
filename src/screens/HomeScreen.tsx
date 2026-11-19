@@ -19,6 +19,7 @@ import { LT } from '../basis/marke';
 import { LtIcon, ICON, MENU_ICON } from '../basis/symbole';
 import { KuekenFact } from '../basis/fakten';
 import { BonLine, TEAM_REWARD, weekIdNow, dayKey, streakMultFor, mondayOf, parseBonDate, BON_DIVIDER } from '../basis/serie';
+import { urlaubsTage } from '../hilfen/urlaub';
 import { nameClassOf, TeigiGlas, teigiStand } from '../basis/laden';
 
 export type HomeScreenProps = {
@@ -204,7 +205,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
           { d: 'M64 30a10 7 0 1 0 20 0a10 7 0 1 0-20 0z', c: '#C98345' },
           { d: 'M14 32a9 6 0 1 0 18 0a9 6 0 1 0-18 0z', c: '#E7B271' },
         ].slice(0, Math.min(5, n));
-        const teigi = !isAdmin && !myProg?._teigiAus ? teigiStand(myDays || [], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))) : null;
+        const teigi = !isAdmin && !myProg?._teigiAus ? teigiStand([...(myDays || []), ...urlaubsTage(myProg, dayKey(new Date()))], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))) : null;
         return (
           <section className="lt-basket" aria-label="Dein Brotkorb">
             <svg width="104" height="64" viewBox="0 0 104 64" aria-hidden="true" style={{ flex: '0 0 auto', overflow: 'visible' }}>
