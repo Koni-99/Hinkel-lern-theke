@@ -58,7 +58,7 @@ export function pickScenario(focus?: string) {
 /** Baut ein komplettes Verkaufsgespräch */
 export const coreKeyOf = (c: Core) => `${c.steps[0]?.topic || ''}|${c.bread?.name || c.basket[0]?.name || ''}`;
 
-export function buildConversation(focus?: string, skip: string[] = []): Conversation {
+export function buildConversation(focus?: string, skip: string[] = [], lang = false): Conversation {
   const g = timeGreeting();
   let core: Core | null = null;
   for (let i = 0; i < 40 && !core; i++) {
@@ -76,7 +76,8 @@ export function buildConversation(focus?: string, skip: string[] = []): Conversa
 
   const steps: SimStep[] = [];
   // Mal kurz, mal ausführlich: nicht jedes Gespräch hat gleich viele Schritte
-  const shape: 'kurz' | 'normal' | 'lang' = focus && GENERAL_TOPICS.includes(focus) ? 'normal' : pick(['kurz', 'kurz', 'normal', 'normal', 'normal', 'lang', 'lang']);
+  // Version 255: Prüfungsgespräch = immer ein langes Gespräch
+  const shape: 'kurz' | 'normal' | 'lang' = lang ? 'lang' : focus && GENERAL_TOPICS.includes(focus) ? 'normal' : pick(['kurz', 'kurz', 'normal', 'normal', 'normal', 'lang', 'lang']);
   const want = (t: string) => focus === t;
 
   // 1) Begrüßung

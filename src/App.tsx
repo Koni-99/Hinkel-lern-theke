@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 254;
+const APP_VERSION: number = 255;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -466,6 +466,7 @@ export default function App() {
   const [spickArea, setSpickArea] = useState<'produkt' | 'fach'>('produkt');
   const [spickView, setSpickView] = useState<'dictionary' | undefined>(undefined);
   const [steckbriefZiel, setSteckbriefZiel] = useState<{ name: string; n: number } | null>(null); // Version 250: Steckbrief von überall öffnen
+  const [thekePruefung, setThekePruefung] = useState(false); // Version 255: Prüfungsgespräch direkt starten (aus der Ausbildung)
   const [sucheAuf, setSucheAuf] = useState(false); // Version 251: Suche überall
   const [hilfeThema, setHilfeThema] = useState<string | undefined>(undefined);
   const zeigeSteckbrief = (name: string) => { setSpickArea('produkt'); setSpickView(undefined); setSteckbriefZiel((z) => ({ name, n: (z?.n || 0) + 1 })); setActiveTab('flashcards'); };
@@ -2705,7 +2706,7 @@ export default function App() {
             <div key={adventPreview ? 'p' : 'n'}><AdventView questions={questions} done={myAdvent} onAnswer={answerAdvent} preview={isAdmin && adventPreview} /></div>
           </div>
         )}
-        {activeTab === 'theke' && <ThekenSimulatorView tipTodayLeft={Math.max(0, TIP_DAY_CAP - (myProg._tipDay && myProg._tipDay.d === dayKey(new Date()) ? Number(myProg._tipDay.c) || 0 : 0))} onTip={isAdmin ? undefined : addTip} tipBalance={(Number(myProg._tipCents) || 0) - (Number(myProg._tipSpent) || 0)} onOpenShop={isAdmin ? undefined : () => setShowTipShop(true)} onSaveScore={saveScoreToLeaderboard} onTopicResults={recordThekeResults} topicStats={(cloudProgress[userKeyLower] || {})._theke} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
+        {activeTab === 'theke' && <ThekenSimulatorView pruefungStart={thekePruefung} onPruefungGestartet={() => setThekePruefung(false)} tipTodayLeft={Math.max(0, TIP_DAY_CAP - (myProg._tipDay && myProg._tipDay.d === dayKey(new Date()) ? Number(myProg._tipDay.c) || 0 : 0))} onTip={isAdmin ? undefined : addTip} tipBalance={(Number(myProg._tipCents) || 0) - (Number(myProg._tipSpent) || 0)} onOpenShop={isAdmin ? undefined : () => setShowTipShop(true)} onSaveScore={saveScoreToLeaderboard} onTopicResults={recordThekeResults} topicStats={(cloudProgress[userKeyLower] || {})._theke} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'tueten' && <TuetenBlitzView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'alternativen' && <AlternativenJaegerView onSaveScore={saveScoreToLeaderboard} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'pfad' && <LernpfadView felder={PFAD} done={Number(myProg._pfad) || 0} avatar={myProg._avatar || '🥨'} onPlay={launchPfad} lastResult={pfadMsg} />}
@@ -2735,7 +2736,7 @@ export default function App() {
         {activeTab === 'ausbildung' && azubiArea && (
           <AusbildungView isAzubi={myRole === 'azubi'} isAdmin={isAdmin} plan={myProg._azubiPlan || {}} lehrjahr={lehrjahrAus(myProg._ausbildungStart) || Number(myProg._lehrjahr) || 0} onToggle={toggleAzubiPlan} onSetLehrjahr={setAzubiLehrjahr} examSection={examSection} exam={myProg._exam || {}}
             ok={myProg._azubiOk || {}} start={myProg._ausbildungStart || ''} onSetStart={(s: string) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); if (s) { pr._ausbildungStart = s; pr._lehrjahr = lehrjahrAus(s); } else delete pr._ausbildungStart; return curr; }); }}
-            uebenZahl={(id: string) => fragenZuPunkt(id, allFlashcards).length} onUeben={launchPlanQuiz} onSpiel={(t: string) => setActiveTab(t)}
+            uebenZahl={(id: string) => fragenZuPunkt(id, allFlashcards).length} onUeben={launchPlanQuiz} onSpiel={(t: string) => { if (t === 'theke-pruefung') { setThekePruefung(true); setActiveTab('theke'); } else setActiveTab(t); }}
             notizen={myProg._berichtNotiz || {}} geuebt={(m: Date) => geuebtInWoche(cloudData.scores || [], userKeyLower, m)}
             onNotiz={(w: string, n: any) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); const alt = { ...(pr._berichtNotiz || {}), [w]: n }; pr._berichtNotiz = Object.fromEntries(Object.entries(alt).sort((x, y) => y[0].localeCompare(x[0])).slice(0, 80)); return curr; }); }}
             onBestaetigen={isAdmin ? (azubiKey: string, id: string, an: boolean) => mutateCloudData((curr) => { const pr = curr.progress[azubiKey]; if (!pr) return curr; const o = { ...(pr._azubiOk || {}) }; if (an) o[id] = Date.now(); else delete o[id]; pr._azubiOk = o; return curr; }) : undefined}
