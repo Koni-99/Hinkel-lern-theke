@@ -80,7 +80,7 @@ export function mondayOf(d: Date) { const x = new Date(d); const wd = (x.getDay(
 
 export const dmy = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {}, ok = {}, start = '', onSetStart, uebenZahl, onUeben, onSpiel, notizen = {}, onNotiz, geuebt, onBestaetigen }: {
+export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {}, ok = {}, start = '', onSetStart, uebenZahl, onUeben, onSpiel, notizen = {}, onNotiz, geuebt, onBestaetigen, lernkarten, kartenPruefen }: {
   exam?: { ZP?: { best?: number }; AP?: { best?: number } };
   isAzubi: boolean; isAdmin: boolean; plan: Record<string, boolean>; lehrjahr: number;
   onToggle: (id: string) => void; onSetLehrjahr: (n: number) => void; examSection: ReactNode;
@@ -90,6 +90,8 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
   uebenZahl?: (id: string) => number; onUeben?: (id: string) => void; onSpiel?: (tab: string) => void;
   notizen?: Record<string, BerichtNotiz>; onNotiz?: (woche: string, n: BerichtNotiz) => void; geuebt?: (montag: Date) => string[];
   onBestaetigen?: (azubiKey: string, id: string, an: boolean) => void;
+  /** Version 254: Berufsschul-Lernkarten (Azubi) und Karten zum Bestätigen (Ausbilder) */
+  lernkarten?: ReactNode; kartenPruefen?: ReactNode;
 }) {
   const [openYear, setOpenYear] = useState<number>(lehrjahr || 1);
   const [week, setWeek] = useState(0);
@@ -157,6 +159,8 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
           ))}
         </section>
       )}
+
+      {kartenPruefen}
 
 
       <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -295,6 +299,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
         </div>
       </section>
 
+      {lernkarten}
       {(isAzubi || isAdmin) ? examSection : (
         <section style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px' }}>
           <span aria-hidden="true" style={{ fontSize: '36px' }}>🔒</span>

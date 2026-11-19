@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 253;
+const APP_VERSION: number = 254;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -66,6 +66,8 @@ import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
 import { lehrjahrAus, fragenZuPunkt, geuebtInWoche } from './hilfen/azubi';
 import { pruefungsThema } from './hilfen/pruefungThemen';
+import { BerufsschulKarten, KartenBestaetigen } from './ui/berufsschulKarten';
+import { alleEigenenKarten, karteSchreiben, karteEntscheiden, karteLoeschen } from './hilfen/eigeneKarten';
 import { urlaubsTage, urlaubHeute, willkommenZurueck } from './hilfen/urlaub';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
@@ -2737,6 +2739,11 @@ export default function App() {
             notizen={myProg._berichtNotiz || {}} geuebt={(m: Date) => geuebtInWoche(cloudData.scores || [], userKeyLower, m)}
             onNotiz={(w: string, n: any) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); const alt = { ...(pr._berichtNotiz || {}), [w]: n }; pr._berichtNotiz = Object.fromEntries(Object.entries(alt).sort((x, y) => y[0].localeCompare(x[0])).slice(0, 80)); return curr; }); }}
             onBestaetigen={isAdmin ? (azubiKey: string, id: string, an: boolean) => mutateCloudData((curr) => { const pr = curr.progress[azubiKey]; if (!pr) return curr; const o = { ...(pr._azubiOk || {}) }; if (an) o[id] = Date.now(); else delete o[id]; pr._azubiOk = o; return curr; }) : undefined}
+            lernkarten={<BerufsschulKarten meKey={userKeyLower} lernkasten={lernkastenVon(cloudData.progress, userKeyLower)} eigene={alleEigenenKarten(cloudData.progress)}
+              onBewerten={isAdmin ? undefined : (key: string, gewusst: boolean) => mutateCloudData(karteBewerten(userKeyLower, username, key, gewusst))}
+              onSchreiben={myRole === 'azubi' && !isAdmin ? (b: string, e: string, f: string) => mutateCloudData(karteSchreiben(userKeyLower, username, b, e, f)) : undefined}
+              onLoeschen={isAdmin ? undefined : (id: string) => mutateCloudData(karteLoeschen(userKeyLower, id))} />}
+            kartenPruefen={isAdmin ? <KartenBestaetigen karten={alleEigenenKarten(cloudData.progress)} onEntscheiden={(u: string, id: string, ok: boolean) => mutateCloudData(karteEntscheiden(u, id, ok))} /> : undefined}
             azubis={isAdmin ? Object.keys(cloudProgress).filter(k => k !== 'admin' && (cloudProgress[k] || {})._role === 'azubi').map(k => ({ key: k, name: cloudProgress[k]._displayName || k, plan: cloudProgress[k]._azubiPlan || {}, ok: cloudProgress[k]._azubiOk || {}, lehrjahr: lehrjahrAus(cloudProgress[k]._ausbildungStart) || Number(cloudProgress[k]._lehrjahr) || 0, exam: cloudProgress[k]._exam || {} })) : []} />
         )}
         {activeTab === 'battle' && (
