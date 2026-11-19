@@ -4,7 +4,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 251;
+const APP_VERSION: number = 252;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -63,6 +63,7 @@ import { comboTake, comboReset } from './ui/antwortFx';
 import { IntroTour, HilfeView } from './ui/hilfe';
 import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
+import { lehrjahrAus, fragenZuPunkt, geuebtInWoche } from './hilfen/azubi';
 import { urlaubsTage, urlaubHeute, willkommenZurueck } from './hilfen/urlaub';
 import { LoginRewardDialog, LOGIN_REWARDS, OsterEi, OSTER_TABS, osterZeit, monthChampions, prevMonthKey, monthLabel } from './ui/kalender';
 import { Buehne } from './thema/buehne';
@@ -1413,6 +1414,16 @@ export default function App() {
     setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
     setActiveTab('quiz');
   };
+  // Version 252: Azubi übt einen Punkt aus dem Ausbildungsplan
+  const launchPlanQuiz = (id: string) => {
+    const list = fragenZuPunkt(id, allFlashcards);
+    if (list.length < 3) return;
+    setExamSim(false);
+    setCurrentQuizCategory('Ausbildung üben'); setSelectedLevel('mixed');
+    setQuizList(shuffleArray(list).slice(0, 15).map(q => shuffleQuestionOptions(q)));
+    setCurrentIndex(0); setScore(0); setQuizRun(0); setCorrectCount(0); setWrongQuestions([]); setSelectedAnswer(null); setSelectedMulti([]); setIsAnswered(false); setQuizFinished(false);
+    setActiveTab('quiz');
+  };
   // Gezielt die Produkte üben, die im Zähler noch fehlen
   const launchProductQuiz = (names: string[]) => {
     const list = questions.filter((q: any) => names.includes(q.product) && !(Array.isArray(q.correctMulti) && q.correctMulti.length > 1));
@@ -2705,8 +2716,13 @@ export default function App() {
         )}
         {osterAktiv && !isAdmin && OSTER_TABS.some(t => t.id === activeTab) && !osterFound.includes(activeTab) && (activeTab !== 'quiz' || currentQuizCategory === null) && <OsterEi tab={activeTab} onFind={findOsterEi} />}
         {activeTab === 'ausbildung' && azubiArea && (
-          <AusbildungView isAzubi={myRole === 'azubi'} isAdmin={isAdmin} plan={myProg._azubiPlan || {}} lehrjahr={Number(myProg._lehrjahr) || 0} onToggle={toggleAzubiPlan} onSetLehrjahr={setAzubiLehrjahr} examSection={examSection} exam={myProg._exam || {}}
-            azubis={isAdmin ? Object.keys(cloudProgress).filter(k => k !== 'admin' && (cloudProgress[k] || {})._role === 'azubi').map(k => ({ name: cloudProgress[k]._displayName || k, plan: cloudProgress[k]._azubiPlan || {}, lehrjahr: Number(cloudProgress[k]._lehrjahr) || 0, exam: cloudProgress[k]._exam || {} })) : []} />
+          <AusbildungView isAzubi={myRole === 'azubi'} isAdmin={isAdmin} plan={myProg._azubiPlan || {}} lehrjahr={lehrjahrAus(myProg._ausbildungStart) || Number(myProg._lehrjahr) || 0} onToggle={toggleAzubiPlan} onSetLehrjahr={setAzubiLehrjahr} examSection={examSection} exam={myProg._exam || {}}
+            ok={myProg._azubiOk || {}} start={myProg._ausbildungStart || ''} onSetStart={(s: string) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); if (s) { pr._ausbildungStart = s; pr._lehrjahr = lehrjahrAus(s); } else delete pr._ausbildungStart; return curr; }); }}
+            uebenZahl={(id: string) => fragenZuPunkt(id, allFlashcards).length} onUeben={launchPlanQuiz} onSpiel={(t: string) => setActiveTab(t)}
+            notizen={myProg._berichtNotiz || {}} geuebt={(m: Date) => geuebtInWoche(cloudData.scores || [], userKeyLower, m)}
+            onNotiz={(w: string, n: any) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); const alt = { ...(pr._berichtNotiz || {}), [w]: n }; pr._berichtNotiz = Object.fromEntries(Object.entries(alt).sort((x, y) => y[0].localeCompare(x[0])).slice(0, 80)); return curr; }); }}
+            onBestaetigen={isAdmin ? (azubiKey: string, id: string, an: boolean) => mutateCloudData((curr) => { const pr = curr.progress[azubiKey]; if (!pr) return curr; const o = { ...(pr._azubiOk || {}) }; if (an) o[id] = Date.now(); else delete o[id]; pr._azubiOk = o; return curr; }) : undefined}
+            azubis={isAdmin ? Object.keys(cloudProgress).filter(k => k !== 'admin' && (cloudProgress[k] || {})._role === 'azubi').map(k => ({ key: k, name: cloudProgress[k]._displayName || k, plan: cloudProgress[k]._azubiPlan || {}, ok: cloudProgress[k]._azubiOk || {}, lehrjahr: lehrjahrAus(cloudProgress[k]._ausbildungStart) || Number(cloudProgress[k]._lehrjahr) || 0, exam: cloudProgress[k]._exam || {} })) : []} />
         )}
         {activeTab === 'battle' && (
           <BattleView

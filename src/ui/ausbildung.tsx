@@ -1,6 +1,7 @@
 // ═══ Ausbildungsplan und Ausbildungs-Ansicht ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
-import { useState, CSSProperties, ReactNode } from 'react';
+import { useState, useEffect, CSSProperties, ReactNode } from 'react';
+import { UEBEN, wochenKey, BerichtNotiz } from '../hilfen/azubi';
 import { dc } from '../daten/data';
 import { TH, cardStyle, btnPrimary, btnSecondary, PageHead } from './basis';
 
@@ -27,7 +28,7 @@ export const AUSBILDUNGSPLAN: { jahr: 1 | 2 | 3; title: string; items: PlanItem[
     { id: 'j2_zusatz', text: 'Zusatzverkauf und passende Empfehlungen' },
     { id: 'j2_alternativ', text: 'Alternativen anbieten, wenn etwas ausverkauft ist' },
     { id: 'j2_reklamation', text: 'Reklamationen freundlich bearbeiten' },
-    { id: 'j2_snacks', text: 'Belegte Brötchen und Snacks zubereiten' },
+    { id: 'j2_snacks', text: 'Ware vorbereiten und Theke auffüllen' }, // Version 252: Hinkel verkauft keine belegten Sachen (id bleibt, damit Haken bleiben)
     { id: 'j2_feingebaeck', text: 'Feingebäck, Kuchen und Saisonware kennen und verkaufen' },
     { id: 'j2_bestellung', text: 'Vorbestellungen annehmen und richtig aufschreiben' },
     { id: 'j2_abrechnung', text: 'Kassenabrechnung am Tagesende' },
@@ -79,22 +80,34 @@ export function mondayOf(d: Date) { const x = new Date(d); const wd = (x.getDay(
 
 export const dmy = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {} }: {
+export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onSetLehrjahr, examSection, azubis, exam = {}, ok = {}, start = '', onSetStart, uebenZahl, onUeben, onSpiel, notizen = {}, onNotiz, geuebt, onBestaetigen }: {
   exam?: { ZP?: { best?: number }; AP?: { best?: number } };
   isAzubi: boolean; isAdmin: boolean; plan: Record<string, boolean>; lehrjahr: number;
   onToggle: (id: string) => void; onSetLehrjahr: (n: number) => void; examSection: ReactNode;
-  azubis: { name: string; plan: Record<string, boolean>; lehrjahr: number; exam?: { ZP?: { best?: number }; AP?: { best?: number } } }[];
+  azubis: { key?: string; name: string; plan: Record<string, boolean>; lehrjahr: number; ok?: Record<string, number>; exam?: { ZP?: { best?: number }; AP?: { best?: number } } }[];
+  /** Version 252: vom Ausbilder bestätigte Planpunkte, Ausbildungsbeginn, Üben, Wochen-Notizen */
+  ok?: Record<string, number>; start?: string; onSetStart?: (s: string) => void;
+  uebenZahl?: (id: string) => number; onUeben?: (id: string) => void; onSpiel?: (tab: string) => void;
+  notizen?: Record<string, BerichtNotiz>; onNotiz?: (woche: string, n: BerichtNotiz) => void; geuebt?: (montag: Date) => string[];
+  onBestaetigen?: (azubiKey: string, id: string, an: boolean) => void;
 }) {
   const [openYear, setOpenYear] = useState<number>(lehrjahr || 1);
   const [week, setWeek] = useState(0);
   const [picked, setPicked] = useState<string[]>([]);
   const [schule, setSchule] = useState('');
   const [extra, setExtra] = useState('');
+  const [notiz, setNotiz] = useState('');
   const [copied, setCopied] = useState(false);
   const canTick = isAzubi && !isAdmin;
   const allItems = [...AUSBILDUNGSPLAN.flatMap(y => y.items), ...AUSBILDUNG_LEHRGAENGE];
   const yearPct = (p: Record<string, boolean>, jahr: number) => { const its = AUSBILDUNGSPLAN.find(y => y.jahr === jahr)!.items; return Math.round(its.filter(i => p[i.id]).length / its.length * 100); };
   const mon = mondayOf(new Date()); mon.setDate(mon.getDate() - week * 7); const sat = new Date(mon); sat.setDate(sat.getDate() + 5);
+  // Notizen der gewählten Woche laden (gespeichert im eigenen Fortschritt)
+  const wk = wochenKey(mon);
+  useEffect(() => { const n = notizen[wk] || {}; setPicked(Array.isArray(n.p) ? n.p : []); setExtra(n.e || ''); setSchule(n.s || ''); setNotiz(n.n || ''); }, [wk]); // eslint-disable-line react-hooks/exhaustive-deps
+  const speichern = (aend: Partial<BerichtNotiz>) => { if (!onNotiz || !canTick) return; onNotiz(wk, { p: picked, e: extra, s: schule, n: notiz, ...aend }); };
+  const ausApp = geuebt ? geuebt(mon) : [];
+  const status = (id: string): 'offen' | 'wartet' | 'ok' => (plan[id] && ok[id] ? 'ok' : plan[id] ? 'wartet' : 'offen');
   const reportText = [
     `Woche vom ${dmy(mon)} bis ${dmy(sat)}`,
     '',
@@ -102,6 +115,7 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
     ...(picked.length ? picked.map(id => `• ${allItems.find(i => i.id === id)?.text || id}`) : ['• (noch nichts ausgewählt)']),
     ...(extra.trim() ? [`• ${extra.trim()}`] : []),
     ...(schule.trim() ? ['', 'Berufsschule:', ...schule.split('\n').filter(s => s.trim()).map(s => `• ${s.trim()}`)] : []),
+    ...(notiz.trim() ? ['', 'Notizen:', ...notiz.split('\n').filter(s => s.trim()).map(s => `• ${s.trim()}`)] : []),
   ].join('\n');
   const copy = () => {
     const done = () => { setCopied(true); window.setTimeout(() => setCopied(false), 2000); };
@@ -122,7 +136,23 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '15px' }}>
                 {[1, 2, 3].map(j => <span key={j} style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>{j}. Jahr: {yearPct(a.plan, j)} %</span>)}
                 <span style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>Lehrgänge: {AUSBILDUNG_LEHRGAENGE.filter(l => a.plan[l.id]).length} von {AUSBILDUNG_LEHRGAENGE.length}</span>
+                <span style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>Bestätigt: {Object.keys(a.ok || {}).filter(id => a.plan[id]).length}</span>
               </div>
+              {onBestaetigen && a.key && (() => {
+                const offen = AUSBILDUNGSPLAN.flatMap(y => y.items).filter(it => a.plan[it.id] && !(a.ok || {})[it.id]);
+                if (!offen.length) return null;
+                return (
+                  <div className="lt-azubi-bestaetigen" style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: TH.brown }}>Wartet auf deine Bestätigung ({offen.length}):</div>
+                    {offen.map(it => (
+                      <div key={it.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '8px 10px', borderRadius: '12px', backgroundColor: TH.white }}>
+                        <span style={{ flex: '1 1 200px', fontSize: '16px' }}>{it.text}</span>
+                        <button type="button" onClick={() => onBestaetigen(a.key!, it.id, true)} style={{ minHeight: '42px', padding: '0 14px', borderRadius: '999px', border: 'none', backgroundColor: TH.green, color: dc('#FFFFFF'), fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Kann {a.name.split(' ')[0]} wirklich</button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </section>
@@ -133,13 +163,18 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Ausbildungsplan</div>
           {canTick && (
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '15px', fontWeight: 700, color: TH.muted }}>Ich bin im</span>
-              {[1, 2, 3].map(j => <button key={j} onClick={() => { onSetLehrjahr(j); setOpenYear(j); }} style={chip(lehrjahr === j)}>{j}. Lehrjahr</button>)}
+            <div className="lt-azubi-start" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              {onSetStart && <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px', fontWeight: 700, color: TH.muted }}>Ausbildung begonnen im
+                <input type="month" value={start} onChange={(e) => { onSetStart(e.target.value); }} aria-label="Ausbildungsbeginn" style={{ minHeight: '44px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '16px', backgroundColor: TH.white, color: TH.ink }} />
+              </label>}
+              {start ? <span style={{ fontWeight: 800, fontSize: '16px' }}>Du bist im {lehrjahr}. Lehrjahr</span> : <>
+                <span style={{ fontSize: '15px', fontWeight: 700, color: TH.muted }}>oder: Ich bin im</span>
+                {[1, 2, 3].map(j => <button key={j} onClick={() => { onSetLehrjahr(j); setOpenYear(j); }} style={chip(lehrjahr === j)}>{j}. Lehrjahr</button>)}
+              </>}
             </div>
           )}
         </div>
-        <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>{canTick ? 'Hake ab, was du schon kannst. Dein Ausbilder sieht deinen Stand.' : 'So sieht der Plan für die Azubis aus. Abhaken können nur die Azubis selbst.'}</div>
+        <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>{canTick ? 'Hake ab, was du schon kannst. Dein Ausbilder bestätigt es, dann wird der Punkt grün. Mit „Üben“ trainierst du genau dieses Thema.' : 'So sieht der Plan für die Azubis aus. Abhaken können nur die Azubis selbst, bestätigen kannst du oben bei „Deine Azubis“.'}</div>
         {AUSBILDUNGSPLAN.map(y => {
           const pct = yearPct(plan, y.jahr); const open = openYear === y.jahr;
           return (
@@ -155,12 +190,21 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
               {open && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 14px 16px' }}>
                   {y.items.map(it => {
-                    const on = !!plan[it.id];
+                    const on = !!plan[it.id]; const st = status(it.id);
+                    const u = UEBEN[it.id]; const n = uebenZahl ? uebenZahl(it.id) : 0;
                     return (
-                      <button key={it.id} onClick={() => canTick && onToggle(it.id)} disabled={!canTick} role="checkbox" aria-checked={on} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '54px', padding: '10px 14px', borderRadius: '14px', border: `2px solid ${on ? TH.green : TH.line}`, backgroundColor: on ? TH.tintSage : TH.white, color: TH.ink, fontSize: '17px', textAlign: 'left', cursor: canTick ? 'pointer' : 'default' }}>
-                        <span aria-hidden="true" style={{ flex: '0 0 28px', height: '28px', borderRadius: '8px', border: `2px solid ${on ? TH.green : TH.line}`, backgroundColor: on ? TH.green : TH.white, color: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{on ? '✓' : ''}</span>
-                        <span style={{ flex: 1, textDecoration: on ? 'line-through' : 'none', opacity: on ? 0.75 : 1 }}>{it.text}</span>
-                      </button>
+                      <div key={it.id} className="lt-planpunkt" style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px', borderRadius: '16px', backgroundColor: st === 'ok' ? TH.tintSage : st === 'wartet' ? TH.tintYellow : TH.white, border: `2px solid ${st === 'ok' ? TH.green : TH.line}` }}>
+                        <button onClick={() => canTick && onToggle(it.id)} disabled={!canTick} role="checkbox" aria-checked={on} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '46px', padding: '4px 6px', border: 'none', background: 'transparent', color: TH.ink, fontSize: '16px', textAlign: 'left', cursor: canTick ? 'pointer' : 'default' }}>
+                          <span aria-hidden="true" style={{ flex: '0 0 28px', height: '28px', borderRadius: '8px', border: `2px solid ${on ? TH.green : TH.line}`, backgroundColor: on ? TH.green : TH.white, color: dc('#FFFFFF'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{on ? '✓' : ''}</span>
+                          <span style={{ flex: 1 }}>{it.text}{st !== 'offen' && <span style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: st === 'ok' ? TH.green : TH.brown }}>{st === 'ok' ? 'Vom Ausbilder bestätigt' : 'Wartet auf Bestätigung vom Ausbilder'}</span>}</span>
+                        </button>
+                        {canTick && ((onUeben && n >= 3) || (onSpiel && u?.spiel)) && (
+                          <div className="lt-ueben" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', paddingLeft: '46px' }}>
+                            {onUeben && n >= 3 && <button type="button" onClick={() => onUeben(it.id)} style={{ minHeight: '38px', padding: '0 12px', borderRadius: '999px', border: 'none', backgroundColor: TH.brown, color: dc('#FFF6E0'), fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Üben: Quiz ({Math.min(15, n)} Fragen)</button>}
+                            {onSpiel && u?.spiel && <button type="button" onClick={() => onSpiel(u.spiel![0])} style={{ minHeight: '38px', padding: '0 12px', borderRadius: '999px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>Spiel: {u.spiel[1]}</button>}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -202,8 +246,8 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
       })()}
 
       <section style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Berichtsheft-Hilfe</div>
-        <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>Wähle aus, was du diese Woche gemacht hast. Unten entsteht dein Wochenbericht zum Abschreiben oder Kopieren.</div>
+        <div style={{ fontFamily: TH.serif, fontSize: '30px', lineHeight: 1.1 }}>Berichtsheft: Notizen der Woche</div>
+        <div style={{ fontSize: '16px', color: TH.brown, lineHeight: 1.45 }}>Notier dir die Woche über, was du gemacht hast. Alles wird gespeichert. Am Ende schreibst du es ins Berichtsheft ab.</div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button onClick={() => setWeek(week + 1)} style={chip(false)}>‹ Woche davor</button>
           <span style={{ fontWeight: 700, fontSize: '16px' }}>{dmy(mon)} bis {dmy(sat)}</span>
@@ -213,22 +257,37 @@ export function AusbildungView({ isAzubi, isAdmin, plan, lehrjahr, onToggle, onS
           <div key={y.jahr} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted }}>{y.jahr}. Lehrjahr</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {y.items.map(it => { const on = picked.includes(it.id); return <button key={it.id} onClick={() => setPicked(on ? picked.filter(p => p !== it.id) : [...picked, it.id])} style={chip(on)}>{on ? '✓ ' : ''}{it.text}</button>; })}
+              {y.items.map(it => { const on = picked.includes(it.id); return <button key={it.id} onClick={() => { const np = on ? picked.filter(p => p !== it.id) : [...picked, it.id]; setPicked(np); speichern({ p: np }); }} style={chip(on)}>{on ? '✓ ' : ''}{it.text}</button>; })}
             </div>
           </div>
         ))}
         <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '16px', fontWeight: 700 }}>
           Sonst noch etwas im Betrieb?
-          <input value={extra} onChange={e => setExtra(e.target.value)} placeholder="z. B. Weihnachtsdeko im Schaufenster aufgebaut" style={{ minHeight: '50px', padding: '0 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '17px', backgroundColor: TH.white, color: TH.ink }} />
+          <input value={extra} onChange={e => setExtra(e.target.value)} onBlur={() => speichern({})} placeholder="z. B. Weihnachtsdeko im Schaufenster aufgebaut" style={{ minHeight: '50px', padding: '0 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '17px', backgroundColor: TH.white, color: TH.ink }} />
         </label>
         <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '16px', fontWeight: 700 }}>
           Berufsschule (ein Thema pro Zeile)
-          <textarea value={schule} onChange={e => setSchule(e.target.value)} rows={3} placeholder={'z. B. Warenkunde Getreide\nKalkulation Grundpreis'} style={{ padding: '12px 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '17px', fontFamily: 'inherit', backgroundColor: TH.white, color: TH.ink }} />
+          <textarea value={schule} onChange={e => setSchule(e.target.value)} onBlur={() => speichern({})} rows={3} placeholder={'z. B. Warenkunde Getreide\nKalkulation Grundpreis'} style={{ padding: '12px 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '17px', fontFamily: 'inherit', backgroundColor: TH.white, color: TH.ink }} />
         </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '16px', fontWeight: 700 }}>
+          Meine Notizen (nur für dich)
+          <textarea className="lt-bericht-notiz" value={notiz} onChange={e => setNotiz(e.target.value)} onBlur={() => speichern({})} rows={4} aria-label="Meine Notizen der Woche" placeholder={'z. B. Kundin wollte Brot ohne Kümmel, Innsbrucker empfohlen'} style={{ padding: '12px 14px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '17px', fontFamily: 'inherit', backgroundColor: TH.white, color: TH.ink }} />
+        </label>
+        {canTick && ausApp.length > 0 && (
+          <div className="lt-aus-app" style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: TH.tintBlue, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontWeight: 700, fontSize: '16px' }}>Diese Woche in der App geübt</div>
+            {ausApp.map(t => { const drin = notiz.includes(t); return (
+              <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontSize: '15px' }}>
+                <span style={{ flex: '1 1 200px' }}>{t}</span>
+                <button type="button" disabled={drin} onClick={() => { const nn = (notiz.trim() ? notiz.trim() + '\n' : '') + t; setNotiz(nn); speichern({ n: nn }); }} style={{ minHeight: '38px', padding: '0 12px', borderRadius: '999px', border: 'none', backgroundColor: drin ? TH.line : TH.brown, color: dc('#FFF6E0'), fontSize: '14px', fontWeight: 700, cursor: drin ? 'default' : 'pointer' }}>{drin ? 'Übernommen' : 'In Notizen übernehmen'}</button>
+              </div>
+            ); })}
+          </div>
+        )}
         <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', fontSize: '17px', lineHeight: 1.5, padding: '16px', borderRadius: '16px', backgroundColor: TH.cream, border: `2px dashed ${TH.line}` }}>{reportText}</pre>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button onClick={copy} style={btnPrimary}>{copied ? '✓ Kopiert' : 'Bericht kopieren'}</button>
-          {(picked.length > 0 || schule || extra) && <button onClick={() => { setPicked([]); setSchule(''); setExtra(''); }} style={btnSecondary}>Leeren</button>}
+          {(picked.length > 0 || schule || extra || notiz) && <button onClick={() => { setPicked([]); setSchule(''); setExtra(''); setNotiz(''); speichern({ p: [], e: '', s: '', n: '' }); }} style={btnSecondary}>Leeren</button>}
         </div>
         <div style={{ padding: '14px 16px', borderRadius: '16px', backgroundColor: TH.tintYellow, display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ fontWeight: 700, fontSize: '17px' }}>Tipps fürs Berichtsheft</div>

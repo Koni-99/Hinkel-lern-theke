@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -919,6 +919,56 @@ async function offlineTests() {
     const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 252: Azubi-Bereich (Lehrjahr aus Beginn, Bestätigung, Üben, Notizen der Woche)
+  teile.push(['Version 252: Azubi-Bereich ausgebaut', async () => {
+    const A = kompiliere(['src/hilfen/azubi.ts']).hilfen_azubi;
+    const h = new Date(2026, 10, 19);
+    ok('Azubi: Lehrjahr aus dem Ausbildungsbeginn', A.lehrjahrAus('2026-08', h) === 1 && A.lehrjahrAus('2025-08', h) === 2 && A.lehrjahrAus('2024-09', h) === 3 && A.lehrjahrAus('2020-01', h) === 3 && A.lehrjahrAus('', h) === 0);
+    const fr = [{ category: 'Arbeit & Hygiene', question: 'Hände waschen?', options: ['a', 'b'] }, { category: 'Service & Verkauf', question: 'Wie gehst du mit einer Reklamation um?', options: ['a', 'b'] }];
+    ok('Azubi: Üben findet passende Fragen', A.fragenZuPunkt('j1_hygiene', fr).length === 1 && A.fragenZuPunkt('j2_reklamation', fr).length === 1);
+    const mo = new Date(2026, 10, 16);
+    const g = A.geuebtInWoche([{ id: 'anna_' + new Date(2026, 10, 17, 9).getTime(), username: 'Anna', category: 'Kassenblitz ⚡' }, { id: 'anna_' + new Date(2026, 10, 18, 9).getTime(), username: 'Anna', category: 'Kassenblitz ⚡' }, { id: 'anna_' + new Date(2026, 10, 2).getTime(), username: 'Anna', category: 'Quiz' }], 'anna', mo);
+    ok('Azubi: „diese Woche geübt“ aus der Bestenliste', g.length === 1 && /Kassenblitz/.test(g[0]) && /2×/.test(g[0]), JSON.stringify(g));
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/ui/ausbildung.tsx'), 'utf8');
+    ok('Ausbildungsplan ohne belegte Brötchen', !/Belegte Brötchen und Snacks zubereiten/.test(src) && /Ware vorbereiten und Theke auffüllen/.test(src));
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._azubiPlan = { j1_hygiene: true, j1_kasse: true };
+    probe.progress.anna._azubiOk = { j1_hygiene: Date.now() };
+    // Ausbilder bestätigt
+    const a = await device({ admin: true, backup: probe });
+    for (let w = 0; w < 40 && !(await nav(a.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(a.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await a.page.locator('.lt-azubi-bestaetigen').count()); w++) await sleep(100);
+    const best = a.page.locator('.lt-azubi-bestaetigen button');
+    ok('Ausbilder: offener Punkt wartet auf Bestätigung', (await best.count()) === 1, String(await best.count()));
+    if (await best.count()) { await click(best.first()); await settle(a.page, 400); }
+    ok('Ausbilder: nach Bestätigen nichts mehr offen', (await a.page.locator('.lt-azubi-bestaetigen').count()) === 0);
+    ok('Ausbilder Azubis: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    // Azubi
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    for (let w = 0; w < 40 && !(await nav(d.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(d.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {});
+    for (let w = 0; w < 40 && !(await d.page.locator('.lt-azubi-start').count()); w++) await sleep(100);
+    await d.page.getByLabel('Ausbildungsbeginn').fill('2025-08'); await settle(d.page, 500);
+    ok('Azubi: Lehrjahr rechnet sich aus dem Beginn', /im 2\. Lehrjahr/.test(await d.page.locator('.lt-azubi-start').innerText().catch(() => '')));
+    if (process.env.OFEN_BILD) await d.page.screenshot({ path: process.env.OFEN_BILD + '-azubi.png', fullPage: true });
+    const punkte = await d.page.locator('.lt-planpunkt').allInnerTexts();
+    ok('Azubi: bestätigt und wartend werden angezeigt', punkte.some((t) => /Vom Ausbilder bestätigt/.test(t)) && punkte.some((t) => /Wartet auf Bestätigung/.test(t)));
+    const ueben = d.page.locator('.lt-ueben button', { hasText: /^Üben: Quiz/ });
+    ok('Azubi: „Üben“-Knöpfe da', (await ueben.count()) > 0);
+    await d.page.locator('.lt-bericht-notiz').fill('Testnotiz der Woche');
+    await d.page.locator('.lt-bericht-notiz').blur(); await settle(d.page, 400);
+    await click(d.page.getByRole('button', { name: /Woche davor/ })); await settle(d.page, 300);
+    const leer = await d.page.locator('.lt-bericht-notiz').inputValue();
+    await click(d.page.getByRole('button', { name: /Woche danach/ })); await settle(d.page, 300);
+    ok('Azubi: Notizen pro Woche gespeichert', leer === '' && (await d.page.locator('.lt-bericht-notiz').inputValue()) === 'Testnotiz der Woche', leer);
+    if (await ueben.count()) { await click(ueben.first()); await settle(d.page, 800); }
+    ok('Azubi: Üben startet ein Quiz', (await d.page.locator('.lt-frage').count()) > 0);
+    ok('Azubi-Bereich: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 251: Lieblingsfragen (Stern), Urlaubsmodus, Willkommen zurück

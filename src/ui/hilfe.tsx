@@ -193,6 +193,10 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         <div><strong>Name vergessen?</strong> Finger auf ein Bild halten. <strong>Ablage:</strong> Antippen legt das fallende Teil zur Seite, nochmal antippen holt es zurück.</div>
         <div>Jeden Tag kommen andere Produkte in den Ofen. Mittwochs und samstags ist <strong>Gruppen-Tag</strong>: Dann zählen alle Produkte einer Gruppe als gleich, zum Beispiel alle Brötchen. <strong>Ruhig backen</strong> geht ohne Zeit und ohne Bestellung, zählt aber nur halb. Pro Runde gibt es höchstens 250 Punkte (vor dem Bonus ×1,5). Am Ende kommt ein Kassenbon mit allem, was du gebacken hast.</div>
       </>, 3)}
+      {box(boxIcon(ICON.cap), 'Ausbildung (für Azubis)', <>
+        <div><strong>Ausbildungsplan:</strong> Trag einmal ein, wann deine Ausbildung begonnen hat. Dann weiß die App dein Lehrjahr von selbst. Hake ab, was du kannst. Der Ausbilder bestätigt es, dann wird der Punkt grün. Unter vielen Punkten gibt es „Üben“: ein Quiz nur zu diesem Thema oder das passende Spiel.</div>
+        <div><strong>Berichtsheft:</strong> Unter „Notizen der Woche“ notierst du, was du gemacht hast. Alles wird gespeichert, du kannst später zurückblättern und es ins Heft abschreiben. Die App zeigt auch, was du in der Woche in der Lern-Theke geübt hast, mit einem Tipp übernimmst du es in deine Notizen.</div>
+      </>, 3)}
       {box(boxIcon(ICON.calendar), 'Urlaub', <div>Im Menü unter „Urlaub“ trägst du freiwillig ein, wann du im Urlaub bist. In der Zeit reißt deine Lern-Serie nicht, es wird kein Serien-Schutz verbraucht und Teigi wird nicht schlapp. Höchstens 6 Wochen im Jahr. Bist du früher zurück, tippst du auf „Ich bin schon zurück“. Der Ausbilder sieht nur, dass du im Urlaub bist.</div>, 3)}
       {box(boxIcon(ICON.lock), 'Was die App speichert', <>
         <div>Die Lern-Theke speichert deinen Namen, deine Punkte, deinen Lernstand (welche Fragen du richtig oder falsch hattest und welche falsche Antwort du gewählt hast), Abzeichen, Trinkgeld und was du selbst einträgst, zum Beispiel Notizen, Ideen oder Lob. Dein Geburtstag ist freiwillig.</div>
