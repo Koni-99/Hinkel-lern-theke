@@ -13,6 +13,7 @@ import { MeineNotiz } from './MeineNotiz';
 import { LtIcon, ICON } from '../../basis/symbole';
 import { alleFotos } from '../../daten/fotos';
 import { ProduktVergleich } from './ProduktVergleich';
+import { backtageVon, preisGeaendert } from '../../hilfen/steckbriefExtras';
 
 
 // Mehrere Fotos pro Produkt (Version 193): zum Wischen, Punkte zeigen, welches Foto gerade da ist
@@ -60,10 +61,16 @@ export type SteckbriefDetailProps = {
   meineNotizen?: Record<string, string>;
   onNotiz?: (produkt: string, text: string) => void;
   onFoto?: (name: string, file: File) => Promise<string>;
+  /** Version 250: Steckbrief an einen Kollegen schicken */
+  kollegen?: { k: string; name: string }[];
+  onSchicken?: (anKey: string, anName: string, produkt: string) => void;
 };
 
-export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz, onFoto }: SteckbriefDetailProps) {
+export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenProfileKey, filteredProfiles, openProfile, kollegenTipps = [], meineTipps = [], onTipp, meineNotizen = {}, onNotiz, onFoto, kollegen = [], onSchicken }: SteckbriefDetailProps) {
   const [fotoMsg, setFotoMsg] = useState('');
+  const [schickenAuf, setSchickenAuf] = useState(false);
+  const [schickenAn, setSchickenAn] = useState('');
+  const [geschickt, setGeschickt] = useState('');
   const [fotoBusy, setFotoBusy] = useState(false);
   const [vergleich, setVergleich] = useState(false);
   if (!openProfile) return null; // wie die Bedingung in components/FlashcardView.tsx
@@ -78,7 +85,11 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
     ...(sp?.weight ? [{ label: "Gewicht", value: sp.weight }] : []),
     ...(prod.slice ? [{ label: "Schnitt", value: prod.slice }] : []),
   ];
-  const goTo = (p: Profile | null) => p && setOpenProfileKey(`${p.name}_${p.ids[0]}`);
+  const goTo = (p: Profile | null) => { if (p) { setSchickenAuf(false); setGeschickt(''); setOpenProfileKey(`${p.name}_${p.ids[0]}`); } };
+  const pName = sp ? sp.name : prod.name;
+  const backtage = backtageVon(pName);
+  const preisNeu = sp ? preisGeaendert(sp.name) : null;
+  const datumKurz = (ts: number) => new Date(ts).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
   return (
     <div className="fc-overlay" onClick={() => setOpenProfileKey(null)} style={{ position: "fixed", inset: 0, zIndex: 120, backgroundColor: "rgba(43,23,10,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
       <div className="fc-sheet" role="dialog" aria-modal="true" aria-label={`Steckbrief ${prod.name}`} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", backgroundColor: TH.cream, borderRadius: "28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35)", textAlign: "left", color: TH.ink }}>
@@ -106,12 +117,22 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
               <span style={{ fontSize: "14px", color: TH.brown }}>{fotoMsg || "Nur für Ausbilder sichtbar. Am Handy kannst du direkt fotografieren."}</span>
             </div>
           )}
+          {backtage && (
+            <div className="lt-backtage" style={{ padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.tintBlue, display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Backtage</span>
+                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map((t) => <span key={t} style={{ minWidth: '34px', textAlign: 'center', padding: '3px 6px', borderRadius: '8px', fontWeight: 800, fontSize: '15px', backgroundColor: backtage.tage.includes(t) ? TH.brown : TH.white, color: backtage.tage.includes(t) ? dc('#FFF6E0') : TH.muted }}>{t}</span>)}
+              </div>
+              {backtage.info && <div style={{ fontSize: "15px", lineHeight: 1.4, color: TH.brown }}>{backtage.info}</div>}
+            </div>
+          )}
           {(facts.length > 0 || sp?.vegan) && (
             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {facts.map((f) => (
                 <div key={f.label} style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>{f.label}</div>
                   <div style={{ fontSize: "19px", fontWeight: 700 }}>{f.value}</div>
+                  {f.label === 'Preis' && preisNeu && <div className="lt-preis-neu" style={{ marginTop: '4px', fontSize: '14px', fontWeight: 700, color: TH.red }}>Preis geändert am {datumKurz(preisNeu.am)}{preisNeu.vorher ? `, vorher ${preisNeu.vorher}` : ''}</div>}
                 </div>
               ))}
               {sp?.vegan && (
@@ -166,6 +187,27 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
           <KollegenTipps key={sp ? sp.name : prod.name} produkt={sp ? sp.name : prod.name} tipps={kollegenTipps} meine={meineTipps} onTipp={onTipp} />
           {onNotiz && <MeineNotiz key={`notiz-${sp ? sp.name : prod.name}`} produkt={sp ? sp.name : prod.name} notiz={meineNotizen[sp ? sp.name : prod.name] || ''} onNotiz={onNotiz} />}
 
+          {onSchicken && kollegen.length > 0 && (
+            <div className="lt-sb-schicken" style={{ display: "flex", flexDirection: "column", gap: "8px", padding: schickenAuf ? "12px 14px" : 0, borderRadius: "16px", backgroundColor: schickenAuf ? TH.tintYellow : "transparent" }}>
+              {!schickenAuf ? (
+                <button type="button" onClick={() => { setSchickenAuf(true); setGeschickt(''); }} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", minHeight: "50px", borderRadius: "16px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "17px", fontWeight: 700, cursor: "pointer" }}><LtIcon paths={ICON.mail} size={20} />An Kollegen schicken</button>
+              ) : geschickt ? (
+                <div style={{ fontSize: "16px", fontWeight: 700, color: TH.green }}>Steckbrief an {geschickt} geschickt.</div>
+              ) : (<>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "15px", fontWeight: 700 }}>An wen soll der Steckbrief „{pName}“?
+                  <select value={schickenAn} onChange={(e) => setSchickenAn(e.target.value)} aria-label="Kollege" style={{ minHeight: "48px", padding: "0 12px", borderRadius: "14px", border: `2px solid ${TH.line}`, fontSize: "17px", backgroundColor: TH.white, color: TH.ink }}>
+                    <option value="">Bitte wählen</option>
+                    {kollegen.map((k) => <option key={k.k} value={k.k}>{k.name}</option>)}
+                  </select>
+                </label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button type="button" disabled={!schickenAn} onClick={() => { const k = kollegen.find((x) => x.k === schickenAn); if (!k) return; onSchicken(k.k, k.name, pName); setGeschickt(k.name); setSchickenAn(''); }} style={{ flex: 1, minHeight: "48px", borderRadius: "14px", border: "none", backgroundColor: schickenAn ? TH.brown : TH.line, color: dc('#FFF6E0'), fontSize: "16px", fontWeight: 700, cursor: schickenAn ? "pointer" : "default" }}>Schicken</button>
+                  <button type="button" onClick={() => setSchickenAuf(false)} style={{ minHeight: "48px", padding: "0 16px", borderRadius: "14px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}>Abbrechen</button>
+                </div>
+                <div style={{ fontSize: "14px", color: TH.brown }}>Dein Kollege bekommt eine Nachricht mit dem Steckbrief.</div>
+              </>)}
+            </div>
+          )}
           <ReportContext report={{ game: "Steckbrief", product: sp ? sp.name : prod.name, text: `Steckbrief ${sp ? sp.name : prod.name}`, detail: sp ? `Preis: ${sp.price || "unbekannt"}${prod.slice ? `, Schnitt: ${prod.slice}` : ""}\nIm Verkauf sagen: ${sp.shortIngredients}\nAllergene: ${sp.allergens.join(", ") || "keine angegeben"}` : `${prod.name}\n${prod.facts.join("\n")}` }} />
           <button onClick={() => toggleFavorite(prod.ids[0])} style={{ minHeight: "54px", borderRadius: "16px", border: fav ? "none" : `2px solid ${TH.line}`, backgroundColor: fav ? TH.tintYellow : TH.white, color: TH.ink, fontSize: "18px", fontWeight: 700, cursor: "pointer" }}>
             {fav ? "★ Gemerkt, nochmal tippen zum Entfernen" : "☆ Merken"}

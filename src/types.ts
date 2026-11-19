@@ -117,6 +117,9 @@ export interface ProductFix {
   weight?: string;
   alts?: string[];
   restored?: boolean;
+  /** Version 250: wann der Preis geändert wurde und was er vorher war (Steckbrief zeigt es 2 Wochen) */
+  priceTs?: number;
+  priceVorher?: string;
   ts: number;
 }
 

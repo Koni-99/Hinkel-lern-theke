@@ -100,8 +100,8 @@ export function NachrichtSchreiben({ cloudData, userKey, name, alleMitarbeiter, 
 }
 
 // ── Seite „Meine Nachrichten“ (Menü) ──
-export function NachrichtenSeite({ cloudData, username, alleMitarbeiter, mutateCloudData, setToast }: {
-  cloudData: CloudPayload; username: string; alleMitarbeiter: string[]; mutateCloudData: Mutate; setToast: (t: string) => void;
+export function NachrichtenSeite({ cloudData, username, alleMitarbeiter, mutateCloudData, setToast, onSteckbrief }: {
+  cloudData: CloudPayload; username: string; alleMitarbeiter: string[]; mutateCloudData: Mutate; setToast: (t: string) => void; onSteckbrief?: (produkt: string) => void;
 }) {
   const me = (username || '').toLowerCase();
   const post = meinePost(cloudData.progress, me);
@@ -117,6 +117,7 @@ export function NachrichtenSeite({ cloudData, username, alleMitarbeiter, mutateC
           <div key={n.von + n.id} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: n.mein.g ? TH.cream : TH.tintYellow, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '16px', lineHeight: 1.45 }}>
             <div style={{ fontSize: '14px', color: TH.muted, fontWeight: 700 }}>Von {n.vonName} · {datum(n.ts)}{n.mein.g ? '' : ' · neu'}</div>
             <div style={{ fontFamily: TH.serif, fontSize: '21px', whiteSpace: 'pre-line' }}>„{n.t}“</div>
+            {n.sb && onSteckbrief && <button type="button" className="lt-sb-ansehen" onClick={() => { if (!n.mein.g) mutateCloudData(nachrichtGelesen(me, username, n.von, n.id, '')); onSteckbrief(n.sb!); }} style={{ alignSelf: 'flex-start', minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: TH.brown, color: dc('#FFF6E0'), fontWeight: 700, fontSize: '16px', cursor: 'pointer' }}>Steckbrief ansehen</button>}
             {n.mein.a ? <div><strong>Deine Antwort:</strong> {n.mein.a}</div> : (
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <input value={antwort[n.von + n.id] || ''} onChange={(e) => setAntwort((a) => ({ ...a, [n.von + n.id]: e.target.value.slice(0, ANTWORT_MAX) }))} placeholder="Kurz antworten (freiwillig)" aria-label={`Antwort an ${n.vonName}`} style={{ ...feld, flex: '1 1 220px', width: 'auto' }} />
@@ -132,7 +133,7 @@ export function NachrichtenSeite({ cloudData, username, alleMitarbeiter, mutateC
 }
 
 // ── Pop-up beim Öffnen der App: neue Einzel-Nachricht ──
-export function EinzelNachrichtPopup({ n, onFertig }: { n: { vonName: string; t: string; ts: number }; onFertig: (antwort: string) => void }) {
+export function EinzelNachrichtPopup({ n, onFertig, onSteckbrief }: { n: { vonName: string; t: string; ts: number; sb?: string }; onFertig: (antwort: string) => void; onSteckbrief?: (produkt: string) => void }) {
   const [antwort, setAntwort] = useState('');
   return (
     <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 108, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -147,6 +148,7 @@ export function EinzelNachrichtPopup({ n, onFertig }: { n: { vonName: string; t:
         <div style={{ padding: '22px 20px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ fontFamily: LT.serif, fontSize: '27px', lineHeight: 1.25, whiteSpace: 'pre-line', maxHeight: '45vh', overflowY: 'auto' }}>„{n.t}“</div>
           <input value={antwort} onChange={(e) => setAntwort(e.target.value.slice(0, ANTWORT_MAX))} placeholder="Kurz antworten (freiwillig)" aria-label={`Antwort an ${n.vonName}`} style={feld} />
+          {n.sb && onSteckbrief && <button className="lt-sb-ansehen" onClick={() => { onFertig(antwort); onSteckbrief(n.sb!); }} style={{ minHeight: '56px', border: 'none', borderRadius: '16px', backgroundColor: LT.yellow, color: LT.ink, fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>Steckbrief ansehen</button>}
           <button onClick={() => onFertig(antwort)} style={{ minHeight: '56px', border: 'none', borderRadius: '16px', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontSize: '19px', fontWeight: 700, cursor: 'pointer' }}>{antwort.trim() ? 'Antworten' : 'Gelesen'}</button>
         </div>
       </div>
