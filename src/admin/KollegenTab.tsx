@@ -5,7 +5,7 @@ import { dc } from '../daten/data';
 import { TH, cardStyle } from '../ui/basis';
 import { CloudPayload } from '../types';
 import { alleKundenfragen, alleTipps, kfrageBeantworten, kfrageLoeschen, tippEntscheiden, tippLoeschen, KFrageEintrag } from '../hilfen/kollegen';
-import { alleLobs, lobLoeschen } from '../hilfen/team';
+import { alleLobs, lobLoeschen, lobeZurFreigabe, lobFreigeben } from '../hilfen/team';
 import { alleIdeen, ideeBeantworten, ideeLoeschen, alleKundenstimmen, stimmeLoeschen, KSTIMME_ARTEN, KStimmeArt } from '../hilfen/rueckmeldungen';
 
 const datum = (ts: number) => new Date(ts).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
@@ -18,7 +18,7 @@ const knopf = (tone: 'plain' | 'ok' | 'danger' = 'plain'): CSSProperties => ({
 const feld: CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: '12px', border: `2px solid ${TH.line}`, fontSize: '16px', fontFamily: 'inherit', resize: 'vertical' };
 
 export function offeneKollegenSachen(progress: CloudPayload['progress'] | undefined): number {
-  return alleKundenfragen(progress).filter((f) => !f.a).length + alleTipps(progress, undefined, 'pending').length + alleIdeen(progress).filter((i) => !i.a).length;
+  return alleKundenfragen(progress).filter((f) => !f.a).length + alleTipps(progress, undefined, 'pending').length + alleIdeen(progress).filter((i) => !i.a).length + lobeZurFreigabe(progress).length;
 }
 
 function FrageKarte({ f, mutateCloudData, onAlsQuizfrage }: { f: KFrageEintrag; mutateCloudData: KollegenTabProps['mutateCloudData']; onAlsQuizfrage: KollegenTabProps['onAlsQuizfrage'] }) {
@@ -91,7 +91,8 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
   const beantwortet = fragen.filter((f) => f.a);
   const tippsOffen = alleTipps(cloudData.progress, undefined, 'pending');
   const tippsOk = alleTipps(cloudData.progress, undefined, 'ok');
-  const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= Date.now() - 30 * 86400000);
+  const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= Date.now() - 30 * 86400000 && !l.warte);
+  const lobsWarten = lobeZurFreigabe(cloudData.progress);
   const ideen = alleIdeen(cloudData.progress);
   const [kArt, setKArt] = useState<KStimmeArt | ''>('');
   const kStimmen = alleKundenstimmen(cloudData.progress).filter((x) => !kArt || x.art === kArt);
@@ -118,6 +119,19 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
         ))}
       </div>
 
+      {lobsWarten.length > 0 && (
+        <div className="lt-lob-freigabe" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px', border: `2px solid ${TH.yellow}` }}>
+          {titel(`Anonymes Lob zur Freigabe (${lobsWarten.length})`, 'Die Kollegen sehen nur „Ein Kollege“. Du siehst, wer es geschrieben hat. Erst nach deiner Freigabe erscheint es und der Gelobte bekommt die Punkte.')}
+          {lobsWarten.map((l) => (
+            <div key={`${l.von}_${l.id}`} style={{ padding: '12px 14px', borderRadius: '14px', backgroundColor: TH.tintYellow, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
+              <span style={{ flex: '1 1 260px' }}><strong>{l.vonName}</strong> (anonym) an <strong>{l.anName}</strong>: „{l.t}“ <span style={{ color: TH.muted, fontSize: '14px' }}>· {datum(l.ts)}</span></span>
+              <button type="button" onClick={() => mutateCloudData(lobFreigeben(l.von, l.id))} style={knopf('ok')}>✓ Freigeben</button>
+              <button type="button" onClick={() => { if (confirm('Dieses anonyme Lob ablehnen? Es wird gelöscht.')) mutateCloudData(lobLoeschen(l.von, l.id)); }} style={knopf('danger')}>✗ Ablehnen</button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {beantwortet.length > 0 && (
         <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {titel(`Beantwortete Kundenfragen (${beantwortet.length})`, 'Gute Fragen kannst du mit einem Klick als Quizfrage für alle übernehmen.')}
@@ -141,7 +155,7 @@ export function KollegenTab({ cloudData, mutateCloudData, onAlsQuizfrage }: Koll
           {titel(`Lob unter Kollegen (${lobs.length})`, 'Die letzten 30 Tage. Steht auf der Startseite unter „Lob der Woche“. Unpassendes kannst du entfernen.')}
           {lobs.map((l) => (
             <div key={`${l.von}_${l.id}`} style={{ padding: '10px 14px', borderRadius: '14px', backgroundColor: TH.cream, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
-              <span style={{ flex: '1 1 260px' }}><strong>{l.vonName}</strong> an <strong>{l.anName}</strong>: „{l.t}“ <span style={{ color: TH.muted, fontSize: '14px' }}>· {datum(l.ts)}</span></span>
+              <span style={{ flex: '1 1 260px' }}><strong>{l.vonName}</strong>{l.anonym ? ' (anonym)' : ''} an <strong>{l.anName}</strong>: „{l.t}“ <span style={{ color: TH.muted, fontSize: '14px' }}>· {datum(l.ts)}</span></span>
               <button type="button" onClick={() => { if (confirm('Dieses Lob entfernen?')) mutateCloudData(lobLoeschen(l.von, l.id)); }} style={knopf('danger')}>Entfernen</button>
             </div>
           ))}

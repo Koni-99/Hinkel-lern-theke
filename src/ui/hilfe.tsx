@@ -150,7 +150,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         <div><strong>Verkaufstipps:</strong> In jedem Produkt-Steckbrief kannst du einen Tipp für die Kollegen hinterlassen, zum Beispiel „passt super zu Frischkäse“.</div>
       </>, 11)}
       {box(boxIcon(ICON.heart), 'Lob, Umfragen und wichtige Nachrichten', <>
-        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 15 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“.</div>
+        <div><strong>Lob der Woche:</strong> Auf der Startseite kannst du einmal am Tag einen Kollegen loben. Er bekommt dafür 15 Punkte. Mit dem Haken „Anonym danken“ steht statt deinem Namen „Ein Kollege“. Ein anonymes Danke schaut sich vorher der Ausbilder an (er sieht, von wem es ist). Erst nach seiner Freigabe erscheint es und der Kollege bekommt die Punkte.</div>
         <div><strong>Wer heute gelernt hat:</strong> Auf der Startseite siehst du, welche Kollegen heute schon gelernt haben. Sind es mehr als zwei, tippst du die Zeile an und siehst alle Namen.</div>
         <div><strong>Umfragen:</strong> Stellt der Ausbilder eine Frage ans Team, erscheint sie auf der Startseite. Einfach antippen und abstimmen.</div>
         <div><strong>Wichtige Nachrichten:</strong> Manche Nachrichten vom Ausbilder bestätigst du mit „Gelesen und verstanden“. So weiß er, dass es angekommen ist.</div>

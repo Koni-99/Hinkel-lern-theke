@@ -5,7 +5,7 @@ import { dc } from '../daten/data';
 import { LT } from '../basis/marke';
 import { LtIcon, ICON } from '../basis/symbole';
 import { CloudPayload } from '../types';
-import { alleLobs, heuteSchonGelobt, lobSchicken, lobVon, LOB_MAX, LOB_PUNKTE } from '../hilfen/team';
+import { alleLobs, heuteSchonGelobt, lobSchicken, lobVon, lobSichtbar, LOB_MAX, LOB_PUNKTE } from '../hilfen/team';
 
 export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setToast }: {
   cloudData: CloudPayload; username: string; kollegen: { key: string; name: string }[];
@@ -17,7 +17,7 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
   const [text, setText] = useState('');
   const [anonym, setAnonym] = useState(false);
   const woche = Date.now() - 7 * 86400000;
-  const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= woche);
+  const lobs = alleLobs(cloudData.progress).filter((l) => l.ts >= woche && lobSichtbar(l));
   const schonHeute = heuteSchonGelobt(cloudData.progress, me);
   const andere = kollegen.filter((k) => k.key !== me);
   if (!me) return null;
@@ -25,7 +25,7 @@ export function LobKarte({ cloudData, username, kollegen, mutateCloudData, setTo
     const ziel = andere.find((k) => k.key === an);
     if (!ziel || !text.trim()) return;
     mutateCloudData(lobSchicken(me, username, ziel.key, ziel.name, text, Date.now(), anonym));
-    setToast(`Dein ${anonym ? 'anonymes Danke' : 'Lob'} an ${ziel.name} ist verschickt. ${ziel.name} bekommt ${LOB_PUNKTE} Punkte.`);
+    setToast(anonym ? `Dein anonymes Danke an ${ziel.name} ist beim Ausbilder. Sobald er es freigibt, sieht ${ziel.name} es und bekommt ${LOB_PUNKTE} Punkte.` : `Dein Lob an ${ziel.name} ist verschickt. ${ziel.name} bekommt ${LOB_PUNKTE} Punkte.`);
     setText(''); setAn(''); setAnonym(false); setOffen(false);
   };
   const feld = { width: '100%', boxSizing: 'border-box' as const, minHeight: '50px', padding: '10px 14px', borderRadius: '14px', border: `2px solid ${LT.line}`, fontSize: '17px', fontFamily: 'inherit', backgroundColor: dc('#FFFFFF'), color: LT.ink };
