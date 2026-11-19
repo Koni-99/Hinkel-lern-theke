@@ -1,5 +1,6 @@
 // ═══ Karteikarten: Such- und Filterleiste ═══
 // Vorher mitten in components/FlashcardView.tsx. Der Inhalt ist unverändert übernommen, die Werte kommen als Props.
+import { SprachKnopf } from '../../ui/sprachKnopf';
 import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { CATS } from '../../daten/questions';
@@ -63,6 +64,7 @@ export function FilterLeiste({ questions, favorites, setFilterMode, filterMode, 
                   outline: "none",
                 }}
               />
+              <SprachKnopf onText={(t) => setSearchQuery(t)} />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}

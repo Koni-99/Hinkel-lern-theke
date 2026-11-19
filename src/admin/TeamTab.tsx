@@ -12,6 +12,7 @@ import { CATS } from '../daten/questions';
 import type { Badge, OnboardingItem } from '../ui/lernstand';
 import { LtIcon, ICON } from '../basis/symbole';
 import { falschVon, falschImTeam } from '../hilfen/falscheAntworten';
+import { urlaubHeute } from '../hilfen/urlaub';
 import { FalschGewaehlt } from './FalschGewaehlt';
 import type { ScoreEntry } from '../types';
 
@@ -58,7 +59,9 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
           const grenze = new Date(); grenze.setDate(grenze.getDate() - 14);
           const gk = `${grenze.getFullYear()}-${String(grenze.getMonth() + 1).padStart(2, '0')}-${String(grenze.getDate()).padStart(2, '0')}`;
           const zuletzt = (k: string) => { const d: string[] = Array.isArray(cloudProgress[k]?._days) ? cloudProgress[k]._days : []; return d.length ? [...d].sort().slice(-1)[0] : ''; };
-          const weg = allKnownUserKeys.filter((k) => { const l = zuletzt(k); return !l || l < gk; }).sort((a, b) => zuletzt(a).localeCompare(zuletzt(b)));
+          // Version 251: wer gerade Urlaub eingetragen hat, steht nicht in der Liste, sondern darunter
+          const imUrlaub = allKnownUserKeys.map((k) => ({ k, u: urlaubHeute(cloudProgress[k]) })).filter((x) => x.u);
+          const weg = allKnownUserKeys.filter((k) => { const l = zuletzt(k); return (!l || l < gk) && !urlaubHeute(cloudProgress[k]); }).sort((a, b) => zuletzt(a).localeCompare(zuletzt(b)));
           const nameVon = (k: string) => cloudLastSeen[k]?.displayName || cloudProgress[k]?._displayName || k;
           return (
             <div style={{ ...cardStyle, padding: '16px 18px', backgroundColor: weg.length ? TH.tintPeach : TH.tintSage, display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -69,6 +72,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                   {weg.map((k) => <span key={k} style={{ padding: '4px 12px', borderRadius: '999px', backgroundColor: dc('#FFFFFF'), fontSize: '15px' }}><strong>{nameVon(k)}</strong> · {zuletzt(k) ? `zuletzt ${zuletzt(k).split('-').reverse().join('.')}` : 'noch nie'}</span>)}
                 </div>
               )}
+              {imUrlaub.length > 0 && <div className="lt-im-urlaub" style={{ fontSize: '15px', color: TH.muted }}>Im Urlaub: {imUrlaub.map((x) => `${nameVon(x.k)} (bis ${x.u!.bis.split('-').reverse().slice(0, 2).join('.')}.)`).join(', ')}</div>}
             </div>
           );
         })()}

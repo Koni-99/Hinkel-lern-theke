@@ -6,6 +6,7 @@
 import { CloudPayload } from '../types';
 import { TIP_SHOP, JOKER_FIELD } from '../basis/laden';
 import { verpassteTage } from '../basis/serie';
+import { urlaubsTage } from './urlaub';
 
 type Upd = (curr: CloudPayload) => CloudPayload;
 const prOf = (curr: CloudPayload, k: string, name: string): any => curr.progress[k] || (curr.progress[k] = { _displayName: name });
@@ -74,7 +75,8 @@ export const geschenkAnnehmen = (userKey: string, name: string, g: GeschenkEintr
 /** Serien-Schutz automatisch einsetzen: verpasste Tage schützen, wenn genug Joker da sind. Gibt die Anzahl zurück. */
 export function schutzNoetig(pr: any, now = new Date()): string[] {
   const days: string[] = Array.isArray(pr?._days) ? pr._days : [];
-  const schutz: string[] = Array.isArray(pr?._schutzTage) ? pr._schutzTage : [];
+  // Urlaubstage (Version 251) zählen wie geschützt, dafür wird kein Joker verbraucht
+  const schutz: string[] = [...(Array.isArray(pr?._schutzTage) ? pr._schutzTage : []), ...urlaubsTage(pr)];
   const fehlt = verpassteTage(days, schutz, now);
   const joker = Number(pr?._jokersSchutz) || 0;
   return fehlt.length > 0 && fehlt.length <= joker ? fehlt : [];

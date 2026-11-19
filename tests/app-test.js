@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -866,6 +866,81 @@ async function offlineTests() {
     const ueber = await d.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     ok('Theken-Ansturm: Fotos am Handy groß (3 pro Reihe)', breiten.length === 8 && Math.min(...breiten) >= 100 && ueber <= 1, `Breiten ${breiten.join(',')}, über ${ueber}px`);
     ok('Theken-Ansturm: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 251: Suche überall (Lupe oben), auch mit Sprache
+  teile.push(['Version 251: Suche überall (Lupe oben)', async () => {
+    const S = kompiliere(['src/hilfen/suche.ts']).hilfen_suche;
+    ok('Suche: Umlaute egal, alle Wörter müssen passen', S.treffer('Bäckerei Brötchen', 'broetchen') > 0 && S.treffer('Bäckerei', 'brötchen') === 0 && S.suchen([{ n: 'Mohnbrötchen' }, { n: 'Mohnschnecke' }, { n: 'Kornspitz' }], 'mohn', () => '', (x) => x.n).length === 2);
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    if (process.env.OFEN_BILD) { await d.page.getByRole('button', { name: 'Suchen' }).first().waitFor().catch(() => {}); await sleep(2500); await d.page.screenshot({ path: process.env.OFEN_BILD + '-kopf.png' }); }
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('laugenbrezel');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-produkt').count()); w++) await sleep(100);
+    ok('Suche: Produkt gefunden', (await d.page.locator('.lt-suche-produkt').first().innerText().catch(() => '')).includes('Laugenbrezel'));
+    await click(d.page.locator('.lt-suche-produkt').first()); await settle(d.page, 800);
+    for (let w = 0; w < 40 && !(await d.page.locator('.fc-sheet').count()); w++) await sleep(100);
+    ok('Suche: Produkt öffnet den Steckbrief', /Laugenbrezel/.test(await d.page.locator('.lt-sb-kopf').innerText().catch(() => '')));
+    await click(d.page.getByRole('button', { name: 'Schließen' }).first()); await settle(d.page, 400);
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('sauerteig');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-frage').count()); w++) await sleep(100);
+    ok('Suche: Quizfragen gefunden, Antwort aufklappbar', (await d.page.locator('.lt-suche-frage').count()) > 0);
+    if (await d.page.locator('.lt-suche-frage').count()) { await click(d.page.locator('.lt-suche-frage').first()); await settle(d.page, 200); }
+    ok('Suche: richtige Antwort sichtbar', /Richtig:/.test(await d.page.locator('.lt-suche-frage').first().innerText().catch(() => '')));
+    await d.page.getByLabel('Suchbegriff').fill('teigi namen');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-hilfe').count()); w++) await sleep(100);
+    ok('Suche: Hilfe-Thema gefunden', (await d.page.locator('.lt-suche-hilfe').count()) > 0);
+    if (await d.page.locator('.lt-suche-hilfe').count()) { await click(d.page.locator('.lt-suche-hilfe').first()); await settle(d.page, 800); }
+    ok('Suche: Hilfe-Thema geöffnet', (await d.page.locator('main details[open]').count()) >= 1 && /So funktioniert/.test(await d.page.locator('main h1').first().innerText().catch(() => '')));
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('ofen');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-seite').count()); w++) await sleep(100);
+    ok('Suche: Seite (Ofen-Kette) gefunden', (await d.page.locator('.lt-suche-seite').innerText().catch(() => '')).includes('Ofen-Kette'));
+    const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
+    ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
+    ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 251: Lieblingsfragen (Stern), Urlaubsmodus, Willkommen zurück
+  teile.push(['Version 251: Lieblingsfragen, Urlaub, Willkommen zurück', async () => {
+    const U = kompiliere(['src/hilfen/urlaub.ts']).hilfen_urlaub;
+    const h = new Date(2026, 10, 19);
+    ok('Willkommen zurück: nach 7 Tagen Pause ja, nach 3 nein, ganz Neue nein', U.willkommenZurueck(['2026-11-10', '2026-11-19'], h) && !U.willkommenZurueck(['2026-11-16'], h) && !U.willkommenZurueck([], h) && !U.willkommenZurueck(['2026-11-19'], h));
+    const pr = {};
+    ok('Urlaub: 6 Wochen gehen, mehr nicht', U.urlaubPruefen(pr, '2026-11-20', '2026-12-31', h) === '' && /6 Wochen/.test(U.urlaubPruefen(pr, '2026-11-20', '2027-01-30', h) + U.urlaubPruefen({ _urlaub: [{ von: '2026-01-01', bis: '2026-02-05' }] }, '2026-11-20', '2026-11-30', h)));
+    U.urlaubEintragen(pr, '2026-11-15', '2026-11-25');
+    ok('Urlaub: Tage, heute im Urlaub, Überschneidung abgelehnt', U.urlaubsTage(pr, '2026-11-19').length === 5 && U.urlaubHeute(pr, h).bis === '2026-11-25' && /schon Urlaub/.test(U.urlaubPruefen(pr, '2026-11-24', '2026-11-28', h)));
+    U.urlaubBeenden(pr, h);
+    ok('Urlaub: „Ich bin zurück“ beendet ihn gestern', U.urlaubeVon(pr)[0].bis === '2026-11-18' && !U.urlaubHeute(pr, h));
+    const Ser = kompiliere(['src/basis/serie.tsx']).basis_serie;
+    const tage = []; for (let i = 20; i >= 12; i--) { const d = new Date(); d.setDate(d.getDate() - i); if (d.getDay() !== 0) tage.push(Ser.dayKey(d)); }
+    const ur = []; for (let i = 11; i >= 1; i--) { const d = new Date(); d.setDate(d.getDate() - i); ur.push(Ser.dayKey(d)); }
+    ok('Urlaub: Lern-Serie reißt im Urlaub nicht', Ser.computeStreak(tage, ur).current >= 5 && Ser.computeStreak(tage, []).current === 0, `${Ser.computeStreak(tage, ur).current}`);
+    // In der App: Stern im Quiz, Lieblingsfragen-Karte, Urlaub eintragen
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(1)); await settle(d.page, 600);
+    ok('Lieblingsfragen: Karte erst da, wenn eine Frage gemerkt ist', (await d.page.locator('.lt-lieblingsfragen').count()) === 0);
+    await click(d.page.locator('main button.lt-card:visible').first()); await settle(d.page, 600);
+    for (let i = 0; i < 4 && !(await d.page.locator('.lt-lieblings-stern').count()); i++) { const b = d.page.locator('main button:visible', { hasText: /Gemischt|Leicht|Alle|Los|Start/ }).first(); if (await b.count()) { await click(b); await settle(d.page, 600); } else break; }
+    const stern = d.page.locator('.lt-lieblings-stern');
+    ok('Lieblingsfragen: Stern im Quiz', (await stern.count()) === 1);
+    if (await stern.count()) { await click(stern); await settle(d.page, 300); }
+    ok('Lieblingsfragen: Stern bleibt an', (await stern.getAttribute('aria-pressed').catch(() => '')) === 'true');
+    await click(nav(d.page).nth(0)); await settle(d.page, 500); await click(nav(d.page).nth(1)); await settle(d.page, 600);
+    const zurueck = d.page.getByRole('button', { name: /Zurück|Bereiche/ }).first(); if (!(await d.page.locator('.lt-lieblingsfragen').count()) && await zurueck.count()) { await click(zurueck); await settle(d.page, 500); }
+    ok('Lieblingsfragen: Karte unter Lernen mit 1 Frage', /1 Frage/.test(await d.page.locator('.lt-lieblingsfragen').innerText().catch(() => '')));
+    await click(d.page.getByRole('button', { name: 'Menü' }).first()); await click(d.page.getByRole('menuitem', { name: 'Urlaub' }).first()); await settle(d.page, 600);
+    const dk = (x) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    const b = new Date(); b.setDate(b.getDate() + 5);
+    await d.page.getByLabel('Letzter Urlaubstag').fill(dk(b));
+    await click(d.page.getByRole('button', { name: 'Urlaub eintragen' })); await settle(d.page, 500);
+    ok('Urlaub: eingetragen, „im Urlaub bis …“ und „Ich bin schon zurück“', (await d.page.locator('.lt-urlaub-jetzt').count()) === 1);
+    await click(d.page.getByRole('button', { name: 'Ich bin schon zurück' })); await settle(d.page, 500);
+    ok('Urlaub: vorzeitig beendet', (await d.page.locator('.lt-urlaub-jetzt').count()) === 0);
+    ok('Lieblingsfragen und Urlaub: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 250: falsch gewählte Antwort für den Ausbilder, Steckbrief mit Backtagen, Preis geändert, Spickzettel, an Kollegen schicken

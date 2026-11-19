@@ -12,6 +12,9 @@ import type { OnboardingItem } from '../../ui/lernstand';
 import type { Question } from '../../daten/questions';
 
 export type QuizCategoriesProps = {
+  /** Version 251: Lieblingsfragen */
+  lieblingsZahl?: number;
+  onLieblings?: () => void;
   username: string;
   fetchCloudData: (customUrl?: string | undefined) => Promise<CloudPayload | null>;
   questions: Question[];
@@ -45,7 +48,7 @@ export type QuizCategoriesProps = {
   examSection: JSX.Element;
 };
 
-export function QuizCategories({ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }: QuizCategoriesProps) {
+export function QuizCategories({ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection , lieblingsZahl = 0, onLieblings }: QuizCategoriesProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '26px' }}>
       <PageHead title="Lernen" subtitle="Such dir einen Bereich aus und leg los. Nach jeder Antwort siehst du die Erklärung." />
@@ -85,6 +88,13 @@ export function QuizCategories({ username, fetchCloudData, questions, isAdmin, s
           <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Fehler-Stapel</span>
           <span style={{ fontSize: '17px' }}>{myWrongCount === 0 ? 'Leer, prima!' : fehlerDue > 0 ? `${fehlerDue} heute fällig · ${myWrongCount} im Stapel` : `${myWrongCount} im Stapel · heute nichts fällig`}</span>
         </button>
+        {lieblingsZahl > 0 && onLieblings && (
+          <button onClick={onLieblings} className="lt-card lt-lieblingsfragen" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', textAlign: 'left', cursor: 'pointer', color: LT.ink }}>
+            <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" /></svg></span>
+            <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Lieblingsfragen</span>
+            <span style={{ fontSize: '17px' }}>{lieblingsZahl} {lieblingsZahl === 1 ? 'Frage' : 'Fragen'} mit Stern gemerkt</span>
+          </button>
+        )}
         <button onClick={() => setActiveTab('hoeren')} className="lt-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
           <span style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }} aria-hidden="true"><LtIcon paths={ICON.headphones} size={22} width={1.9} /></span>
           <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>Hör-Lernen</span>

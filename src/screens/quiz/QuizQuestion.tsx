@@ -14,6 +14,9 @@ import { HINKEL_KUEKEN, LT, BTN_YELLOW } from '../../basis/marke';
 import { LtIcon, ICON } from '../../basis/symbole';
 
 export type QuizQuestionProps = {
+  /** Version 251: Lieblingsfragen (Stern) */
+  favorites?: number[];
+  toggleFavorite?: (id: number) => void;
   username: string;
   mutateCloudData: (updater: (current: CloudPayload) => CloudPayload) => void;
   isAdmin: boolean;
@@ -60,7 +63,7 @@ export type QuizQuestionProps = {
   quizBonus?: '' | 'comeback' | 'glueck' | 'beides';
 };
 
-export function QuizQuestion({ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg, gluecksfrage, quizBonus }: QuizQuestionProps) {
+export function QuizQuestion({ chanceOn, setChanceOn, username, mutateCloudData, isAdmin, doubleOn, setDoubleOn, jokerHide, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, currentIndex, setCurrentIndex, selectedAnswer, setSelectedAnswer, selectedMulti, setSelectedMulti, isAnswered, setIsAnswered, score, correctCount, wrongQuestions, setQuizFinished, lastDelta, quizRun, examTimerEnabled, examSecondsLeft, isExamMode, examSim, saveScoreToLeaderboard, applyJoker, spendJoker, applySwapJoker, finishPfad, handleOptionClick, examSimNext, submitMultiAnswer, setToast, myProg, gluecksfrage, quizBonus, favorites = [], toggleFavorite }: QuizQuestionProps) {
   const currentQ = quizList[currentIndex];
   const requiredIndices: number[] = currentQ.correctMulti || [currentQ.correct];
   const isMulti = requiredIndices.length > 1;
@@ -109,6 +112,13 @@ export function QuizQuestion({ chanceOn, setChanceOn, username, mutateCloudData,
         <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <h2 className="lt-frage" style={{ margin: 0, flex: '1 1 240px', minWidth: 0, fontFamily: LT.serif, fontSize: '25px', lineHeight: 1.22, color: LT.ink, overflowWrap: 'break-word', textWrap: 'balance' as any }}>{currentQ.question}</h2>
           <SpeakButton small {...(isAnswered && !examSim ? { hoerKey: stimmeKey(hoerTexte(currentQ).antwort) } : { natuerlich: true })} text={isAnswered && !examSim ? `Richtig ist: ${getRightAnswerText(currentQ)}. ${currentQ.explanation || ''}` : quizVorherText(currentQ.question, currentQ.options)} />
+          {toggleFavorite && typeof currentQ.id === 'number' && (() => { const fav = favorites.includes(currentQ.id); return (
+            <button type="button" className={'lt-lieblings-stern' + (fav ? ' lt-an' : '')} onClick={() => { toggleFavorite(currentQ.id); setToast(fav ? 'Aus den Lieblingsfragen entfernt.' : 'Zu deinen Lieblingsfragen gelegt. Du findest sie unter Lernen → Lieblingsfragen.'); }}
+              aria-pressed={fav} aria-label={fav ? 'Aus den Lieblingsfragen entfernen' : 'Als Lieblingsfrage merken'} title={fav ? 'Lieblingsfrage' : 'Als Lieblingsfrage merken'}
+              style={{ width: '44px', height: '44px', flex: '0 0 auto', borderRadius: '50%', border: `2px solid ${fav ? '#E0A400' : LT.line}`, backgroundColor: fav ? '#FFF3C4' : '#FFFFFF', color: fav ? '#C88A00' : LT.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill={fav ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={2} strokeLinejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" /></svg>
+            </button>
+          ); })()}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {currentIndex === 0 && !isAnswered && !isExamMode && !examSim && !isAdmin && !doubleOn && (Number(myProg._jokersDouble) || 0) > 0 && (
