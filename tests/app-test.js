@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -901,6 +901,104 @@ async function offlineTests() {
     const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 260: Start-Übersicht, Wochen-Rückblick, Sortiment, Foto-Vollbild, „Zu mir springen“, Fotos für ohne Internet
+  teile.push(['Version 260: Ausbilder Start-Übersicht, Rückblick und Sortiment', async () => {
+    const T = kompiliere(['src/hilfen/teamStart.ts']).hilfen_teamStart;
+    const jetzt = new Date(2026, 10, 19, 12); // Donnerstag
+    const prog = { anna: { _role: 'azubi', _intro: true, _days: ['2026-11-10', '2026-11-12'], _seit: '2026-11-10', _handy: true }, ben: { _days: [] }, cem: { _urlaub: [{ von: '2026-11-09', bis: '2026-11-14' }], _days: ['2026-10-01'] } };
+    const st = T.startStand(prog, { anna: { h: 'x' } }, ['anna', 'ben', 'cem']);
+    ok('Start-Übersicht: wer noch nicht losgelegt hat, steht oben', st[0].key !== 'anna' && st.find((z) => z.key === 'anna').offen === false && st.find((z) => z.key === 'anna').pin && st.find((z) => z.key === 'anna').handy && st.find((z) => z.key === 'ben').offen, JSON.stringify(st.map((z) => [z.key, z.offen])));
+    const r = T.wochenRueckblick(prog, [{ username: 'Anna', score: 200, date: '11.11.26, 08:00' }, { username: 'Ben', score: 50, date: '18.11.26, 08:00' }], ['anna', 'ben', 'cem'], jetzt);
+    ok('Rückblick: letzte Woche Mo bis So, Punkte, Fleißigste, Neu, Urlaub', r.von === '2026-11-09' && r.bis === '2026-11-15' && r.punkte === 200 && r.lerntage === 2 && r.top[0].key === 'anna' && r.neu.join() === 'anna' && r.nicht.join() === 'ben' && r.urlaub.join() === 'cem', JSON.stringify(r));
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const d0 = new Date(); d0.setDate(d0.getDate() - ((d0.getDay() + 6) % 7) - 5); // Mittwoch letzter Woche
+    const tk = `${d0.getFullYear()}-${String(d0.getMonth() + 1).padStart(2, '0')}-${String(d0.getDate()).padStart(2, '0')}`;
+    probe.progress.anna._days = [tk]; probe.progress.anna._intro = true;
+    probe.scores = [];
+    probe.scores.push({ id: 's9', username: 'Anna', score: 77, date: `${d0.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })}, 08:00`, category: 'Quiz' });
+    const a = await device({ admin: true, backup: probe });
+    a.page.on('dialog', (dlg) => dlg.accept());
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    for (let w = 0; w < 50 && !(await a.page.locator('.lt-wochen-rueckblick').count()); w++) await sleep(100);
+    const rb = await a.page.locator('.lt-wochen-rueckblick').first().innerText().catch(() => '');
+    ok('Rückblick oben im Ausbilder-Bereich: 1 von 2, Anna am fleißigsten, Ben nicht', /1 von 2 haben gelernt/.test(rb) && /Am fleißigsten\s*Anna/.test(rb) && /Nicht gelernt\s*Ben/.test(rb), rb.slice(0, 200));
+    await click(a.page.locator('.lt-rueckblick-gelesen')); await settle(a.page, 300);
+    ok('Rückblick: „Gelesen“ blendet ihn aus', (await a.page.locator('.lt-wochen-rueckblick').count()) === 0);
+    await click(a.page.getByRole('tab', { name: /Mitarbeiter/ }).first()); await settle(a.page, 500);
+    const su = a.page.locator('.lt-start-uebersicht');
+    ok('Start-Übersicht: 2 angemeldet, 1 noch nicht losgelegt', /2 angemeldet/.test(await su.innerText().catch(() => '')) && /1 noch nicht/.test(await su.innerText().catch(() => '')));
+    await click(su.locator('summary')); await settle(a.page, 300);
+    const zeilen = await a.page.locator('.lt-start-zeile').allInnerTexts();
+    ok('Start-Übersicht: Ben (ohne Rolle) oben, Anna mit Rolle und Einführung', zeilen.length === 2 && /Ben/.test(zeilen[0]) && /✓ Rolle/.test(zeilen[1]) && /✓ Einführung/.test(zeilen[1]), zeilen.join(' | ').slice(0, 200));
+    await click(a.page.getByRole('tab', { name: /Inhalte/ }).first()); await settle(a.page, 500);
+    await a.page.getByLabel('Produkt suchen').fill('kappeskopp');
+    for (let w = 0; w < 30 && !(await a.page.locator('.lt-sortiment-treffer').count()); w++) await sleep(100);
+    await click(a.page.locator('.lt-sortiment-treffer button').first()); await settle(a.page, 400);
+    ok('Sortiment: Kappeskopp herausgenommen', /Kappeskopp/.test(await a.page.locator('.lt-sortiment-raus').first().innerText().catch(() => '')));
+    await click(a.page.locator('.lt-sortiment-raus button').first()); await settle(a.page, 300);
+    ok('Sortiment: wieder ins Sortiment geholt', (await a.page.locator('.lt-sortiment-raus').count()) === 0);
+    ok('Ausbilder 260: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
+    // Mitarbeiter: herausgenommenes Produkt ist weg (Suche, Quizfragen)
+    const p2 = JSON.parse(JSON.stringify(SAMPLE));
+    p2.productFixes = { Kappeskopp: { aus: true, ts: Date.now() } };
+    const d = await device({ user: 'Anna', backup: p2, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('kappeskopp');
+    await sleep(600);
+    const prod = await d.page.locator('.lt-suche-produkt').count(), fr = await d.page.locator('.lt-suche-frage').count();
+    ok('Nicht im Sortiment: kein Steckbrief und keine Quizfrage mehr in der Suche', prod === 0 && fr === 0, `${prod} Produkte, ${fr} Fragen`);
+    await d.page.getByLabel('Suchbegriff').fill('zimtmonde');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-produkt').count()); w++) await sleep(100);
+    ok('Andere Produkte bleiben', (await d.page.locator('.lt-suche-produkt').count()) > 0);
+    ok('Sortiment beim Mitarbeiter: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  teile.push(['Version 260: Foto-Vollbild, „Zu mir springen“, Fotos für ohne Internet', async () => {
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    ['Cem', 'Dora', 'Emil', 'Finn'].forEach((n, i) => { probe.scores.push({ id: 'x' + i, username: n, score: 900 + i * 10, date: '12.11.26, 08:00', category: 'Quiz' }); probe.progress[n.toLowerCase()] = { _displayName: n }; });
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    // Steckbrief: Foto antippen = Vollbild, wischen, schließen
+    await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
+    await d.page.getByLabel('Suchbegriff').fill('laugenbrezel');
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-produkt').count()); w++) await sleep(100);
+    await click(d.page.locator('.lt-suche-produkt').first()); await settle(d.page, 800);
+    for (let w = 0; w < 40 && !(await d.page.locator('.lt-foto-gross').count()); w++) await sleep(100);
+    await click(d.page.locator('.lt-foto-gross').first()); await settle(d.page, 400);
+    const vb = d.page.locator('.lt-foto-vollbild');
+    ok('Steckbrief: Foto antippen öffnet das Vollbild mit allen Fotos', (await vb.count()) === 1 && (await vb.locator('img').count()) >= 2 && /1 \/ \d/.test(await vb.innerText()));
+    await click(vb.getByRole('button', { name: 'Nächstes Foto' })); await sleep(900);
+    ok('Vollbild: weiter zum nächsten Foto', /2 \/ \d/.test(await vb.innerText().catch(() => '')));
+    await d.page.goBack(); await settle(d.page, 500);
+    ok('Vollbild: Zurück-Taste schließt nur das Vollbild', (await d.page.locator('.lt-foto-vollbild').count()) === 0 && (await d.page.locator('.fc-sheet').count()) === 1);
+    await d.page.goBack(); await settle(d.page, 500);
+    // Bestenliste: zu mir springen
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Bestenliste"]:visible').first()); await settle(d.page, 800);
+    for (let w = 0; w < 40 && !(await d.page.locator('.sb-zu-mir').count()); w++) await sleep(100);
+    const zm = await d.page.locator('.sb-zu-mir').innerText().catch(() => '');
+    ok('Bestenliste: Knopf „Zu mir springen“ mit eigenem Platz', /Platz \d/.test(zm), zm);
+    await click(d.page.locator('.sb-zu-mir')); await sleep(300);
+    ok('Bestenliste: eigene Zeile leuchtet auf', (await d.page.locator('.sb-me.sb-me-puls').count()) === 1);
+    // Menü: Fotos für ohne Internet laden
+    await click(d.page.getByRole('button', { name: 'Menü' }).first()); await settle(d.page, 300);
+    await click(d.page.locator('.lt-menu-offline')); await settle(d.page, 300);
+    let txt = '';
+    for (let w = 0; w < 40 && !/von \d+ Fotos|Alle Fotos/.test(txt); w++) { txt = await d.page.locator('.lt-offline-laden').innerText().catch(() => ''); await sleep(100); }
+    const vorher = Number((txt.match(/(\d+) von/) || [])[1] || 0);
+    ok('Für ohne Internet: zeigt, wie viele Fotos schon da sind', /von \d+ Fotos/.test(txt), txt.slice(0, 120));
+    await click(d.page.locator('.lt-offline-start'));
+    let nachher = vorher;
+    for (let w = 0; w < 80 && nachher < vorher + 30; w++) { nachher = Number(((await d.page.locator('.lt-offline-laden').innerText().catch(() => '')).match(/(\d+) von/) || [])[1] || 0); await sleep(100); }
+    ok('Für ohne Internet: Fotos werden aufs Gerät geladen', nachher >= vorher + 30, `${vorher} → ${nachher}`);
+    const gespeichert = await d.page.evaluate(async () => (await (await caches.open('lern-theke-fotos-1')).keys()).length);
+    ok('Für ohne Internet: Fotos liegen im Foto-Speicher', gespeichert >= 30, String(gespeichert));
+    await click(d.page.locator('.lt-offline-laden button', { hasText: /Abbrechen|Fertig/ }).last()); await settle(d.page, 300);
+    ok('Für ohne Internet: Fenster geht zu', (await d.page.locator('.lt-offline-laden').count()) === 0);
+    ok('Vollbild, Bestenliste, Offline: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 259: Ausbilder: „Zu erledigen“, rote Zahl am Knopf, Meldung bei Neuem

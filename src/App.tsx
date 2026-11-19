@@ -1,10 +1,12 @@
+import { heuteKey } from './hilfen/teamStart';
+const isStandaloneNow = () => { try { return window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true; } catch { return false; } };
 import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { dc, BASE_BAKING_SCHEDULE, BASE_SEASONAL_MAP } from './daten/data';
 import { CATS, questions as rawQuestions, examQuestions } from './daten/questions';
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 259;
+const APP_VERSION: number = 260;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -33,7 +35,7 @@ import { getRankByPercentage, formatEndpointUrl, matchesSortimentSubfilter, shuf
 import { shuffleQuestionOptions } from './hilfen/pruefung';
 import { hasAdminSession, adminSignOut, withAdminAuth, ADMIN_EXPIRED_EVENT } from './hilfen/anmeldung';
 import { settleBattle, awardBattlePoints, battleWinnerSide, BATTLE_SEKUNDEN } from './hilfen/battle';
-import { applyProductFixes, patchProductQuestion, registerNewProducts } from './hilfen/produkte';
+import { applyProductFixes, patchProductQuestion, registerNewProducts, frageZuAusProdukt } from './hilfen/produkte';
 // Ausbilder-Bereich wird erst geladen, wenn er gebraucht wird (schnellerer Start für alle anderen)
 const AdminView = lazy(() => import('./components/AdminView').then((m) => ({ default: m.AdminView })));
 // Seiten und Spiele erst laden, wenn man sie öffnet (schnellerer Start)
@@ -79,6 +81,7 @@ import { Buehne } from './thema/buehne';
 import { mitShopFotos, mitZufallsFotos, setEigeneFotos } from './daten/fotos';
 import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './thema/modus';
 import { Aussehen } from './screens/dialoge/Aussehen';
+import { OfflineLaden } from './screens/dialoge/OfflineLaden';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
 import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, teigiStand, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
@@ -303,8 +306,10 @@ export default function App() {
     const nowStr = new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' });
     mutateCloudData((curr) => {
       curr.lastSeen[userKey] = { displayName: clean, time: nowStr, timestamp: Date.now() };
-      if (!curr.progress[userKey]) curr.progress[userKey] = { _displayName: clean };
+      if (!curr.progress[userKey]) curr.progress[userKey] = { _displayName: clean, _seit: heuteKey() };
       else curr.progress[userKey]._displayName = clean;
+      // Version 260: läuft die App als App auf dem Handy? (für die Start-Übersicht des Ausbilders)
+      if (userKey !== 'admin' && isStandaloneNow() && !curr.progress[userKey]._handy) curr.progress[userKey]._handy = true;
       return curr;
     });
   };
@@ -337,10 +342,10 @@ export default function App() {
   const newProductQs = useMemo(() => registerNewProducts(newProductList), [newProdKey]);
   useMemo(() => applyProductFixes(pFixes), [pFixKey, newProdKey]);
   const questions = useMemo(
-    () => [...rawQuestions, ...newProductQs, ...(cloudData.customQuestions || [])].filter(q => !hiddenQ[String(q.id)]).map(q => applyEdit(patchProductQuestion(q))).filter(ohneSojaFrage),
+    () => [...rawQuestions, ...newProductQs, ...(cloudData.customQuestions || [])].filter(q => !hiddenQ[String(q.id)]).map(q => applyEdit(patchProductQuestion(q))).filter(ohneSojaFrage).filter((q) => !frageZuAusProdukt(q)),
     [cloudData.customQuestions, hiddenKey, editsKey, pFixKey, newProductQs]
   );
-  const examQs = useMemo(() => examQuestions.filter(q => !hiddenQ[String(q.id)]).map(applyEdit).filter(ohneSojaFrage), [hiddenKey, editsKey]);
+  const examQs = useMemo(() => examQuestions.filter(q => !hiddenQ[String(q.id)]).map(applyEdit).filter(ohneSojaFrage).filter((q) => !frageZuAusProdukt(q)), [hiddenKey, editsKey, pFixKey]);
   const azubiArea = username.toLowerCase() === 'admin' || ((cloudData.progress || {})[username.toLowerCase()] || {})._role === 'azubi';
   const examAllowed = true; // Prüfungen sind für alle freigeschaltet
   const allFlashcards = useMemo(() => (examAllowed ? [...questions, ...examQs] : questions), [questions, examQs, examAllowed]);
@@ -480,6 +485,7 @@ export default function App() {
   const [kopf, setKopfState] = useState<Kopf>(kopfGespeichert);
   const setKopf = (k: Kopf) => { kopfSetzen(k); setKopfState(k); };
   const [showAussehen, setShowAussehen] = useState(false);
+  const [showOfflineLaden, setShowOfflineLaden] = useState(false);
   const [bigFont, setBigFont] = useState<boolean>(() => { try { return localStorage.getItem('hinkel_big_font') === '1'; } catch { return false; } });
   const toggleBigFont = () => {
     setBigFont(prev => {
@@ -2705,6 +2711,7 @@ export default function App() {
             <div className="lt-menu-gruppe" role="presentation" style={{ padding: '10px 14px 2px', fontSize: '12px', fontWeight: 800, letterSpacing: '1.2px', textTransform: 'uppercase', opacity: 0.6 }}>Einstellungen und Hilfe</div>
             <button role="menuitem" onClick={() => { toggleBigFont(); }} aria-pressed={bigFont}><span style={{ width: '24px', fontWeight: 800 }}>A+</span>{bigFont ? 'Normale Schrift' : 'Größere Schrift'}</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); setShowAussehen(true); }}><LtIcon paths={ICON.sliders} size={22} />Aussehen</button>
+            <button role="menuitem" className="lt-menu-offline" onClick={() => { setHdrMenu(false); setShowOfflineLaden(true); }}><LtIcon paths={ICON.download} size={22} />Für ohne Internet laden</button>
             {!isStandaloneApp && !installHidden && <button role="menuitem" onClick={() => { setHdrMenu(false); setShowInstallHelp(true); }}><LtIcon paths={ICON.phone} size={22} />Auf den Startbildschirm</button>}
             <button role="menuitem" onClick={() => { setHdrMenu(false); setHilfeThema(undefined); setActiveTab('hilfe'); }}><LtIcon paths={ICON.bulb} size={22} />So funktioniert die Lern-Theke</button>
             <button role="menuitem" onClick={() => { setHdrMenu(false); if (isAdmin) adminSignOut(); setUsername(''); setTempUsername(''); setAdminPinInput(''); setPinError(false); resetLogin(); setActiveTab('home'); localStorage.removeItem('hinkel_username'); }} style={{ color: '#B42318' }}><LtIcon paths={ICON.logout} size={22} />Abmelden</button>
@@ -2941,6 +2948,7 @@ export default function App() {
       )}
 
       {/* ── Anleitung: App auf den Startbildschirm ── */}
+      {showOfflineLaden && <OfflineLaden schliessen={() => setShowOfflineLaden(false)} />}
       {showAussehen && <Aussehen kopf={kopf} setKopf={setKopf} schliessen={() => setShowAussehen(false)} />}
       {showInstallHelp && <InstallHilfe {...{ setShowInstallHelp, hideInstall, canInstallDirect, isAppleDevice, installDirect }} />}
 

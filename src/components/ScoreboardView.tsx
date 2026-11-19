@@ -37,6 +37,7 @@ const SB_CSS = `
 .sb-print{animation:sbPrint .9s cubic-bezier(.3,.7,.3,1) both}
 .sb-row{animation:sbRow .4s cubic-bezier(.2,.8,.2,1) both}
 .sb-me{animation:sbRow .4s cubic-bezier(.2,.8,.2,1) both,sbGlow 1.1s ease-in-out 2}
+.sb-me.sb-me-puls{animation:sbGlow .9s ease-in-out 3}
 .sb-key[aria-selected=true]{animation:sbKey .25s ease}
 @media (prefers-reduced-motion:reduce){.sb-print,.sb-row,.sb-me,.sb-key{animation:none !important}}
 @media (max-width:820px){
@@ -287,6 +288,22 @@ export function ScoreboardView({
             <div style={{ textAlign: "center", fontWeight: 700, fontSize: "1.2em", letterSpacing: "2px" }}>BÄCKEREI HINKEL</div>
             <div style={{ textAlign: "center", fontSize: "0.85em" }}>Bestenliste · {activeLabel}</div>
             <div style={{ textAlign: "center", fontSize: "0.85em" }}>Stand {stamp}</div>
+            {/* Version 260: direkt zum eigenen Platz springen, Zeile blinkt kurz auf */}
+            {(() => {
+              const platz = rows.findIndex((r) => r.key === myKey);
+              if (platz < 3) return null;
+              const springen = () => {
+                const el = document.querySelector('.sb-bon .sb-me') as HTMLElement | null;
+                if (!el) return;
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.remove('sb-me-puls'); void el.offsetWidth; el.classList.add('sb-me-puls');
+              };
+              return (
+                <button type="button" className="sb-zu-mir" onClick={springen} style={{ display: "block", margin: "10px auto 0", minHeight: "40px", padding: "0 16px", border: `1px dashed ${C.ink}`, borderRadius: "999px", backgroundColor: C.yellow, fontFamily: C.mono, fontSize: "0.85em", fontWeight: 700, color: C.ink, cursor: "pointer" }}>
+                  Zu mir springen · Platz {platz + 1}
+                </button>
+              );
+            })()}
             {dash()}
 
             {rows.length === 0 ? (

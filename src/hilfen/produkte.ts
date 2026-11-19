@@ -17,7 +17,26 @@ export const ALT_ORIGINALS = new Map<string, string[] | undefined>();
 export let activeProductFixes: NonNullable<CloudPayload['productFixes']> = {};
 
 /** Korrekturen des Ausbilders auf Sortiment und Alternativen anwenden (wirkt in allen Spielen) */
+// Version 260: Produkte, die der Ausbilder aus dem Sortiment genommen hat (productFixes[name].aus).
+// Sie werden aus SHOP_PRODUCTS herausgenommen (Steckbriefe, Spiele) und ihre Quizfragen ausgeblendet.
+let RAUS: { p: ShopProduct; idx: number }[] = [];
+export let ausSortiment = new Set<string>();
+/** Gehört die Frage zu einem Produkt, das gerade nicht im Sortiment ist? („Name“ in der Frage oder Name als richtige Antwort) */
+export function frageZuAusProdukt(q: any): boolean {
+  if (!ausSortiment.size || !q) return false;
+  const text = String(q.question || '');
+  const richtig = Array.isArray(q.options) ? String(q.options[q.correct] ?? '').trim() : '';
+  for (const n of ausSortiment) if (text.includes(`„${n}“`) || text.includes(`„${n}"`) || richtig === n) return true;
+  return false;
+}
+/** Alle Produktnamen, auch die gerade herausgenommenen (für die Auswahl im Ausbilder-Bereich) */
+export const alleProduktNamen = () => Array.from(new Set([...SHOP_PRODUCTS.map((p) => p.name), ...RAUS.map((r) => r.p.name)])).sort((a, b) => a.localeCompare(b, 'de'));
+
 export function applyProductFixes(fixes?: CloudPayload['productFixes']) {
+  // herausgenommene Produkte zurück an ihren Platz (außer sie sind inzwischen wieder da)
+  [...RAUS].sort((a, b) => a.idx - b.idx).forEach((r) => { if (!SHOP_PRODUCTS.some((x) => x.name === r.p.name)) SHOP_PRODUCTS.splice(Math.min(r.idx, SHOP_PRODUCTS.length), 0, r.p); });
+  RAUS = [];
+  ausSortiment = new Set(Object.keys(fixes || {}).filter((n) => (fixes || {})[n]?.aus));
   // erst alles auf Original zurück …
   PRODUCT_ORIGINALS.forEach((orig, name) => {
     const p = SHOP_PRODUCTS.find(x => x.name === name);
@@ -51,6 +70,7 @@ export function applyProductFixes(fixes?: CloudPayload['productFixes']) {
     }
     activeProductFixes[name] = f;
   });
+  for (let i = SHOP_PRODUCTS.length - 1; i >= 0; i--) if (ausSortiment.has(SHOP_PRODUCTS[i].name)) RAUS.push({ p: SHOP_PRODUCTS.splice(i, 1)[0], idx: i });
 }
 
 /** Originaldaten eines Produkts (vor der Korrektur des Ausbilders) */

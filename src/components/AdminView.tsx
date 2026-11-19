@@ -33,6 +33,8 @@ import { MeldungenTab } from '../admin/MeldungenTab';
 import { InhalteTab } from '../admin/InhalteTab';
 import { NachrichtTab } from '../admin/NachrichtTab';
 import { TeamTab } from '../admin/TeamTab';
+import { WochenRueckblick } from '../admin/WochenRueckblick';
+import { SortimentAus } from '../admin/SortimentAus';
 
 export function AdminView({
   cloudData,
@@ -548,7 +550,7 @@ export function AdminView({
 
   // ── Produktdaten korrigieren ──
   const pFixes = cloudData.productFixes || {};
-  const fixedProducts = Object.keys(pFixes).filter(n => pFixes[n] && !pFixes[n].restored).sort();
+  const fixedProducts = Object.keys(pFixes).filter(n => pFixes[n] && !pFixes[n].restored && !pFixes[n].aus).sort();
   const shopNames = SHOP_PRODUCTS.map(p => p.name).sort((a, b) => a.localeCompare(b, 'de'));
   const allAllergens = Array.from(new Set(SHOP_PRODUCTS.reduce<string[]>((acc, p) => acc.concat(p.allergens), []))).sort((a, b) => a.localeCompare(b, 'de'));
   const startProductFix = (name: string, reportKey?: string) => {
@@ -808,6 +810,8 @@ export function AdminView({
                 </div>
               );
             })()}
+      {/* ── Version 260: Rückblick auf letzte Woche (ab Montag, bis „Gelesen“) ── */}
+      <WochenRueckblick oben progress={cloudProgress} scores={cloudScores} keys={allKnownUserKeys} nameOf={nameOf} />
       {(() => {
         const letzte = Number((cloudData.progress?.admin || {})._letzteSicherung) || 0;
         const tage = letzte ? Math.floor((Date.now() - letzte) / 86400000) : -1;
@@ -841,6 +845,7 @@ export function AdminView({
       {adminTab === 'message' && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
 
       {/* ═════════ INHALTE ═════════ */}
+      {adminTab === 'content' && <SortimentAus cloudData={cloudData} mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <ProduktImport mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}
       {adminTab === 'content' && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
@@ -851,6 +856,7 @@ export function AdminView({
       {/* ═════════ AUSWERTUNG ═════════ */}
       {adminTab === 'stats' && <AuswertungUeberblick {...{ allKnownUserKeys, allQById, startFix, renderFixEditor, hiddenMap, hideQuestion, qStats, smallBtn, sectionTitle, weekInfo, nameOf }} />}
 
+      {adminTab === 'stats' && <WochenRueckblick progress={cloudProgress} scores={cloudScores} keys={allKnownUserKeys} nameOf={nameOf} />}
       {adminTab === 'stats' && <AuswertungWoche {...{ allKnownUserKeys, smallBtn, sectionTitle, wStart, weekInfo, nameOf, copyReport }} />}
 
       {adminTab === 'stats' && <AuswertungNutzung progress={cloudData.progress} sectionTitle={sectionTitle} />}
