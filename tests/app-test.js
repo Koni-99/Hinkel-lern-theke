@@ -903,6 +903,30 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 255: Prüfungsgespräch im Theken-Simulator mit Bewertungsbogen
+  teile.push(['Version 255: Prüfungsgespräch mit Bewertungsbogen', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Simulator' }).first()); await settle(d.page, 1000);
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-pruefung-start').count()); w++) await sleep(100);
+    await click(d.page.locator('.lt-pruefung-start')); await settle(d.page, 600);
+    let schritte = 0, hinweise = 0;
+    for (let i = 0; i < 30 && !(await d.page.locator('.lt-pruefungsbogen').count()); i++) {
+      const o = d.page.locator('main button', { hasText: /\S/ }).filter({ has: d.page.locator('span') });
+      const opt = d.page.locator('.lt-pop-in button').filter({ hasNotText: /Vorlesen|Nochmal hören/ });
+      if (await opt.count()) { await click(opt.first()); schritte++; }
+      await sleep(900);
+      hinweise = Math.max(hinweise, await d.page.locator('.lt-msg', { hasText: /^✓ |^✗ / }).count());
+      if (!(await d.page.locator('.lt-pop-in button').count()) && !(await d.page.locator('.lt-pruefungsbogen').count())) await sleep(500);
+      void o;
+    }
+    const bogen = await d.page.locator('.lt-pruefungsbogen').innerText().catch(() => '');
+    ok('Prüfungsgespräch: Bewertungsbogen mit Note am Ende', /Note \d/.test(bogen) && /Kontakt und Begrüßung/.test(bogen) && /Kassieren/i.test(bogen), bogen.slice(0, 80));
+    ok('Prüfungsgespräch: langes Gespräch, keine Hinweise zwischendurch', schritte >= 5 && hinweise === 0, `${schritte} Schritte, ${hinweise} Hinweise`);
+    ok('Prüfungsgespräch: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 254: Berufsschul-Lernkarten und eigene Karten (Ausbilder bestätigt)
   teile.push(['Version 254: Berufsschul-Lernkarten, eigene Karten', async () => {
     const M = kompiliere(['src/daten/berufsschule.ts', 'src/hilfen/eigeneKarten.ts']);

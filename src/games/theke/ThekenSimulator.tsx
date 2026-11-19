@@ -16,6 +16,7 @@ import { LtIcon, ICON } from '../../basis/symbole';
 const kundenStimme = (p: { name: string; title: string }) => (/^(Frau|Kundin|Die )/.test(p.name) || /^Die /.test(p.title) ? 'frau' as const : 'mann' as const);
 const gesprochen = (t: string) => t.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
 import { buildConversation } from './gespraech';
+import { ihkGrade } from '../../ui/lernstand';
 
 export type ThekeStats = Record<string, { ok: number; bad: number }>;
 
@@ -93,7 +94,23 @@ export function TipJar({ balance, onOpenShop, big, todayLeft }: { balance: numbe
   );
 }
 
-export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, onLearn, known = {}, onKnown, onTip, tipBalance, onOpenShop, tipTodayLeft }: { onTip?: (cents: number) => void; tipBalance?: number; onOpenShop?: () => void; tipTodayLeft?: number; onSaveScore: (points: number, category: string) => void; onTopicResults?: (results: ThekeResult[]) => void; topicStats?: ThekeStats; onLearn?: OnLearn; known?: KnownMap; onKnown?: OnKnown }) {
+/** Version 255: Bewertungsbogen wie in der praktischen Prüfung (aus den Themen der Gesprächsschritte) */
+export const BOGEN: { name: string; themen?: string[] }[] = [
+  { name: 'Kontakt und Begrüßung', themen: ['Begrüßung'] },
+  { name: 'Beratung und Warenkenntnis' },
+  { name: 'Zusatzverkauf', themen: ['Zusatzverkauf'] },
+  { name: 'Kassieren', themen: ['Summe', 'Rückgeld', 'Kartenzahlung', 'Trinkgeld'] },
+  { name: 'Gesprächsführung und Abschluss', themen: ['Smalltalk', 'Verabschiedung'] },
+];
+export function pruefungsBogen(review: { topic: string; ok: boolean }[]) {
+  const fest = BOGEN.flatMap(b => b.themen || []);
+  return BOGEN.map(b => {
+    const teil = review.filter(r => (b.themen ? b.themen.includes(r.topic) : !fest.includes(r.topic)));
+    return { name: b.name, richtig: teil.filter(r => r.ok).length, gesamt: teil.length };
+  });
+}
+
+export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSaveScore, onTopicResults, topicStats, onLearn, known = {}, onKnown, onTip, tipBalance, onOpenShop, tipTodayLeft }: { pruefungStart?: boolean; onPruefungGestartet?: () => void; onTip?: (cents: number) => void; tipBalance?: number; onOpenShop?: () => void; tipTodayLeft?: number; onSaveScore: (points: number, category: string) => void; onTopicResults?: (results: ThekeResult[]) => void; topicStats?: ThekeStats; onLearn?: OnLearn; known?: KnownMap; onKnown?: OnKnown }) {
   const [onlyNew, toggleOnlyNew] = useOnlyNew('theke');
   const knownTheke = known.theke || [];
   const [learned, setLearned] = useState(0);
@@ -116,6 +133,8 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
   const [thFx, setThFx] = useState<AnswerFxState>(null);
   const [thRun, setThRun] = useState(0);
   const [focus, setFocus] = useState<string | undefined>(undefined);
+  // Version 255: Prüfungsgespräch (wie die praktische Prüfung: lang, keine Hinweise zwischendurch, Bewertungsbogen am Ende)
+  const [pruefung, setPruefung] = useState(false);
   // Zuhören: Kunde spricht laut, der Text bleibt verdeckt, bis man antippt oder antwortet (pro Gerät gemerkt)
   const [hoeren, setHoeren] = useState<boolean>(() => { try { return localStorage.getItem('lt_theke_hoeren') === '1'; } catch { return false; } });
   const [offenBis, setOffenBis] = useState(0);
@@ -124,10 +143,12 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
   useEffect(() => () => { stopSpeaking(); }, []);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }); }, [messages, busy, phase]);
+  useEffect(() => { if (pruefungStart) { onPruefungGestartet?.(); startConversation(undefined, true); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const startConversation = (focusTopic?: string) => {
-    const c = buildConversation(focusTopic, onlyNew ? knownTheke : []);
-    setFocus(focusTopic);
+  const startConversation = (focusTopic?: string, pruef = false) => {
+    const c = buildConversation(pruef ? undefined : focusTopic, onlyNew && !pruef ? knownTheke : [], pruef);
+    setPruefung(pruef);
+    setFocus(pruef ? undefined : focusTopic);
     savedRef.current = false;
     resultsRef.current = [];
     setLearned(0);
@@ -149,7 +170,8 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
     const step = conv.steps[stepIdx];
     const right = step.options.find(x => x.correct);
     const add: ChatMsg[] = [{ from: 'seller', text: o.text }];
-    if (o.correct) {
+    if (pruefung) { /* in der Prüfung gibt es zwischendurch keine Rückmeldung */ }
+    else if (o.correct) {
       add.push({ from: 'note-ok', text: pick(['Richtig!', 'Sehr gut!', 'Genau so!', 'Perfekt!']) });
       if (step.learn && onLearn) {
         const n = onLearn([step.learn]);
@@ -165,7 +187,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
     setReview(r => [...r, { topic: step.topic, ok: o.correct, why: o.why, better: right && !o.correct ? right.text : undefined, q: step.customer.join(' '), a: right ? right.text : o.text, product: step.learn?.product }]);
     const run = o.correct ? thRun + 1 : 0;
     setThRun(run);
-    setThFx({ k: Date.now(), ok: o.correct, text: o.correct ? '💬 +10 Punkte' : '✗ Nicht ganz', streak: run, pts: o.correct ? 10 : undefined });
+    if (!pruefung) setThFx({ k: Date.now(), ok: o.correct, text: o.correct ? '💬 +10 Punkte' : '✗ Nicht ganz', streak: run, pts: o.correct ? 10 : undefined });
     setOffenBis(messages.length);
     const newCorrect = correct + (o.correct ? 1 : 0);
     setCorrect(newCorrect);
@@ -205,7 +227,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
           if (coreOk && conv.coreKey) onKnown?.('theke', [conv.coreKey]);
         }
       }
-    }, o.correct ? 900 : 1600);
+    }, pruefung ? 700 : o.correct ? 900 : 1600);
   };
 
   // Neue Kundensätze im Zuhör-Modus laut sprechen
@@ -258,6 +280,15 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
           onStart={() => startConversation()}
         />
       )}
+      {phase === 'menu' && (
+        <button type="button" onClick={() => startConversation(undefined, true)} className="lt-card lt-pruefung-start" style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px', textAlign: 'left', cursor: 'pointer', border: `2px solid ${TH.line}` }}>
+          <span style={{ flex: '0 0 auto', display: 'inline-flex' }}><LtIcon paths={ICON.cap} size={30} /></span>
+          <span style={{ flex: 1 }}>
+            <span style={{ display: 'block', fontWeight: 700, fontSize: '18px' }}>Prüfungsgespräch üben</span>
+            <span style={{ display: 'block', fontSize: '15px', color: TH.muted }}>Wie in der praktischen Prüfung: ein langes Gespräch ohne Hinweise zwischendurch, am Ende ein Bewertungsbogen mit Note.</span>
+          </span>
+        </button>
+      )}
       {phase === 'menu' && canSpeak() && (
         <button type="button" onClick={toggleHoeren} aria-pressed={hoeren} className="lt-hoeren-schalter" style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: '14px', textAlign: 'left', cursor: 'pointer', border: `2px solid ${hoeren ? TH.brown : TH.line}`, backgroundColor: hoeren ? TH.tintYellow : TH.white, color: TH.ink }}>
           <span style={{ flex: '0 0 auto', display: 'inline-flex' }}><LtIcon paths={ICON.headphones} size={30} /></span>
@@ -280,7 +311,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
             <div style={{ flex: '2 1 240px', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '16px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>
               {(() => {
                 const last = review[review.length - 1];
-                const mood = phase === 'done' ? (isPerfect ? '🤩' : correct >= total - 2 ? '😊' : '😐') : !last ? '🙂' : last.ok ? '😊' : '😕';
+                const mood = pruefung && phase !== 'done' ? '🙂' : phase === 'done' ? (isPerfect ? '🤩' : correct >= total - 2 ? '😊' : '😐') : !last ? '🙂' : last.ok ? '😊' : '😕';
                 return <span key={`${mood}-${review.length}-${phase}`} className="lt-mood" title="So fühlt sich der Kunde gerade" style={{ flex: '0 0 46px', height: '46px', borderRadius: '50%', backgroundColor: TH.tintBlue, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }} aria-label={`Stimmung: ${mood}`}>{mood}</span>;
               })()}
               <span>
@@ -288,7 +319,7 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
                 <span style={{ display: 'block', fontSize: '15px', color: TH.muted }}>{conv.persona.who}{focus ? ` · Übung: ${focus}` : ''}</span>
               </span>
             </div>
-            <StatChip label="Richtig" value={`${correct} / ${total}`} tone="yellow" />
+            {pruefung ? <StatChip label="Prüfung" value="läuft" tone="yellow" /> : <StatChip label="Richtig" value={`${correct} / ${total}`} tone="yellow" />}
             <StatChip label="Bedient" value={served} />
             {tipTotal > 0 && <StatChip label="Trinkgeld" value={euro(tipTotal)} />}
           </div>
@@ -372,11 +403,32 @@ export function ThekenSimulatorView({ onSaveScore, onTopicResults, topicStats, o
               {onOpenShop && <TipJar balance={tipBalance || 0} onOpenShop={onOpenShop} todayLeft={tipTodayLeft} />}
               {learned > 0 && <div style={{ padding: '10px 16px', borderRadius: '14px', backgroundColor: TH.tintBlue, fontSize: '17px', fontWeight: 700 }}>{learnedText(learned)}</div>}
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
-                <button onClick={() => startConversation(focus)} style={btnPrimary}>{focus ? `Nächster Kunde: ${focus}` : 'Nächster Kunde'}</button>
+                {pruefung ? <button onClick={() => startConversation(undefined, true)} style={btnPrimary}>Neues Prüfungsgespräch</button>
+                  : <button onClick={() => startConversation(focus)} style={btnPrimary}>{focus ? `Nächster Kunde: ${focus}` : 'Nächster Kunde'}</button>}
+                {pruefung && <button onClick={() => startConversation()} style={{ ...btnPrimary, backgroundColor: TH.white, color: TH.ink, border: `2px solid ${TH.line}` }}>Normal weiter</button>}
                 {focus && <button onClick={() => startConversation()} style={{ ...btnPrimary, backgroundColor: TH.white, color: TH.ink, border: `2px solid ${TH.line}` }}>Gemischt weiter</button>}
               </div>
             </div>
           )}
+          {phase === 'done' && pruefung && review.length > 0 && (() => {
+            const bogen = pruefungsBogen(review);
+            const pct = Math.round((review.filter(x => x.ok).length / review.length) * 100);
+            const g = ihkGrade(pct);
+            return (
+              <div className="lt-papier lt-pruefungsbogen" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase', color: TH.muted }}>Bewertungsbogen Prüfungsgespräch</div>
+                <div style={{ fontFamily: TH.serif, fontSize: '36px', lineHeight: 1.05, color: g.passed ? TH.green : TH.red }}>Note {g.note}, {g.text}</div>
+                <div style={{ fontSize: '17px', color: TH.brown }}>{pct} von 100 Punkten · {g.passed ? 'bestanden' : 'noch nicht bestanden (ab 50 Punkten)'}</div>
+                {bogen.map(b => (
+                  <div key={b.name} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', fontSize: '16px' }}><strong>{b.name}</strong><span>{b.gesamt ? `${b.richtig} von ${b.gesamt}` : 'kam nicht vor'}</span></div>
+                    {b.gesamt > 0 && <div style={{ height: '8px', borderRadius: '999px', backgroundColor: dc('#EFE3CF'), overflow: 'hidden' }}><div style={{ width: `${Math.round(b.richtig / b.gesamt * 100)}%`, height: '100%', backgroundColor: b.richtig === b.gesamt ? TH.green : b.richtig * 2 >= b.gesamt ? dc('#D49A00') : TH.red }} /></div>}
+                  </div>
+                ))}
+                <div style={{ fontSize: '15px', color: TH.muted }}>In der echten Prüfung zählt auch, wie du sprichst: freundlich, laut genug, mit Blickkontakt. Üb das Gespräch ruhig auch mal laut.</div>
+              </div>
+            );
+          })()}
           {phase === 'done' && review.length > 0 && (() => {
             const good = review.filter(r => r.ok);
             const bad = review.filter(r => !r.ok);
