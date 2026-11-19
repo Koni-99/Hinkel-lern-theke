@@ -7,6 +7,7 @@ import { DAILY_FACTS } from '../../basis/fakten';
 import { dc } from '../../daten/data';
 import { CloudPayload } from '../../types';
 import { getExamEvaluation } from '../../hilfen/pruefung';
+import { themenAuswertung } from '../../hilfen/pruefungThemen';
 import { getRightAnswerText, PUNKTE_FAKTOR } from '../../hilfen/allgemein';
 import { StarRating, starsFor, ReceiptHead, ReceiptFoot, TH, cardStyle, btnPrimary, btnSecondary, ConfettiOverlay } from '../../ui/basis';
 import { ihkGrade } from '../../ui/lernstand';
@@ -55,9 +56,11 @@ export type QuizResultProps = {
   streakMult: number;
   isNewcomer: boolean;
   jubel?: string | null;
+  /** Version 253: nach einer Prüfung ein Thema gezielt üben */
+  onThemaUeben?: (thema: string) => void;
 };
 
-export function QuizResult({ jubel, fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }: QuizResultProps) {
+export function QuizResult({ onThemaUeben, jubel, fetchCloudData, questions, isAdmin, setActiveTab, pfadMsg, lastComboExtra, masteryStart, currentQuizCategory, setCurrentQuizCategory, setSelectedLevel, quizList, score, correctCount, wrongQuestions, quizRun, isExamMode, examSim, examPrev, launchProductQuiz, retryWrongQuestions, albumNames, productTotal, masteredState, resOpen, setResOpen, streakMult, isNewcomer }: QuizResultProps) {
   if (currentQuizCategory === null) return null; // wie die Bedingung in App.tsx
   const evalInfo = getExamEvaluation(correctCount, quizList.length);
   return (
@@ -167,6 +170,25 @@ export function QuizResult({ jubel, fetchCloudData, questions, isAdmin, setActiv
         )}
         <ReceiptFoot />
       </div>
+      {isExamMode && quizList.length >= 5 && (() => {
+        const falsch = new Set<number | undefined>(wrongQuestions.map((w: any) => w.id));
+        const themen = themenAuswertung(quizList, falsch);
+        return (
+          <section className="lt-themen-auswertung" style={{ ...cardStyle, maxWidth: '640px', width: '100%', alignSelf: 'center', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+            <div style={{ fontFamily: LT.serif, fontSize: '26px', lineHeight: 1.1 }}>Deine Themen</div>
+            <div style={{ fontSize: '15px', color: LT.muted }}>Wo du schon sicher bist und wo du noch üben solltest.</div>
+            {themen.map((t) => (
+              <div key={t.thema} style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '10px 12px', borderRadius: '14px', backgroundColor: t.pct >= 70 ? TH.tintSage : TH.tintPeach }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap', fontSize: '16px' }}>
+                  <strong>{t.thema}</strong><span>{t.richtig} von {t.gesamt} richtig ({t.pct} %)</span>
+                </div>
+                <div style={{ height: '8px', borderRadius: '999px', backgroundColor: dc('#EFE3CF'), overflow: 'hidden' }}><div style={{ width: `${t.pct}%`, height: '100%', backgroundColor: t.pct >= 70 ? TH.green : TH.red }} /></div>
+                {t.pct < 70 && onThemaUeben && <button type="button" onClick={() => onThemaUeben(t.thema)} style={{ alignSelf: 'flex-start', minHeight: '42px', padding: '0 14px', borderRadius: '999px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Hier noch üben</button>}
+              </div>
+            ))}
+          </section>
+        );
+      })()}
 
       {quizList.length > 0 && (() => {
         const isWrong = (q: any) => wrongQuestions.some(w => w.id === q.id);

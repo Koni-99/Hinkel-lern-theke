@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -919,6 +919,68 @@ async function offlineTests() {
     const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 253: Rechen-Trainer und Prüfungs-Auswertung nach Themen
+  teile.push(['Version 253: Rechen-Trainer, Prüfung nach Themen', async () => {
+    const M = kompiliere(['src/games/rechenLogik.ts', 'src/hilfen/pruefungThemen.ts', 'src/daten/questions.ts']);
+    const R = M.games_rechenLogik, T = M.hilfen_pruefungThemen, Q = M.daten_questions;
+    const fehler = [];
+    for (let i = 0; i < 600; i++) {
+      for (const art of ['summe', 'rueckgeld', 'grundpreis', 'rabatt', 'mwst', 'dreisatz']) {
+        const a = R.neueAufgabe(art);
+        if (!(Number.isInteger(a.cent) && a.cent > 0) || !a.text || a.weg.length < 2 || /NaN|undefined/.test(a.text + a.weg.join())) fehler.push(art + ': ' + a.text);
+        if (!a.weg.join(' ').includes(R.euro(a.cent))) fehler.push(art + ' Rechenweg ohne Ergebnis: ' + a.text);
+      }
+    }
+    ok('Rechen-Trainer: 3600 Aufgaben sinnvoll, Rechenweg endet beim Ergebnis', fehler.length === 0, fehler.slice(0, 2).join(' | '));
+    const g = R.neueAufgabe('grundpreis', () => 0.0);
+    ok('Rechen-Trainer: Kilopreis richtig gerechnet', /wiegt (\d+) g und kostet/.test(g.text));
+    const runde = R.neueRunde();
+    ok('Rechen-Trainer: Runde mit 8 Aufgaben, alle Arten dabei', runde.length === 8 && new Set(runde.map((x) => x.art)).size === 6);
+    const th = Q.examQuestions.map(T.pruefungsThema);
+    ok('Prüfung: fast alle Fragen haben ein Thema', th.filter((x) => x === T.SONST).length <= 5, String(th.filter((x) => x === T.SONST).length));
+    const aus = T.themenAuswertung([{ id: 1, question: 'Was ist Sauerteig im Brot?' }, { id: 2, question: 'Wie viel Mehrwertsteuer (MwSt) …' }, { id: 3, question: 'Mehltype?' }], new Set([2]));
+    ok('Prüfung: Auswertung pro Thema, schwächstes zuerst', aus[0].thema === 'Rechnen und Kalkulation' && aus[0].pct === 0 && aus[1].pct === 100, JSON.stringify(aus));
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Rechen-Trainer' }).first()); await settle(d.page, 1000);
+    await click(d.page.getByRole('button', { name: "Los geht's" })); await settle(d.page, 500);
+    for (let w = 0; w < 30 && !(await d.page.locator('.lt-rechen-aufgabe').count()); w++) await sleep(100);
+    ok('Rechen-Trainer: Aufgabe steht da', (await d.page.locator('.lt-rechen-aufgabe').innerText().catch(() => '')).length > 20);
+    await d.page.getByLabel('Ergebnis in Euro').fill('1,23');
+    await click(d.page.getByRole('button', { name: 'Prüfen' })); await settle(d.page, 300);
+    ok('Rechen-Trainer: Rechenweg nach der Antwort', /So rechnest du/i.test(await d.page.locator('.lt-rechenweg').innerText().catch(() => '')));
+    for (let i = 0; i < 8; i++) {
+      const w = d.page.getByRole('button', { name: /^(Weiter|Auswertung)$/ });
+      if (await w.count()) { await click(w.first()); await settle(d.page, 300); }
+      if (await d.page.getByLabel('Ergebnis in Euro').count() && await d.page.getByRole('button', { name: 'Prüfen' }).count()) { await d.page.getByLabel('Ergebnis in Euro').fill('2'); await click(d.page.getByRole('button', { name: 'Prüfen' })); await settle(d.page, 200); }
+    }
+    ok('Rechen-Trainer: Auswertung am Ende', (await d.page.locator('.lt-receipt').count()) > 0);
+    ok('Rechen-Trainer: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  teile.push(['Version 253: Prüfung, Auswertung nach Themen', async () => {
+    const d = await device({ user: 'Anna', backup: SAMPLE, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    // Prüfung üben (Ausbildung → 10 zufällige Fragen) → Themen-Auswertung
+    for (let w = 0; w < 40 && !(await nav(d.page).filter({ hasText: 'Ausbildung' }).count()); w++) await sleep(100);
+    await click(nav(d.page).filter({ hasText: 'Ausbildung' }).first()).catch(() => {}); await settle(d.page, 600);
+    const zehn = d.page.getByRole('button', { name: /10 zufällige Fragen üben/ }).first();
+    if (await zehn.count()) {
+      await click(zehn); await settle(d.page, 600);
+      for (let i = 0; i < 25 && !(await d.page.locator('.lt-themen-auswertung').count()); i++) {
+        const o = d.page.locator('button.lt-qopt:visible'); if (await o.count()) { await click(o.first()); await settle(d.page, 150); }
+        const w = d.page.getByRole('button', { name: /Nächste Frage|Kassenbon zeigen|Weiter|Abgeben|Auswerten/ }); if (await w.count()) { await click(w.first()); await settle(d.page, 200); }
+      }
+    }
+    if (process.env.OFEN_BILD) await d.page.screenshot({ path: process.env.OFEN_BILD + '-pruefung.png' });
+    ok('Prüfung: Auswertung nach Themen am Ende', (await d.page.locator('.lt-themen-auswertung').count()) === 1);
+    const ueb = d.page.locator('.lt-themen-auswertung button', { hasText: 'Hier noch üben' });
+    if (await ueb.count()) { await click(ueb.first()); await settle(d.page, 600); }
+    ok('Prüfung: „Hier noch üben“ startet ein Quiz', !(await ueb.count()) || (await d.page.locator('button.lt-qopt').count()) > 0);
+    ok('Prüfung Themen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 252: Azubi-Bereich (Lehrjahr aus Beginn, Bestätigung, Üben, Notizen der Woche)
