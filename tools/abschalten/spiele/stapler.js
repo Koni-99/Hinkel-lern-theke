@@ -1,7 +1,13 @@
 // ═══ Brot-Stapler: Brote schwingen oben, Tippen lässt sie fallen, Überstand bricht ab ═══
 const STAP_BRETT = 410;             // Oberkante des Brotbretts (Welt-y)
-const STAP_ARTEN = ['stuten', 'krusti', 'laib', 'baguette', 'stuten', 'krusti'];
-const STAP_HOEHE = { stuten: 40, krusti: 34, laib: 38, baguette: 26 };
+/** Jede Brotsorte stapelt sich anders: Höhe, Breite (Faktor), Spielraum für „Perfekt“, Schwung, Abbröseln beim Überstand */
+const STAP_TYP = {
+  laib: { name: 'Laib', h: 38, breite: 1, tol: 7, schwung: 1, broesel: 0 },
+  stuten: { name: 'Stuten', h: 40, breite: 1, tol: 9, schwung: .9, broesel: 0 },
+  baguette: { name: 'Baguette', h: 24, breite: 1.24, tol: 5, schwung: 1.18, broesel: 0 },
+  brezel: { name: 'Brezel', h: 30, breite: 1, tol: 6, schwung: 1.06, broesel: 4 },
+};
+const STAP_SCHWER = { baguette: true, brezel: true };
 const STAP_MAX = 136;
 const STAP_BG = { bild: null, breite: 0, hoehe: 0 };
 
@@ -93,6 +99,11 @@ function stap_stueck(s, cy, { glanz = 0 } = {}){
   x.save();
   x.beginPath(); x.rect(s.l, cy - h, s.r - s.l, h * 2); x.clip();
   if (s.gold) stap_goldLaib(s.fx, cy, s.fw, h);
+  else if (s.art === 'brezel') {
+    // Brezeln aneinander: luftig, mit Lücken
+    const n = Math.max(1, Math.round(s.fw / 44)), pw = s.fw / n;
+    for (let i = 0; i < n; i++) { const bx = s.fx - s.fw / 2 + pw * (i + .5); x.save(); x.translate(bx, cy + 1); x.scale(1, h / (pw * .66)); brot('brezel', 0, 0, pw * 1.02, h, { schatten: false }); x.restore(); }
+  }
   else brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
   if (s.art === 'stuten' && !s.gold) {
     // aufgerissene Oberseite wie beim echten Stuten, dazu Backform-Kante
@@ -115,8 +126,8 @@ function stap_stueck(s, cy, { glanz = 0 } = {}){
     x.beginPath(); x.ellipse(fx, my, 3.4, hh * .94, 0, 0, 7); x.fill();
     x.fillStyle = 'rgba(150,100,50,.35)'; for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(fx + (i % 2 - .5), my - hh * .5 + i * hh * .32, .8, 0, 7); x.fill(); }
   };
-  if (s.l > s.fx - s.fw / 2 + .8) flaeche(s.l, -1);
-  if (s.r < s.fx + s.fw / 2 - .8) flaeche(s.r, 1);
+  if (s.art !== 'brezel' && s.l > s.fx - s.fw / 2 + .8) flaeche(s.l, -1);
+  if (s.art !== 'brezel' && s.r < s.fx + s.fw / 2 - .8) flaeche(s.r, 1);
   if (glanz > 0) {
     x.save(); x.globalAlpha = glanz;
     x.fillStyle = radial((s.l + s.r) / 2, cy, 4, (s.r - s.l) * .7, [[0, 'rgba(255,236,150,.85)'], [1, 'rgba(255,200,60,0)']]);
@@ -127,9 +138,9 @@ function stap_stueck(s, cy, { glanz = 0 } = {}){
 
 SPIELE.stapler = {
   key: 'stapler', name: 'Brot-Stapler', kurz: 'Stapeln',
-  anleitung: 'Das Brot schwingt oben hin und her. Tippe, damit es fällt. Was übersteht, bricht ab. Genau getroffen leuchtet es golden, nach drei Treffern in Folge geht das Brot wieder auf.',
+  anleitung: 'Das Brot schwingt oben hin und her. Tippe, damit es fällt. Was übersteht, bricht ab. Stuten liegt stabil, das Baguette ist lang, aber flink, die Brezel wackelt. Oben links siehst du, was als Nächstes kommt.',
   start(){
-    this.stapel = [{ art: 'brett', l: 112, r: 248, fx: 180, fw: 136, h: 0, y: STAP_BRETT, sq: 0, glanz: 0 }];
+    this.stapel = [{ art: 'brett', typ: 'stuten', l: 112, r: 248, fx: 180, fw: 136, h: 0, y: STAP_BRETT, sq: 0, glanz: 0 }];
     this.oben = STAP_BRETT; this.kamera = 0; this.zeit = 0;
     this.perfekt = 0; this.bonus = 0; this.anzahl = 0; this.stuecke = []; this.tot = -1; this.fertig = false; this.frageIn = -1;
     this.rekordH = stap_rekordHoehe(); this.rekordGezeigt = false;
@@ -140,18 +151,31 @@ SPIELE.stapler = {
     const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
     this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
     this.goldZeit = zufall(15, 40);
+    this.folge = []; this.naechste = null;
     this.neuesBrot(STAP_MAX);
   },
+  /** Faire Reihenfolge: erst nur Laib und Stuten, nie zwei schwierige direkt hintereinander am Anfang */
+  sorteWaehlen(i){
+    if (i < 4) return Math.random() < .5 ? 'laib' : 'stuten';
+    const f = this.folge, l1 = f[f.length - 1], l2 = f[f.length - 2];
+    const ohneSchwer = (STAP_SCHWER[l1] && (i < 14 || STAP_SCHWER[l2]));
+    const topf = ohneSchwer ? ['laib', 'laib', 'stuten', 'stuten'] : ['laib', 'laib', 'stuten', 'stuten', 'baguette', 'baguette', 'brezel', 'brezel'];
+    return topf[ganz(0, topf.length - 1)];
+  },
   neuesBrot(w){
-    const n = this.anzahl, art = STAP_ARTEN[(n * 5 + ganz(0, 2)) % STAP_ARTEN.length];
-    const h = STAP_HOEHE[art];
+    const n = this.anzahl;
+    const typ = this.naechste || this.sorteWaehlen(n);
+    this.folge.push(typ); this.naechste = this.sorteWaehlen(n + 1); this.vorschauT = 0;
+    const T = STAP_TYP[typ], art = typ === 'laib' ? (Math.random() < .5 ? 'laib' : 'krusti') : typ;
+    const bw = typ === 'baguette' ? Math.min(STAP_MAX + 24, w * T.breite + 6) : w;
     const links = n % 2 === 0;
-    this.akt = { art, w, h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega: this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075), zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
+    const omega = (this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075)) * (this.gem ? 1 : T.schwung);
+    this.akt = { typ, art, w: bw, h: T.h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega, zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
     this.akt.x = this.pendelX(this.akt);
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
   hangY(){ return this.oben - 96 - this.akt.h / 2; },
-  ganzesBrot(a){ return { gold: a.gold, art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
+  ganzesBrot(a){ return { typ: a.typ, gold: a.gold, art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
   top(){ return this.stapel[this.stapel.length - 1]; },
   punkte(){ return this.anzahl * 10 + this.bonus; },
   aktuellePunkte(){ return this.punkte(); },
@@ -183,18 +207,26 @@ SPIELE.stapler = {
     if (r - l < 4) {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
-      this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
+      this.stuecke.push({ typ: a.typ, gold: a.gold, art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
       this.tot = 0; wackeln(8); blitz(.25, '255,200,180'); brumm(70);
       schwebText('Daneben!', W / 2, cy + this.kamera - 60, F.rot, 24);
       stap_rekordHoeheSetzen(this.anzahl);
       return;
     }
-    const neu = { art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0 };
-    const dx = a.x - tm;
-    if (Math.abs(dx) < 7) {
+    const neu = { typ: a.typ, art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0, wackel: a.typ === 'brezel' ? 1 : 0 };
+    const dx = a.x - tm, T = STAP_TYP[a.typ] || STAP_TYP.laib;
+    // Spielraum: Sorte selbst, dazu die Fläche darunter (Stuten eben, Brezel uneben)
+    const tol = Math.max(3, T.tol + (t.typ === 'stuten' ? 2 : t.typ === 'brezel' ? -2 : 0));
+    if (Math.abs(dx) < tol) {
       // Perfekt: einrasten, nichts bricht ab
       this.perfekt++; if (typeof statMax === 'function') statMax('perfektFolge', this.perfekt);
-      neu.fx = tm; neu.fw = a.w; neu.l = tm - a.w / 2; neu.r = tm + a.w / 2;
+      neu.fx = tm; neu.fw = a.w; neu.l = Math.max(tm - a.w / 2, t.l); neu.r = Math.min(tm + a.w / 2, t.r);
+      if (neu.r - neu.l < a.w - 1) { // langes Baguette: Enden brechen sauber ab
+        const sy0 = cy + this.kamera;
+        this.stuecke.push({ typ: a.typ, art: a.art, l: tm - a.w / 2, r: neu.l, fx: tm, fw: a.w, h: a.h, px: (tm - a.w / 2 + neu.l) / 2, py: cy, vx: -60, vy: -90, rot: 0, vr: -3 });
+        this.stuecke.push({ typ: a.typ, art: a.art, l: neu.r, r: tm + a.w / 2, fx: tm, fw: a.w, h: a.h, px: (neu.r + tm + a.w / 2) / 2, py: cy, vx: 60, vy: -90, rot: 0, vr: 3 });
+        teilchen(neu.l, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] }); teilchen(neu.r, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] });
+      }
       neu.glanz = 1;
       const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
       const sy = cy + this.kamera;
@@ -208,11 +240,13 @@ SPIELE.stapler = {
       }
     } else {
       this.perfekt = 0;
+      // Brezel ist luftig: an der Bruchstelle bröselt noch etwas mehr ab
+      if (T.broesel) { if (al < l - .5) l = Math.min(r - 6, l + T.broesel); if (ar > r + .5) r = Math.max(l + 6, r - T.broesel); }
       neu.fx = a.x; neu.fw = a.w; neu.l = l; neu.r = r;
       const sy = cy + this.kamera;
       // Überstand bricht ab
-      if (al < l - .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
-      if (ar > r + .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (al < l - .5) { this.stuecke.push({ typ: a.typ, gold: a.gold, art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (ar > r + .5) { this.stuecke.push({ typ: a.typ, gold: a.gold, art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
       schwebText('+10', a.x, sy - 40, F.gruen, 18);
     }
     if (a.gold) {
@@ -230,7 +264,8 @@ SPIELE.stapler = {
     this.neuesBrot(neu.r - neu.l);
     // Goldlaib: ganz selten, nicht am Anfang
     if (this.anzahl >= 4 && this.zeit > this.goldZeit && typeof goldKommt === 'function' && goldKommt()) {
-      Object.assign(this.akt, { gold: true, goldT: 5.5, art: 'laib', h: STAP_HOEHE.laib, mohn: false });
+      Object.assign(this.akt, { gold: true, goldT: 5.5, typ: 'laib', art: 'laib', h: STAP_TYP.laib.h, mohn: false });
+      if (this.akt.w > this.top().r - this.top().l) { this.akt.w = this.top().r - this.top().l; this.akt.x = this.pendelX(this.akt); }
       goldErschienen();
     }
   },
@@ -241,7 +276,7 @@ SPIELE.stapler = {
     // Kamera fährt mit
     const ziel = Math.max(0, 300 - this.oben);
     this.kamera += (ziel - this.kamera) * Math.min(1, dt * 3.5);
-    for (const s of this.stapel) { s.sq = Math.max(0, s.sq - dt * 3); s.glanz = Math.max(0, s.glanz - dt * 1.1); if (s.auf) s.auf = Math.max(0, s.auf - dt * 2.5); }
+    for (const s of this.stapel) { if (s.wackel) s.wackel = Math.max(0, s.wackel - dt * 1.4); s.sq = Math.max(0, s.sq - dt * 3); s.glanz = Math.max(0, s.glanz - dt * 1.1); if (s.auf) s.auf = Math.max(0, s.auf - dt * 2.5); }
     for (const p of this.stuecke) { p.vy += 1500 * dt; p.px += p.vx * dt; p.py += p.vy * dt; p.rot += p.vr * dt; }
     this.stuecke = this.stuecke.filter((p) => p.py + this.kamera < H + 120);
     this.seilWeg = Math.max(0, (this.seilWeg || 0) - dt * 3);
@@ -281,6 +316,7 @@ SPIELE.stapler = {
         const w = a.w; this.neuesBrot(w); this.akt.sperre = .5;
       }
     }
+    this.vorschauT = (this.vorschauT || 0) + dt;
     if (a.zustand === 'haengt') {
       a.sperre = Math.max(0, a.sperre - dt); a.ein = Math.min(1, a.ein + dt * 4);
       a.ph += a.omega * dt; a.x = this.pendelX(a);
@@ -370,7 +406,7 @@ SPIELE.stapler = {
       x.fillStyle = 'rgba(30,12,2,.28)'; x.beginPath(); x.ellipse((s.l + s.r) / 2, s.y + s.h / 2 - 1, (s.r - s.l) * .46, 3.5, 0, 0, 7); x.fill();
       const q = s.sq ? Math.sin(s.sq * Math.PI) * s.sq : 0, auf = s.auf ? ease.feder(1 - s.auf) : 1;
       x.save(); const mx = (s.l + s.r) / 2, by = s.y + s.h / 2;
-      x.translate(mx, by); x.scale((1 + q * .07) * (s.auf ? .9 + .1 * auf : 1), 1 - q * .14); x.translate(-mx, -by);
+      x.translate(mx, by); if (s.wackel) x.rotate(Math.sin(t * 22) * .05 * s.wackel); x.scale((1 + q * .07) * (s.auf ? .9 + .1 * auf : 1), 1 - q * .14); x.translate(-mx, -by);
       stap_stueck(s, s.y, { glanz: s.glanz });
       x.restore();
     }
@@ -426,6 +462,18 @@ SPIELE.stapler = {
       x.strokeStyle = 'rgba(150,100,0,.6)'; x.lineWidth = 1; x.stroke();
       text(tx, 0, .5, { gr: 12.5, farbe: F.braun, schat: false }); x.restore();
     }
+    // Vorschau: welches Brot kommt als Nächstes
+    if (laeuft && this.tot < 0 && this.naechste) {
+      const typ = this.naechste, T = STAP_TYP[typ], ein = Math.min(1, (this.vorschauT || 0) * 4);
+      x.save(); x.globalAlpha = .4 + .6 * ein;
+      rr(10, 50, 100, 34, 12); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill(); x.strokeStyle = STAP_SCHWER[typ] ? 'rgba(255,170,120,.8)' : 'rgba(255,231,160,.5)'; x.lineWidth = 1.2; x.stroke();
+      text('Als Nächstes', 72, 59, { gr: 8.5, farbe: '#D9C6A3', art: '700', schat: false });
+      const mw = typ === 'baguette' ? 34 : 26, mh = T.h * .34;
+      const mini = { typ, art: typ, l: 28 - mw / 2 - 1, r: 28 + mw / 2 + 1, fx: 28, fw: mw, h: mh };
+      stap_stueck(mini, 67);
+      text(T.name, 72, 73, { gr: 11, farbe: STAP_SCHWER[typ] ? '#FFC4A0' : '#FFE7A0', schat: false });
+      x.restore();
+    }
     // Hinweis am Anfang
     if (laeuft && this.anzahl === 0 && this.tot < 0) {
       const al = .8 + Math.sin(t * 5) * .2;
@@ -442,7 +490,7 @@ SPIELE.stapler = {
     const t = this.top(), m = (t.l + t.r) / 2;
     const vorher = { ...a, ph: a.ph + a.omega * .03 };
     const dx = this.pendelX(vorher) - m;
-    const toleranz = this.anzahl % 4 === 3 ? 24 : 5;
+    const toleranz = this.anzahl % 4 === 3 ? 24 : Math.max(3, (STAP_TYP[a.typ] || STAP_TYP.laib).tol - 3);
     return Math.abs(dx) < toleranz ? { x: 180, y: 260, warte: 60 } : weg;
   }
 };

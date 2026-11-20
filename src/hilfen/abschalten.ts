@@ -2,6 +2,7 @@
 // Die Spiele selbst liegen als eigene Seite in public/abschalten/index.html (gebaut aus tools/abschalten, läuft im iframe).
 // Keine Punkte für die Gesamtwertung (Wunsch des Nutzers), nur eigener Rekord und eine kleine Bestenliste je Spiel.
 // Rekord im eigenen Fortschritt: progress/<name>/_abschalten { lauf: 123, … }
+import { alleNachrichten, postfachKey } from './nachrichten';
 export const ABSCHALTEN_SPIELE: { key: string; titel: string; kurz: string }[] = [
   { key: 'lauf', titel: 'Teigi-Lauf', kurz: 'Springen und Körner sammeln' },
   { key: 'chaos', titel: 'Backstuben-Chaos', kurz: 'Backen, bevor die Kunden gehen' },
@@ -111,3 +112,67 @@ export const heuteKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMo
 
 /** Text der Herausforderung (fester Text, darum darf jeder sie schicken) */
 export const herausforderungText = (key: string, punkte: number) => `Schlag meine ${Math.floor(punkte).toLocaleString('de-DE')} Punkte bei „${abschaltenSpiel(key)?.titel || 'Zum Abschalten'}“!`;
+
+// ═══ Version 269: Wochen-Bestenliste, Herausforderung geschlagen, Sammlung ═══
+/** Montag der Woche als 'JJJJ-MM-TT' */
+export function wocheKey(d = new Date()): string {
+  const m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+  return heuteKey(m);
+}
+/** Beste Punkte der Woche je Spiel: _abWoche { lauf: { w: Montag, p } } */
+export function wocheMerken(pr: any, key: string, punkte: number, d = new Date()): boolean {
+  if (!abschaltenSpiel(key)) return false;
+  const p = Math.max(0, Math.min(1_000_000, Math.floor(Number(punkte) || 0))), w = wocheKey(d);
+  const alt = pr._abWoche?.[key];
+  if (p <= 0 || (alt && alt.w === w && Number(alt.p) >= p)) return false;
+  pr._abWoche = { ...(pr._abWoche || {}), [key]: { w, p } };
+  return true;
+}
+export function wochenliste(progress: Record<string, any> | undefined, key: string, n = 5, d = new Date()): { k: string; name: string; punkte: number }[] {
+  const w = wocheKey(d);
+  return Object.entries(progress || {})
+    .filter(([k, pr]) => k !== 'admin' && pr?._abWoche?.[key]?.w === w && Number(pr._abWoche[key].p) > 0)
+    .map(([k, pr]) => ({ k, name: String(pr?._displayName || k), punkte: Math.floor(Number(pr._abWoche[key].p)) }))
+    .sort((a, b) => b.punkte - a.punkte || a.name.localeCompare(b.name, 'de'))
+    .slice(0, n);
+}
+
+/** Nach einer Runde: Herausforderungen an mich in diesem Spiel, die ich jetzt geschlagen habe, im eigenen Fortschritt merken
+ *  (_abGeschlagen { postfachKey: { p, ts } }). Gibt die Namen der Absender zurück. */
+export function geschlageneMerken(progress: Record<string, any> | undefined, ich: string, pr: any, key: string, punkte: number, now = Date.now()): string[] {
+  const p = Math.floor(Number(punkte) || 0); if (p <= 0) return [];
+  const namen: string[] = [];
+  alleNachrichten(progress as any).forEach((n) => {
+    if (!n.ab || n.ab.k !== key || n.von === ich || !n.an?.[ich] || p <= Number(n.ab.p)) return;
+    const pk = postfachKey(n.von, n.id);
+    if (pr._abGeschlagen?.[pk]) return;
+    pr._abGeschlagen = { ...(pr._abGeschlagen || {}), [pk]: { p, ts: now } };
+    namen.push(n.vonName);
+  });
+  return namen;
+}
+/** Für den Absender: welche Kollegen haben meine Herausforderungen geschlagen? (neueste zuerst) */
+export type Geschlagen = { id: string; wer: string; werName: string; key: string; meine: number; deine: number; ts: number };
+export function meineGeschlagenen(progress: Record<string, any> | undefined, ich: string): Geschlagen[] {
+  const out: Geschlagen[] = [];
+  alleNachrichten(progress as any).forEach((n) => {
+    if (n.von !== ich || !n.ab || !abschaltenSpiel(n.ab.k)) return;
+    const pk = postfachKey(n.von, n.id);
+    Object.keys(n.an || {}).forEach((k) => {
+      const e = (progress as any)?.[k]?._abGeschlagen?.[pk];
+      if (e) out.push({ id: `${pk}_${k}`, wer: k, werName: String((progress as any)?.[k]?._displayName || n.an[k] || k), key: n.ab!.k, meine: Number(n.ab!.p) || 0, deine: Number(e.p) || 0, ts: Number(e.ts) || 0 });
+    });
+  });
+  return out.sort((a, b) => b.ts - a.ts);
+}
+export const geschlagenText = (g: Geschlagen) => `${g.werName} hat deine ${g.meine.toLocaleString('de-DE')} bei „${abschaltenSpiel(g.key)?.titel || ''}“ geschlagen: ${g.deine.toLocaleString('de-DE')}!`;
+
+/** Tagesaufgaben in Folge (bis heute oder gestern) */
+export function aufgabenSerie(pr: any, d = new Date()): number {
+  const tage = new Set(Object.keys(pr?._abAufgaben || {}));
+  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (!tage.has(heuteKey(t))) t.setDate(t.getDate() - 1);
+  let n = 0;
+  while (tage.has(heuteKey(t)) && n < 1000) { n++; t.setDate(t.getDate() - 1); }
+  return n;
+}
