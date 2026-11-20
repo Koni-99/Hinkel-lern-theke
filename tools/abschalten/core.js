@@ -211,10 +211,10 @@ function zielMalen(){
 
 // ── Schleife, Start, Ende ──
 const SPIELE = {};
-let spiel = null, laeuft = false, last = 0, startZeit = 0, runde = 0, pausiert = false;
+let spiel = null, laeuft = false, last = 0, startZeit = 0, runde = 0, pausiert = false, spielZeit = 0;
 function schleife(t){
   const dt = Math.min(0.04, (t - last) / 1000 || 0); last = t;
-  if (laeuft && !frageOffen && !pausiert) { spiel.tick(dt); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
+  if (laeuft && !frageOffen && !pausiert) { spielZeit += dt; spiel.tick(dt * sanftFaktor()); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
   if (!frageOffen && !pausiert) fxTick(dt);
   x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
   spiel.malen(t / 1000); saisonMalen(t / 1000, frageOffen || pausiert ? 0 : dt); fxMalen(); zielMalen(); x.restore();
@@ -268,9 +268,10 @@ function zeigeStart(){
   ueber.querySelector('.los').addEventListener('click', starten);
   aufgabeKnopf();
 }
-function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; startZeit = performance.now(); }
+function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; startZeit = performance.now(); spielZeit = 0; if (rundeSanft) setTimeout(() => { if (laeuft) schwebText('Sanfter Start', W / 2, 150, '#2F7A3A', 20); }, 300); }
 function ende(punkte, zeile){
   laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80);
+  sanftMerken(spielZeit);
   const alt = rekordLesen(spiel.key);
   if (!rundeGemuetlich) rekordSetzen(spiel.key, punkte);
   const neu = !rundeGemuetlich && punkte > alt && punkte > 0;
@@ -491,3 +492,21 @@ function rundeVorbereiten(){
 }
 // Für Prüfungen: ?saison=advent&gold=1&aufgabe=stapler-brote
 try { const q = new URLSearchParams(location.search); if (q.get('saison')) SAISON_TEST = q.get('saison'); if (q.get('gold')) GOLD_TEST = true; if (q.get('aufgabe')) AUFGABE_TEST = q.get('aufgabe'); } catch {}
+
+// ── Version 269: sanfter Einstieg ──
+// Wer dreimal hintereinander sehr früh verliert (unter 20 s Spielzeit), bekommt einen leichteren Start:
+// die ersten 25 s läuft das Spiel langsamer (75 %), dann geht es in 5 s auf normales Tempo.
+let rundeSanft = false;
+const sanftKey = () => 'lt_abschalten_kurz_' + (spiel ? spiel.key : '');
+function sanftZaehler(){ try { return Number(localStorage.getItem(sanftKey())) || 0; } catch { return 0; } }
+function sanftMerken(sek){
+  if (rundeGemuetlich) return;
+  try { localStorage.setItem(sanftKey(), String(sek < 20 ? sanftZaehler() + 1 : 0)); } catch {}
+}
+function sanftFaktor(){
+  if (!rundeSanft || rundeGemuetlich) return 1;
+  if (spielZeit < 25) return .75;
+  return Math.min(1, .75 + (spielZeit - 25) / 5 * .25);
+}
+const altVorbereiten = rundeVorbereiten;
+rundeVorbereiten = function(){ altVorbereiten(); rundeSanft = !GEMUETLICH && sanftZaehler() >= 3; };

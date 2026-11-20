@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 268;
+const APP_VERSION: number = 269;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -58,7 +58,7 @@ const StatistikView = lazy(() => import('./ui/statistik').then((m) => ({ default
 const EinarbeitungSeite = lazy(() => import('./screens/EinarbeitungSeite').then((m) => ({ default: m.EinarbeitungSeite })));
 import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
 import { AdventView, AdventDone } from './games/Advent';
-import { rekordMerken, goldGutschreiben, aufgabeMerken, GOLD_SACHEN } from './hilfen/abschalten';
+import { rekordMerken, goldGutschreiben, aufgabeMerken, GOLD_SACHEN, wocheMerken, geschlageneMerken, meineGeschlagenen, geschlagenText } from './hilfen/abschalten';
 import { ADVENT_PUNKTE, ADVENT_FINALE, adventBelohnung, belohnungGutschreiben, finaleGutschreiben, type AdventBelohnung } from './hilfen/advent';
 import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
 import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
@@ -482,6 +482,18 @@ export default function App() {
   const [thekePruefung, setThekePruefung] = useState(false); // Version 255: Prüfungsgespräch direkt starten (aus der Ausbildung)
   const [sucheAuf, setSucheAuf] = useState(false); // Version 251: Suche überall
   const [hilfeThema, setHilfeThema] = useState<string | undefined>(undefined);
+  // Version 269: Kollege hat meine Herausforderung geschlagen → einmal Meldung
+  const geschlagenSig = username && !isAdmin ? meineGeschlagenen(cloudData.progress, username.toLowerCase()).map((g) => g.id).join() : '';
+  useEffect(() => {
+    if (!geschlagenSig || !username) return;
+    const me = username.toLowerCase(), key = `lt_abgeschlagen_${me}`;
+    let gesehen: string[] = []; try { gesehen = JSON.parse(localStorage.getItem(key) || '[]'); } catch { /* egal */ }
+    const alle = meineGeschlagenen(cloudData.progress, me), neu = alle.filter((g) => !gesehen.includes(g.id));
+    if (!neu.length) return;
+    try { localStorage.setItem(key, JSON.stringify(alle.map((g) => g.id).slice(0, 200))); } catch { /* egal */ }
+    const t = window.setTimeout(() => setToast(`${geschlagenText(neu[0])}${neu.length > 1 ? ` Und ${neu.length - 1} weitere.` : ''} Zurückschlagen unter Spielen, „Zum Abschalten“.`), 2500);
+    return () => window.clearTimeout(t);
+  }, [geschlagenSig]);
   // Version 268: Herausforderung annehmen → Zum Abschalten mit dem Spiel öffnen
   const [abschaltenWunsch, setAbschaltenWunsch] = useState<{ key: string; n: number } | null>(null);
   const zeigeAbschalten = (key: string) => { try { sessionStorage.setItem('lt_abschalten', key); } catch { /* egal */ } setAbschaltenWunsch((w) => ({ key, n: (w?.n || 0) + 1 })); setActiveTab('abschalten'); };
@@ -2805,7 +2817,7 @@ export default function App() {
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'saetze' && <ThekenSaetzeSeite onBack={() => setActiveTab('nachschlagen')} />}
         {activeTab === 'rechnen' && <RechenTrainerView onSaveScore={saveScoreToLeaderboard} />}
-        {activeTab === 'abschalten' && <AbschaltenSeite progress={cloudData.progress || {}} userKey={userKeyLower} fragen={questions} onBack={() => setActiveTab('spielen')} onRekord={(key, punkte) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); rekordMerken(pr, key, punkte); return curr; }); }} wunsch={abschaltenWunsch} aktionen={{
+        {activeTab === 'abschalten' && <AbschaltenSeite progress={cloudData.progress || {}} userKey={userKeyLower} fragen={questions} onBack={() => setActiveTab('spielen')} onRekord={(key, punkte) => { if (!username || isAdmin) return; const k = username.toLowerCase(); const namen = geschlageneMerken(cloudData.progress, k, { ...(cloudData.progress?.[k] || {}) }, key, punkte); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); rekordMerken(pr, key, punkte); wocheMerken(pr, key, punkte); geschlageneMerken(curr.progress, k, pr, key, punkte); return curr; }); if (namen.length) window.setTimeout(() => setToast(`Herausforderung von ${namen.join(' und ')} geschlagen! ${namen.length === 1 ? 'Sie oder er bekommt' : 'Sie bekommen'} Bescheid.`), 1200); }} wunsch={abschaltenWunsch} aktionen={{
           onGold: (key) => { if (!username || isAdmin) return; const k = username.toLowerCase(); const neu = !(Array.isArray(cloudData.progress?.[k]?._shopOwned) && cloudData.progress[k]._shopOwned.includes(GOLD_SACHEN[key]?.id)); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); goldGutschreiben(pr, key); return curr; }); if (neu && GOLD_SACHEN[key]) window.setTimeout(() => setToast(`${GOLD_SACHEN[key].ding} gefangen! Neu für Teigi: ${GOLD_SACHEN[key].sache}. Anziehen im Laden unter „Teigi“.`), 900); },
           onAufgabe: (tag, id) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); aufgabeMerken(pr, tag, id); return curr; }); window.setTimeout(() => setToast('Tagesaufgabe geschafft! Sie zählt für deine Sticker im Stickerheft.'), 700); },
           onHerausfordern: (an, text, key, punkte) => { if (!username || isAdmin) return; mutateCloudData(herausforderungSchicken(username.toLowerCase(), username, an, text, key, punkte)); const namen = Object.values(an); setToast(`Herausforderung an ${namen.length === 1 ? namen[0] : `${namen.length} Kollegen`} geschickt.`); },

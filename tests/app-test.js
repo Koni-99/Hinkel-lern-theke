@@ -947,6 +947,7 @@ async function offlineTests() {
     await rahmen.locator('#c').click({ position: { x: 150, y: 200 } }).catch(() => {});
     const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
     await fr.evaluate(() => ende(88, 'Test'));
+    await click(d.page.locator('.lt-abschalten-umschalter button', { hasText: 'Für immer' }));
     let zeile = '';
     for (let w = 0; w < 60 && !/Anna/.test(zeile); w++) { zeile = await d.page.locator('.lt-abschalten-liste').innerText().catch(() => ''); if (!/Anna/.test(zeile)) await sleep(100); }
     ok('Abschalten: Rekord landet in der kleinen Bestenliste (Anna 88 vor Ben 77)', /1\.\s*Anna \(du\)\s*88/.test(zeile) && /2\.\s*Ben\s*77/.test(zeile), zeile.slice(0, 200));
@@ -955,6 +956,51 @@ async function offlineTests() {
     for (let w = 0; w < 40 && !/Teigi-Lauf/.test(ueb); w++) { ueb = await rahmen.locator('.ueber').innerText().catch(() => ''); if (!/Teigi-Lauf/.test(ueb)) await sleep(100); }
     ok('Abschalten: anderes Spiel wählen (Teigi-Lauf)', /Teigi-Lauf/.test(ueb), ueb.slice(0, 80));
     ok('Abschalten: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 269: Wochen-Bestenliste, Herausforderung geschlagen, Sammlung, sanfter Start
+  teile.push(['Version 269: Woche, Geschlagen, Sammlung', async () => {
+    const A = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts']).hilfen_abschalten;
+    const mo = new Date(2026, 10, 16, 9), so = new Date(2026, 10, 22, 20), naechste = new Date(2026, 10, 23, 8);
+    const pr = {};
+    ok('Woche: Montag als Schlüssel, nur höher zählt', A.wocheKey(so) === '2026-11-16' && A.wocheMerken(pr, 'lauf', 300, mo) && !A.wocheMerken(pr, 'lauf', 200, so) && A.wocheMerken(pr, 'lauf', 100, naechste) && pr._abWoche.lauf.p === 100);
+    const prog = { anna: { _displayName: 'Anna', _abWoche: { lauf: { w: '2026-11-23', p: 100 } } }, ben: { _displayName: 'Ben', _abWoche: { lauf: { w: '2026-11-16', p: 999 } } } };
+    ok('Woche: Liste nur mit Runden dieser Woche', JSON.stringify(A.wochenliste(prog, 'lauf', 5, naechste).map((z) => z.k)) === '["anna"]');
+    const p2 = { anna: { _displayName: 'Anna', _nachrichten: { m1: { an: { ben: 'Ben' }, t: 'x', ts: 1, ab: { k: 'stapler', p: 500 } } } }, ben: { _displayName: 'Ben' } };
+    ok('Geschlagen: nicht bei weniger Punkten oder anderem Spiel', A.geschlageneMerken(p2, 'ben', p2.ben, 'stapler', 400).length === 0 && A.geschlageneMerken(p2, 'ben', p2.ben, 'lauf', 900).length === 0);
+    ok('Geschlagen: Ben schlägt Annas 500 mit 640, nur einmal', A.geschlageneMerken(p2, 'ben', p2.ben, 'stapler', 640).join() === 'Anna' && A.geschlageneMerken(p2, 'ben', p2.ben, 'stapler', 700).length === 0);
+    const gs = A.meineGeschlagenen(p2, 'anna');
+    ok('Geschlagen: Anna sieht es mit Text', gs.length === 1 && /Ben hat deine 500 bei „Brot-Stapler“ geschlagen: 640!/.test(A.geschlagenText(gs[0])), JSON.stringify(gs));
+    ok('Tagesaufgaben in Folge', A.aufgabenSerie({ _abAufgaben: { '2026-11-20': 'a', '2026-11-19': 'b', '2026-11-17': 'c' } }, new Date(2026, 10, 20, 12)) === 2);
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._nachrichten = { m1: { an: { ben: 'Ben' }, t: 'Schlag meine 500', ts: Date.now() - 5000, ab: { k: 'stapler', p: 500 } } };
+    probe.progress.ben._abGeschlagen = { [kompiliere(['src/hilfen/nachrichten.ts']).hilfen_nachrichten.postfachKey('anna', 'm1')]: { p: 640, ts: Date.now() - 1000 } };
+    probe.progress.anna._abGold = { lauf: 1 };
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    let txt = '';
+    for (let w = 0; w < 60 && !/Ben hat deine 500/.test(txt); w++) { txt = await d.page.locator('body').innerText().catch(() => ''); if (!/Ben hat deine 500/.test(txt)) await sleep(100); }
+    ok('Anna: Meldung „Ben hat deine 500 … geschlagen“ beim Öffnen', /Ben hat deine 500 bei „Brot-Stapler“ geschlagen: 640/.test(txt));
+    await clearPopups(d.page);
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Spielen"]:visible').first()); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    await click(bereich.locator('button', { hasText: 'Teigi-Lauf' }).first()); await settle(d.page, 800);
+    const karte = d.page.locator('.lt-geschlagen');
+    for (let w = 0; w < 40 && !(await karte.count()); w++) await sleep(100);
+    ok('Zum Abschalten: Karte „geschlagen“ mit „Zurückschlagen“', (await karte.count()) === 1 && (await karte.locator('.lt-zurueckschlagen').count()) === 1);
+    await click(karte.locator('.lt-zurueckschlagen'));
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let ue = '';
+    for (let w = 0; w < 60 && !/Brot-Stapler/.test(ue); w++) { ue = await rahmen.locator('.ueber').innerText().catch(() => ''); if (!/Brot-Stapler/.test(ue)) await sleep(100); }
+    ok('Zurückschlagen öffnet den Brot-Stapler, Karte ist weg', /Brot-Stapler/.test(ue) && (await d.page.locator('.lt-geschlagen').count()) === 0);
+    ok('Bestenliste mit Umschalter „Diese Woche / Für immer“', (await d.page.locator('.lt-abschalten-umschalter button').count()) === 2);
+    await click(d.page.locator('.lt-sammlung summary'));
+    const samm = await d.page.locator('.lt-sammlung').innerText().catch(() => '');
+    ok('Meine Sammlung: Goldkorn gefunden, 6 Spiele', /1 von 6 Goldstücken/.test(samm) && /Goldkorn gefunden: Stirnband/.test(samm) && (await d.page.locator('.lt-sammlung-feld').count()) === 6, samm.slice(0, 160));
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    const sanft = await fr.evaluate(() => { localStorage.setItem('lt_abschalten_kurz_stapler', '3'); rundeVorbereiten(); const a = rundeSanft; spielZeit = 10; const f1 = sanftFaktor(); spielZeit = 40; const f2 = sanftFaktor(); return [a, f1, f2]; });
+    ok('Sanfter Start nach 3 kurzen Runden: erst 75 %, später normal', sanft[0] === true && sanft[1] === 0.75 && sanft[2] === 1, JSON.stringify(sanft));
+    ok('Version 269: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern

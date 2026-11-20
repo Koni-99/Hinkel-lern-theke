@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { TH, cardStyle, PageHead } from '../ui/basis';
 import { dc } from '../daten/data';
-import { ABSCHALTEN_SPIELE, abschaltenSpiel, bestenliste, leichteFragen, meineRekorde, kollegenZiele, MEDAILLEN, medaille, MEDAILLE_NAMEN, goldSchon, heuteKey, herausforderungText } from '../hilfen/abschalten';
+import { ABSCHALTEN_SPIELE, abschaltenSpiel, bestenliste, leichteFragen, meineRekorde, kollegenZiele, MEDAILLEN, medaille, MEDAILLE_NAMEN, goldSchon, heuteKey, herausforderungText, wochenliste, meineGeschlagenen, geschlagenText, GOLD_SACHEN, aufgabenSerie, type Geschlagen } from '../hilfen/abschalten';
 import { HERAUSFORDERN_MAX } from '../hilfen/nachrichten';
 import { TeigiGlas } from '../basis/laden';
 
@@ -32,6 +32,12 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
   const kollegen = Object.entries(progress || {}).filter(([k, pr]) => k !== 'admin' && k !== userKey && pr && typeof pr === 'object')
     .map(([k, pr]: [string, any]) => ({ k, name: String(pr._displayName || k) })).sort((a, b) => a.name.localeCompare(b.name, 'de'));
   useEffect(() => { if (wunsch && abschaltenSpiel(wunsch.key)) setKey(wunsch.key); }, [wunsch?.n]);
+  // Version 269: Bestenliste „Diese Woche“ oder „Für immer“, Kollegen haben meine Herausforderung geschlagen
+  const [woche, setWoche] = useState(true);
+  const okKey = `lt_abgeschlagen_ok_${userKey}`;
+  const [okIds, setOkIds] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(okKey) || '[]'); } catch { return []; } });
+  const geschlagen = meineGeschlagenen(progress, userKey).filter((g) => !okIds.includes(g.id)).slice(0, 3);
+  const erledigt = (g: Geschlagen) => { const n = [...okIds, g.id].slice(-200); setOkIds(n); try { localStorage.setItem(okKey, JSON.stringify(n)); } catch { /* egal */ } };
   useEffect(() => { try { sessionStorage.setItem(MERKER, key); } catch { /* egal */ } }, [key]);
   // Spielfeld ganz ins Bild holen (am Handy liegt sonst die Leiste unten darüber)
   useEffect(() => { const t = window.setTimeout(() => rahmen.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 350); return () => window.clearTimeout(t); }, [key]);
@@ -52,14 +58,19 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
     return () => { removeEventListener('message', nachricht); document.body.classList.remove('lt-abschalten-offen'); };
   }, []);
   const spiel = abschaltenSpiel(key)!;
-  const liste = bestenliste(progress, key, 5);
+  const liste = woche ? wochenliste(progress, key, 5) : bestenliste(progress, key, 5);
   const ich = meine[key] || 0;
   return (
     <div className="lt-abschalten" style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
       <style>{`body.lt-abschalten-offen .lt-teigi-begleiter{display:none !important}
 .lt-abschalten-wahl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 @media (min-width:700px){.lt-abschalten-wahl{grid-template-columns:repeat(6,minmax(0,1fr))}}
-.lt-abschalten-rahmen{display:block;width:min(100%, 420px, calc((100dvh - 150px) * .75));aspect-ratio:3/4;margin:0 auto;border:none;border-radius:24px;background:#2A1A10;box-shadow:0 24px 50px -24px rgba(31,20,12,.75),0 0 0 4px #3A2010,0 0 0 6px #C98A00}`}</style>
+.lt-abschalten-rahmen{display:block;width:min(100%, 420px, calc((100dvh - 150px) * .75));min-width:min(100%, 300px);aspect-ratio:3/4;margin:0 auto;border:none;border-radius:24px;background:#2A1A10;box-shadow:0 24px 50px -24px rgba(31,20,12,.75),0 0 0 4px #3A2010,0 0 0 6px #C98A00}
+@media (min-width:700px){.lt-abschalten-rahmen{width:min(100%, 660px, calc((100dvh - 120px) * .75))}}
+.lt-abschalten-umschalter{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(75,42,20,.08);align-self:flex-start}
+.lt-abschalten-umschalter button{min-height:36px;padding:0 14px;border-radius:999px;border:none;background:transparent;font-weight:700;font-size:14px;cursor:pointer;color:inherit}
+.lt-abschalten-umschalter button[aria-pressed="true"]{background:#4B2A14;color:#FFE9B0}
+.lt-sammlung-raster{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}`}</style>
       <PageHead title="Zum Abschalten" subtitle="Spielen und den Kopf frei bekommen. Keine Punkte für die Bestenliste, nur dein eigener Rekord." onBack={onBack} backLabel="Zu den Spielen" />
       <div className="lt-abschalten-wahl" role="tablist" aria-label="Spiel auswählen">
         {ABSCHALTEN_SPIELE.map((s) => {
@@ -74,6 +85,15 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
       </div>
       {/* unsichtbar: daraus wird Teigis Grafik mit Hut und Glas für die Spiele */}
       <div ref={teigiRef} aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}><TeigiGlas stufe={2} laune="froh" size={72} hut={meinPr._teigiHut || null} glas={meinPr._teigiGlas || null} /></div>
+      {geschlagen.map((g) => (
+        <div key={g.id} className="lt-geschlagen" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '10px', borderLeft: '6px solid #C98A00' }}>
+          <div style={{ fontSize: '17px', fontWeight: 700, lineHeight: 1.4 }}>{geschlagenText(g)}</div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button type="button" className="lt-zurueckschlagen" onClick={() => { erledigt(g); setKey(g.key); }} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: 'none', backgroundColor: TH.brown, color: '#FFF6E0', fontWeight: 800, fontSize: '16px', cursor: 'pointer' }}>Zurückschlagen</button>
+            <button type="button" onClick={() => erledigt(g)} style={{ minHeight: '46px', padding: '0 18px', borderRadius: '999px', border: `2px solid ${TH.line || '#E5D6BC'}`, backgroundColor: 'transparent', color: TH.ink, fontWeight: 700, fontSize: '16px', cursor: 'pointer' }}>OK</button>
+          </div>
+        </div>
+      ))}
       <iframe ref={rahmen} className="lt-abschalten-rahmen" title={spiel.titel} src={`${BASIS}abschalten/index.html#${key}`} />
       {fordern && (
         <div className="lt-overlay" onClick={() => setFordern(null)} style={{ position: 'fixed', inset: 0, zIndex: 120, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -95,8 +115,9 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
       )}
       <section className="lt-abschalten-liste" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ fontFamily: TH.serif, fontSize: '24px', lineHeight: 1.15 }}>Bestenliste: {spiel.titel}</div>
+        <div className="lt-abschalten-umschalter" role="group" aria-label="Zeitraum"><button type="button" aria-pressed={woche} onClick={() => setWoche(true)}>Diese Woche</button><button type="button" aria-pressed={!woche} onClick={() => setWoche(false)}>Für immer</button></div>
         <div style={{ fontSize: '15px', color: TH.muted }}>{spiel.kurz}. {ich ? `Dein Rekord: ${ich.toLocaleString('de-DE')}.` : 'Spiel eine Runde, dann stehst du hier.'}</div>
-        {liste.length === 0 ? <div style={{ fontSize: '16px', color: TH.muted }}>Noch niemand hat hier gespielt.</div> : liste.map((z, i) => (
+        {liste.length === 0 ? <div style={{ fontSize: '16px', color: TH.muted }}>{woche ? 'Diese Woche hat hier noch niemand gespielt. Die Liste startet jeden Montag neu.' : 'Noch niemand hat hier gespielt.'}</div> : liste.map((z, i) => (
           <div key={z.k} className="lt-abschalten-zeile" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', borderRadius: '12px', backgroundColor: z.k === userKey ? TH.tintYellow : 'transparent' }}>
             <span style={{ flex: '0 0 26px', fontWeight: 800, color: i === 0 ? '#A8740A' : TH.muted }}>{i + 1}.</span>
             <span style={{ flex: 1, minWidth: 0, fontWeight: z.k === userKey ? 800 : 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{z.name}{z.k === userKey ? ' (du)' : ''}</span>
@@ -104,6 +125,19 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
           </div>
         ))}
       </section>
+      <details className="lt-sammlung" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <summary style={{ cursor: 'pointer', fontFamily: TH.serif, fontSize: '22px', lineHeight: 1.2 }}>Meine Sammlung <span style={{ fontFamily: 'inherit', fontSize: '15px', color: TH.muted }}>({Object.keys(GOLD_SACHEN).filter((k) => Number(meinPr._abGold?.[k]) > 0).length} von 6 Goldstücken, {Object.keys(meinPr._abAufgaben || {}).length} Tagesaufgaben)</span></summary>
+        <div style={{ fontSize: '15px', color: TH.muted, marginTop: '8px' }}>Medaillen und Goldstücke je Spiel.{aufgabenSerie(meinPr) > 1 ? ` Tagesaufgaben ${aufgabenSerie(meinPr)} Tage in Folge geschafft.` : ''}</div>
+        <div className="lt-sammlung-raster" style={{ marginTop: '8px' }}>
+          {ABSCHALTEN_SPIELE.map((sp) => { const r = meine[sp.key] || 0, m = medaille(sp.key, r), g = GOLD_SACHEN[sp.key], hat = Number(meinPr._abGold?.[sp.key]) > 0; return (
+            <div key={sp.key} className="lt-sammlung-feld" style={{ padding: '10px 12px', borderRadius: '14px', backgroundColor: dc('#FFFBF2'), border: '1.5px solid #EADBC0', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px' }}>
+              <strong style={{ fontSize: '15px' }}>{sp.titel}</strong>
+              <span style={{ color: m ? '#8A5A0A' : TH.muted, fontWeight: 700 }}>{m ? `${MEDAILLE_NAMEN[m]}-Medaille` : 'Noch keine Medaille'}</span>
+              <span style={{ color: hat ? '#2F7A3A' : TH.muted }}>{hat ? `${g.ding} gefunden: ${g.sache}` : `${g.ding}: noch nicht gefunden`}</span>
+            </div>
+          ); })}
+        </div>
+      </details>
     </div>
   );
 }
