@@ -6,7 +6,9 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 270;
+const APP_VERSION: number = 271;
+/** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
+const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -2979,7 +2981,8 @@ export default function App() {
 
       {/* ── Trinkgeld-Laden ── */}
       {showTipShop && !isAdmin && <TipShop kollegen={allKnownUserKeys.filter((k) => k !== userKeyLower).map((k) => ({ k, name: (cloudProgress[k] || {})._displayName || k })).sort((a, b) => a.name.localeCompare(b.name))} onSchenken={schenken} geschenkeHeute={geschenkeHeute(cloudData.progress, userKeyLower)} prog={myProg} onBuy={buyShopItem} onEquip={equipShopItem} onClose={() => setShowTipShop(false)} ptsBalance={ptsBalance} onBuyPts={buyPtsItem} onEquipPts={equipPtsItem} />}
-      {!isAdmin && !myProg._teigiAus && activeTab !== 'admin' && (
+      {/* Version 271: Teigi nur noch beim Quiz, in den Spielen und beim Hör-Lernen (verdeckte auf anderen Seiten Text), im Brotkorb bleibt er */}
+      {!isAdmin && !myProg._teigiAus && (TEIGI_SEITEN.includes(activeTab) || (activeTab === 'quiz' && selectedLevel !== null && quizList.length > 0)) && (
         <TeigiBegleiter stufe={teigiStand([...(Array.isArray(myProg._days) ? myProg._days : []), ...myUrlaubTage], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
       )}
       {/* Version 265: was hinter dem Türchen steckte (Punkte, Tüte, Advents-Belohnung, bei allen 24 das Finale) */}

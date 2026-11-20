@@ -195,7 +195,7 @@ export function BilderQuizView({ images, onSaveScore, onFinished, known = [], on
           ) : (
             <>
               <div style={{ padding: '12px 16px', borderRadius: '14px', backgroundColor: TH.tintYellow, fontSize: '17px', fontWeight: 700 }}>{Math.min(10, onlyNew ? leftF : totalF)} Fotos · ab 5 richtigen gibt es Punkte für die Bestenliste.</div>
-              {onLearn && <LearnHint text="Erkennst du ein Produkt richtig, werden seine Quizfragen „Welche Beschreibung passt?“ und „Zu welcher Warengruppe gehört …?“ im Bereich „Sortiment & Warenkunde“ abgehakt." />}
+              {onLearn && <LearnHint text="Erkennst du ein Produkt, werden seine Fragen zu Beschreibung und Warengruppe im Quiz abgehakt." />}
               <button onClick={() => start(10)} style={btnPrimary}>Los geht’s</button>
               <AllAtOnceButton count={onlyNew ? leftF : totalF} unit="Fotos" onClick={() => start(9999)} />
             </>

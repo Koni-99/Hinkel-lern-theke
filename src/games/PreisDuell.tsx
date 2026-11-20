@@ -121,14 +121,14 @@ export function PreisDuellView({ images, best = 0, onSaveScore, onFinished, onLe
       {state === 'menu' && (
         <GameIntro
           title="Wie gut kennst du unsere Preise?"
-          text="Links siehst du ein Produkt mit Preis, rechts ein zweites ohne Preis. Tippe auf „Teurer“ oder „Billiger“. Liegst du richtig, rückt das Produkt nach links und das nächste kommt. Je länger deine Serie, desto knapper werden die Preise."
+          text="Ist das rechte Produkt teurer oder billiger als das linke? Je länger deine Serie, desto knapper werden die Preise."
           hint={`Ab 3 richtigen am Stück gibt es Punkte (10 pro Treffer).${best > 0 ? ` Deine beste Serie: ${best}` : ''}`}
           startLabel="Los geht’s"
           onStart={start}
         />
       )}
       {state === 'menu' && <OnlyNewToggle on={onlyNew} onToggle={toggleOnlyNew} label="Nur neue Preise" done={PRICE_POOL.filter(p => knownPrices.includes(p.name)).length} total={PRICE_POOL.length} unit="Preise" />}
-      {state === 'menu' && onLearn && <LearnHint text="Liegst du richtig, wird die Quizfrage „Was kostet …?“ zum aufgedeckten Produkt im Bereich „Sortiment & Warenkunde“ abgehakt, den Preis hast du ja gerade gesehen." />}
+      {state === 'menu' && onLearn && <LearnHint text="Liegst du richtig, wird die Preis-Frage zu diesem Produkt im Quiz abgehakt." />}
       {state === 'playing' && a && b && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <ReportContext report={{ game: 'Teurer oder billiger', product: b.name, text: `Ist ${b.name} teurer oder billiger als ${a.name} (${centsText(parseCents(a.price))})?`, detail: `Preise laut App: ${b.name} ${centsText(parseCents(b.price))}, ${a.name} ${centsText(parseCents(a.price))}` }} />

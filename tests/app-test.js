@@ -701,7 +701,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     ok('Teigi im Brotkorb ohne Kauf', (await d.page.locator('.lt-teigi-zeile').count()) === 1);
-    ok('Teigi begleitet auch auf der Startseite', (await d.page.locator('.lt-teigi-begleiter').count()) === 1);
+    ok('Teigi-Begleiter nicht auf der Startseite (Version 271, verdeckte Text), nur im Brotkorb', (await d.page.locator('.lt-teigi-begleiter').count()) === 0);
     await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);
     ok('Schalter ganz unten blendet Teigi aus', (await d.page.locator('.lt-teigi-zeile').count()) === 0 && /einschalten/.test(await d.page.locator('button.lt-teigi-schalter').innerText()));
     await click(d.page.locator('button.lt-teigi-schalter').first()); await settle(d.page, 400);
@@ -1193,7 +1193,8 @@ async function offlineTests() {
   }]);
   // Version 261: Teigi bewegt den Mund, solange eine Stimme vorliest
   teile.push(['Version 261: Teigi spricht mit', async () => {
-    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    // seit Version 271 ist der Begleiter nur in Quiz/Spielen/Hör-Lernen dabei → im Kassenblitz prüfen
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => { await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__t261')) { sessionStorage.setItem('__t261', '1'); sessionStorage.setItem('lt_seite', 'kassenblitz'); } } catch {} }); } });
     await clearPopups(d.page);
     const mund = () => d.page.locator('.lt-teigi-begleiter .lt-teigi-mund-spricht').count();
     let m0 = 1;
@@ -1214,18 +1215,12 @@ async function offlineTests() {
     await d.page.evaluate(() => { window.__spricht = false; });
     for (let w = 0; w < 30 && m; w++) { m = await mund(); if (m) await sleep(100); }
     ok('Teigi: hört auf, wenn die Stimme fertig ist', m === 0);
-    // natürliche Stimme (Tondatei): Steckbrief vorlesen
+    // Seit Version 271 ist Teigi im Steckbrief nicht mehr dabei (verdeckte dort Text)
     await click(d.page.getByRole('button', { name: 'Suchen' }).first()); await settle(d.page, 400);
     await d.page.getByLabel('Suchbegriff').fill('laugenbrezel');
     for (let w = 0; w < 30 && !(await d.page.locator('.lt-suche-produkt').count()); w++) await sleep(100);
     await click(d.page.locator('.lt-suche-produkt').first()); await settle(d.page, 800);
-    const vorlesen = d.page.locator('.fc-sheet button', { hasText: /vorlesen/i }).first();
-    if (await vorlesen.count()) {
-      await vorlesen.click().catch(() => {});
-      let mm = 0;
-      for (let w = 0; w < 50 && !mm; w++) { mm = await mund(); if (!mm) await sleep(100); }
-      ok('Teigi: spricht auch mit der natürlichen Stimme (Steckbrief vorlesen)', mm === 1);
-    }
+    ok('Steckbrief: Teigi-Begleiter verdeckt nichts (nicht da)', (await d.page.locator('.lt-teigi-begleiter').count()) === 0);
     ok('Teigi spricht: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);

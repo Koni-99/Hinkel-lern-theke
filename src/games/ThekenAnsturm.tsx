@@ -76,7 +76,7 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
       <ConfettiOverlay active={state === 'result' && served >= 8} />
       <PageHead title="Theken-Ansturm" subtitle="Die Schlange wird länger. Pack jede Bestellung, bevor der Kunde ungeduldig wird." />
-      {state === 'menu' && <GameIntro title="So geht's" text="Der Kunde sagt, was er möchte. Erkenne die Ware am Foto und tippe sie an, bis alles in der Tüte ist. Den Namen siehst du erst nach dem Antippen. Falsches Produkt kostet Geduld. Drei verärgerte Kunden und das Spiel ist vorbei." hint="Je schneller du bist, desto mehr Bonuspunkte." startLabel="Theke öffnen" onStart={start} />}
+      {state === 'menu' && <GameIntro title="So geht's" text="Erkenne die bestellte Ware am Foto und pack sie in die Tüte. Drei verärgerte Kunden und das Spiel ist vorbei." hint="Je schneller du bist, desto mehr Bonuspunkte." startLabel="Theke öffnen" onStart={start} />}
       {state === 'play' && (
         <div id="lt-game-card" className="lt-ansturm-card" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>

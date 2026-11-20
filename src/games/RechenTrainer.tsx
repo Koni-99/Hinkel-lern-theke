@@ -48,7 +48,7 @@ export function RechenTrainerView({ onSaveScore }: { onSaveScore: (points: numbe
     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', width: '100%' }}>
       <PageHead title="Rechen-Trainer" subtitle="Rechnen wie in der Prüfung, mit echten Hinkel-Preisen. Ohne Zeitdruck, mit Rechenweg." />
       {phase === 'menu' && (
-        <GameIntro title="Rechnen wie in der Prüfung" text={`${RUNDE} Aufgaben: zusammenrechnen, Rückgeld, Preis pro Kilo, Rabatt, Mehrwertsteuer herausrechnen und Dreisatz. Tipp das Ergebnis in Euro ein, zum Beispiel 3,45. Danach siehst du den Rechenweg.`}
+        <GameIntro title="Rechnen wie in der Prüfung" text={`${RUNDE} Aufgaben rund um die Kasse, ohne Zeitdruck. Tipp das Ergebnis in Euro ein, danach siehst du den Rechenweg.`}
           hint={`${PUNKTE_PRO_AUFGABE} Punkte pro richtiger Aufgabe. Ein Taschenrechner ist erlaubt, wie in der Prüfung.`} startLabel="Los geht's" onStart={start} />
       )}
       {phase === 'spiel' && a && (

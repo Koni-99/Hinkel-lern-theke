@@ -489,8 +489,8 @@ export function OfenKetteView({ images, scores, userKey, onSaveScore }: { images
       {phase === 'menu' && (<>
         <GameIntro
           title="Ofen an!"
-          text={`Schieben, drehen, fallen lassen. Eine volle Reihe ist fertig gebacken. 4 gleiche Produkte nebeneinander werden goldbraun und verschwinden, was nachrutscht, kann eine Kette auslösen. Oben steht eine Bestellung nur mit dem Namen: Erkenne das Produkt am Foto, dann zählt es doppelt.`}
-          hint="Rot umrandet: Allergen-Frage, schnell antippen. Goldenes Brötchen: backt alle gleichen weg, auf denen es landet. Bleibt ein Bild zu lange liegen, verbrennt es. Finger auf ein Bild halten zeigt den Namen."
+          text={`Schieben, drehen, fallen lassen. Volle Reihen und 4 gleiche Produkte nebeneinander sind fertig gebacken. Die Bestellung oben zählt doppelt.`}
+          hint="Rot umrandet heißt Allergen-Frage. Finger auf ein Bild halten zeigt den Namen."
           startLabel="Ofen an"
           onStart={() => start(false)}
         />
