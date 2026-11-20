@@ -7,19 +7,23 @@ function waehle(k){
   spiel.start(); setHud([]); zeigeStart();
 }
 const melde = (d) => { try { if (parent !== window) parent.postMessage(d, location.origin); } catch {} };
-const altEnde = ende; ende = function (p, z) { altEnde(p, z); melde({ typ: 'lt-abschalten-ende', key: spiel.key, punkte: p }); };
+// Gemütliche Runden zählen nicht (Version 267)
+const altEnde = ende; ende = function (p, z) { const gem = rundeGemuetlich; altEnde(p, z); if (!gem) melde({ typ: 'lt-abschalten-ende', key: spiel.key, punkte: p }); };
 addEventListener('message', (e) => {
   if (e.origin !== location.origin) return;
   const d = e.data || {};
   if (d.typ !== 'lt-abschalten-daten') return;
   if (Array.isArray(d.fragen) && d.fragen.length >= 5) FRAGEN = d.fragen;
+  if (d.ziele && typeof d.ziele === 'object') ZIELE = d.ziele;
+  if (d.medaillen && typeof d.medaillen === 'object') MEDAILLEN = d.medaillen;
+  if (d.teigiSvg) setTeigiSvg(d.teigiSvg, d.teigiSkala);
   let neu = false;
   Object.entries(d.rekord || {}).forEach(([k, v]) => { if (Number(v) > rekordLesen(k)) { rekordSetzen(k, Number(v)); neu = true; } });
-  if (neu && !laeuft && !ueber.hidden && ueber.classList.contains('start')) zeigeStart();
+  if (!laeuft && !pausiert && !ueber.hidden && ueber.classList.contains('start')) zeigeStart();
 });
 addEventListener('hashchange', () => waehle(wunsch()));
 // Pausieren, wenn die App im Hintergrund ist (Handy gesperrt, anderer Tab)
-document.addEventListener('visibilitychange', () => { if (document.hidden && laeuft && !frageOffen) { laeuft = false; ueber.hidden = false; ueber.className = 'ueber start'; ueber.innerHTML = '<div class="karte"><span class="marke">Pause</span><h2>' + spiel.name + '</h2><button class="los">Weiter</button></div>'; ueber.querySelector('.los').addEventListener('click', () => { ueber.hidden = true; laeuft = true; }); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pausieren(); });
 addEventListener('resize', groesse);
 groesse(); waehle(wunsch()); requestAnimationFrame(schleife);
 melde({ typ: 'lt-abschalten-bereit' });

@@ -106,13 +106,15 @@ SPIELE.stapler = {
     this.oben = STAP_BRETT; this.kamera = 0; this.zeit = 0;
     this.perfekt = 0; this.bonus = 0; this.anzahl = 0; this.stuecke = []; this.tot = -1; this.fertig = false; this.frageIn = -1;
     this.rekordH = stap_rekordHoehe(); this.rekordGezeigt = false;
+    this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
+    this.zielZeile = null; this.zielSchaetzen();
     this.neuesBrot(STAP_MAX);
   },
   neuesBrot(w){
     const n = this.anzahl, art = STAP_ARTEN[(n * 5 + ganz(0, 2)) % STAP_ARTEN.length];
     const h = STAP_HOEHE[art];
     const links = n % 2 === 0;
-    this.akt = { art, w, h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega: Math.min(4.1, 1.85 + n * .075), zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
+    this.akt = { art, w, h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega: this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075), zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
     this.akt.x = this.pendelX(this.akt);
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
@@ -120,6 +122,15 @@ SPIELE.stapler = {
   ganzesBrot(a){ return { art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
   top(){ return this.stapel[this.stapel.length - 1]; },
   punkte(){ return this.anzahl * 10 + this.bonus; },
+  aktuellePunkte(){ return this.punkte(); },
+  medaillen: [150, 500, 1200],
+  /** Höhe (in Broten) grob schätzen, bei der der nächste Kollegen-Rekord erreicht wäre */
+  zielSchaetzen(){
+    const z = !this.gem && typeof naechstesZiel === 'function' && typeof spiel !== 'undefined' && spiel === this ? naechstesZiel(this.punkte()) : null;
+    if (!z) { this.zielZeile = null; return; }
+    const rate = this.anzahl > 3 ? Math.max(10, this.punkte() / this.anzahl) : 14;
+    this.zielZeile = { name: z.name, n: this.anzahl + Math.max(1, Math.ceil((z.punkte - this.punkte()) / rate)) };
+  },
 
   runter(){
     const a = this.akt;
@@ -138,7 +149,7 @@ SPIELE.stapler = {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
       this.stuecke.push({ art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
-      this.tot = 0; wackeln(8); blitz(.25, '255,200,180');
+      this.tot = 0; wackeln(8); blitz(.25, '255,200,180'); brumm(70);
       schwebText('Daneben!', W / 2, cy + this.kamera - 60, F.rot, 24);
       stap_rekordHoeheSetzen(this.anzahl);
       return;
@@ -152,13 +163,13 @@ SPIELE.stapler = {
       neu.glanz = 1;
       const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
       const sy = cy + this.kamera;
-      blitz(.18, '255,225,140');
+      blitz(.18, '255,225,140'); brumm(25);
       teilchen(tm, sy, { n: 22, form: 'stern', tempo: 190, groesse: [2.5, 5.5], leben: [.5, .9], schwer: 260 });
       schwebText(this.perfekt > 1 ? `Perfekt ×${this.perfekt}  +${10 + bon}` : `Perfekt! +${10 + bon}`, W / 2, sy - 56, '#B07A00', 22);
       if (this.perfekt % 3 === 0) {
         // Brot geht auf: wird breiter
         const nw = Math.min(STAP_MAX, a.w + 16);
-        if (nw > a.w) { neu.fw = nw; neu.l = tm - nw / 2; neu.r = tm + nw / 2; neu.auf = 1; mehlWolke(tm, sy - 10, 12); setTimeout(() => schwebText('Geht auf! Breiter', W / 2, sy - 92, F.braun, 20), 260); }
+        if (nw > a.w) { neu.fw = nw; neu.l = tm - nw / 2; neu.r = tm + nw / 2; neu.auf = 1; mehlWolke(tm, sy - 10, 12); setTimeout(() => { schwebText('Geht auf! Breiter', W / 2, sy - 92, F.braun, 20); brumm(30); }, 260); }
       }
     } else {
       this.perfekt = 0;
@@ -173,6 +184,7 @@ SPIELE.stapler = {
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
+    this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
   },
 
@@ -218,10 +230,8 @@ SPIELE.stapler = {
     this.hud();
   },
   hud(){
-    const teile = [{ icon: 'flagge', text: `${this.anzahl} hoch` }];
-    if (this.perfekt >= 2) teile.push(`Perfekt ×${this.perfekt}`);
-    teile.push({ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') });
-    setHud(teile);
+    // nur zwei Pillen: in der Mitte sitzt der Pause-Knopf; die Perfekt-Serie steht im Bild
+    setHud([{ icon: 'flagge', text: `${this.anzahl} hoch` }, { icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }]);
   },
 
   malen(t){
@@ -267,6 +277,17 @@ SPIELE.stapler = {
       // Bestmarke liegt noch höher: Abstand schätzen
       const sy = this.oben - (this.rekordH - this.anzahl) * 30;
       if (sy + kam > 50 && sy + kam < H) { x.strokeStyle = 'rgba(255,199,44,.75)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+    }
+    // Kollegen-Ziel
+    if (this.zielZeile && laeuft) {
+      const zn = this.zielZeile.n, sy = st[zn] ? st[zn].y - st[zn].h / 2 : this.oben - (zn - this.anzahl) * 32;
+      if (sy + kam > 70 && sy + kam < H) {
+        x.strokeStyle = 'rgba(125,190,110,.9)'; x.setLineDash([10, 6]); x.lineWidth = 2.2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]);
+        x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif'; const tw = x.measureText(this.zielZeile.name).width + 34;
+        rr(64, sy - 12, tw, 24, 12); x.fillStyle = linear(0, sy - 12, 0, sy + 12, [[0, '#3F8F4E'], [1, '#2A6A36']]); x.fill();
+        x.fillStyle = '#FFFFFF'; x.beginPath(); x.moveTo(74, sy + 6); x.lineTo(74, sy - 7); x.lineTo(84, sy - 4); x.lineTo(74, sy - 1); x.fill();
+        text(this.zielZeile.name, 64 + 22 + (tw - 30) / 2, sy, { gr: 12, farbe: '#FFFFFF', schat: false });
+      }
     }
     // Stapel (nur sichtbare Brote), mit Kontaktschatten
     for (let i = 1; i < st.length; i++) {
@@ -318,6 +339,14 @@ SPIELE.stapler = {
     }
     x.restore();
     vignette(.4);
+    if (laeuft && this.perfekt >= 2 && this.tot < 0) {
+      const tx = `Perfekt ×${this.perfekt}`; x.font = '800 12.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(tx).width + 22;
+      const puls = 1 + Math.max(0, Math.sin(t * 6)) * .04;
+      x.save(); x.translate(W - 12 - w / 2, 86); x.scale(puls, puls);
+      rr(-w / 2, -12, w, 24, 12); x.fillStyle = linear(0, -12, 0, 12, [[0, '#FFE58A'], [1, '#F2B400']]); x.fill();
+      x.strokeStyle = 'rgba(150,100,0,.6)'; x.lineWidth = 1; x.stroke();
+      text(tx, 0, .5, { gr: 12.5, farbe: F.braun, schat: false }); x.restore();
+    }
     // Hinweis am Anfang
     if (laeuft && this.anzahl === 0 && this.tot < 0) {
       const al = .8 + Math.sin(t * 5) * .2;

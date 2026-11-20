@@ -12,6 +12,28 @@ export const ABSCHALTEN_SPIELE: { key: string; titel: string; kurz: string }[] =
 ];
 export const abschaltenSpiel = (k: string) => ABSCHALTEN_SPIELE.find((s) => s.key === k);
 
+/** Version 267: Medaillen je Spiel [Bronze, Silber, Gold] (gleiche Werte wie `medaillen` in tools/abschalten/spiele/*.js) */
+export const MEDAILLEN: Record<string, [number, number, number]> = {
+  lauf: [250, 900, 2500], chaos: [600, 1800, 4000], tour: [800, 2000, 4000], schutz: [800, 2400, 5000], schleuder: [500, 1300, 2600], stapler: [150, 500, 1200],
+};
+export const MEDAILLE_NAMEN = ['', 'Bronze', 'Silber', 'Gold'];
+/** 0 = keine, 1 Bronze, 2 Silber, 3 Gold */
+export function medaille(key: string, punkte: number): number {
+  const m = MEDAILLEN[key]; if (!m || !m[0]) return 0;
+  return punkte >= m[2] ? 3 : punkte >= m[1] ? 2 : punkte >= m[0] ? 1 : 0;
+}
+/** Rekorde der Kollegen (ohne mich und den Ausbilder) je Spiel, für „Nächstes Ziel: Ben 310“ im Spiel */
+export function kollegenZiele(progress: Record<string, any> | undefined, ich: string): Record<string, { name: string; punkte: number }[]> {
+  const out: Record<string, { name: string; punkte: number }[]> = {};
+  ABSCHALTEN_SPIELE.forEach((sp) => {
+    out[sp.key] = Object.entries(progress || {})
+      .filter(([k, pr]) => k !== 'admin' && k !== ich && Number(pr?._abschalten?.[sp.key]) > 0)
+      .map(([k, pr]) => ({ name: String(pr?._displayName || k), punkte: Math.floor(Number(pr._abschalten[sp.key])) }))
+      .sort((a, b) => b.punkte - a.punkte).slice(0, 30);
+  });
+  return out;
+}
+
 /** Eigene Rekorde aus dem Fortschritt */
 export function meineRekorde(pr: any): Record<string, number> {
   const r = (pr && pr._abschalten) || {};

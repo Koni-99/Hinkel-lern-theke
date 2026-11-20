@@ -7,7 +7,7 @@ import { topWeak } from '../focus';
 import { LT } from '../basis/marke';
 import { DuelSwords, DuelBadge, LtIcon, ICON, GAME_ICON } from '../basis/symbole';
 import { cleanCat } from '../basis/serie';
-import { ABSCHALTEN_SPIELE, meineRekorde } from '../hilfen/abschalten';
+import { ABSCHALTEN_SPIELE, meineRekorde, medaille, MEDAILLE_NAMEN } from '../hilfen/abschalten';
 
 export type SpielenSeiteProps = {
   fetchCloudData: (customUrl?: string | undefined) => Promise<CloudPayload | null>;
@@ -42,7 +42,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
     alt: { title: 'Alternativen-Jäger', short: 'Ausverkauft? Die beste Empfehlung finden', time: '6 Runden', learn: true, action: () => setActiveTab('alternativen') },
     battle: { title: 'Quiz Battle', short: 'Kollegen herausfordern, 40 Sek. pro Frage', time: '5 Fragen', learn: true, duel: duelInvites, action: () => { setActiveTab('battle'); setBattleState('menu'); fetchCloudData(); } },
     // Version 266: Zum Abschalten (ohne Punkte für die Bestenliste, eigene Seite mit iframe)
-    ...Object.fromEntries(ABSCHALTEN_SPIELE.map((s) => [`ab_${s.key}`, { title: s.titel, short: s.kurz, time: meineRek[s.key] ? `Rekord ${meineRek[s.key].toLocaleString('de-DE')}` : 'Zum Entspannen', action: () => { try { sessionStorage.setItem('lt_abschalten', s.key); } catch { /* egal */ } setActiveTab('abschalten'); } }])),
+    ...Object.fromEntries(ABSCHALTEN_SPIELE.map((s) => [`ab_${s.key}`, { title: s.titel, short: s.kurz, time: meineRek[s.key] ? `${medaille(s.key, meineRek[s.key]) ? `${MEDAILLE_NAMEN[medaille(s.key, meineRek[s.key])]} · ` : ''}Rekord ${meineRek[s.key].toLocaleString('de-DE')}` : 'Zum Entspannen', action: () => { try { sessionStorage.setItem('lt_abschalten', s.key); } catch { /* egal */ } setActiveTab('abschalten'); } }])),
     advent: { title: 'Adventskalender', short: nowMonth === 10 ? 'Ab 1. Dezember jeden Tag ein Türchen' : 'Jeden Tag ein Türchen mit Extra-Punkten', time: adventOpenNow ? `${adventOpenNow} offen` : '1 Frage am Tag', learn: true, action: () => { setAdventPreview(false); setActiveTab('advent'); } },
   };
   const groups: { title: string; sub?: string; tint: string; ink: string; keys: string[] }[] = [

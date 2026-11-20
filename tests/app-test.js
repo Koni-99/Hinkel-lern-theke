@@ -919,6 +919,9 @@ async function offlineTests() {
     ok('Abschalten: Bestenliste sortiert, ohne Ausbilder', bl.length === 2 && bl[0].name === 'Ben', JSON.stringify(bl));
     const lf = A.leichteFragen([{ question: 'Kurz?', options: ['a', 'b', 'c'], correct: 1, level: 'easy' }, { question: 'Schwer?', options: ['a', 'b', 'c'], correct: 0, level: 'hard' }]);
     ok('Abschalten: nur leichte Fragen', lf.length === 1 && lf[0][2] === 1);
+    ok('Abschalten: Medaillen Bronze/Silber/Gold', A.medaille('stapler', 100) === 0 && A.medaille('stapler', 600) === 2 && A.medaille('lauf', 9999) === 3);
+    const zi = A.kollegenZiele({ anna: { _abschalten: { lauf: 5 } }, ben: { _displayName: 'Ben', _abschalten: { lauf: 77 } } }, 'anna');
+    ok('Abschalten: Kollegen-Ziele ohne mich selbst', zi.lauf.length === 1 && zi.lauf[0].name === 'Ben');
     const probe = JSON.parse(JSON.stringify(SAMPLE));
     probe.progress.ben._abschalten = { stapler: 77 };
     const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
@@ -934,8 +937,13 @@ async function offlineTests() {
     for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
     ok('Abschalten: Spiel lädt im Rahmen (Brot-Stapler)', los === 1 && /Brot-Stapler/.test(await rahmen.locator('.ueber').innerText().catch(() => '')));
     ok('Abschalten: Teigi-Begleiter ausgeblendet', await d.page.evaluate(() => { const t = document.querySelector('.lt-teigi-begleiter'); return !t || getComputedStyle(t).display === 'none'; }));
+    ok('Abschalten: Startkarte mit Medaillen und Schalter „Gemütlich spielen“', (await rahmen.locator('.ueber .medaillen span').count()) === 3 && (await rahmen.locator('.ueber .schalter').count()) === 1);
     await rahmen.locator('.ueber .los').click();
     await sleep(600);
+    ok('Abschalten: Pause-Knopf im Spiel', await rahmen.locator('.pause-knopf').isVisible().catch(() => false));
+    await rahmen.locator('.pause-knopf').click(); await sleep(300);
+    ok('Abschalten: Pause hält an, „Weiter“ geht weiter', /Pause/i.test(await rahmen.locator('.ueber').innerText().catch(() => '')));
+    await rahmen.locator('.ueber .los').click(); await sleep(300);
     await rahmen.locator('#c').click({ position: { x: 150, y: 200 } }).catch(() => {});
     const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
     await fr.evaluate(() => ende(88, 'Test'));
