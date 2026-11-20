@@ -1,0 +1,340 @@
+// ═══ Brot-Stapler: Brote schwingen oben, Tippen lässt sie fallen, Überstand bricht ab ═══
+const STAP_BRETT = 410;             // Oberkante des Brotbretts (Welt-y)
+const STAP_ARTEN = ['stuten', 'krusti', 'laib', 'baguette', 'stuten', 'krusti'];
+const STAP_HOEHE = { stuten: 40, krusti: 34, laib: 38, baguette: 26 };
+const STAP_MAX = 136;
+const STAP_BG = { bild: null, breite: 0, hoehe: 0 };
+
+function stap_rekordHoehe(){ try { return Number(localStorage.getItem('lt_abschalten_stapler_hoehe')) || 0; } catch { return 0; } }
+function stap_rekordHoeheSetzen(n){ try { if (n > stap_rekordHoehe()) localStorage.setItem('lt_abschalten_stapler_hoehe', String(n)); } catch {} }
+
+/** Hintergrund (hohes Bäckerei-Regal) einmal zeichnen und als eigene Leinwand merken; senkrecht endlos wiederholbar */
+function stap_backen(){
+  x.save(); x.setTransform(c.width / W, 0, 0, c.height / H, 0, 0); x.clearRect(0, 0, W, H);
+  // Rückwand aus dunklem Holz, senkrechte Bretter
+  x.fillStyle = linear(0, 0, W, 0, [[0, '#4A2A14'], [.5, '#6A4022'], [1, '#4A2A14']]); x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 9; i++) {
+    const bx = i * 40;
+    x.fillStyle = `rgba(${i % 2 ? '255,220,170' : '30,12,2'},.05)`; x.fillRect(bx, 0, 40, H);
+    x.fillStyle = 'rgba(20,8,0,.35)'; x.fillRect(bx, 0, 1.5, H);
+    x.strokeStyle = 'rgba(30,12,2,.12)'; x.lineWidth = 1;
+    for (let k = 0; k < 4; k++) { x.beginPath(); const sx = bx + 8 + k * 8; x.moveTo(sx, 0); for (let yy = 0; yy <= H; yy += 30) x.lineTo(sx + Math.sin((yy + i * 70 + k * 20) * .03) * 2, yy); x.stroke(); }
+  }
+  // Regalböden alle 160 px mit Broten in Körben
+  const reihe = (ry, variante) => {
+    // Inhalt
+    const korb = (kx, kw, kh) => {
+      x.beginPath(); x.moveTo(kx, ry - kh); x.lineTo(kx + kw, ry - kh); x.lineTo(kx + kw - 6, ry); x.lineTo(kx + 6, ry); x.closePath();
+      x.fillStyle = linear(0, ry - kh, 0, ry, [[0, '#C98E4A'], [1, '#7C4E1E']]); x.fill();
+      x.save(); x.clip(); x.strokeStyle = 'rgba(60,30,8,.4)'; x.lineWidth = 1;
+      for (let r = 0; r < kh / 7; r++) for (let k = 0; k < kw / 9 + 1; k++) { x.beginPath(); x.ellipse(kx + k * 9 + (r % 2) * 4.5, ry - kh + 4 + r * 7, 4, 2.4, 0, 0, 7); x.stroke(); }
+      x.restore();
+      holz(kx - 2, ry - kh - 3, kw + 4, 5, 2.5, '#D9A35C', '#8E5A26');
+    };
+    if (variante === 0) {
+      brot('baguette', 70, ry - 44, 70, 14, { rot: -1.2, schatten: false }); brot('baguette', 84, ry - 40, 66, 13, { rot: -1.0, schatten: false }); korb(46, 64, 24);
+      brot('laib', 165, ry - 20, 58, 38, { schatten: false }); brot('laib', 222, ry - 19, 54, 36, { schatten: false });
+      brot('broetchen', 280, ry - 32, 30, 20, { schatten: false }); brot('broetchen', 304, ry - 30, 30, 20, { schatten: false, mohn: true }); korb(264, 66, 20);
+    } else if (variante === 1) {
+      brot('stuten', 72, ry - 19, 70, 38, { schatten: false }); brot('krusti', 150, ry - 16, 64, 32, { schatten: false });
+      brot('brezel', 222, ry - 22, 46, 34, { schatten: false }); brot('brezel', 262, ry - 22, 46, 34, { schatten: false }); brot('brezel', 302, ry - 22, 46, 34, { schatten: false });
+    } else {
+      brot('krusti', 64, ry - 16, 64, 32, { schatten: false }); brot('krusti', 128, ry - 16, 60, 30, { schatten: false });
+      brot('broetchen', 196, ry - 30, 30, 20, { schatten: false }); brot('broetchen', 222, ry - 31, 30, 20, { schatten: false }); korb(180, 62, 20);
+      brot('stuten', 290, ry - 19, 70, 38, { schatten: false });
+    }
+    // Brett mit Kante und Schatten
+    x.fillStyle = 'rgba(20,8,0,.35)'; x.fillRect(14, ry + 10, W - 28, 10);
+    holz(10, ry, W - 20, 11, 2, '#B98450', '#7C5128');
+    x.fillStyle = 'rgba(255,235,200,.35)'; x.fillRect(10, ry, W - 20, 1.5);
+  };
+  reihe(150, 0); reihe(310, 1); reihe(470, 2);
+  // Seitenpfosten
+  [0, W - 16].forEach((px) => { x.fillStyle = linear(px, 0, px + 16, 0, [[0, '#5E3A1C'], [.4, '#A06C3C'], [1, '#4A2A14']]); x.fillRect(px, 0, 16, H); });
+  // Dunst: Regal nach hinten schieben
+  x.fillStyle = 'rgba(34,16,6,.52)'; x.fillRect(0, 0, W, H);
+  x.restore();
+  const l = document.createElement('canvas'); l.width = c.width; l.height = c.height; const lc = l.getContext('2d');
+  // leicht unscharf = Tiefe (wo der Browser es kann)
+  if ('filter' in lc) lc.filter = `blur(${(1.6 * c.width / W).toFixed(1)}px)`;
+  lc.drawImage(c, 0, 0); lc.filter = 'none';
+  STAP_BG.bild = l; STAP_BG.breite = c.width; STAP_BG.hoehe = c.height;
+}
+
+/** Ein (evtl. abgeschnittenes) Brot zeichnen: volles Brot bei fx mit Breite fw, sichtbar nur zwischen l und r */
+function stap_stueck(s, cy, { glanz = 0 } = {}){
+  const h = s.h;
+  x.save();
+  x.beginPath(); x.rect(s.l, cy - h, s.r - s.l, h * 2); x.clip();
+  brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
+  if (s.art === 'stuten') {
+    // aufgerissene Oberseite wie beim echten Stuten, dazu Backform-Kante
+    const ky = cy - h * .2, a = s.fw * .36;
+    x.lineCap = 'round';
+    x.strokeStyle = 'rgba(110,55,15,.5)'; x.lineWidth = 4; x.beginPath(); x.moveTo(s.fx - a, ky + 1); x.bezierCurveTo(s.fx - a * .4, ky - 3, s.fx + a * .4, ky + 3, s.fx + a, ky - 1); x.stroke();
+    x.strokeStyle = 'rgba(255,226,170,.9)'; x.lineWidth = 2; x.beginPath(); x.moveTo(s.fx - a, ky); x.bezierCurveTo(s.fx - a * .4, ky - 4, s.fx + a * .4, ky + 2, s.fx + a, ky - 2); x.stroke();
+    x.fillStyle = 'rgba(70,30,5,.22)'; x.fillRect(s.fx - s.fw / 2, cy + h * .3, s.fw, h * .2);
+  }
+  x.restore();
+  // Schnittflächen mit heller Krume
+  const flaeche = (kx, seite) => {
+    const u = klemm((kx - s.fx) / (s.fw / 2), -1, 1);
+    const rund = s.art === 'laib' || s.art === 'krusti';
+    const hh = rund ? h / 2 * Math.sqrt(Math.max(0, 1 - u * u)) : s.art === 'baguette' ? h / 2 * (Math.abs(u) > .8 ? Math.sqrt(Math.max(0, 1 - Math.pow((Math.abs(u) - .8) / .2, 2))) : 1) : h * .41;
+    if (hh < 2) return;
+    const my = s.art === 'stuten' ? cy + h * .09 : cy;
+    const fx = kx - seite * 2.6;
+    x.fillStyle = linear(fx - 3, my - hh, fx + 3, my + hh, s.art === 'laib' ? [[0, '#D8B48A'], [1, '#A9825A']] : [[0, '#FFF1D2'], [1, '#E5C48C']]);
+    x.beginPath(); x.ellipse(fx, my, 3.4, hh * .94, 0, 0, 7); x.fill();
+    x.fillStyle = 'rgba(150,100,50,.35)'; for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(fx + (i % 2 - .5), my - hh * .5 + i * hh * .32, .8, 0, 7); x.fill(); }
+  };
+  if (s.l > s.fx - s.fw / 2 + .8) flaeche(s.l, -1);
+  if (s.r < s.fx + s.fw / 2 - .8) flaeche(s.r, 1);
+  if (glanz > 0) {
+    x.save(); x.globalAlpha = glanz;
+    x.fillStyle = radial((s.l + s.r) / 2, cy, 4, (s.r - s.l) * .7, [[0, 'rgba(255,236,150,.85)'], [1, 'rgba(255,200,60,0)']]);
+    x.fillRect(s.l - 40, cy - h * 1.6, s.r - s.l + 80, h * 3.2);
+    x.restore();
+  }
+}
+
+SPIELE.stapler = {
+  key: 'stapler', name: 'Brot-Stapler', kurz: 'Stapeln',
+  anleitung: 'Das Brot schwingt oben hin und her. Tippe, damit es fällt. Was übersteht, bricht ab. Genau getroffen leuchtet es golden, nach drei Treffern in Folge geht das Brot wieder auf.',
+  start(){
+    this.stapel = [{ art: 'brett', l: 112, r: 248, fx: 180, fw: 136, h: 0, y: STAP_BRETT, sq: 0, glanz: 0 }];
+    this.oben = STAP_BRETT; this.kamera = 0; this.zeit = 0;
+    this.perfekt = 0; this.bonus = 0; this.anzahl = 0; this.stuecke = []; this.tot = -1; this.fertig = false; this.frageIn = -1;
+    this.rekordH = stap_rekordHoehe(); this.rekordGezeigt = false;
+    this.neuesBrot(STAP_MAX);
+  },
+  neuesBrot(w){
+    const n = this.anzahl, art = STAP_ARTEN[(n * 5 + ganz(0, 2)) % STAP_ARTEN.length];
+    const h = STAP_HOEHE[art];
+    const links = n % 2 === 0;
+    this.akt = { art, w, h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega: Math.min(4.1, 1.85 + n * .075), zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
+    this.akt.x = this.pendelX(this.akt);
+  },
+  pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
+  hangY(){ return this.oben - 96 - this.akt.h / 2; },
+  ganzesBrot(a){ return { art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
+  top(){ return this.stapel[this.stapel.length - 1]; },
+  punkte(){ return this.anzahl * 10 + this.bonus; },
+
+  runter(){
+    const a = this.akt;
+    if (this.tot >= 0 || !a || a.zustand !== 'haengt' || a.sperre > 0) return; // gerade erst erschienen: Doppeltippen zählt nicht
+    a.zustand = 'faellt'; a.y = this.hangY(); a.vy = 260;
+    this.seilWeg = 1;
+  },
+  taste(k){ if (k === ' ' || k === 'ArrowDown' || k === 'Enter') this.runter(); },
+
+  landen(){
+    const a = this.akt, t = this.top(), cy = this.oben - a.h / 2;
+    const al = a.x - a.w / 2, ar = a.x + a.w / 2;
+    const tm = (t.l + t.r) / 2;
+    let l = Math.max(al, t.l), r = Math.min(ar, t.r);
+    if (r - l < 4) {
+      // Daneben: Brot kippt herunter
+      const kippt = a.x < tm ? -1 : 1;
+      this.stuecke.push({ art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
+      this.tot = 0; wackeln(8); blitz(.25, '255,200,180');
+      schwebText('Daneben!', W / 2, cy + this.kamera - 60, F.rot, 24);
+      stap_rekordHoeheSetzen(this.anzahl);
+      return;
+    }
+    const neu = { art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0 };
+    const dx = a.x - tm;
+    if (Math.abs(dx) < 5.5) {
+      // Perfekt: einrasten, nichts bricht ab
+      this.perfekt++;
+      neu.fx = tm; neu.fw = a.w; neu.l = tm - a.w / 2; neu.r = tm + a.w / 2;
+      neu.glanz = 1;
+      const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
+      const sy = cy + this.kamera;
+      blitz(.18, '255,225,140');
+      teilchen(tm, sy, { n: 22, form: 'stern', tempo: 190, groesse: [2.5, 5.5], leben: [.5, .9], schwer: 260 });
+      schwebText(this.perfekt > 1 ? `Perfekt ×${this.perfekt}  +${10 + bon}` : `Perfekt! +${10 + bon}`, W / 2, sy - 56, '#B07A00', 22);
+      if (this.perfekt % 3 === 0) {
+        // Brot geht auf: wird breiter
+        const nw = Math.min(STAP_MAX, a.w + 16);
+        if (nw > a.w) { neu.fw = nw; neu.l = tm - nw / 2; neu.r = tm + nw / 2; neu.auf = 1; mehlWolke(tm, sy - 10, 12); setTimeout(() => schwebText('Geht auf! Breiter', W / 2, sy - 92, F.braun, 20), 260); }
+      }
+    } else {
+      this.perfekt = 0;
+      neu.fx = a.x; neu.fw = a.w; neu.l = l; neu.r = r;
+      const sy = cy + this.kamera;
+      // Überstand bricht ab
+      if (al < l - .5) { this.stuecke.push({ art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (ar > r + .5) { this.stuecke.push({ art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      schwebText('+10', a.x, sy - 40, F.gruen, 18);
+    }
+    this.stapel.push(neu); this.anzahl++;
+    this.oben = cy - a.h / 2;
+    if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
+    if (this.anzahl % 10 === 0) this.frageIn = .55;
+    this.neuesBrot(neu.r - neu.l);
+  },
+
+  tick(dt){
+    this.zeit += dt;
+    const a = this.akt;
+    // Kamera fährt mit
+    const ziel = Math.max(0, 300 - this.oben);
+    this.kamera += (ziel - this.kamera) * Math.min(1, dt * 3.5);
+    for (const s of this.stapel) { s.sq = Math.max(0, s.sq - dt * 3); s.glanz = Math.max(0, s.glanz - dt * 1.1); if (s.auf) s.auf = Math.max(0, s.auf - dt * 2.5); }
+    for (const p of this.stuecke) { p.vy += 1500 * dt; p.px += p.vx * dt; p.py += p.vy * dt; p.rot += p.vr * dt; }
+    this.stuecke = this.stuecke.filter((p) => p.py + this.kamera < H + 120);
+    this.seilWeg = Math.max(0, (this.seilWeg || 0) - dt * 3);
+
+    if (this.tot >= 0) {
+      this.tot += dt;
+      if (this.tot > 1.1 && !this.fertig) { this.fertig = true; const n = this.anzahl; ende(this.punkte(), n === 0 ? 'Kein Brot gestapelt. Gleich nochmal!' : `${n} ${n === 1 ? 'Brot' : 'Brote'} hoch gestapelt.`); }
+      this.hud(); return;
+    }
+    if (this.frageIn > 0) {
+      this.frageIn -= dt;
+      if (this.frageIn <= 0) {
+        this.frageIn = -1;
+        frage((ok) => {
+          if (ok) {
+            this.bonus += 50;
+            const t = this.top(), m = (t.l + t.r) / 2, nw = Math.min(STAP_MAX, t.r - t.l + 20);
+            t.fx = m; t.fw = nw; t.l = m - nw / 2; t.r = m + nw / 2; t.auf = 1; t.sq = 1;
+            this.akt.w = nw; this.akt.x = this.pendelX(this.akt); this.akt.sperre = .4;
+            schwebText('Richtig! +50, breiteres Brot', W / 2, 170, F.gruen, 18);
+            teilchen(m, this.oben + this.kamera, { n: 20, form: 'stern', tempo: 180, groesse: [3, 6] });
+          } else schwebText('Weiter geht\'s', W / 2, 170, F.braun, 20);
+        });
+      }
+    }
+    if (a.zustand === 'haengt') {
+      a.sperre = Math.max(0, a.sperre - dt); a.ein = Math.min(1, a.ein + dt * 4);
+      a.ph += a.omega * dt; a.x = this.pendelX(a);
+    } else if (a.zustand === 'faellt') {
+      a.vy += 2600 * dt; a.y += a.vy * dt;
+      if (a.y + a.h / 2 >= this.oben) { a.y = this.oben - a.h / 2; this.landen(); }
+    }
+    this.hud();
+  },
+  hud(){
+    const teile = [{ icon: 'flagge', text: `${this.anzahl} hoch` }];
+    if (this.perfekt >= 2) teile.push(`Perfekt ×${this.perfekt}`);
+    teile.push({ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') });
+    setHud(teile);
+  },
+
+  malen(t){
+    if (!STAP_BG.bild || STAP_BG.breite !== c.width || STAP_BG.hoehe !== c.height) stap_backen();
+    const kam = this.kamera || 0;
+    // Regal mit Parallaxe (senkrecht endlos)
+    const ky = c.height / H, o = ((kam * .45) % H + H) % H;
+    x.drawImage(STAP_BG.bild, 0, 0, STAP_BG.bild.width, STAP_BG.bild.height, 0, o - H, W, H + .5);
+    x.drawImage(STAP_BG.bild, 0, 0, STAP_BG.bild.width, STAP_BG.bild.height, 0, o, W, H);
+    void ky;
+    // Warmes Licht auf den Stapel
+    x.fillStyle = radial(W / 2, 250, 20, 300, [[0, 'rgba(255,214,140,.38)'], [.6, 'rgba(255,190,110,.12)'], [1, 'rgba(255,190,110,0)']]); x.fillRect(0, 0, W, H);
+
+    for (let i = 0; i < 18; i++) { const px = (zufallFest(i) * W + t * (6 + i % 5 * 3)) % W, py = ((zufallFest(i + 30) * H - t * (4 + i % 3 * 2) + kam * .7) % H + H) % H; x.globalAlpha = .25 + .2 * Math.sin(t * 2 + i); x.fillStyle = '#FFF3D6'; x.beginPath(); x.arc(px, py, 1 + (i % 3) * .5, 0, 7); x.fill(); }
+    x.globalAlpha = 1;
+    x.save(); x.translate(0, kam);
+    // Theke unten
+    const ty = STAP_BRETT + 14;
+    if (ty + kam < H + 10) {
+      x.fillStyle = linear(0, ty, 0, ty + 14, [[0, '#E8D3B0'], [1, '#C7A97C']]); x.fillRect(0, ty, W, 14);
+      x.fillStyle = 'rgba(255,255,255,.5)'; x.fillRect(0, ty, W, 1.5);
+      holz(0, ty + 14, W, 120, 0, '#9C6A3C', '#5E3A1C');
+      for (let i = 0; i < 4; i++) { rr(14 + i * 86, ty + 28, 74, 80, 6); x.strokeStyle = 'rgba(40,20,5,.35)'; x.lineWidth = 2; x.stroke(); x.strokeStyle = 'rgba(255,230,190,.15)'; x.lineWidth = 1; rr(15 + i * 86, ty + 29, 74, 80, 6); x.stroke(); }
+      // Brotbrett
+      bodenSchatten(180, ty + 2, 96, 8, .45);
+      holz(98, STAP_BRETT, 164, 14, 7, '#D7A266', '#8E5A2C');
+      x.fillStyle = '#5E3A1C'; x.beginPath(); x.ellipse(250, STAP_BRETT + 7, 4, 2.6, 0, 0, 7); x.fill();
+    }
+    // Höhenmarken links
+    const st = this.stapel || [];
+    for (let i = 5; i < st.length; i += 5) {
+      const sy = st[i].y - st[i].h / 2;
+      if (sy + kam < -20 || sy + kam > H + 20) continue;
+      x.strokeStyle = 'rgba(255,230,180,.35)'; x.setLineDash([4, 5]); x.lineWidth = 1.2; x.beginPath(); x.moveTo(20, sy); x.lineTo(70, sy); x.stroke(); x.setLineDash([]);
+      rr(20, sy - 11, 30, 18, 9); x.fillStyle = 'rgba(43,23,10,.8)'; x.fill();
+      text(String(i), 35, sy - 2, { gr: 11, farbe: '#FFE7A0', schat: false });
+    }
+    // Bestmarke
+    if (this.rekordH > 0 && st.length > this.rekordH) {
+      const s = st[this.rekordH], sy = s.y - s.h / 2;
+      if (sy + kam > -20 && sy + kam < H + 20) { x.strokeStyle = 'rgba(255,199,44,.85)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+    } else if (this.rekordH > 0 && laeuft) {
+      // Bestmarke liegt noch höher: Abstand schätzen
+      const sy = this.oben - (this.rekordH - this.anzahl) * 30;
+      if (sy + kam > 50 && sy + kam < H) { x.strokeStyle = 'rgba(255,199,44,.75)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+    }
+    // Stapel (nur sichtbare Brote), mit Kontaktschatten
+    for (let i = 1; i < st.length; i++) {
+      const s = st[i];
+      if (s.y + kam < -60 || s.y + kam > H + 60) continue;
+      x.fillStyle = 'rgba(30,12,2,.28)'; x.beginPath(); x.ellipse((s.l + s.r) / 2, s.y + s.h / 2 - 1, (s.r - s.l) * .46, 3.5, 0, 0, 7); x.fill();
+      const q = s.sq ? Math.sin(s.sq * Math.PI) * s.sq : 0, auf = s.auf ? ease.feder(1 - s.auf) : 1;
+      x.save(); const mx = (s.l + s.r) / 2, by = s.y + s.h / 2;
+      x.translate(mx, by); x.scale((1 + q * .07) * (s.auf ? .9 + .1 * auf : 1), 1 - q * .14); x.translate(-mx, -by);
+      stap_stueck(s, s.y, { glanz: s.glanz });
+      x.restore();
+    }
+    // Abgebrochene Stücke fallen mit Drehung
+    for (const p of this.stuecke || []) {
+      x.save(); x.translate(p.px, p.py); x.rotate(p.rot); x.translate(-p.px, -p.py);
+      stap_stueck(p, p.py); x.restore();
+    }
+    // Aktuelles Brot an der Schiene
+    const a = this.akt;
+    if (a && this.tot < 0) {
+      const hy = this.hangY(), rail = hy - 58;
+      if (a.zustand === 'haengt') {
+        const e = ease.feder(Math.min(1, a.ein));
+        // Fallhilfe: gestrichelte Linien zur Landestelle
+        x.strokeStyle = 'rgba(255,240,210,.28)'; x.setLineDash([3, 6]); x.lineWidth = 1.4;
+        x.beginPath(); x.moveTo(a.x - a.w / 2 + 3, hy + a.h / 2); x.lineTo(a.x - a.w / 2 + 3, this.oben); x.moveTo(a.x + a.w / 2 - 3, hy + a.h / 2); x.lineTo(a.x + a.w / 2 - 3, this.oben); x.stroke(); x.setLineDash([]);
+        x.fillStyle = 'rgba(20,8,0,.22)'; x.beginPath(); x.ellipse(a.x, this.oben - 1, a.w * .42, 4, 0, 0, 7); x.fill();
+        // Seile
+        x.strokeStyle = '#E8D7B4'; x.lineWidth = 1.6;
+        x.beginPath(); x.moveTo(a.x - 6, rail + 8); x.lineTo(a.x - a.w * .3, hy - a.h * .3); x.moveTo(a.x + 6, rail + 8); x.lineTo(a.x + a.w * .3, hy - a.h * .3); x.stroke();
+        x.save(); x.translate(a.x, hy); x.scale(e, e); x.rotate(-Math.cos(a.ph) * .06 * Math.min(1, a.omega / 3)); x.translate(-a.x, -hy);
+        x.globalAlpha = Math.min(1, a.ein * 2);
+        stap_stueck(this.ganzesBrot(a), hy + Math.sin(t * 3) * 1.5);
+        x.globalAlpha = 1; x.restore();
+        // kleine Klammern
+        [-1, 1].forEach((sg) => { x.fillStyle = linear(0, hy - a.h * .4, 0, hy - a.h * .2, [[0, '#FFE7A0'], [1, '#B98200']]); rr(a.x + sg * a.w * .3 - 4, hy - a.h * .42, 8, 7, 2); x.fill(); });
+      } else {
+        // Seile schnellen hoch
+        const s = this.seilWeg || 0;
+        if (s > 0) { x.strokeStyle = `rgba(232,215,180,${s})`; x.lineWidth = 1.6; x.beginPath(); x.moveTo(a.x - 6, rail + 8); x.lineTo(a.x - a.w * .3 * s, rail + 8 + (hy - rail) * s * .6); x.moveTo(a.x + 6, rail + 8); x.lineTo(a.x + a.w * .3 * s, rail + 8 + (hy - rail) * s * .6); x.stroke(); }
+        stap_stueck(this.ganzesBrot(a), a.y);
+      }
+      // Messingschiene mit Laufkatze
+      x.fillStyle = 'rgba(20,8,0,.3)'; x.fillRect(0, rail + 5, W, 4);
+      x.fillStyle = linear(0, rail - 4, 0, rail + 5, [[0, '#FFE9A8'], [.45, '#D9A22A'], [1, '#7A5208']]); x.fillRect(0, rail - 4, W, 9);
+      x.fillStyle = 'rgba(255,255,255,.55)'; x.fillRect(0, rail - 3, W, 1.2);
+      rr(a.x - 15, rail - 10, 30, 20, 6); x.fillStyle = linear(0, rail - 10, 0, rail + 10, [[0, '#7A4A22'], [1, '#3A2010']]); x.fill();
+      [-8, 8].forEach((d) => { x.fillStyle = '#2B170A'; x.beginPath(); x.arc(a.x + d, rail - 4, 4, 0, 7); x.fill(); x.fillStyle = '#D9A22A'; x.beginPath(); x.arc(a.x + d, rail - 4, 1.6, 0, 7); x.fill(); });
+    }
+    x.restore();
+    vignette(.4);
+    // Hinweis am Anfang
+    if (laeuft && this.anzahl === 0 && this.tot < 0) {
+      const al = .8 + Math.sin(t * 5) * .2;
+      x.globalAlpha = al; rr(110, 392, 140, 32, 16); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill();
+      text('Tippen = fallen lassen', 180, 408, { gr: 12.5, farbe: '#FFE7A0', schat: false }); x.globalAlpha = 1;
+    }
+  },
+
+  // Für das Prüfskript: tippen, wenn das Brot (fast) über dem Stapel ist; manchmal absichtlich ungenau
+  testZug(i){
+    const weg = { x: 180, y: 530, warte: 6 };
+    const a = this.akt;
+    if (!a || this.tot >= 0 || a.zustand !== 'haengt' || a.sperre > 0 || this.frageIn > 0) return weg;
+    const t = this.top(), m = (t.l + t.r) / 2;
+    const vorher = { ...a, ph: a.ph + a.omega * .03 };
+    const dx = this.pendelX(vorher) - m;
+    const toleranz = this.anzahl % 4 === 3 ? 24 : 5;
+    return Math.abs(dx) < toleranz ? { x: 180, y: 260, warte: 60 } : weg;
+  }
+};

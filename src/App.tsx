@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 265;
+const APP_VERSION: number = 266;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -48,6 +48,7 @@ const AllergenTrainerView = lazy(() => import('./games/AllergenTrainer').then((m
 const ThekenSaetzeSeite = lazy(() => import('./screens/ThekenSaetze').then((m) => ({ default: m.ThekenSaetzeSeite })));
 const RechenTrainerView = lazy(() => import('./games/RechenTrainer').then((m) => ({ default: m.RechenTrainerView })));
 const OfenKetteView = lazy(() => import('./games/OfenKette').then((m) => ({ default: m.OfenKetteView })));
+const AbschaltenSeite = lazy(() => import('./screens/AbschaltenSeite').then((m) => ({ default: m.AbschaltenSeite })));
 const TelefonBestellungView = lazy(() => import('./games/TelefonBestellung').then((m) => ({ default: m.TelefonBestellungView })));
 const PreisDuellView = lazy(() => import('./games/PreisDuell').then((m) => ({ default: m.PreisDuellView })));
 const SchneideProfiView = lazy(() => import('./games/SchneideProfi').then((m) => ({ default: m.SchneideProfiView })));
@@ -57,6 +58,7 @@ const StatistikView = lazy(() => import('./ui/statistik').then((m) => ({ default
 const EinarbeitungSeite = lazy(() => import('./screens/EinarbeitungSeite').then((m) => ({ default: m.EinarbeitungSeite })));
 import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
 import { AdventView, AdventDone } from './games/Advent';
+import { rekordMerken } from './hilfen/abschalten';
 import { ADVENT_PUNKTE, ADVENT_FINALE, adventBelohnung, belohnungGutschreiben, finaleGutschreiben, type AdventBelohnung } from './hilfen/advent';
 import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
 import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
@@ -2800,6 +2802,7 @@ export default function App() {
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'saetze' && <ThekenSaetzeSeite onBack={() => setActiveTab('nachschlagen')} />}
         {activeTab === 'rechnen' && <RechenTrainerView onSaveScore={saveScoreToLeaderboard} />}
+        {activeTab === 'abschalten' && <AbschaltenSeite progress={cloudData.progress || {}} userKey={userKeyLower} fragen={questions} onBack={() => setActiveTab('spielen')} onRekord={(key, punkte) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); rekordMerken(pr, key, punkte); return curr; }); }} />}
         {activeTab === 'ofen' && <OfenKetteView images={productImages} scores={cloudData.scores || []} userKey={userKeyLower} onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'schneiden' && <SchneideProfiView images={spielBilder} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}

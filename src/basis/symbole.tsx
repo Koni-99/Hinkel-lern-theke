@@ -106,6 +106,8 @@ export const ICON = {
   heart: ['M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z'],
   pause: ['M7 4h3v16H7z', 'M14 4h3v16h-3z'],
   download: ['M12 3v12', 'm7 10 5 5 5-5', 'M5 21h14'],
+  truck: ['M2 6h12v10H2z', 'M14 9h4l3 4v3h-7z', 'M6 19a2 2 0 1 0 0-4a2 2 0 0 0 0 4z', 'M17 19a2 2 0 1 0 0-4a2 2 0 0 0 0 4z'],
+  target: ['M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18z', 'M12 16a4 4 0 1 0 0-8a4 4 0 0 0 0 8z', 'M12 12h.01'],
   skipBack: ['M19 20 9 12l10-8z', 'M5 19V5'],
   skipFwd: ['M5 4l10 8-10 8z', 'M19 5v14'],
 };
@@ -114,7 +116,7 @@ export const ICON = {
 export const GAME_ICON: Record<string, string[]> = {
   'Theken-Simulator': ICON.bell, 'Welches Brot ist das?': ICON.camera, 'Allergene-Training': ICON.shield, 'Quiz Battle': ICON.swords,
   Kassenblitz: ICON.coins, 'Theken-Ansturm': ICON.users, 'Tüten-Blitz': ICON.bag, 'Alternativen-Jäger': ICON.swap,
-  'Teurer oder billiger?': ICON.scale, 'Telefon-Bestellung': ICON.phone, 'Ofen-Kette': ICON.flame, 'Rechen-Trainer': ICON.calc, 'Schneide-Profi': ICON.knife, Adventskalender: ICON.calendar,
+  'Teurer oder billiger?': ICON.scale, 'Telefon-Bestellung': ICON.phone, 'Ofen-Kette': ICON.flame, 'Teigi-Lauf': ICON.flag, 'Backstuben-Chaos': ICON.users, 'Lieferwagen-Tour': ICON.truck, 'Schädlinge abwehren': ICON.shield, 'Teig-Schleuder': ICON.target, 'Brot-Stapler': ICON.bread, 'Rechen-Trainer': ICON.calc, 'Schneide-Profi': ICON.knife, Adventskalender: ICON.calendar,
 };
 
 export const MENU_ICON: Record<string, string[]> = {
