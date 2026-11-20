@@ -443,12 +443,12 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-kopf-aehren .lt-papier.lt-wx-halo,.lt-kopf-mitaehren .lt-papier.lt-wx-halo{width:190% !important;height:135% !important;background:radial-gradient(closest-side,rgba(255,199,44,.75),rgba(234,179,8,.35) 55%,rgba(234,179,8,0))}
 /* Version 231: Teigi begleitet beim Lernen und Spielen (unten links, Sprechblase daneben, Seite bekommt unten Platz) */
 body.lt-mit-teigi main{padding-bottom:100px}
-.lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:95;display:flex;flex-direction:row-reverse;align-items:flex-end;gap:6px;pointer-events:none}
+.lt-teigi-begleiter{position:fixed;left:10px;bottom:calc(env(safe-area-inset-bottom, 0px) + 98px);z-index:95;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none}
 .lt-papier.lt-teigi-begleiter>button{pointer-events:auto;flex:0 0 auto;border:none;background:none;width:72px;height:76px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
 .lt-papier.lt-teigi-begleiter svg.lt-teigi{filter:drop-shadow(0 0 2px #FFE58A) drop-shadow(0 0 7px rgba(255,199,44,.85)) drop-shadow(0 4px 6px rgba(31,20,12,.35))}
 
-.lt-papier .lt-teigi-sprech{max-width:200px;margin-bottom:30px;padding:8px 12px;border-radius:16px 16px 16px 4px;background:#FFFBF2;color:#2B170A;font-size:14px;font-weight:700;line-height:1.3;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);border:2px solid #FFC72C;animation:ltTeigiSprech 2.8s ease forwards}
-@keyframes ltTeigiSprech{0%{opacity:0;transform:translateX(-8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+.lt-papier .lt-teigi-sprech{max-width:200px;margin-bottom:4px;padding:8px 12px;border-radius:16px 16px 16px 4px;background:#FFFBF2;color:#2B170A;font-size:14px;font-weight:700;line-height:1.3;box-shadow:0 6px 16px -6px rgba(31,20,12,.45);border:2px solid #FFC72C;animation:ltTeigiSprech 2.8s ease forwards}
+@keyframes ltTeigiSprech{0%{opacity:0;transform:translateY(8px) scale(.9)}10%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 .lt-teigi-hops{animation:ltTeigiHops .7s cubic-bezier(.3,1.6,.5,1)}
 .lt-teigi-begleiter.lt-teigi-spricht{z-index:130}
 .lt-papier .lt-teigi-mund-spricht{transform-box:fill-box;transform-origin:50% 35%;animation:ltTeigiPlapper .46s ease-in-out infinite}
@@ -457,7 +457,7 @@ body.lt-mit-teigi main{padding-bottom:100px}
 @keyframes ltTeigiHops{0%{transform:translateY(0)}35%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(0) rotate(4deg)}100%{transform:none}}
 .lt-teigi-traurig{animation:ltTeigiTraurig .8s ease}
 @keyframes ltTeigiTraurig{0%,100%{transform:none}25%{transform:translateX(-4px) rotate(-4deg)}50%{transform:translateX(4px) rotate(4deg)}75%{transform:translateX(-2px)}}
-@media (min-width:1180px){.lt-teigi-begleiter{bottom:24px;left:auto;right:24px;flex-direction:row}.lt-papier .lt-teigi-sprech{border-radius:16px 16px 4px 16px}body.lt-mit-teigi main{padding-bottom:0}}
+@media (min-width:1180px){.lt-teigi-begleiter{bottom:24px;left:auto;right:24px;flex-direction:row;align-items:flex-end}.lt-papier .lt-teigi-sprech{border-radius:16px 16px 4px 16px;margin-bottom:30px}body.lt-mit-teigi main{padding-bottom:0}}
 .lt-teigi-dreh{animation:ltTeigiDreh .8s cubic-bezier(.3,1.3,.5,1)}
 @keyframes ltTeigiDreh{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
 .lt-teigi-tanz{animation:ltTeigiTanz .9s ease-in-out}
@@ -717,7 +717,6 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
   .lt-ansturm-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;gap:6px !important}.lt-ansturm-grid button{padding:2px !important;border-radius:10px !important;min-width:0 !important}.lt-ansturm-grid span{font-size:12px !important;overflow-wrap:anywhere;hyphens:auto}
   .lt-ansturm-order{position:sticky;top:6px;z-index:5;background:#FFFFFF;padding:6px 0;margin:-6px 0}
   .lt-statchip{min-width:0 !important;padding:6px 8px !important;border-radius:12px !important}.lt-statchip>div:first-child{font-size:11px !important;letter-spacing:0 !important}.lt-statchip>div:last-child{font-size:22px !important}
-  .lt-float-report{writing-mode:horizontal-tb !important;transform:none !important;top:auto !important;bottom:96px !important;right:8px !important;border-radius:999px !important;border:2px solid #E2D2B6 !important;padding:6px 12px !important;font-size:13px !important;box-shadow:0 4px 12px rgba(75,42,20,.18)}
   .lt-headbtns{gap:5px !important}
   .lt-headbtns>button{padding:0 9px !important;min-height:44px !important;font-size:15px !important;white-space:nowrap}
   .lt-desknav{display:none}
@@ -735,7 +734,6 @@ html .lt-root svg.lt-wheel-spin,html.lt-noanim svg.lt-wheel-spin,html.lt-noanim 
   .lt-bon{width:100%;max-width:340px;font-size:16px}
   .lt-band{padding:22px !important}
   .lt-sticky-next{bottom:104px}
-  .lt-float-report{top:auto !important;font-size:13px !important;padding:6px 12px !important}
   .lt-expl{scroll-margin-bottom:220px}
 }
 

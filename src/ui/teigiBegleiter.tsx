@@ -16,7 +16,8 @@ const zufall = (liste: string[]) => {
   letzter = auswahl[Math.floor(Math.random() * auswahl.length)];
   return letzter;
 };
-const RICHTIG = [
+/** Version 270: zur Zeit nicht benutzt (Teigi redet nur bei Serien), bleibt für später */
+export const RICHTIG = [
   'Lecker!', 'Genau so!', 'Stark!', 'Das sitzt!', 'Mmh, richtig!', 'Super gemacht!', 'Ich blubber vor Freude!',
   'Knusprig gelöst!', 'Goldbraun, perfekt!', 'Frisch aus dem Ofen: richtig!', 'Da geht mir der Teig auf!',
   'Volltreffer!', 'Du weißt Bescheid!', 'Wie aus dem Bilderbuch!', 'Das hätte ich nicht besser gewusst!',
@@ -25,7 +26,7 @@ const RICHTIG = [
   'Das merkt man, du lernst fleißig!', 'Weiter so, ich bin stolz!', 'Ofenfrisch und richtig!', 'Ganz meine Meinung!',
   'Da klatsche ich mit meinem Deckel!', 'Sauber!', 'Spitze!', 'Klasse!', 'Richtig gut!', 'Wow!',
 ];
-const FALSCH = [
+export const FALSCH = [
   'Nicht schlimm, nächstes Mal!', 'Lies dir die Erklärung durch.', 'Auch Teig braucht Zeit.', 'Kopf hoch, weiter geht’s!',
   'Das merken wir uns.', 'Fehler machen schlau!', 'Knapp daneben ist auch vorbei, aber egal!', 'Beim nächsten Mal sitzt es!',
   'Auch der beste Bäcker hat mal ein Brot verbrannt.', 'Gleich nochmal, du schaffst das!', 'Hmm, das war knifflig.',
@@ -54,8 +55,9 @@ const START = [
 export const teigiSpruch = (m: TeigiMeldung, zahl = Math.random()): string | null => {
   if (m.ok && SERIE[m.lauf]) return zufall(SERIE[m.lauf]);
   if (m.ok && m.lauf > 20 && m.lauf % 10 === 0) return `${m.lauf} in Folge! Wahnsinn!`;
-  if (!m.ok) return zahl < 0.75 ? zufall(FALSCH) : null;
-  return zahl < 0.5 ? zufall(RICHTIG) : null; // nicht bei jeder richtigen Antwort reden
+  // Version 270: sonst still (Nutzer: im Spiel passierte zu viel auf einmal). Er hüpft oder schaut traurig, redet aber nicht.
+  void zahl;
+  return null;
 };
 
 export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?: string | null; glas?: string | null; tanz?: string | null }) {

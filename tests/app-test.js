@@ -976,6 +976,35 @@ async function offlineTests() {
     ok('Abschalten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 270: Spiele aufgeräumt (eine Plakette ohne Emoji, Teigi redet nur bei Serien, Blase über Teigi, runder Melde-Knopf)
+  teile.push(['Version 270: Spiele aufgeräumt', async () => {
+    const T = kompiliere(['src/ui/teigiBegleiter.tsx']).ui_teigiBegleiter;
+    ok('Teigi: redet bei falsch und einzelnen richtigen Antworten nicht mehr, nur bei Serien', T.teigiSpruch({ ok: false, lauf: 0 }, 0) === null && T.teigiSpruch({ ok: true, lauf: 2 }, 0) === null && !!T.teigiSpruch({ ok: true, lauf: 5 }, 0));
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => { await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__kb')) { sessionStorage.setItem('__kb', '1'); sessionStorage.setItem('lt_seite', 'kassenblitz'); } } catch {} }); } });
+    await clearPopups(d.page);
+    const start = d.page.locator('main button:visible', { hasText: /starten/i });
+    for (let w = 0; w < 40 && !(await start.count()); w++) await sleep(100);
+    if (await start.count()) { await click(start.first()); await settle(d.page, 500); }
+    const opt = d.page.locator('main button:visible', { hasText: /^\s*\d+,\d\d\s*€/ });
+    for (let w = 0; w < 50 && !(await opt.count()); w++) await sleep(100);
+    await click(opt.first());
+    let fx = 0;
+    for (let w = 0; w < 30 && !fx; w++) { fx = await d.page.locator('.lt-fx > span').count(); if (!fx) await sleep(50); }
+    const fxText = await d.page.locator('.lt-fx > span').first().innerText().catch(() => '');
+    ok('Nach der Antwort nur eine Plakette, ohne Emoji', fx === 1 && !/[\u{1F300}-\u{1FAFF}✀-➿]/u.test(fxText) && /Stimmt|Daneben/.test(fxText), `${fx}: ${fxText}`);
+    const melde = d.page.locator('.lt-float-report');
+    if (await melde.count()) { const b = await melde.boundingBox(); ok('Fehler melden: kleiner runder Knopf', b && b.width <= 48 && b.height <= 48, JSON.stringify(b)); }
+    const teigi = d.page.locator('.lt-teigi-begleiter');
+    if (await teigi.count()) {
+      await click(teigi.locator('button'));
+      const blase = d.page.locator('.lt-teigi-sprech');
+      for (let w = 0; w < 30 && !(await blase.count()); w++) await sleep(50);
+      const bb = await blase.boundingBox(), tb = await teigi.locator('button').boundingBox();
+      ok('Teigis Sprechblase steht über Teigi, nicht daneben', bb && tb && bb.y + bb.height <= tb.y + 4, JSON.stringify([bb, tb]));
+    }
+    ok('Version 270: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 269: Wochen-Bestenliste, Herausforderung geschlagen, Sammlung, sanfter Start
   teile.push(['Version 269: Woche, Geschlagen, Sammlung', async () => {
     const A = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts']).hilfen_abschalten;

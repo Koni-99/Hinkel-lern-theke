@@ -16,10 +16,10 @@ export type AnswerFxState = { k: number; ok: boolean; text: string; streak?: num
  * Der Container drumherum braucht position: relative. Mit k wird die Animation bei jeder Antwort neu gestartet.
  */
 export const FX_CSS = `
-@keyframes ltFxFloat{0%{opacity:0;transform:translateY(14px) scale(.7)}10%{opacity:1;transform:translateY(0) scale(1.12)}18%{transform:scale(1)}82%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-18px)}}
+@keyframes ltFxFloat{0%{opacity:0;transform:translateY(10px) scale(.85)}14%{opacity:1;transform:translateY(0) scale(1.04)}24%{transform:scale(1)}78%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}
 .lt-fx{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 72px);left:50%;transform:translateX(-50%);z-index:1150;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;width:max-content;max-width:92vw}
-.lt-fx>span{animation:ltFxFloat 3.2s ease forwards}
-@media (prefers-reduced-motion:reduce){.lt-fx>span{animation:ltFxFade 3.2s ease forwards}}
+.lt-fx>span{animation:ltFxFloat 1.6s ease forwards}
+@media (prefers-reduced-motion:reduce){.lt-fx>span{animation:ltFxFade 1.6s ease forwards}}
 @keyframes ltFxFade{0%,85%{opacity:1}100%{opacity:0}}
 `;
 
@@ -53,7 +53,10 @@ export function comboTake(roundScore: number): number {
 
 export function comboReset() { try { document.body.classList.remove('lt-hot'); } catch { /* egal */ } comboRun = 0; comboMultSum = 0; comboHits = 0; comboExact = 0; comboExactHits = 0; }
 
-export function AnswerFx({ fx, streakIcon = '🔥' }: { fx: AnswerFxState; streakIcon?: string; pos?: 'top' | 'bottom' }) {
+/** Emojis und Zeichen wie ✓/✗ aus dem Text der Plakette entfernen */
+export const ohneEmoji = (t: string) => String(t || '').replace(/[\p{Extended_Pictographic}\u2700-\u27BF\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim();
+
+export function AnswerFx({ fx }: { fx: AnswerFxState; streakIcon?: string; pos?: 'top' | 'bottom' }) {
   const fxKey = fx ? `${fx.k}|${fx.ok}` : null;
   useEffect(() => {
     if (!fx) return;
@@ -66,10 +69,8 @@ export function AnswerFx({ fx, streakIcon = '🔥' }: { fx: AnswerFxState; strea
   return (
     <div key={fx.k} className="lt-fx" aria-hidden="true">
       <style>{FX_CSS}</style>
-      <span style={{ padding: '10px 20px', borderRadius: '999px', backgroundColor: fx.ok ? TH.green : TH.red, color: dc('#FFFFFF'), fontWeight: 700, fontSize: '20px', boxShadow: '0 10px 24px -6px rgba(0,0,0,.4)', whiteSpace: 'nowrap' }}>{fx.text}</span>
-      {fx.ok && (fx.streak || 0) >= 3 && (
-        <span style={{ padding: '8px 16px', borderRadius: '999px', backgroundColor: dc('#FCE1D2'), color: dc('#C2410C'), fontWeight: 700, fontSize: '18px', animationDelay: '.15s', opacity: 0, animationFillMode: 'forwards', boxShadow: '0 8px 18px -8px rgba(0,0,0,.3)' }}>{streakIcon} {fx.streak} in Folge!</span>
-      )}
+      {/* Version 270: nur noch eine ruhige Plakette, ohne Emoji, mit Serie dahinter */}
+      <span style={{ padding: '7px 16px', borderRadius: '999px', backgroundColor: fx.ok ? TH.green : TH.red, color: dc('#FFFFFF'), fontWeight: 700, fontSize: '16px', boxShadow: '0 6px 16px -6px rgba(0,0,0,.35)', whiteSpace: 'nowrap' }}>{ohneEmoji(fx.text)}{fx.ok && (fx.streak || 0) >= 3 ? ` · ${fx.streak} in Folge` : ''}</span>
     </div>
   );
 }
