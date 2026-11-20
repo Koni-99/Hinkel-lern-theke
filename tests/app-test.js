@@ -820,7 +820,9 @@ async function offlineTests() {
   // Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz
   teile.push(['Version 229: Hinweis-Joker und Zweite Chance im Lernen-Quiz', async () => {
     const Q = kompiliere(['src/daten/questions.ts']).daten_questions;
-    const richtig = new Map(); (Q.questions || []).forEach((q) => { if (!(Array.isArray(q.correctMulti) && q.correctMulti.length > 1)) richtig.set(q.question.trim(), q.options[q.correct]); });
+    // Es gibt Fragen mit gleichem Text, aber anderen Antworten: passende Frage über die sichtbaren Antworten finden (Version 270)
+    const ohneBuchstabe = (t) => String(t).replace(/^[A-D]\s*\n?/, '').trim();
+    const richtigeAntworten = (frage, sichtbar) => (Q.questions || []).filter((q) => q.question.trim() === frage && !(Array.isArray(q.correctMulti) && q.correctMulti.length > 1) && sichtbar.every((v) => q.options.some((o) => String(o).trim() === ohneBuchstabe(v)))).map((q) => String(q.options[q.correct]).trim());
     const probe = JSON.parse(JSON.stringify(SAMPLE));
     probe.progress.anna = { ...probe.progress.anna, _jokersHinweis: 2, _jokersChance: 1 };
     const d = await device({ user: 'Anna', backup: probe });
@@ -838,9 +840,9 @@ async function offlineTests() {
     await click(d.page.locator('.lt-joker-chance').first()); await settle(d.page, 300);
     const an = (await d.page.locator('.lt-chance-an').count()) > 0;
     const frage = (await d.page.locator('.lt-frage').first().innerText()).trim();
-    const ziel = String(richtig.get(frage) || '');
     const texte = await opts.allInnerTexts();
-    const falsch = texte.findIndex((t) => ziel && !t.includes(ziel));
+    const ziele = richtigeAntworten(frage, texte);
+    const falsch = ziele.length ? texte.findIndex((t) => !ziele.includes(ohneBuchstabe(t))) : -1;
     if (falsch >= 0) { await click(opts.nth(falsch)); await settle(d.page, 400); }
     const nochOffen = (await d.page.locator('.lt-qcard.lt-ans-bad, .lt-qcard.lt-ans-ok').count()) === 0;
     ok('Zweite Chance: falsche Antwort zählt nicht, man darf nochmal', an && falsch >= 0 && nochOffen && (await opts.count()) === nachHinweis - 1 && (await d.page.locator('.lt-chance-an').count()) === 0, `an ${an}, offen ${nochOffen}, ${await opts.count()} Antworten`);
@@ -849,8 +851,8 @@ async function offlineTests() {
     ok('Teigi begleitet im Quiz (jeder hat ihn, ohne Kauf)', (await begleiter.count()) === 1);
     const opts2 = d.page.locator('button.lt-qopt:visible');
     const frage2 = (await d.page.locator('.lt-frage').first().innerText()).trim();
-    const ziel2 = String(richtig.get(frage2) || '');
-    const r2 = (await opts2.allInnerTexts()).findIndex((t) => ziel2 && t.includes(ziel2));
+    const texte2 = await opts2.allInnerTexts(), ziele2 = richtigeAntworten(frage2, texte2);
+    const r2 = ziele2.length === 1 ? texte2.findIndex((t) => ohneBuchstabe(t) === ziele2[0]) : -1;
     let hops = 0;
     if (r2 >= 0) { await click(opts2.nth(r2)); for (let i = 0; i < 40 && !hops; i++) { hops = await d.page.locator('.lt-teigi-begleiter .lt-teigi-hops').count(); if (!hops) await d.page.waitForTimeout(50); } }
     ok('Teigi hüpft bei einer richtigen Antwort', hops === 1);
