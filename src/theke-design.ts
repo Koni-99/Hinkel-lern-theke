@@ -39,11 +39,6 @@ export const buildLtCss = (kueken: string): string => `
 .lt-wrong{animation:ltShake .45s ease}
 .lt-ans-ok{animation:ltAnsOk .9s ease}@keyframes ltAnsOk{0%{box-shadow:0 0 0 0 rgba(46,160,67,.0)}25%{box-shadow:0 0 0 6px rgba(46,160,67,.55),0 0 34px rgba(46,160,67,.45)}100%{box-shadow:0 0 0 0 rgba(46,160,67,0)}}
 .lt-ans-bad{animation:ltShake .45s ease}
-.lt-bag-rare .lt-bag-body{background:linear-gradient(110deg,#B8860B 0,#FFE27A 22%,#FFF6C8 35%,#E8B923 50%,#FFF0A8 65%,#C9971C 100%);background-size:200% 100%;animation:ltRareShine 2.2s linear infinite}
-.lt-bag-open.lt-bag-rare .lt-bag-body{animation:ltBagPeel .85s cubic-bezier(.5,0,.7,.4) forwards}
-@keyframes ltRareShine{from{background-position:0 0}to{background-position:-200% 0}}
-.lt-rare-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);z-index:6;padding:4px 12px;border-radius:999px;background:linear-gradient(90deg,#7B2FF7,#C21E8E);color:#fff;font-weight:800;font-size:13px;letter-spacing:1px;white-space:nowrap;box-shadow:0 4px 10px rgba(120,30,160,.4);animation:ltRarePulse 1.2s ease-in-out infinite}
-@keyframes ltRarePulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.08)}}
 
 .lt-snowcap{position:absolute;left:0;right:0;top:0;height:7px;background:linear-gradient(#FFFFFF,#F1F5FA);box-shadow:0 1px 0 rgba(150,170,190,.5)}
 .lt-drip{position:absolute;top:14px;width:6px;height:10px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:linear-gradient(#CFE6F7,#7DB9F0);opacity:0;animation:ltDrip 2s ease-in infinite;pointer-events:none;z-index:2}
@@ -81,15 +76,6 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-menu-row:hover{background:rgba(255,199,44,.14)}
 .lt-menu-row+.lt-menu-row{border-top:1px solid rgba(75,42,20,.08)}
 .lt-menu-lead{flex:1;min-width:16px;border-bottom:2px dotted rgba(75,42,20,.35);margin:0 4px;transform:translateY(-5px)}
-.lt-bag{position:absolute;inset:-6px;z-index:5;border:none;padding:0;background:transparent;cursor:pointer}
-.lt-bag-body{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(90deg,#E9AE00 0,#FFCB12 12%,#FFD83A 45%,#FFCD12 80%,#DDA200 100%);color:#4B2A14;border-radius:16px;box-shadow:inset 0 -10px 18px rgba(0,0,0,.12);clip-path:polygon(0 0,calc(100% - 40px) 0,100% 40px,100% 100%,0 100%);transform-origin:0 100%}
-.lt-bag-body::after{content:'';position:absolute;top:0;bottom:0;left:22%;width:16%;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.22),rgba(255,255,255,0));pointer-events:none}
-.lt-bag-top{position:absolute;right:0;top:0;width:40px;height:40px;background:linear-gradient(225deg,transparent 50%,#C99300 50%,#F5D46A);border-radius:0 0 0 8px;box-shadow:-3px 3px 5px rgba(0,0,0,.18);z-index:1;transform-origin:100% 0;animation:ltEarWiggle 2.4s ease-in-out infinite}
-@keyframes ltEarWiggle{0%,80%,100%{transform:none}88%{transform:scale(1.18)}94%{transform:scale(1.05)}}
-.lt-bag-open .lt-bag-top{animation:ltEarPeel .35s ease-in forwards}
-@keyframes ltEarPeel{to{transform:scale(2.4);opacity:0}}
-.lt-bag-open .lt-bag-body{animation:ltBagPeel .85s cubic-bezier(.5,0,.7,.4) forwards}
-@keyframes ltBagPeel{0%{transform:none}25%{transform:rotate(-4deg)}100%{transform:translate(-40%,90%) rotate(-28deg);opacity:0}}
 @keyframes ltTearTop{0%{transform:none}30%{transform:rotate(-4deg) translateY(-4px)}100%{transform:translate(70px,-90px) rotate(25deg);opacity:0}}
 @keyframes ltBagDown{0%,30%{transform:translateY(0)}100%{transform:translateY(130%);opacity:0}}
 .lt-stamp{aspect-ratio:1;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
@@ -695,7 +681,7 @@ html.lt-pt_mk_nacht .lt-awning-edge{background-image:none !important;background-
 @keyframes ltKuekenUp{0%{transform:translateY(16px);opacity:0}60%{transform:translateY(-4px);opacity:1}100%{transform:none}}
 .lt-hero-cta:active .lt-cta-btn{transform:translateY(3px);box-shadow:0 2px 0 #B98A0A !important}
 /* Noch weniger Bewegung: nichts läuft dauerhaft */
-.lt-bag-top,.lt-deal,.lt-wheel-idle svg,.lt-bulb,.lt-duel-badge,.lt-overtake-ic,.lt-login-today,.lt-osterei,.lt-pfad-fig,.lt-pfad-cur{animation:none !important}
+.lt-deal,.lt-wheel-idle svg,.lt-bulb,.lt-duel-badge,.lt-overtake-ic,.lt-login-today,.lt-osterei,.lt-pfad-fig,.lt-pfad-cur{animation:none !important}
 .lt-dialog .lt-emo-bob,.lt-dialog .lt-emo-shake,.lt-dialog .lt-emo-twinkle,.lt-dialog [class^="lt-fx-"],.lt-root h1 [class^="lt-fx-"],.lt-root .lt-emo-bob,.lt-root .lt-emo-shake,.lt-root .lt-emo-twinkle,.lt-root .lt-emo-spin2{animation-iteration-count:1 !important}
 .lt-card:hover{transform:none}
 /* Hochwertigere Flächen: feine Ränder, einheitliche Ecken, weiche Tiefe statt dicker Kanten */

@@ -1,7 +1,7 @@
 // ═══ Rubbellos, Abzeichen-Album, Profil, Jahresrückblick ═══
 // Vorher in components/minigameUtils.tsx. Inhalt unverändert übernommen.
 import { useState, useRef, useEffect } from 'react';
-import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, BAG_LOGO, KUEKEN_IMG, ConfettiOverlay } from './basis';
+import { TH, cardStyle, btnPrimary, btnSecondary, PageHead, ConfettiOverlay } from './basis';
 import type { Badge } from './lernstand';
 
 // ───────── Rubbellos ─────────
@@ -37,57 +37,191 @@ export function LosIcon3D({ id }: { id: string }) {
   );
 }
 
-export function ScratchCard({ prize, onRevealed }: { prize: LosPrize; onRevealed: () => void }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-  const drawing = useRef(false);
-  const doneRef = useRef(false);
-  const [done, setDone] = useState(false);
-  const [bag, setBag] = useState<'zu' | 'reisst' | 'offen'>('zu');
-  useEffect(() => {
-    const c = ref.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    c.width = 300; c.height = 180;
-    const rare = prize.id === 'p5000';
-    const g = ctx.createLinearGradient(0, 0, 300, 180);
-    if (rare) { g.addColorStop(0, '#6A1FD1'); g.addColorStop(0.5, '#E6B3FF'); g.addColorStop(1, '#A0187A'); }
-    else { g.addColorStop(0, '#E0A400'); g.addColorStop(0.45, '#FFE58A'); g.addColorStop(0.55, '#FFF3C4'); g.addColorStop(1, '#C98A00'); }
-    ctx.fillStyle = g; ctx.fillRect(0, 0, 300, 180);
-    if (rare) { ctx.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc((i * 73) % 300, (i * 47) % 180, 1.5 + (i % 3), 0, Math.PI * 2); ctx.fill(); } }
-    ctx.fillStyle = rare ? 'rgba(255,255,255,.95)' : 'rgba(75,42,20,.8)'; ctx.font = '800 22px "Bricolage Grotesque", sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(rare ? 'Goldlos: hier rubbeln' : 'Hier rubbeln', 150, 98);
-  }, []);
-  const scratch = (e: any) => {
-    if (!drawing.current || doneRef.current) return;
-    const c = ref.current; if (!c) return;
-    const ctx = c.getContext('2d'); if (!ctx) return;
-    const r = c.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * 300, y = ((e.clientY - r.top) / r.height) * 180;
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath(); ctx.arc(x, y, 26, 0, Math.PI * 2); ctx.fill();
-    const data = ctx.getImageData(0, 0, 300, 180).data;
-    let clear = 0; for (let i = 3; i < data.length; i += 64) if (data[i] === 0) clear++;
-    if (clear / (data.length / 64) > 0.45) { doneRef.current = true; setDone(true); ctx.clearRect(0, 0, 300, 180); onRevealed(); }
+// Version 263: Rubbellos mit drei Feldern (Nutzer wählte Vorschlag C): drei runde Goldfelder freirubbeln,
+// drei gleiche Bilder = Gewinn. Sind die ersten zwei gleich, leuchtet das dritte Feld. Bei einer Niete sind die Bilder
+// nicht alle gleich. Der Gewinn ist vorher gezogen und schon gutgeschrieben (wie bisher). Krümel beim Rubbeln,
+// die Folie bröckelt ab, Strahlen und Funken bei Gewinn. Farben stehen als Klassen im <style> (mit lt-papier),
+// damit sie im dunklen Design echt bleiben.
+const LOS_CSS = `
+.lt-papier.lt-los3{position:relative;overflow:hidden;width:100%;max-width:330px;aspect-ratio:330/200;border-radius:14px;background:#FFFDF6;color:#2B170A;box-shadow:0 1px 2px rgba(31,20,12,.06),0 14px 28px -14px rgba(31,20,12,.5)}
+.lt-papier.lt-los3 .lt-los3-rand{position:absolute;inset:0;border-radius:14px;overflow:hidden;pointer-events:none}
+.lt-papier.lt-los3 .lt-los3-kopf{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;justify-content:center;gap:8px;background:#FFC72C;font-weight:800;font-size:13px;letter-spacing:2.5px;color:#4B2A14}
+.lt-papier.lt-los3 .lt-los3-kopf i{font-style:normal;font-weight:600;letter-spacing:0}
+.lt-papier.lt-los3.lt-los3-rare .lt-los3-kopf{background:linear-gradient(90deg,#6A1FD1,#C21E8E);color:#FFFFFF}
+.lt-papier.lt-los3 .lt-los3-felder{position:absolute;left:12px;right:12px;top:44px;bottom:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center}
+.lt-papier.lt-los3 .lt-los3-feld{position:relative;border-radius:50%;background:#FFF4D8;aspect-ratio:1}
+.lt-papier.lt-los3 .lt-los3-bild{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.lt-papier.lt-los3 .lt-los3-bild svg{width:58px;height:58px}
+.lt-papier.lt-los3 .lt-los3-feld canvas.lt-los3-folie{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;touch-action:none;cursor:grab}
+.lt-papier.lt-los3 .lt-los3-glanz{position:absolute;inset:0;border-radius:50%;pointer-events:none;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.55) 45%,transparent 60%) -150% 0/200% 100% no-repeat;animation:ltLosGlanz 2.6s ease-in-out infinite}
+.lt-papier.lt-los3 .lt-los3-feld:nth-child(2) .lt-los3-glanz{animation-delay:.25s}.lt-papier.lt-los3 .lt-los3-feld:nth-child(3) .lt-los3-glanz{animation-delay:.5s}
+.lt-papier.lt-los3 .lt-los3-strahlen{position:absolute;left:50%;top:50%;width:190px;height:190px;margin:-95px 0 0 -95px;border-radius:50%;background:repeating-conic-gradient(rgba(255,199,44,.4) 0 10deg,transparent 10deg 20deg);-webkit-mask:radial-gradient(circle,#000 22%,transparent 66%);mask:radial-gradient(circle,#000 22%,transparent 66%);opacity:0;pointer-events:none}
+.lt-papier.lt-los3.lt-los3-rare .lt-los3-strahlen{background:repeating-conic-gradient(rgba(178,107,255,.42) 0 10deg,transparent 10deg 20deg)}
+.lt-papier.lt-los3 .lt-los3-strahlen.an{animation:ltLosStrahlen .5s ease forwards,ltLosDreh 9s linear infinite}
+.lt-papier.lt-los3 .lt-los3-bild.pop{animation:ltLosPop .7s cubic-bezier(.2,1.6,.4,1) both}
+.lt-papier.lt-los3 .lt-los3-bild.wackel{animation:ltLosWackel .6s ease both}
+.lt-papier.lt-los3 .lt-los3-feld.spannend{animation:ltLosSpannend .7s ease-in-out infinite}
+.lt-los3-kruemel{position:absolute;left:-40px;right:-40px;top:-30px;bottom:-150px;width:calc(100% + 80px);height:calc(100% + 180px);pointer-events:none;z-index:8}
+@keyframes ltLosGlanz{0%{background-position:-150% 0}60%,100%{background-position:150% 0}}
+@keyframes ltLosStrahlen{to{opacity:1}}@keyframes ltLosDreh{to{transform:rotate(360deg)}}
+@keyframes ltLosPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+@keyframes ltLosWackel{0%,100%{transform:none}20%{transform:rotate(-8deg)}40%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}80%{transform:rotate(2deg)}}
+@keyframes ltLosSpannend{0%,100%{box-shadow:0 0 0 0 rgba(255,199,44,0)}50%{box-shadow:0 0 0 7px rgba(255,199,44,.6)}}
+@media (prefers-reduced-motion:reduce){.lt-papier.lt-los3 .lt-los3-glanz,.lt-papier.lt-los3 .lt-los3-feld.spannend{animation:none}.lt-papier.lt-los3 .lt-los3-strahlen.an{animation:none;opacity:1}}
+`;
+const LOS_ALLE: LosPrize['id'][] = ['p50', 'p150', 'tip', 'joker', 'p5000'];
+/** Bilder der drei Felder: Gewinn = dreimal dasselbe, Niete = zwei gleiche und eins anders (oder alle verschieden) */
+export function losBilder(id: LosPrize['id'], zufall = Math.random): LosPrize['id'][] {
+  if (id !== 'niete') return [id, id, id];
+  const mix = [...LOS_ALLE].sort(() => zufall() - 0.5);
+  const zwei = zufall() < 0.7;
+  const b = zwei ? [mix[0], mix[0], mix[1]] : [mix[0], mix[1], mix[2]];
+  return b.sort(() => zufall() - 0.5);
+}
+
+const ohneBewegung = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('lt-noanim'); } catch { return false; } };
+
+type Teil = { x: number; y: number; vx: number; vy: number; r: number; vr: number; w: number; h: number; a: number; f: number; farbe?: string; bild?: HTMLCanvasElement; sx?: number; sy?: number; sw?: number; sh?: number };
+/** Krümel, abbröckelnde Folie und Funken auf einer Leinwand über dem Los */
+function kruemelMaler(c: HTMLCanvasElement) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  c.width = Math.round(c.clientWidth * dpr); c.height = Math.round(c.clientHeight * dpr);
+  const x = c.getContext('2d')!; const teile: Teil[] = []; let laeuft = false; let aus = false;
+  const tick = () => {
+    if (aus) return;
+    x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, c.clientWidth, c.clientHeight);
+    for (let i = teile.length - 1; i >= 0; i--) {
+      const p = teile[i]; p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.a -= p.f;
+      if (p.a <= 0 || p.y > c.clientHeight + 20) { teile.splice(i, 1); continue; }
+      x.save(); x.globalAlpha = Math.max(0, p.a); x.translate(p.x, p.y); x.rotate(p.r);
+      if (p.bild) x.drawImage(p.bild, p.sx!, p.sy!, p.sw!, p.sh!, -p.w / 2, -p.h / 2, p.w, p.h); else { x.fillStyle = p.farbe || '#F5C531'; x.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+      x.restore();
+    }
+    if (teile.length) requestAnimationFrame(tick); else laeuft = false;
   };
+  const start = () => { if (!laeuft) { laeuft = true; requestAnimationFrame(tick); } };
+  const ruhig = ohneBewegung();
+  return {
+    stopp() { aus = true; },
+    streuen(px: number, py: number, rare: boolean) { if (ruhig) return; for (let i = 0; i < 3; i++) teile.push({ x: px + (Math.random() - 0.5) * 16, y: py + (Math.random() - 0.5) * 10, vx: (Math.random() - 0.5) * 3, vy: -Math.random() * 2.5, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, w: 2 + Math.random() * 4, h: 2 + Math.random() * 3, a: 1, f: 0.025, farbe: rare ? (Math.random() < 0.5 ? '#C99BFF' : '#7B2FF7') : (Math.random() < 0.5 ? '#F5C531' : '#C98A00') }); start(); },
+    abbroeckeln(fc: HTMLCanvasElement, ox: number, oy: number, fdpr: number) {
+      if (ruhig) return;
+      const w = fc.width / fdpr, h = fc.height / fdpr, n = 5, m = 5, tw = w / n, th = h / m;
+      const d = fc.getContext('2d')!.getImageData(0, 0, fc.width, fc.height).data;
+      for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) {
+        const cx = Math.floor((i + 0.5) * tw * fdpr), cy = Math.floor((j + 0.5) * th * fdpr);
+        if (d[(cy * fc.width + cx) * 4 + 3] < 30) continue;
+        const kopie = document.createElement('canvas'); kopie.width = Math.max(1, Math.round(tw * fdpr)); kopie.height = Math.max(1, Math.round(th * fdpr));
+        kopie.getContext('2d')!.drawImage(fc, i * tw * fdpr, j * th * fdpr, tw * fdpr, th * fdpr, 0, 0, kopie.width, kopie.height);
+        teile.push({ bild: kopie, sx: 0, sy: 0, sw: kopie.width, sh: kopie.height, w: tw, h: th, x: ox + (i + 0.5) * tw, y: oy + (j + 0.5) * th, vx: (Math.random() - 0.5) * 4, vy: -1 - Math.random() * 3, r: 0, vr: (Math.random() - 0.5) * 0.25, a: 1, f: 0.014 });
+      }
+      start();
+    },
+    funken(px: number, py: number, rare: boolean) { if (ruhig) return; for (let i = 0; i < 46; i++) { const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * 6; teile.push({ x: px, y: py, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 3, r: 0, vr: 0.3, w: 3 + Math.random() * 4, h: 3 + Math.random() * 4, a: 1, f: 0.015, farbe: rare ? ['#B26BFF', '#FFE27A', '#FFFFFF', '#C21E8E'][i % 4] : ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E'][i % 4] }); } start(); },
+  };
+}
+
+/** Goldfolie mit eingeprägten Ähren auf ein rundes Feld malen */
+function maleFolie(c: HTMLCanvasElement, rare: boolean) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = c.clientWidth || 90, h = c.clientHeight || 90;
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+  const x = c.getContext('2d', { willReadFrequently: true })!; x.scale(dpr, dpr);
+  const g = x.createLinearGradient(0, 0, w, h);
+  if (rare) { g.addColorStop(0, '#5B1BB8'); g.addColorStop(0.45, '#C99BFF'); g.addColorStop(0.55, '#E9D2FF'); g.addColorStop(1, '#8E1A72'); }
+  else { g.addColorStop(0, '#C98A00'); g.addColorStop(0.4, '#FFD95A'); g.addColorStop(0.52, '#FFF1B8'); g.addColorStop(0.64, '#F5C531'); g.addColorStop(1, '#B57B00'); }
+  x.fillStyle = g; x.fillRect(0, 0, w, h);
+  x.strokeStyle = rare ? 'rgba(255,255,255,.28)' : 'rgba(120,80,0,.22)'; x.lineWidth = 1.3; x.lineCap = 'round';
+  for (let yy = 8; yy < h; yy += 26) for (let xx = ((yy / 26) % 2) * 14 + 6; xx < w; xx += 28) {
+    x.beginPath(); x.moveTo(xx, yy + 10); x.lineTo(xx, yy - 2); x.stroke();
+    for (let k = 0; k < 3; k++) { x.beginPath(); x.ellipse(xx - 2.6, yy + 5 - k * 4, 1.6, 3, -0.5, 0, 7); x.stroke(); x.beginPath(); x.ellipse(xx + 2.6, yy + 5 - k * 4, 1.6, 3, 0.5, 0, 7); x.stroke(); }
+  }
+  return { x, w, h, dpr };
+}
+
+export function ScratchCard({ prize, onRevealed }: { prize: LosPrize; onRevealed: () => void }) {
+  const rare = prize.id === 'p5000';
+  const [bilder] = useState(() => losBilder(prize.id));
+  const losRef = useRef<HTMLDivElement | null>(null);
+  const kruemelRef = useRef<HTMLCanvasElement | null>(null);
+  const malerRef = useRef<ReturnType<typeof kruemelMaler> | null>(null);
+  const [offen, setOffen] = useState<number[]>([]);
+  const [info, setInfo] = useState(rare ? 'Ein seltenes Goldlos! Rubbel alle drei Felder frei.' : 'Rubbel alle drei Felder mit dem Finger frei.');
+  const fertig = offen.length === 3;
+  useEffect(() => {
+    const los = losRef.current, kc = kruemelRef.current; if (!los || !kc) return;
+    const kr = kruemelMaler(kc); malerRef.current = kr;
+    const geoeffnet: number[] = [];
+    const aufraeumen: (() => void)[] = [];
+    [...los.querySelectorAll<HTMLCanvasElement>('canvas.lt-los3-folie')].forEach((c, nr) => {
+      const f = maleFolie(c, rare);
+      let an = false, letzter: { x: number; y: number } | null = null, zug = 0, vorbei = false;
+      const pos = (e: PointerEvent) => { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * (f.w / r.width), y: (e.clientY - r.top) * (f.h / r.height), bx: e.clientX, by: e.clientY }; };
+      const pruefe = () => {
+        const d = f.x.getImageData(0, 0, c.width, c.height).data; let frei = 0, alle = 0;
+        for (let i = 3; i < d.length; i += 4 * 9) { alle++; if (d[i] === 0) frei++; }
+        // Ecken außerhalb des Kreises zählen mit, darum ab 50 % aller Punkte (gut 60 % der Kreisfläche)
+        if (vorbei || frei / alle < 0.5) return;
+        vorbei = true;
+        const kb = kc.getBoundingClientRect(), cb = c.getBoundingClientRect();
+        kr.abbroeckeln(c, cb.left - kb.left, cb.top - kb.top, f.dpr);
+        f.x.setTransform(1, 0, 0, 1, 0, 0); f.x.clearRect(0, 0, c.width, c.height); c.style.pointerEvents = 'none';
+        geoeffnet.push(nr); setOffen([...geoeffnet]);
+      };
+      const zeichne = (p: { x: number; y: number; bx: number; by: number }) => {
+        f.x.globalCompositeOperation = 'destination-out'; f.x.strokeStyle = '#000'; f.x.lineCap = 'round'; f.x.lineJoin = 'round'; f.x.lineWidth = 28;
+        f.x.beginPath(); const a = letzter || p; f.x.moveTo(a.x, a.y); f.x.lineTo(p.x + 0.1, p.y); f.x.stroke(); letzter = p;
+        const kb = kc.getBoundingClientRect(); kr.streuen(p.bx - kb.left, p.by - kb.top, rare);
+        if (++zug % 4 === 0) pruefe();
+      };
+      const runter = (e: PointerEvent) => { if (vorbei) return; an = true; letzter = null; try { c.setPointerCapture(e.pointerId); } catch { /* egal */ } c.parentElement?.querySelector('.lt-los3-glanz')?.remove(); zeichne(pos(e)); };
+      const bewegt = (e: PointerEvent) => { if (an && !vorbei) zeichne(pos(e)); };
+      const hoch = () => { an = false; letzter = null; if (!vorbei) pruefe(); };
+      c.addEventListener('pointerdown', runter); c.addEventListener('pointermove', bewegt); c.addEventListener('pointerup', hoch); c.addEventListener('pointercancel', hoch);
+      aufraeumen.push(() => { c.removeEventListener('pointerdown', runter); c.removeEventListener('pointermove', bewegt); c.removeEventListener('pointerup', hoch); c.removeEventListener('pointercancel', hoch); });
+    });
+    return () => { aufraeumen.forEach((f) => f()); kr.stopp(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Nach jedem freigerubbelten Feld: Spannung beim dritten, am Ende Auswertung
+  useEffect(() => {
+    if (offen.length === 2) { const [a, b] = offen; if (bilder[a] === bilder[b]) setInfo('Zwei gleiche! Jetzt das letzte Feld ...'); }
+    if (offen.length !== 3) return;
+    if (prize.id === 'niete') { setInfo('Leider keine drei gleichen. Viel Glück beim nächsten Los.'); onRevealed(); return; }
+    setInfo(rare ? 'Wahnsinn! Das gibt es nur etwa bei jedem 20. Los. Schon gutgeschrieben.' : 'Gewonnen! Ist schon gutgeschrieben.');
+    const kc = kruemelRef.current, los = losRef.current, kr = malerRef.current;
+    if (kc && los && kr) {
+      const kb = kc.getBoundingClientRect(), lb = los.getBoundingClientRect();
+      kr.funken(lb.left - kb.left + lb.width / 2, lb.top - kb.top + lb.height / 2, rare);
+      if (rare) window.setTimeout(() => { kr.funken(lb.left - kb.left + 40, lb.top - kb.top + 30, true); kr.funken(lb.left - kb.left + lb.width - 40, lb.top - kb.top + 30, true); }, 450);
+    }
+    onRevealed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offen.length]);
+  const zweiGleich = offen.length === 2 && bilder[offen[0]] === bilder[offen[1]];
+  const ergebnis = !fertig ? '' : prize.id === 'niete' ? 'Leider eine Niete' : `Drei gleiche: ${prize.label}`;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
-      <div style={{ position: 'relative', width: '100%', maxWidth: '300px', aspectRatio: '300 / 180', borderRadius: '20px', overflow: bag === 'offen' ? 'hidden' : 'visible', backgroundColor: prize.id === 'p5000' ? '#FBF3FF' : '#FFFFFF', border: prize.id === 'p5000' ? '3px solid #9B30D9' : 'none', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 12px 26px -16px rgba(31,20,12,.45)' }}>
-        {prize.id === 'p5000' && bag !== 'offen' && <span className="lt-rare-badge">SELTENES GOLDLOS</span>}
-        {prize.id === 'p5000' && done && <ConfettiOverlay active />}
-        {bag !== 'offen' && (
-          <button onClick={() => { if (bag !== 'zu') return; setBag('reisst'); window.setTimeout(() => setBag('offen'), 900); }} aria-label="Tüte an der Ecke öffnen" className={`lt-bag${bag === 'reisst' ? ' lt-bag-open' : ''}${prize.id === 'p5000' ? ' lt-bag-rare' : ''}`}>
-            <span className="lt-bag-top" aria-hidden="true" />
-            <span className="lt-bag-body">{BAG_LOGO ? <img className="lt-logo" src={BAG_LOGO} alt="" style={{ width: '74px', height: 'auto', cursor: 'pointer' }} /> : <><span style={{ fontSize: '30px' }} aria-hidden="true">🥨</span><span style={{ fontWeight: 800, letterSpacing: '3px' }}>HINKEL</span></>}<span style={{ fontSize: '14px' }}>Ecke abziehen ↗</span></span>
-          </button>
-        )}
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textAlign: 'center', padding: '10px' }}>
-          {prize.id === 'niete' && KUEKEN_IMG ? <img className="lt-logo lt-emo-bob" src={KUEKEN_IMG} alt="" style={{ width: '62px', height: 'auto', cursor: 'default' }} /> : <span className={done ? 'lt-pop-in' : undefined} style={{ display: 'inline-flex' }}><LosIcon3D id={prize.id} /></span>}
-          <strong style={{ fontFamily: TH.serif, fontSize: prize.id === 'p5000' ? '24px' : '22px', color: prize.id === 'p5000' ? '#7B2FF7' : '#2B170A' }}>{prize.label}</strong>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <style>{LOS_CSS}</style>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '330px', display: 'flex', justifyContent: 'center' }}>
+        <div ref={losRef} className={`lt-papier lt-los3${rare ? ' lt-los3-rare' : ''}`}>
+          <div className="lt-los3-rand" aria-hidden="true"><div className="lt-los3-kopf">{rare ? 'GOLDLOS' : 'HINKEL'} <i>3 gleiche gewinnen</i></div></div>
+          <div className="lt-los3-felder">
+            {bilder.map((b, i) => (
+              <div key={i} className={`lt-los3-feld${zweiGleich && !offen.includes(i) ? ' spannend' : ''}`}>
+                <div className={`lt-los3-strahlen${fertig && prize.id !== 'niete' ? ' an' : ''}`} />
+                <div className={`lt-los3-bild${offen.includes(i) ? (fertig && prize.id === 'niete' ? ' wackel' : ' pop') : ''}`}><LosIcon3D id={b} /></div>
+                <canvas className="lt-los3-folie" aria-label={`Feld ${i + 1} freirubbeln`} />
+                <div className="lt-los3-glanz" />
+              </div>
+            ))}
+          </div>
         </div>
-        <canvas ref={ref} onPointerDown={(e) => { drawing.current = true; (e.target as HTMLCanvasElement).setPointerCapture?.(e.pointerId); scratch(e); }} onPointerMove={scratch} onPointerUp={() => { drawing.current = false; }}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', touchAction: 'none', cursor: 'grab' }} />
+        <canvas ref={kruemelRef} className="lt-los3-kruemel" aria-hidden="true" />
       </div>
-      <ConfettiOverlay active={done && prize.id !== 'niete'} />
-      <span style={{ fontSize: '15px', color: TH.muted }}>{done ? (prize.id === 'niete' ? 'Schade! Viel Glück beim nächsten Los.' : prize.id === 'p5000' ? 'Wahnsinn! Das gibt es nur etwa bei jedem 20. Los. Schon gutgeschrieben.' : 'Gewonnen! Ist schon gutgeschrieben.') : prize.id === 'p5000' ? 'Ein seltenes Goldlos! Rubbel es frei.' : 'Mit dem Finger frei rubbeln.'}</span>
+      <div className="lt-los3-ergebnis" role="status" style={{ fontFamily: TH.serif, fontSize: '22px', lineHeight: 1.2, minHeight: '27px', color: rare ? '#7B2FF7' : TH.ink }}>{ergebnis}</div>
+      {fertig && prize.id !== 'niete' && <ConfettiOverlay active />}
+      <span className="lt-los3-info" style={{ fontSize: '15px', color: TH.muted }}>{info}</span>
     </div>
   );
 }

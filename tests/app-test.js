@@ -921,6 +921,33 @@ async function offlineTests() {
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 263: Rubbellos mit drei Feldern
+  teile.push(['Version 263: Rubbellos mit drei Feldern', async () => {
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._jokersLos = 1;
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    const alles = d.page.locator('button', { hasText: 'Alles anzeigen' });
+    if (await alles.count()) { await click(alles.first()); await settle(d.page, 400); }
+    const karte = d.page.locator('main button:visible, main [role=button]:visible', { hasText: /Los bereit/ }).first();
+    for (let w = 0; w < 40 && !(await karte.count()); w++) await sleep(100);
+    await click(karte); await settle(d.page, 500);
+    for (let w = 0; w < 40 && (await d.page.locator('.lt-los3-folie').count()) < 3; w++) await sleep(100);
+    ok('Rubbellos: drei Felder zum Freirubbeln', (await d.page.locator('.lt-los3-folie').count()) === 3 && (await d.page.locator('.lt-los3-ergebnis').innerText()) === '');
+    for (let i = 0; i < 3; i++) {
+      const bx = await d.page.locator('.lt-los3-folie').nth(i).boundingBox();
+      await d.page.mouse.move(bx.x + bx.width / 2, bx.y + bx.height / 2); await d.page.mouse.down();
+      for (let y = 10; y < bx.height - 6; y += 8) { await d.page.mouse.move(bx.x + bx.width - 8, bx.y + y, { steps: 5 }); await d.page.mouse.move(bx.x + 8, bx.y + y + 4, { steps: 5 }); }
+      await d.page.mouse.up(); await sleep(150);
+    }
+    let erg = '';
+    for (let w = 0; w < 30 && !erg; w++) { erg = (await d.page.locator('.lt-los3-ergebnis').innerText().catch(() => '')).trim(); if (!erg) await sleep(100); }
+    const bilder = await d.page.locator('.lt-los3-bild').evaluateAll((els) => els.map((e) => e.innerHTML));
+    const gleich = bilder.length === 3 && bilder[0] === bilder[1] && bilder[1] === bilder[2];
+    ok('Rubbellos: alle drei frei, Gewinn bei drei gleichen, sonst Niete', (/^Drei gleiche:/.test(erg) && gleich) || (erg === 'Leider eine Niete' && !gleich), erg);
+    ok('Rubbellos: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 262: Neustart der Bestenliste (nur Bestenliste, Stufe und Trinkgeld bleiben)
   teile.push(['Version 262: Neustart der Bestenliste', async () => {
     const W = kompiliere(['src/hilfen/wertungen.ts']).hilfen_wertungen;
