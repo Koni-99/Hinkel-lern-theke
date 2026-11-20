@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 263;
+const APP_VERSION: number = 264;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -24,7 +24,7 @@ import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen, steckbri
 import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
-import { geschenkSchicken, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
+import { geschenkeSchicken, anzahlVon, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
 import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
@@ -891,10 +891,11 @@ export default function App() {
   // Geschenke von Kollegen (Version 226): ältestes offenes als Pop-up
   const geschenkNeu = !username || isAdmin ? [] : offeneGeschenke(cloudData.progress, username.toLowerCase());
   const geschenkFertig = () => { const g = geschenkNeu[0]; if (!g || !username) return; mutateCloudData(geschenkAnnehmen(username.toLowerCase(), username, g)); };
-  const schenken = (jokerId: string, an: string, anName: string) => {
-    if (!username || isAdmin) return;
-    mutateCloudData(geschenkSchicken(username.toLowerCase(), username, an, anName, jokerId));
-    setToast(`${jokerVon(jokerId)?.label || 'Geschenk'} an ${anName} verschickt. Er oder sie bekommt es beim nächsten Öffnen der App.`);
+  const schenken = (jokerId: string, an: { k: string; name: string }[], anzahl: number) => {
+    if (!username || isAdmin || !an.length) return;
+    mutateCloudData(geschenkeSchicken(username.toLowerCase(), username, an, jokerId, anzahl));
+    const namen = an.length <= 2 ? an.map((x) => x.name).join(' und ') : `${an.length} Kollegen`;
+    setToast(`${anzahl > 1 ? `${anzahl}× ` : ''}${jokerVon(jokerId)?.label || 'Geschenk'} an ${namen} verschickt. ${an.length > 1 ? 'Sie bekommen' : 'Er oder sie bekommt'} es beim nächsten Öffnen der App.`);
   };
 
   // Ausbilder schenkt Punkte / Trinkgeld
@@ -2995,7 +2996,7 @@ export default function App() {
             <ConfettiOverlay active />
             <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>Ein Geschenk für dich</div>
             <span className="lt-emo-bob" style={{ display: 'inline-flex' }}><ShopIcon3D k={geschenkNeu[0].j} size={84} /></span>
-            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{geschenkNeu[0].vonName} schenkt dir: {jokerVon(geschenkNeu[0].j)?.label}</div>
+            <div style={{ fontFamily: LT.serif, fontSize: '28px', lineHeight: 1.2 }}>{geschenkNeu[0].vonName} schenkt dir: {anzahlVon(geschenkNeu[0]) > 1 ? `${anzahlVon(geschenkNeu[0])}× ` : ''}{jokerVon(geschenkNeu[0].j)?.label}</div>
             <div style={{ fontSize: '15px', color: LT.muted }}>{jokerVon(geschenkNeu[0].j)?.desc}</div>
             <button onClick={geschenkFertig} autoFocus style={{ minHeight: '52px', alignSelf: 'stretch', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '18px', fontWeight: 700, cursor: 'pointer' }}>Danke!</button>
           </div>
