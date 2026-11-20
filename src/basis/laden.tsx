@@ -248,10 +248,11 @@ export const PT_SHOP: PtItem[] = [
   { id: 'pt_spruch', kind: 'spruch', icon: '💬', label: 'Spruch des Tages', price: 15000, desc: 'Dein Satz steht einen Tag lang bei allen auf der Startseite. Der Ausbilder gibt ihn vorher frei.' },
 ];
 
-export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPts, onEquipPts, kollegen = [], onSchenken, geschenkeHeute = 0 }: { kollegen?: { k: string; name: string }[]; onSchenken?: (jokerId: string, an: string, anName: string) => void; geschenkeHeute?: number; prog: any; onBuy: (it: ShopItem) => void; onEquip: (kind: AnlegeArt, value: string | null) => void; onClose: () => void; ptsBalance?: number; onBuyPts?: (it: PtItem, text?: string) => void; onEquipPts?: (it: PtItem, on: boolean) => void }) {
+export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPts, onEquipPts, kollegen = [], onSchenken, geschenkeHeute = 0 }: { kollegen?: { k: string; name: string }[]; onSchenken?: (jokerId: string, an: { k: string; name: string }[], anzahl: number) => void; geschenkeHeute?: number; prog: any; onBuy: (it: ShopItem) => void; onEquip: (kind: AnlegeArt, value: string | null) => void; onClose: () => void; ptsBalance?: number; onBuyPts?: (it: PtItem, text?: string) => void; onEquipPts?: (it: PtItem, on: boolean) => void }) {
   const [spruch, setSpruch] = useState('');
   const [gJoker, setGJoker] = useState('j_los');
-  const [gAn, setGAn] = useState('');
+  const [gWer, setGWer] = useState<string[]>([]);
+  const [gAnzahl, setGAnzahl] = useState(1);
   const balance = (Number(prog._tipCents) || 0) - (Number(prog._tipSpent) || 0);
   const owned: string[] = Array.isArray(prog._shopOwned) ? prog._shopOwned : [];
   const [tab, setTab] = useState<ShopTab>('zeichen');
@@ -464,25 +465,43 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
             </div>
           )}
           {tab === 'joker' && onSchenken && kollegen.length > 0 && (() => {
+            // Version 264: Anzahl wählen und mehrere Kollegen ankreuzen, höchstens 10 Joker am Tag
             const j = TIP_SHOP.find((i) => i.id === gJoker);
-            const wer = kollegen.find((x) => x.k === gAn);
-            const frei = Math.max(0, 3 - geschenkeHeute);
-            const geht = !!j && !!wer && frei > 0 && balance >= j.price;
+            const wer = kollegen.filter((x) => gWer.includes(x.k));
+            const frei = Math.max(0, 10 - geschenkeHeute);
+            const stueck = gAnzahl * wer.length;
+            const preis = (j?.price || 0) * stueck;
+            const geht = !!j && wer.length > 0 && stueck <= frei && balance >= preis;
+            const namen = wer.length <= 2 ? wer.map((x) => x.name).join(' und ') : `${wer.length} Kollegen`;
+            const knopf = { width: '44px', height: '44px', borderRadius: '50%', border: '2px solid #E3D6BE', backgroundColor: '#FFFFFF', color: LT.ink, fontSize: '22px', fontWeight: 800, cursor: 'pointer' } as const;
             return (
               <div className="lt-schenken" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px 16px', borderRadius: '18px', backgroundColor: '#FFFFFF', boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)' }}>
-                <div style={{ fontWeight: 800, fontSize: '17px' }}>Einem Kollegen etwas schenken</div>
-                <div style={{ fontSize: '14px', color: LT.brown }}>Du bezahlst mit deinem Trinkgeld, dein Kollege bekommt beim nächsten Öffnen der App ein Pop-up mit deinem Geschenk. Bis zu 3 Geschenke am Tag{frei < 3 ? `, heute noch ${frei}` : ''}.</div>
+                <div style={{ fontWeight: 800, fontSize: '17px' }}>Kollegen etwas schenken</div>
+                <div style={{ fontSize: '14px', color: LT.brown }}>Du bezahlst mit deinem Trinkgeld, deine Kollegen bekommen beim nächsten Öffnen der App ein Pop-up mit deinem Geschenk. Bis zu 10 Joker am Tag{frei < 10 ? `, heute noch ${frei}` : ''}.</div>
+                <div style={{ fontSize: '14px', fontWeight: 800 }}>1. Was?</div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {['j_los', 'j_5050', 'j_swap', 'j_time', 'j_spin', 'j_schutz', 'j_double'].map((id) => { const it = TIP_SHOP.find((i) => i.id === id); if (!it) return null; const on = gJoker === id; return (
                     <button key={id} type="button" aria-pressed={on} onClick={() => setGJoker(id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '44px', padding: '0 12px 0 6px', borderRadius: '999px', border: on ? '2px solid #1F140C' : '2px solid #E3D6BE', backgroundColor: on ? '#FFF4C7' : '#FFFFFF', fontWeight: 700, fontSize: '14px', cursor: 'pointer', color: LT.ink }}><ShopIcon3D k={id} size={26} />{it.label} · {tipEuro(it.price)}</button>
                   ); })}
                 </div>
-                <select value={gAn} onChange={(e) => setGAn(e.target.value)} aria-label="Kollege auswählen" style={{ minHeight: '46px', padding: '0 12px', borderRadius: '12px', border: '2px solid #E3D6BE', fontSize: '16px', backgroundColor: '#FFFFFF', color: LT.ink }}>
-                  <option value="">Wem möchtest du etwas schenken?</option>
-                  {kollegen.map((x) => <option key={x.k} value={x.k}>{x.name}</option>)}
-                </select>
-                <button type="button" disabled={!geht} onClick={() => { if (!geht || !j || !wer) return; onSchenken(j.id, wer.k, wer.name); setRing((r) => r + 1); setGAn(''); }} style={{ minHeight: '48px', borderRadius: '999px', border: 'none', backgroundColor: geht ? '#1F140C' : '#CBBBA4', color: geht ? '#FFD86B' : '#FFFFFF', fontWeight: 800, fontSize: '16px', cursor: geht ? 'pointer' : 'default' }}>
-                  {!wer ? 'Erst einen Kollegen auswählen' : frei === 0 ? 'Heute schon 3 Geschenke verschickt' : j && balance < j.price ? `Noch ${tipEuro(j.price - balance)} Trinkgeld nötig` : `${j?.label} an ${wer.name} schenken (${tipEuro(j?.price || 0)})`}
+                <div style={{ fontSize: '14px', fontWeight: 800 }}>2. Wie viele pro Kollege?</div>
+                <div className="lt-schenken-anzahl" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" aria-label="Einen weniger" disabled={gAnzahl <= 1} onClick={() => setGAnzahl((n) => Math.max(1, n - 1))} style={{ ...knopf, opacity: gAnzahl <= 1 ? 0.4 : 1 }}>−</button>
+                  <span aria-live="polite" style={{ minWidth: '34px', textAlign: 'center', fontSize: '22px', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{gAnzahl}</span>
+                  <button type="button" aria-label="Einen mehr" disabled={gAnzahl >= 10} onClick={() => setGAnzahl((n) => Math.min(10, n + 1))} style={{ ...knopf, opacity: gAnzahl >= 10 ? 0.4 : 1 }}>+</button>
+                  <span style={{ fontSize: '14px', color: LT.brown }}>{j?.label}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 800 }}>3. An wen?</span>
+                  {gWer.length > 0 && <button type="button" onClick={() => setGWer([])} style={{ border: 'none', background: 'transparent', color: LT.brown, textDecoration: 'underline', fontSize: '14px', cursor: 'pointer', padding: 0 }}>keinen mehr auswählen</button>}
+                </div>
+                <div className="lt-schenken-wer" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', maxHeight: '180px', overflowY: 'auto' }}>
+                  {kollegen.map((x) => { const on = gWer.includes(x.k); return (
+                    <button key={x.k} type="button" aria-pressed={on} onClick={() => setGWer((w) => (on ? w.filter((y) => y !== x.k) : [...w, x.k]))} style={{ minHeight: '40px', padding: '0 12px', borderRadius: '999px', border: on ? '2px solid #1F140C' : '2px solid #E3D6BE', backgroundColor: on ? '#FFF4C7' : '#FFFFFF', color: LT.ink, fontWeight: on ? 800 : 600, fontSize: '14px', cursor: 'pointer' }}>{on ? '✓ ' : ''}{x.name}</button>
+                  ); })}
+                </div>
+                <button type="button" className="lt-schenken-los" disabled={!geht} onClick={() => { if (!geht || !j) return; onSchenken(j.id, wer, gAnzahl); setRing((r) => r + 1); setGWer([]); setGAnzahl(1); }} style={{ minHeight: '52px', padding: '6px 14px', borderRadius: '999px', border: 'none', backgroundColor: geht ? '#1F140C' : '#CBBBA4', color: geht ? '#FFD86B' : '#FFFFFF', fontWeight: 800, fontSize: '16px', lineHeight: 1.25, cursor: geht ? 'pointer' : 'default' }}>
+                  {!wer.length ? 'Erst Kollegen auswählen' : frei === 0 ? 'Heute schon 10 Joker verschenkt' : stueck > frei ? `Heute gehen nur noch ${frei} Joker` : j && balance < preis ? `Noch ${tipEuro(preis - balance)} Trinkgeld nötig` : `${gAnzahl}× ${j?.label} an ${namen} schenken (${tipEuro(preis)})`}
                 </button>
               </div>
             );

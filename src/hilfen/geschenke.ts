@@ -13,8 +13,12 @@ const prOf = (curr: CloudPayload, k: string, name: string): any => curr.progress
 
 /** Diese Joker kann man verschenken (zum normalen Preis, kein Tagesangebot) */
 export const GESCHENK_JOKER = ['j_los', 'j_5050', 'j_swap', 'j_time', 'j_spin', 'j_schutz', 'j_double'];
-export const GESCHENKE_PRO_TAG = 3;
-export type Geschenk = { an: string; anName: string; j: string; ts: number };
+/** Version 264: höchstens 10 Joker am Tag verschenken (zusammengezählt, egal an wen; vorher 3 Geschenke) */
+export const GESCHENKE_PRO_TAG = 10;
+export const GESCHENK_MAX_ANZAHL = 10;
+/** n = Anzahl (Version 264, alte Geschenke ohne n = 1) */
+export type Geschenk = { an: string; anName: string; j: string; ts: number; n?: number };
+export const anzahlVon = (g: { n?: number }) => Math.max(1, Math.min(GESCHENK_MAX_ANZAHL, Math.floor(Number(g.n) || 1)));
 export type GeschenkEintrag = Geschenk & { id: string; von: string; vonName: string };
 
 const tagVon = (ts: number) => { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
@@ -37,8 +41,9 @@ export function alleGeschenke(progress: CloudPayload['progress'] | undefined): G
   });
   return out.sort((a, b) => a.ts - b.ts);
 }
+/** Wie viele Joker ich heute schon verschenkt habe (Anzahl zusammengezählt) */
 export const geschenkeHeute = (progress: CloudPayload['progress'] | undefined, userKey: string, now = Date.now()) =>
-  alleGeschenke(progress).filter((g) => g.von === userKey && tagVon(g.ts) === tagVon(now)).length;
+  alleGeschenke(progress).filter((g) => g.von === userKey && tagVon(g.ts) === tagVon(now)).reduce((s, g) => s + anzahlVon(g), 0);
 
 /** Noch nicht angenommene Geschenke an mich (älteste zuerst) */
 export function offeneGeschenke(progress: CloudPayload['progress'] | undefined, userKey: string): GeschenkEintrag[] {
@@ -46,19 +51,28 @@ export function offeneGeschenke(progress: CloudPayload['progress'] | undefined, 
   return alleGeschenke(progress).filter((g) => g.an === userKey && !erhalten[geschenkKey(g.von, g.id)]);
 }
 
-export const geschenkSchicken = (userKey: string, name: string, an: string, anName: string, jokerId: string, now = Date.now()): Upd => (curr) => {
+/** Version 264: einen Joker n-mal an einen oder mehrere Kollegen schenken. Alles oder nichts:
+ *  nur wenn das Trinkgeld für alle reicht und die Tagesgrenze nicht überschritten wird. */
+export const geschenkeSchicken = (userKey: string, name: string, empfaenger: { k: string; name: string }[], jokerId: string, anzahl = 1, now = Date.now()): Upd => (curr) => {
   const j = jokerVon(jokerId);
-  if (!j || !GESCHENK_JOKER.includes(jokerId) || !an || an === userKey || an === 'admin') return curr;
-  if (geschenkeHeute(curr.progress, userKey, now) >= GESCHENKE_PRO_TAG) return curr;
+  const n = Math.max(1, Math.min(GESCHENK_MAX_ANZAHL, Math.floor(Number(anzahl) || 1)));
+  const an = Array.from(new Map(empfaenger.filter((e) => e.k && e.k !== userKey && e.k !== 'admin').map((e) => [e.k, e])).values());
+  if (!j || !GESCHENK_JOKER.includes(jokerId) || !an.length) return curr;
+  if (geschenkeHeute(curr.progress, userKey, now) + n * an.length > GESCHENKE_PRO_TAG) return curr;
   const pr = prOf(curr, userKey, name);
   const balance = (Number(pr._tipCents) || 0) - (Number(pr._tipSpent) || 0);
-  if (balance < j.price) return curr;
-  pr._tipSpent = (Number(pr._tipSpent) || 0) + j.price;
-  // nur die letzten 30 eigenen Geschenke behalten
-  const alt = Object.entries(pr._geschenke || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, 29);
-  pr._geschenke = { ...Object.fromEntries(alt), [`g${now}`]: { an, anName, j: jokerId, ts: now } };
+  if (balance < j.price * n * an.length) return curr;
+  pr._tipSpent = (Number(pr._tipSpent) || 0) + j.price * n * an.length;
+  // nur die letzten 40 eigenen Geschenke behalten
+  const alt = Object.entries(pr._geschenke || {}).sort((a: any, b: any) => (b[1].ts || 0) - (a[1].ts || 0)).slice(0, Math.max(0, 40 - an.length));
+  const neu: Record<string, Geschenk> = {};
+  an.forEach((e, i) => { neu[`g${now + i}`] = { an: e.k, anName: e.name, j: jokerId, ts: now + i, ...(n > 1 ? { n } : {}) }; });
+  pr._geschenke = { ...Object.fromEntries(alt), ...neu };
   return curr;
 };
+/** Ein Joker an einen Kollegen (wie vor Version 264) */
+export const geschenkSchicken = (userKey: string, name: string, an: string, anName: string, jokerId: string, now = Date.now()): Upd =>
+  geschenkeSchicken(userKey, name, [{ k: an, name: anName }], jokerId, 1, now);
 
 /** Beschenkter nimmt an: Joker wird im eigenen Fortschritt gutgeschrieben (genau einmal) */
 export const geschenkAnnehmen = (userKey: string, name: string, g: GeschenkEintrag, now = Date.now()): Upd => (curr) => {
@@ -67,7 +81,7 @@ export const geschenkAnnehmen = (userKey: string, name: string, g: GeschenkEintr
   if ((pr._geschenkeErhalten || {})[key]) return curr;
   const f = JOKER_FIELD[g.j];
   if (!f) return curr;
-  pr[f] = (Number(pr[f]) || 0) + 1;
+  pr[f] = (Number(pr[f]) || 0) + anzahlVon(g);
   pr._geschenkeErhalten = { ...(pr._geschenkeErhalten || {}), [key]: now };
   return curr;
 };

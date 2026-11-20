@@ -654,11 +654,18 @@ async function offlineTests() {
     G.schutzEinsetzen('ben', 'Ben')(zwei);
     ok('Serien-Schutz: 2 verpasste Tage mit nur 1 Joker: nichts verbraucht', zwei.progress.ben._jokersSchutz === 1 && !zwei.progress.ben._schutzTage);
     const c2 = { progress: { anna: { _displayName: 'Anna', _tipCents: 1000, _tipSpent: 0 }, ben: { _displayName: 'Ben' } } };
-    for (let i = 0; i < 4; i++) G.geschenkSchicken('anna', 'Anna', 'ben', 'Ben', 'j_los', Date.now() + i)(c2);
-    ok('Geschenk: höchstens 3 am Tag, bezahlt mit Trinkgeld', Object.keys(c2.progress.anna._geschenke).length === 3 && c2.progress.anna._tipSpent === 150, `${Object.keys(c2.progress.anna._geschenke || {}).length} Geschenke, ${c2.progress.anna._tipSpent} Cent`);
+    const preisLos = L.TIP_SHOP.find((i) => i.id === 'j_los').price;
+    const jetzt0 = Date.now();
+    G.geschenkeSchicken('anna', 'Anna', [{ k: 'ben', name: 'Ben' }, { k: 'cem', name: 'Cem' }], 'j_los', 3, jetzt0)(c2);
+    G.geschenkeSchicken('anna', 'Anna', [{ k: 'ben', name: 'Ben' }], 'j_los', 4, jetzt0 + 10)(c2);
+    G.geschenkeSchicken('anna', 'Anna', [{ k: 'ben', name: 'Ben' }], 'j_los', 1, jetzt0 + 20)(c2);
+    ok('Geschenke: Anzahl und mehrere Kollegen, höchstens 10 Joker am Tag, bezahlt mit Trinkgeld', G.geschenkeHeute(c2.progress, 'anna', jetzt0 + 30) === 10 && c2.progress.anna._tipSpent === 10 * preisLos && Object.keys(c2.progress.anna._geschenke).length === 3, `${G.geschenkeHeute(c2.progress, 'anna', jetzt0 + 30)} Joker, ${c2.progress.anna._tipSpent} Cent`);
     G.offeneGeschenke(c2.progress, 'ben').forEach((g) => G.geschenkAnnehmen('ben', 'Ben', g)(c2));
     G.offeneGeschenke(c2.progress, 'ben').forEach((g) => G.geschenkAnnehmen('ben', 'Ben', g)(c2));
-    ok('Geschenk: Beschenkter bekommt jedes Los genau einmal', c2.progress.ben._jokersLos === 3 && G.offeneGeschenke(c2.progress, 'ben').length === 0, `${c2.progress.ben._jokersLos} Lose`);
+    ok('Geschenk: Beschenkter bekommt jedes Los genau einmal, mit Anzahl', c2.progress.ben._jokersLos === 7 && G.offeneGeschenke(c2.progress, 'ben').length === 0 && G.offeneGeschenke(c2.progress, 'cem').length === 1, `${c2.progress.ben._jokersLos} Lose`);
+    const c3 = { progress: { anna: { _displayName: 'Anna', _tipCents: preisLos * 3, _tipSpent: 0 } } };
+    G.geschenkeSchicken('anna', 'Anna', [{ k: 'ben', name: 'Ben' }, { k: 'cem', name: 'Cem' }], 'j_los', 2)(c3);
+    ok('Geschenke: reicht das Trinkgeld nicht für alle, wird nichts verschickt', !c3.progress.anna._geschenke && !c3.progress.anna._tipSpent);
     const st = L.setStand(['a_brot', 'a_brezel', 'a_croissant', 'a_baguette', 'a_aehre', 'a_keks']);
     ok('Sammel-Sets: Brotkorb voll, Süße Theke nicht', st.find((x) => x.id === 'brot').voll && !st.find((x) => x.id === 'suess').voll);
     const torte = L.TIP_SHOP.find((i) => i.id === 'a_torte');
@@ -1977,14 +1984,15 @@ async function cloudTests() {
     ok('Laden: Sammel-Sets im Reiter „Titel“', (await laden.locator('.lt-sammelset').count()) >= 6);
     await click(laden.getByRole('tab', { name: 'Joker' })); await settle(A.page, 300);
     const box = laden.locator('.lt-schenken');
-    ok('Laden: „Einem Kollegen etwas schenken“ unter Joker', (await box.count()) === 1);
+    ok('Laden: „Kollegen etwas schenken“ unter Joker', (await box.count()) === 1);
     if (await box.count()) {
-      await box.locator('select').selectOption('ben');
-      await click(box.getByRole('button', { name: /an Ben schenken/ }));
+      await click(box.locator('.lt-schenken-wer button', { hasText: 'Ben' }).first());
+      await click(box.locator('.lt-schenken-anzahl button[aria-label="Einen mehr"]'));
+      await click(box.getByRole('button', { name: /2× Rubbellos an Ben schenken/ }));
     }
     let gs = null;
     for (let i = 0; i < 150 && !gs; i++) { const m = await db('GET', '/progress/anna/_geschenke'); gs = m && Object.values(m)[0]; if (!gs) await sleep(100); }
-    ok('Geschenk: im eigenen Fortschritt gespeichert', !!gs && gs.an === 'ben' && gs.j === 'j_los', JSON.stringify(gs));
+    ok('Geschenk: im eigenen Fortschritt gespeichert (2 Stück)', !!gs && gs.an === 'ben' && gs.j === 'j_los' && gs.n === 2, JSON.stringify(gs));
     ok('Geschenk (Anna): keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
     const vorher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0;
@@ -2000,11 +2008,11 @@ async function cloudTests() {
       if (await andere.count()) await andere.last().click({ timeout: 2000 }).catch(() => {});
       await sleep(500);
     }
-    ok('Geschenk: Ben bekommt das Pop-up „Anna schenkt dir“', (await pop.count()) > 0 && /Anna schenkt dir/.test(await pop.innerText()));
+    ok('Geschenk: Ben bekommt das Pop-up „Anna schenkt dir: 2× Rubbellos“', (await pop.count()) > 0 && /Anna schenkt dir: 2× Rubbellos/.test(await pop.innerText()));
     if (await pop.count()) await click(pop.getByRole('button', { name: 'Danke!' }));
     let nachher = vorher;
     for (let i = 0; i < 150 && nachher === vorher; i++) { nachher = Number(await db('GET', '/progress/ben/_jokersLos')) || 0; if (nachher === vorher) await sleep(100); }
-    ok('Geschenk: Ben hat ein Rubbellos mehr', nachher === vorher + 1, `${vorher} → ${nachher}`);
+    ok('Geschenk: Ben hat zwei Rubbellose mehr', nachher === vorher + 2, `${vorher} → ${nachher}`);
     ok('Geschenk (Ben): keine Fehler', B.errors.length === 0, B.errors[0]);
     await B.ctx.close();
   }]);
