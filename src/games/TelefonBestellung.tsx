@@ -63,7 +63,7 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
       {phase === 'menu' && (
         <GameIntro
           title="Das Telefon klingelt"
-          text={`${ANRUFE} Kunden rufen an, vom einfachen Anruf bis zum komplizierten, der sich mittendrin korrigiert. Schreib auf: Name, Abholtag, Uhrzeit, was und wie viel, und ob das Brot geschnitten werden soll. Manche Kunden korrigieren sich mittendrin, so wie am echten Telefon.`}
+          text={`${ANRUFE} Kunden rufen an und bestellen. Schreib Name, Abholtag, Uhrzeit und Ware auf, manche korrigieren sich mittendrin.`}
           hint={stimme ? '10 Punkte für jedes richtige Feld, +10 wenn alles stimmt, +10 extra, wenn du nur zugehört hast, ohne den Text zu lesen. Ton am Handy einschalten!' : '10 Punkte für jedes richtige Feld, +10 wenn alles stimmt. Dein Gerät kann nicht vorlesen, deshalb siehst du den Text.'}
           startLabel="Anruf annehmen"
           onStart={start}

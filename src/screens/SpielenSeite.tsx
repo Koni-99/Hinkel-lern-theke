@@ -88,7 +88,7 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
     <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
       <div>
         <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Spielen</h1>
-        <p style={{ margin: '6px 0 0', fontSize: '18px', color: LT.brown }}>Jedes Spiel bringt Punkte für die Bestenliste. Spiele mit „zählt fürs Lernen“ haken nebenbei auch Lernfragen ab.</p>
+        <p style={{ margin: '6px 0 0', fontSize: '18px', color: LT.brown }}>Die Spiele bringen Punkte für die Bestenliste, „Zum Abschalten“ ganz unten ist nur zum Entspannen. Spiele mit „zählt fürs Lernen“ haken nebenbei auch Lernfragen ab.</p>
       </div>
       {lastKey && lastGroup && (
         <button onClick={games[lastKey].action} className="lt-card" style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', borderRadius: '20px', border: 'none', backgroundColor: LT.brown, color: dc('#FFF6E0'), textAlign: 'left', cursor: 'pointer' }}>
@@ -102,6 +102,8 @@ export function SpielenSeite({ fetchCloudData, cloudData, isAdmin, setActiveTab,
       )}
       {!isAdmin && (() => {
         const tw = topWeak(5);
+        // Version 271: Karte nur, wenn es wirklich Schwachstellen gibt (sonst nahm sie oben viel Platz ein); erklärt wird es in der Hilfe
+        if (!tw.length) return null;
         return (
           <section aria-labelledby="lt-focus-h" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 18px', borderRadius: '20px', backgroundColor: dc('#FFFFFF'), border: `2px solid ${LT.line}` }}>
             <h2 id="lt-focus-h" style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '24px' }}>Dein Schwachstellen-Training</h2>

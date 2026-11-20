@@ -335,7 +335,7 @@ export function AlternativenJaegerView({ onSaveScore, onLearn, known = {}, onKno
         </button>
       )}
       {gameState === 'menu' && onlyNew && altLeft === 0 && <div style={{ padding: '12px 16px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontSize: '17px', fontWeight: 700 }}>Alle Situationen geschafft! Mit „Nur neue Situationen“ aus kannst du alles wiederholen.</div>}
-      {gameState === 'menu' && onLearn && <LearnHint text="Jede beste Empfehlung hakt die passende Frage „… ist ausverkauft, welche Alternative empfiehlst du?“ im Bereich „Service & Verkauf“ ab." />}
+      {gameState === 'menu' && onLearn && <LearnHint text="Jede beste Empfehlung hakt die passende Ausverkauft-Frage im Quiz ab." />}
 
       {gameState === 'playing' && shuffledScenarios.length > 0 && (() => {
         const scen = shuffledScenarios[currentIndex];

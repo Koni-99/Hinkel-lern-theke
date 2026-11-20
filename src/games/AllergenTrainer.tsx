@@ -101,7 +101,7 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
       {state === 'menu' && (
         <GameIntro
           title="Sicher beraten bei Allergien"
-          text="Ein Kunde nennt seine Allergie. Du wählst das passende Produkt, oder das, von dem du abraten musst. Nach jeder Antwort siehst du die Allergene aller Produkte."
+          text="Ein Kunde nennt seine Allergie. Wähle das passende Produkt oder das, von dem du abraten musst."
           hint="Wichtig an der Theke: Nie raten! Im Zweifel immer die vollständige Zutatenliste prüfen oder in der Backstube nachfragen."
           startLabel="Training starten (10 Kunden)"
           onStart={() => start(10)}
@@ -109,7 +109,7 @@ export function AllergenTrainerView({ images, onSaveScore, onFinished, onLearn, 
       )}
       {state === 'menu' && <OnlyNewToggle on={onlyNew} onToggle={toggleOnlyNew} label="Nur neue Kunden-Situationen" done={alDone} total={ALLERGEN_KEYS.length} unit="Situationen" />}
       {state === 'menu' && <AllAtOnceButton count={onlyNew ? ALLERGEN_KEYS.length - alDone : ALLERGEN_KEYS.length} unit="Situationen" onClick={() => start(onlyNew ? ALLERGEN_KEYS.length - alDone : ALLERGEN_KEYS.length)} />}
-      {state === 'menu' && onLearn && <LearnHint text="Berätst du richtig, wird die Quizfrage „Welche Allergene sind bei … angegeben?“ zum richtigen Produkt im Bereich „Sortiment & Warenkunde“ abgehakt. Nach jeder Antwort siehst du dafür alle Allergene." />}
+      {state === 'menu' && onLearn && <LearnHint text="Richtig beraten hakt die Allergen-Frage zu diesem Produkt im Quiz ab." />}
 
       {state === 'playing' && r && question && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

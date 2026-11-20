@@ -274,8 +274,8 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
       {phase === 'menu' && (
         <GameIntro
           title="Bereit für den ersten Kunden?"
-          text="Jedes Gespräch ist anders: über 20 Situationen von Allergie und Zöliakie über Reklamation, Vordrängler und eilige Kunden bis zu Kartenzahlung und Trinkgeld. Über 20 verschiedene Kunden, alle Antworten kommen direkt aus unserem Sortiment."
-          hint="10 Punkte pro richtiger Antwort, +10 Bonus für eine perfekte Beratung. Gute Beratung bringt öfter Trinkgeld, das bleibt in deiner Trinkgeldkasse."
+          text="Jedes Gespräch ist anders, von Allergie bis Reklamation, alles mit unserem Sortiment."
+          hint="10 Punkte pro richtiger Antwort, gute Beratung bringt Trinkgeld."
           startLabel="Ersten Kunden bedienen"
           onStart={() => startConversation()}
         />
@@ -299,7 +299,7 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
         </button>
       )}
       {phase === 'menu' && <OnlyNewToggle on={onlyNew} onToggle={toggleOnlyNew} label="Nur neue Beratungen" done={knownTheke.length} unit="Beratungen gemeistert" />}
-      {phase === 'menu' && onLearn && <LearnHint text="Fragt dich ein Kunde nach Zutaten, Preis oder Mehl oder willst du ein Brot schneiden, wird bei einer richtigen Antwort die passende Frage im Bereich „Sortiment & Warenkunde“ abgehakt, genau so, als hättest du sie im Quiz beantwortet." />}
+      {phase === 'menu' && onLearn && <LearnHint text="Richtige Antworten zu Zutaten, Preis, Mehl oder Schnitt haken die passende Quizfrage ab." />}
       {phase === 'menu' && onOpenShop && <TipJar balance={tipBalance || 0} onOpenShop={onOpenShop} big todayLeft={tipTodayLeft} />}
       {phase === 'menu' && topicPanel}
 

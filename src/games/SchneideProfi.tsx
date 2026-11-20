@@ -137,7 +137,7 @@ export function SchneideProfiView({ images, best = 0, onSaveScore, onFinished, o
           </div>
           <OnlyNewToggle on={onlyNew} onToggle={toggleOnlyNew} label="Nur neue Brote" done={sliceDone} total={SLICE_POOL.length} unit="Brote" />
           <div style={{ padding: '12px 16px', borderRadius: '14px', backgroundColor: TH.tintYellow, fontSize: '17px', fontWeight: 700 }}>{Math.min(10, onlyNew ? sliceLeft : SLICE_POOL.length)} Brote · ab 5 richtigen gibt es Punkte.{best > 0 ? ` Dein Bestwert: ${best} / 10` : ''}</div>
-          {onLearn && <LearnHint text="Jedes richtig eingestellte Brot hakt die passende Frage „Mit welcher Schnittstärke wird … geschnitten?“ im Bereich „Sortiment & Warenkunde“ ab." />}
+          {onLearn && <LearnHint text="Jedes richtig eingestellte Brot hakt seine Schnittstärke-Frage im Quiz ab." />}
           {onlyNew && sliceLeft === 0
             ? <div style={{ padding: '12px 16px', borderRadius: '14px', backgroundColor: TH.tintSage, color: TH.green, fontSize: '17px', fontWeight: 700 }}>Du hast alle Brote richtig geschnitten. Schalte „Nur neue Brote“ aus, um alles zu wiederholen.</div>
             : <>
