@@ -8,7 +8,7 @@ import { useCountUp } from './serie';
 
 /** Einfaches Linien-Symbol (statt Emojis) */
 // ── Trinkgeld-Laden: Preise in Cent ──
-export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier' | 'teigihut' | 'teigiglas' | 'teigitanz'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean; advent?: boolean };
+export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier' | 'teigihut' | 'teigiglas' | 'teigitanz'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean; advent?: boolean; spiel?: string };
 export type AnlegeArt = 'avatar' | 'title' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'teigihut' | 'teigiglas' | 'teigitanz';
 
 export const TIP_DAY_CAP = 600;
@@ -121,6 +121,13 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 'tz_schal', kind: 'teigihut', icon: '🧣', label: 'Winterschal', price: 0, advent: true, desc: 'Damit Teigi nicht friert. Nur aus dem Adventskalender.' },
   { id: 'tz_ohren', kind: 'teigihut', icon: '🎧', label: 'Ohrenschützer', price: 0, advent: true, desc: 'Flauschig warm. Nur aus dem Adventskalender.' },
   { id: 'tz_stern', kind: 'teigihut', icon: '🌟', label: 'Goldener Stern', price: 0, advent: true, desc: 'Nur für alle 24 Türchen im Adventskalender.' },
+  // Version 268: nur aus den Spielen „Zum Abschalten“ (Goldstück fangen), nicht im Laden
+  { id: 'tz_g_stirnband', kind: 'teigihut', icon: '🏃', label: 'Stirnband', price: 0, spiel: 'lauf', desc: 'Nur aus dem Teigi-Lauf: Goldkorn fangen.' },
+  { id: 'tz_g_haarreif', kind: 'teigihut', icon: '🥨', label: 'Brezel-Haarreif', price: 0, spiel: 'chaos', desc: 'Nur aus dem Backstuben-Chaos: Goldbrezel fangen.' },
+  { id: 'tz_g_kappe', kind: 'teigihut', icon: '🧢', label: 'Fahrermütze', price: 0, spiel: 'tour', desc: 'Nur aus der Lieferwagen-Tour: Goldpaket fangen.' },
+  { id: 'tz_g_ritter', kind: 'teigihut', icon: '🛡️', label: 'Ritterhelm', price: 0, spiel: 'schutz', desc: 'Nur aus Schädlinge abwehren: Goldähre fangen.' },
+  { id: 'tz_g_flieger', kind: 'teigihut', icon: '🥽', label: 'Fliegerbrille', price: 0, spiel: 'schleuder', desc: 'Nur aus der Teig-Schleuder: Goldform treffen.' },
+  { id: 'tz_g_bauhelm', kind: 'teigihut', icon: '⛑️', label: 'Bauhelm', price: 0, spiel: 'stapler', desc: 'Nur aus dem Brot-Stapler: Goldlaib fangen.' },
   { id: 'tg_bernstein', kind: 'teigiglas', icon: '🫙', label: 'Glas Bernstein', price: 600, desc: 'Teigi wohnt in einem bernsteinfarbenen Glas.' },
   { id: 'tg_rose', kind: 'teigiglas', icon: '🫙', label: 'Glas Rosé', price: 600, desc: 'Teigi wohnt in einem rosa Glas.' },
   { id: 'tg_mint', kind: 'teigiglas', icon: '🫙', label: 'Glas Minze', price: 600, desc: 'Teigi wohnt in einem mintgrünen Glas.' },
@@ -156,7 +163,7 @@ export const wochenTeile = (d = new Date()): string[] => {
   const a = (w * 5) % pool.length;
   return [pool[a], pool[(a + 1 + (w % (pool.length - 1))) % pool.length]];
 };
-export const imLaden = (it: ShopItem, d = new Date()) => it.kind !== 'haustier' && !it.advent && (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
+export const imLaden = (it: ShopItem, d = new Date()) => it.kind !== 'haustier' && !it.advent && !it.spiel && (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
 
 export const dealOfDay = (d = new Date()): ShopItem => {
   const pool = TIP_SHOP.filter(i => imLaden(i, d) && i.id !== 'j_tuete' && i.kind !== 'haustier');
@@ -284,7 +291,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
   const tabs: { id: ShopTab; icon: string; label: string }[] = [
     { id: 'zeichen', icon: '🥐', label: 'Zeichen' }, { id: 'teigi', icon: '🫙', label: 'Teigi' }, { id: 'bewegung', icon: '✨', label: 'Bewegung' }, { id: 'titel', icon: '🏷️', label: 'Titel' }, { id: 'farben', icon: '🎨', label: 'Farben' }, { id: 'joker', icon: '🃏', label: 'Joker' }, { id: 'schatz', icon: '💎', label: 'Schatzkammer' },
   ];
-  const list = (t: ShopTab) => TIP_SHOP.filter(i => (!i.advent || owned.includes(i.id)) && (
+  const list = (t: ShopTab) => TIP_SHOP.filter(i => ((!i.advent && !i.spiel) || owned.includes(i.id)) && (
     t === 'zeichen' ? i.kind === 'avatar' && (imLaden(i) || owned.includes(i.id))
       : t === 'teigi' ? ['teigihut', 'teigiglas', 'teigitanz'].includes(i.kind) && (imLaden(i) || owned.includes(i.id))
       : t === 'bewegung' ? i.kind === 'effect' || i.kind === 'jubel' : t === 'titel' ? i.kind === 'title' : t === 'farben' ? i.kind === 'theme' || i.kind === 'schrift' : i.kind === 'joker'))
@@ -575,7 +582,7 @@ export const setStand = (owned: string[]) => SAMMEL_SETS.map((st) => {
 /** Überraschungstüte (Version 229): vorher auslosen, dann speichern. Teile, die man schon hat, kommen nicht in die Tüte. */
 export type TuetenInhalt = { art: 'teil'; it: ShopItem } | { art: 'joker'; it: ShopItem } | { art: 'geld'; cents: number };
 export function tueteAuslosen(owned: string[], zufall = Math.random): TuetenInhalt {
-  const teile = TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && !i.advent && i.price <= 1000 && !owned.includes(i.id));
+  const teile = TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && !i.advent && !i.spiel && i.price <= 1000 && !owned.includes(i.id));
   const joker = TIP_SHOP.filter((i) => i.kind === 'joker' && JOKER_FIELD[i.id] && i.id !== 'j_tuete');
   const r = zufall();
   if (r < 0.45 && teile.length) return { art: 'teil', it: teile[Math.floor(zufall() * teile.length)] };
@@ -740,6 +747,55 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas, spricht = false 
         <path d="M30 20q30-34 60 0" stroke="#6B4A9A" strokeWidth="4.5" fill="none" strokeLinecap="round" />
         <circle cx="29" cy="24" r="9" fill="#F3EEFA" stroke="#6B4A9A" strokeWidth="2.4" /><circle cx="91" cy="24" r="9" fill="#F3EEFA" stroke="#6B4A9A" strokeWidth="2.4" />
         <circle cx="26.5" cy="21.5" r="3" fill="#FFFFFF" /><circle cx="88.5" cy="21.5" r="3" fill="#FFFFFF" />
+      </g>}
+      {/* Version 268: Sachen aus den Spielen „Zum Abschalten“ */}
+      {hut === 'tz_g_stirnband' && <g>
+        <rect x="28" y="18.5" width="64" height="11" rx="5" fill={u('rot')} />
+        <path d="M30 24h60" stroke="#FFFFFF" strokeWidth="2.4" opacity=".9" />
+        <path d="M90 21q10-4 14 2q-6 0-10 3zM90 26q9 4 11 11q-6-4-11-6z" fill={u('rot')} />
+        <path d="M34 20.5h20" stroke="#FFFFFF" strokeWidth="1.4" strokeLinecap="round" opacity=".55" />
+      </g>}
+      {hut === 'tz_g_haarreif' && <g>
+        <path d="M30 22Q30 -6 60 -6T90 22" stroke="#8E1B12" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M33 14Q36 -2 60 -3" stroke="#FFFFFF" strokeWidth="1.2" fill="none" opacity=".45" />
+        <g transform="translate(60 -9)">
+          <path d="M-13 4q-4-12 6-12q7 0 7 9q0-9 7-9q10 0 6 12q-3 7-13 2q-10 5-13-2zM-8 6l8-8 8 8" fill="none" stroke="#8A4A14" strokeWidth="5.4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M-13 4q-4-12 6-12q7 0 7 9q0-9 7-9q10 0 6 12q-3 7-13 2q-10 5-13-2zM-8 6l8-8 8 8" fill="none" stroke="#C67A2A" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="-8" cy="-4" r=".9" fill="#FFF6E4" /><circle cx="7" cy="-5" r=".9" fill="#FFF6E4" /><circle cx="10" cy="3" r=".9" fill="#FFF6E4" /><circle cx="-11" cy="2" r=".9" fill="#FFF6E4" />
+        </g>
+      </g>}
+      {hut === 'tz_g_kappe' && <g>
+        <path d="M34 18q0-22 26-22t26 22z" fill="#24446E" />
+        <path d="M60 18q24 0 40 4q-4 4-14 3q-14-2-26-3z" fill="#16304F" />
+        <path d="M40 10q4-10 16-12" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".35" fill="none" />
+        <rect x="33" y="14" width="54" height="5" rx="2" fill="#FFC72C" />
+        <circle cx="60" cy="-4" r="2.4" fill={u('goldTop')} />
+        <circle cx="60" cy="7" r="5" fill={u('goldTop')} stroke="#8C5A0A" strokeWidth="1" /><path d="M58 4.6v4.8M62 4.6v4.8M58 7h4" stroke="#6E440A" strokeWidth="1.2" />
+      </g>}
+      {hut === 'tz_g_ritter' && <g>
+        <path d="M32 19q0-30 28-30t28 30z" fill="#B9C2CC" stroke="#6E7883" strokeWidth="1.4" />
+        <path d="M60 -11v30" stroke="#8C96A1" strokeWidth="3" />
+        <path d="M38 8q4-14 18-16" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round" opacity=".7" fill="none" />
+        <rect x="31" y="14" width="58" height="6" rx="2" fill="#8C96A1" stroke="#6E7883" strokeWidth="1" />
+        <circle cx="38" cy="17" r="1.2" fill="#E8ECF0" /><circle cx="50" cy="17" r="1.2" fill="#E8ECF0" /><circle cx="70" cy="17" r="1.2" fill="#E8ECF0" /><circle cx="82" cy="17" r="1.2" fill="#E8ECF0" />
+        <path d="M60 -11q6-14 20-12q-6 4-8 10q8-2 12 4q-12-2-24-2z" fill={u('rot')} />
+      </g>}
+      {hut === 'tz_g_flieger' && <g>
+        <rect x="27" y="20" width="66" height="7" rx="3" fill="#7A4A22" />
+        <path d="M30 22h60" stroke="#A8703E" strokeWidth="1" strokeDasharray="2 3" />
+        {[48, 72].map((gx) => <g key={gx}>
+          <circle cx={gx} cy="17" r="10" fill={u('gold')} />
+          <circle cx={gx} cy="17" r="7.4" fill="#7FC4E8" />
+          <circle cx={gx} cy="17" r="7.4" fill={u('kante')} opacity=".55" />
+          <path d={`M${gx - 4} 14q2-3 5-3`} stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+        </g>)}
+        <rect x="57" y="14" width="6" height="5" rx="1.5" fill="#7A4A22" />
+      </g>}
+      {hut === 'tz_g_bauhelm' && <g>
+        <path d="M33 17q0-26 27-26t27 26z" fill="#FFC21A" stroke="#B8860B" strokeWidth="1.2" />
+        <path d="M60 -9q-5 0-5 6v20h10V-3q0-6-5-6z" fill="#FFD84D" stroke="#B8860B" strokeWidth="1" />
+        <path d="M40 7q3-12 14-14" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" opacity=".6" fill="none" />
+        <path d="M27 17h66q2 0 2 2.4v1.6H25v-1.6q0-2.4 2-2.4z" fill="#E8A400" stroke="#B8860B" strokeWidth="1" />
       </g>}
       {hut === 'tz_stern' && <g>
         <polygon points={Array.from({ length: 10 }, (_, i) => { const a = (i * Math.PI) / 5 - Math.PI / 2, r = i % 2 ? 6.5 : 15; return `${60 + Math.cos(a) * r},${-1 + Math.sin(a) * r}`; }).join(' ')} fill={u('goldTop')} stroke="#8C5A0A" strokeWidth="1.3" strokeLinejoin="round" />

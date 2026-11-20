@@ -1,4 +1,4 @@
-# Baut public/abschalten/index.html aus den Dateien in diesem Ordner (Version 266).
+# Baut public/abschalten/index.html aus den Dateien in diesem Ordner (Version 266, ergänzt 268).
 # Aufruf aus dem Hauptordner: python3 tools/abschalten/baue.py
 import os
 d = os.path.dirname(os.path.abspath(__file__))

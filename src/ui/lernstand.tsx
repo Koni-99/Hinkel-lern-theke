@@ -183,6 +183,12 @@ export function computeBadges(prog: any, masteryPct: number, fachPct: number, al
     { id: 'alternativen', icon: '🤝', title: 'Alternativen-Ass', desc: '30 Ausverkauft-Situationen gemeistert', ok: knownCount(p, 'alternativen') >= 30 },
     { id: 'beratung', icon: '🛎️', title: 'Beratungs-Profi', desc: '20 verschiedene Beratungen im Theken-Simulator gemeistert', ok: knownCount(p, 'theke') >= 20 },
     { id: 'advent', icon: '🎄', title: 'Adventsheld', desc: 'Alle 24 Türchen im Adventskalender geöffnet', ok: adventMax(p) >= 24 },
+    // Version 268: Zum Abschalten (Tagesaufgabe und Goldstücke)
+    { id: 'ab_aufgabe1', icon: '☕', title: 'Feierabend-Spieler', desc: 'Erste Tagesaufgabe bei „Zum Abschalten“ geschafft', ok: Object.keys(p._abAufgaben || {}).length >= 1 },
+    { id: 'ab_aufgabe7', icon: '🎈', title: 'Gut abgeschaltet', desc: '7 Tagesaufgaben bei „Zum Abschalten“ geschafft', ok: Object.keys(p._abAufgaben || {}).length >= 7 },
+    { id: 'ab_aufgabe30', icon: '🏝️', title: 'Tiefenentspannt', desc: '30 Tagesaufgaben bei „Zum Abschalten“ geschafft', ok: Object.keys(p._abAufgaben || {}).length >= 30 },
+    { id: 'ab_gold1', icon: '✨', title: 'Goldfinder', desc: 'Ein Goldstück in einem Spiel zum Abschalten gefangen', ok: Object.keys(p._abGold || {}).length >= 1 },
+    { id: 'ab_gold6', icon: '🏆', title: 'Goldschatz', desc: 'In allen sechs Spielen zum Abschalten das Goldstück gefangen', ok: Object.keys(p._abGold || {}).length >= 6 },
     // Neue Abzeichen
     { id: 'wissen300', icon: '🧠', title: 'Wissensriese', desc: '300 Fragen gemeistert', ok: ok.size >= 300 },
     { id: 'alles', icon: '🏰', title: 'Hinkel-Legende', desc: 'Alle Fragen, alle Produkte und alle Fotos geschafft', ok: masteryPct >= 100 && allProducts && allPhotos },

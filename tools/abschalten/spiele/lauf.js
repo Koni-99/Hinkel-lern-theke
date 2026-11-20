@@ -316,6 +316,52 @@ function lauf_zielFahne(fx, t, name){
   text(name, fx + 2 + (w - 8) / 2, top + h / 2 + Math.sin(t * 5 + 3.5) * 1.2, { gr: 12, farbe: '#FFFFFF', schat: false });
 }
 
+// ── Goldkorn (ganz selten) ──
+function lauf_goldKorn(gx, gy, t){
+  if (typeof goldGlanz === 'function') goldGlanz(gx, gy, 18, t);
+  const s = Math.max(.45, Math.abs(Math.cos(t * 2.6)));
+  x.save(); x.translate(gx, gy); x.rotate(.35); x.scale(s * 1.7, 1.7);
+  x.beginPath(); x.ellipse(0, 0, 6, 9.5, 0, 0, 7);
+  x.fillStyle = linear(-6, -9, 6, 9, [[0, '#FFF1B8'], [.45, '#FFC72C'], [1, '#C98A00']]); x.fill();
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.1; x.stroke();
+  x.strokeStyle = 'rgba(150,95,0,.6)'; x.lineWidth = .9; x.beginPath(); x.moveTo(0, -7); x.quadraticCurveTo(1.6, 0, 0, 7); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,.9)'; x.beginPath(); x.ellipse(-2.2, -3.5, 1.4, 3, .2, 0, 7); x.fill();
+  x.restore();
+}
+// ── Geister-Lauf: blasser, bläulicher Teigi des besten Laufs ──
+const LAUF_GEIST = { bild: null, quelle: '' };
+function lauf_geistBild(){
+  if (!teigiBereit) return null;
+  if (LAUF_GEIST.bild && LAUF_GEIST.quelle === TEIGI_BILD.src) return LAUF_GEIST.bild;
+  const k = document.createElement('canvas'); k.width = k.height = 160; const g = k.getContext('2d');
+  g.drawImage(TEIGI_BILD, 0, 0, 160, 160);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(205,228,255,.62)'; g.fillRect(0, 0, 160, 160);
+  LAUF_GEIST.bild = k; LAUF_GEIST.quelle = TEIGI_BILD.src; return k;
+}
+function lauf_geistMalen(gx, fussY, t){
+  const b = lauf_geistBild(), g = LAUF_GR, bob = Math.sin(t * 9) * 1.5;
+  x.globalAlpha = .42;
+  if (b) x.drawImage(b, gx - g / 2, fussY - g * .93 + bob, g, g);
+  else { rr(gx - g * .25, fussY - g * .8, g * .5, g * .7, 10); x.fillStyle = '#DDEBFF'; x.fill(); }
+  x.globalAlpha = .5; x.strokeStyle = 'rgba(200,225,255,.9)'; x.lineWidth = 1.2; x.setLineDash([3, 4]);
+  x.beginPath(); x.ellipse(gx, fussY - g * .45 + bob, g * .36, g * .5, 0, 0, 7); x.stroke(); x.setLineDash([]);
+  x.globalAlpha = 1;
+  // kleines Schild über dem Geist
+  const ty = fussY - g - 4 + bob;
+  x.globalAlpha = .85; rr(gx - 30, ty - 9, 60, 18, 9); x.fillStyle = 'rgba(52,72,110,.7)'; x.fill(); x.globalAlpha = 1;
+  text('Bestzeit', gx, ty, { gr: 10.5, farbe: '#EEF5FF', schat: false });
+}
+function lauf_geistPfeil(rechts, meter){
+  const txt = `Bestzeit ${rechts ? '+' : '-'}${meter} m`;
+  x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(txt).width + 34, y0 = 268;
+  const px = rechts ? W - 10 - w : 10;
+  rr(px, y0, w, 26, 13); x.fillStyle = 'rgba(52,72,110,.72)'; x.fill();
+  x.strokeStyle = 'rgba(205,228,255,.7)'; x.lineWidth = 1; x.stroke();
+  const ax = rechts ? px + w - 14 : px + 14, d = rechts ? 1 : -1;
+  x.fillStyle = '#DDEBFF'; x.beginPath(); x.moveTo(ax + d * 6, y0 + 13); x.lineTo(ax - d * 3, y0 + 6); x.lineTo(ax - d * 3, y0 + 20); x.closePath(); x.fill();
+  text(txt, px + w / 2 - d * 6, y0 + 13.5, { gr: 12, farbe: '#EEF5FF', schat: false });
+}
+
 // ── Teigi selbst (ohne mitwandernden Bodenschatten) ──
 function lauf_figur(px, fussY, g, { sx = 1, sy = 1, rot = 0, schritt = 0, amBoden = true, blink = false, fuss } = {}){
   const fy0 = fuss ?? fussY;
@@ -338,6 +384,9 @@ function lauf_figur(px, fussY, g, { sx = 1, sy = 1, rot = 0, schritt = 0, amBode
   x.globalAlpha = 1;
 }
 
+const lauf_statPlus = (n, v) => { if (typeof statPlus === 'function') statPlus(n, v); };
+const lauf_statMax = (n, v) => { if (typeof statMax === 'function') statMax(n, v); };
+
 SPIELE.lauf = {
   key: 'lauf', name: 'Teigi-Lauf', kurz: 'Springen',
   anleitung: 'Tippen zum Springen, in der Luft nochmal tippen für einen Doppelsprung. Spring über Mehlsäcke, Blechwagen und Brotkörbe und sammle goldene Körner. Am Ofen wartet eine Bonus-Frage.',
@@ -349,11 +398,29 @@ SPIELE.lauf = {
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
+    // Goldkorn und Geister-Lauf
+    this.goldZeit = zufall(15, 40); this.gold = null;
+    this.aufnahme = { d: [], y: [], dt: .1 }; this.aufT = 0; this.aufWeg = 0;
+    const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('lauf') : null;
+    this.geist = null;
+    if (gd && Array.isArray(gd.d) && gd.d.length > 5 && Array.isArray(gd.y) && gd.dt > 0) {
+      const summe = []; let w = 0; for (const d of gd.d) { w += d; summe.push(w); }
+      this.geist = { dt: gd.dt, summe, y: gd.y, aus: false };
+    }
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
   },
   meter(){ return Math.floor(this.weg / 32); },
   punkte(){ return this.meter() + this.k * 5 + this.extra; },
   aktuellePunkte(){ return this.punkte(); },
+  /** Für den Geister-Lauf: alle 0,1 s gelaufene Strecke (Zuwachs) und Sprunghöhe */
+  geistDaten(){ const a = this.aufnahme; return a && a.d.length > 5 ? { v: 1, dt: a.dt, d: a.d, y: a.y } : null; },
+  geistJetzt(){
+    const g = this.geist; if (!g || g.aus) return null;
+    const f = this.zeit / g.dt, i = Math.floor(f);
+    if (i >= g.summe.length - 1) return null;
+    const u = f - i, w0 = i > 0 ? g.summe[i - 1] : 0;
+    return { weg: lerp(w0, g.summe[i], u), y: lerp(g.y[i] || 0, g.y[i + 1] || 0, u) };
+  },
   medaillen: [250, 900, 2500],
   springen(){
     if (this.tot >= 0) return;
@@ -439,6 +506,33 @@ SPIELE.lauf = {
     this.brezeln = this.brezeln.filter((b) => b.x > -40 && !b.weg);
     for (const s of this.staub) { s.x -= v * s.v * .3; s.y += Math.sin(this.zeit + s.p) * .1; if (s.x < -4) { s.x = W + 4; s.y = zufall(60, 380); } }
 
+    // Aufnahme für den Geister-Lauf (klein: Zuwachs in px und Höhe, ganze Zahlen)
+    this.aufT += dt;
+    while (this.aufT >= this.aufnahme.dt) {
+      this.aufT -= this.aufnahme.dt; const a = this.aufnahme;
+      a.d.push(Math.round(this.weg - this.aufWeg)); this.aufWeg += a.d[a.d.length - 1]; a.y.push(Math.round(this.y));
+      if (a.d.length > 2400) { const d = [], yy = []; for (let i = 0; i + 1 < a.d.length; i += 2) { d.push(a.d[i] + a.d[i + 1]); yy.push(a.y[i + 1]); } a.d = d; a.y = yy; a.dt *= 2; }
+    }
+    // Geist am Ende seines Laufs: kleiner Puff
+    if (this.geist && !this.geist.aus && this.zeit / this.geist.dt >= this.geist.summe.length - 1) {
+      this.geist.aus = true;
+      const gx = LAUF_TX + this.geist.summe[this.geist.summe.length - 1] - this.weg;
+      if (gx > -20 && gx < W + 20) { teilchen(gx, LAUF_BODEN - 36, { n: 16, farben: ['rgba(220,235,255,.9)', 'rgba(255,255,255,.8)'], tempo: 90, groesse: [4, 9], schwer: -40, leben: [.5, .9] }); schwebText('Bestzeit vorbei', gx, LAUF_BODEN - 100, '#4A6A9A', 16); }
+    }
+    lauf_statMax('meter', this.meter());
+    // Goldkorn: schwebt langsam heran, auf und ab, nach ein paar Sekunden ist es weg
+    if (!this.gold && this.zeit > this.goldZeit && typeof goldKommt === 'function' && goldKommt()) {
+      const frei = this.hind.every((h) => h.x + h.w < W - 40 || h.x > W + 120);
+      if (frei) { this.gold = { x: W + 24, y: LAUF_BODEN - 120, t: 0 }; goldErschienen(); }
+    }
+    if (this.gold) {
+      const g = this.gold; g.t += dt; g.x -= dt * (this.tempo * .3 + 20); g.y = LAUF_BODEN - 120 + Math.sin(g.t * 2.3) * 55;
+      if (Math.abs(g.x - LAUF_TX) < 32 && Math.abs(g.y - (LAUF_BODEN + this.y - 32)) < 40) {
+        if (typeof goldGefangen === 'function') goldGefangen(g.x, g.y);
+        this.extra += 50; schwebText('+50', g.x, g.y - 30, '#B07A00', 20); this.gold = null;
+      } else if (g.x < -30) this.gold = null;
+    }
+
     // Nachschub
     if (this.weg >= this.naechstAb && !this.ofenSperre) this.erzeugen();
     this.ofenIn -= dt; this.brezelIn -= dt;
@@ -480,7 +574,7 @@ SPIELE.lauf = {
       this.flagge = { name: ziel.name, weg: this.weg + Math.max(5, (ziel.punkte - this.punkte()) / rate) * 32 };
     }
     for (const k of this.koerner) if (!k.weg && Math.abs(k.x - LAUF_TX) < 26 && Math.abs(k.y - mitte) < 38) {
-      k.weg = true; this.k++;
+      k.weg = true; this.k++; lauf_statPlus('koerner', 1);
       teilchen(k.x, k.y, { n: 6, tempo: 90, groesse: [1.5, 3], leben: [.25, .45], schwer: 0 });
       if (--this.gruppen[k.g] === 0) { this.extra += 10; brumm(25); schwebText('Alle! +10', k.x + 10, k.y - 22, '#B07A00', 18); }
     }
@@ -564,6 +658,14 @@ SPIELE.lauf = {
       else if (h.art === 'stapel') { lauf_sack(h.x - 2, LAUF_BODEN, h.w + 4, h.h * .52, h.wackel); lauf_sack(h.x + 3, LAUF_BODEN - h.h * .5, h.w - 6, h.h * .5, h.wackel); }
       else if (h.art === 'wagen') lauf_wagen(h.x, LAUF_BODEN, h.w, h.h);
       else lauf_korb(h.x, LAUF_BODEN, h.w, h.h);
+    }
+    if (this.gold) lauf_goldKorn(this.gold.x, this.gold.y, t);
+    // Geister-Lauf
+    const gj = laeuft && this.tot < 0 ? this.geistJetzt() : null;
+    if (gj) {
+      const gx = LAUF_TX + gj.weg - (this.weg || 0);
+      if (gx > -30 && gx < W + 30) lauf_geistMalen(gx, LAUF_BODEN + gj.y, t);
+      else { const m = Math.round((gj.weg - (this.weg || 0)) / 32); if (m !== 0) lauf_geistPfeil(m > 0, Math.abs(m)); }
     }
     // Teigi
     const y = this.y || 0, hoehe = -y;

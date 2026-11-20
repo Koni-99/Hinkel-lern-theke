@@ -35,12 +35,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .pille{display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 8px;border-radius:999px;background:linear-gradient(180deg,rgba(255,252,244,.94),rgba(255,243,220,.9));color:#2B170A;font:800 14px/1 var(--text);font-variant-numeric:tabular-nums;box-shadow:0 4px 10px -4px rgba(31,20,12,.45),inset 0 1px 0 #fff;white-space:nowrap}
 .pille i{display:inline-flex;width:17px;height:17px}.pille i svg{width:100%;height:100%}
 .pille i.herz{width:15px;height:15px;margin-right:-2px}
-.ueber{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(120% 80% at 50% 30%,rgba(43,23,10,.35),rgba(20,10,4,.78));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:einblenden .3s ease}
-.ueber .karte{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 18px 18px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#FFF1D6);color:#2B170A;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 #fff;animation:hoch .45s cubic-bezier(.2,1.4,.4,1)}
+.ueber{position:absolute;inset:0;z-index:4;display:flex;align-items:safe center;justify-content:center;padding:14px;overflow-y:auto;background:radial-gradient(120% 80% at 50% 30%,rgba(43,23,10,.35),rgba(20,10,4,.78));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:einblenden .3s ease}
+.ueber .karte{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 16px;margin:auto 0;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#FFF1D6);color:#2B170A;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 #fff;animation:hoch .45s cubic-bezier(.2,1.4,.4,1)}
 .ueber .marke{font-size:11.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#8A6A3A;background:#FFF0C2;padding:4px 10px;border-radius:999px}
 .ueber .marke.gold{background:linear-gradient(90deg,#FFC72C,#FFE58A,#FFC72C);color:#4B2A14;animation:glanz 1.6s ease-in-out infinite}
 .ueber h2{margin:0;font-family:var(--display);font-size:30px;line-height:1.05}
-.ueber p{margin:0;font-size:14.5px;color:#6B5640;line-height:1.45}
+.ueber p{margin:0;font-size:13.5px;color:#6B5640;line-height:1.45}
 .ueber .zahl{font-family:var(--display);font-size:54px;line-height:1;font-weight:800;color:#4B2A14;font-variant-numeric:tabular-nums}
 .ueber .rekord{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#8A6A3A}.ueber .rekord svg{width:16px;height:16px}
 .ueber .los{margin-top:4px;min-height:54px;min-width:200px;border:none;border-radius:16px;padding:0 24px;font:800 18px var(--text);cursor:pointer;color:#2B170A;background:linear-gradient(180deg,#FFD95A,#F2B400);box-shadow:0 6px 0 #B98200,0 12px 22px -8px rgba(185,130,0,.8);transition:transform .1s,box-shadow .1s}
@@ -293,7 +293,7 @@ function schleife(t){
   if (laeuft && !frageOffen && !pausiert) { spiel.tick(dt); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
   if (!frageOffen && !pausiert) fxTick(dt);
   x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
-  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore();
+  spiel.malen(t / 1000); saisonMalen(t / 1000, frageOffen || pausiert ? 0 : dt); fxMalen(); zielMalen(); x.restore();
   pauseKnopf.hidden = !laeuft || frageOffen || pausiert;
   requestAnimationFrame(schleife);
 }
@@ -316,7 +316,7 @@ pauseKnopf.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hid
 feld.appendChild(pauseKnopf);
 const pauseStil = document.createElement('style');
 pauseStil.textContent = '.pause-knopf{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;width:36px;height:36px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;background:rgba(43,23,10,.55);color:#FFE9B0;cursor:pointer;box-shadow:0 4px 10px -4px rgba(0,0,0,.5)}.pause-knopf:active{transform:translateX(-50%) scale(.92)}'
-  + '.schalter{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;border:2px solid #EADBC0;background:#FFFFFF;cursor:pointer;text-align:left;font:700 14px var(--text);color:#2B170A}.schalter .spur{flex:0 0 42px;height:24px;border-radius:999px;background:#D9CBB2;position:relative;transition:background .2s}.schalter .spur::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.schalter[aria-pressed="true"] .spur{background:#2F9A47}.schalter[aria-pressed="true"] .spur::after{left:21px}.schalter small{display:block;font-weight:600;font-size:12px;color:#8A6A3A}'
+  + '.schalter{display:flex;align-items:center;gap:10px;width:100%;padding:5px 12px;border-radius:12px;border:2px solid #EADBC0;background:#FFFFFF;cursor:pointer;text-align:left;font:700 14px var(--text);color:#2B170A}.schalter .spur{flex:0 0 42px;height:24px;border-radius:999px;background:#D9CBB2;position:relative;transition:background .2s}.schalter .spur::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.schalter[aria-pressed="true"] .spur{background:#2F9A47}.schalter[aria-pressed="true"] .spur::after{left:21px}.schalter small{display:block;font-weight:600;font-size:12px;color:#8A6A3A}'
   + '.medaillen{display:flex;gap:10px;justify-content:center;align-items:flex-end}.medaillen span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;color:#8A6A3A}.medaillen span.weg{opacity:.35;filter:grayscale(1)}'
   + '.ueber .zeile{font-size:13.5px;font-weight:700;color:#8A6A3A}';
 document.head.appendChild(pauseStil);
@@ -338,12 +338,13 @@ function zeigeStart(){
   runde++; laeuft = false; pausiert = false; ueber.hidden = false; ueber.className = 'ueber start';
   const r = rekordLesen(spiel.key);
   const ziel = naechstesZiel(r);
-  ueber.innerHTML = `<div class="karte"><span class="marke">Zum Abschalten</span><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${medaillenHtml(spiel.key, r)}${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}${ziel ? `<span class="zeile">Nächstes Ziel: ${ziel.name} mit ${ziel.punkte.toLocaleString('de-DE')}</span>` : ''}<button class="schalter" type="button" aria-pressed="${GEMUETLICH}"><span class="spur"></span><span>Gemütlich spielen<small>Langsamer, ohne Zeitdruck. Zählt nicht für den Rekord.</small></span></button><button class="los">Los geht's</button></div>`;
+  ueber.innerHTML = `<div class="karte"><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${medaillenHtml(spiel.key, r)}${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}${ziel ? `<span class="zeile">Nächstes Ziel: ${ziel.name} mit ${ziel.punkte.toLocaleString('de-DE')}</span>` : ''}${aufgabeHtml()}<button class="schalter" type="button" aria-pressed="${GEMUETLICH}"><span class="spur"></span><span>Gemütlich spielen<small>Zählt nicht für den Rekord.</small></span></button><button class="los">Los geht's</button></div>`;
   const sch = ueber.querySelector('.schalter');
   sch.addEventListener('click', () => { GEMUETLICH = !GEMUETLICH; sch.setAttribute('aria-pressed', String(GEMUETLICH)); try { localStorage.setItem('lt_abschalten_gemuetlich', GEMUETLICH ? '1' : '0'); } catch {} });
   ueber.querySelector('.los').addEventListener('click', starten);
+  aufgabeKnopf();
 }
-function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; spiel.start(); laeuft = true; startZeit = performance.now(); }
+function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; startZeit = performance.now(); }
 function ende(punkte, zeile){
   laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80);
   const alt = rekordLesen(spiel.key);
@@ -352,13 +353,16 @@ function ende(punkte, zeile){
   const medAlt = medailleFuer(spiel.key, alt), medNeu = rundeGemuetlich ? 0 : medailleFuer(spiel.key, punkte);
   const m = medaillenVon(spiel.key), naechste = m ? m.find((g) => g > Math.max(alt, punkte)) : null;
   const meineRunde = runde, meinSpiel = spiel;
+  if (neu && spiel.geistDaten) geistSchreiben(spiel.key, spiel.geistDaten());
+  const goldZeile = goldEndZeile();
   setTimeout(() => {
     if (meineRunde !== runde || meinSpiel !== spiel) return; // inzwischen neu gestartet oder anderes Spiel gewählt
     ueber.hidden = false; ueber.className = 'ueber ende';
     const medZeile = medNeu > medAlt ? `<span class="marke gold" style="display:inline-flex;align-items:center;gap:6px">${medailleSvg(medNeu, 20)}${MEDAILLE_NAME[medNeu]} geschafft!</span>` : '';
     const nochZeile = !rundeGemuetlich && naechste ? `<span class="zeile">Noch ${(naechste - Math.max(alt, punkte)).toLocaleString('de-DE')} bis ${MEDAILLE_NAME[m.indexOf(naechste) + 1]}</span>` : '';
-    ueber.innerHTML = `<div class="karte">${rundeGemuetlich ? '<span class="marke">Gemütliche Runde</span>' : neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}${medZeile}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p>${rundeGemuetlich ? '<span class="zeile">Gemütlich zählt nicht für den Rekord.</span>' : `<span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span>`}${nochZeile}<button class="los">Nochmal</button></div>`;
+    ueber.innerHTML = `<div class="karte">${rundeGemuetlich ? '<span class="marke">Gemütliche Runde</span>' : neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}${medZeile}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p>${rundeGemuetlich ? '<span class="zeile">Gemütlich zählt nicht für den Rekord.</span>' : `<span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span>`}${nochZeile}${goldZeile}<button class="los">Nochmal</button>${!rundeGemuetlich && punkte > 0 && imRahmen ? '<button class="fordern" type="button">Kollegen herausfordern</button>' : ''}</div>`;
     ueber.querySelector('.los').addEventListener('click', starten);
+    ueber.querySelector('.fordern')?.addEventListener('click', () => nachAussen({ typ: 'lt-abschalten-herausfordern', key: meinSpiel.key, punkte }));
     if (neu || medNeu > medAlt) { brumm(60); for (let i = 0; i < 4; i++) setTimeout(() => teilchen(zufall(60, 300), zufall(80, 200), { n: 26, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], tempo: 260, form: 'stern', groesse: [3, 6], leben: [.8, 1.4] }), i * 180); }
   }, 450);
 }
@@ -371,6 +375,198 @@ c.addEventListener('pointermove', (e) => { if (!zeiger || !laeuft) return; spiel
 const loslassen = (e) => { if (!zeiger) return; const p = pos(e); const s = zeiger; zeiger = null; if (laeuft) spiel.hoch?.(p, s); };
 c.addEventListener('pointerup', loslassen); c.addEventListener('pointercancel', loslassen);
 addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && spiel.taste) { if ([' ', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.key)) e.preventDefault(); spiel.taste(e.key); } });
+
+// ── Version 268: Saison-Deko, Goldstücke, Tagesaufgabe, Geister-Lauf, Kollegen herausfordern ──
+const imRahmen = (() => { try { return parent !== window; } catch { return true; } })();
+function nachAussen(d){ try { if (imRahmen) parent.postMessage(d, location.origin); } catch {} }
+
+// Saison-Deko: kommt von selbst nach Datum. Liegt über dem Spiel, aber nur leicht (stört nicht beim Spielen).
+// Ein Spiel kann sie ausschalten (spiel.saisonAus = true) oder eigenes Wetter melden (spiel.eigenesWetter() → kein Schnee).
+let SAISON_TEST = null;
+function osterSonntag(j){ const a = j % 19, b = Math.floor(j / 100), cc = j % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(cc / 4), k = cc % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), ta = ((h + l - 7 * m + 114) % 31) + 1; return new Date(j, mo - 1, ta); }
+function saisonHeute(d = new Date()){
+  const mo = d.getMonth() + 1, ta = d.getDate(), tag = new Date(d.getFullYear(), d.getMonth(), ta);
+  const os = osterSonntag(d.getFullYear()), weiber = new Date(os); weiber.setDate(os.getDate() - 52); const veilchen = new Date(os); veilchen.setDate(os.getDate() - 47);
+  if ((mo === 11 && ta === 11) || (tag >= weiber && tag <= veilchen)) return 'karneval';
+  if (mo === 12 && ta <= 24) return 'advent';
+  if ((mo === 12 && ta > 24) || (mo === 1 && ta <= 6)) return 'weihnacht';
+  if (mo <= 2) return 'winter';
+  if (mo <= 5) return 'fruehling';
+  if (mo <= 8) return 'sommer';
+  return 'herbst';
+}
+const SAISON_NAME = { advent: 'Adventszeit', weihnacht: 'Weihnachtszeit', winter: 'Winter', karneval: 'Karneval', fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst' };
+const SAISON = { art: null, teile: [], fuer: null };
+const LICHT_FARBEN = ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#FF9AD0'];
+const lichtSprite = {};
+function lichtGlanz(f){
+  if (lichtSprite[f]) return lichtSprite[f];
+  const k = document.createElement('canvas'); k.width = k.height = 64; const g = k.getContext('2d');
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, f + 'CC'); r.addColorStop(.35, f + '55'); r.addColorStop(1, f + '00');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return (lichtSprite[f] = k);
+}
+function saisonTeil(art, oben){
+  const t = { x: zufall(0, W), y: oben ? zufall(-H, 0) : zufall(0, H), ph: zufall(0, 7), rot: zufall(0, 6), vr: zufall(-2, 2) };
+  if (art === 'schnee') Object.assign(t, { r: zufall(1.2, 3.4), vy: zufall(18, 42), a: zufall(.5, .9) });
+  if (art === 'konfetti') Object.assign(t, { r: zufall(3, 5.5), vy: zufall(40, 75), f: ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#C77DFF', '#FF9AD0'][ganz(0, 5)], vr: zufall(-6, 6) });
+  if (art === 'bluete') Object.assign(t, { r: zufall(3.5, 6), vy: zufall(22, 40), f: ['#FFD3E2', '#FFFFFF', '#FFB8D0'][ganz(0, 2)] });
+  if (art === 'blatt') Object.assign(t, { r: zufall(5, 8), vy: zufall(26, 46), f: ['#E07B22', '#C9461E', '#D9A126', '#9A5A1E'][ganz(0, 3)] });
+  if (art === 'funkel') Object.assign(t, { r: zufall(1, 2.4), vy: zufall(-6, 6), y: zufall(20, H * .55) });
+  t.art = art; return t;
+}
+function saisonVorbereiten(){
+  const art = SAISON_TEST || saisonHeute(); SAISON.art = art; SAISON.fuer = spiel && spiel.key; SAISON.teile = [];
+  const mach = (a, n) => { for (let i = 0; i < (ohneBewegung ? Math.ceil(n / 3) : n); i++) SAISON.teile.push(saisonTeil(a, false)); };
+  if (art === 'advent' || art === 'weihnacht') mach('schnee', 26);
+  if (art === 'winter') mach('schnee', 18);
+  if (art === 'karneval') mach('konfetti', 26);
+  if (art === 'fruehling') mach('bluete', 12);
+  if (art === 'herbst') mach('blatt', 10);
+  if (art === 'sommer') mach('funkel', 10);
+}
+function saisonMalen(t, dt){
+  if (!spiel || spiel.saisonAus) return;
+  if (SAISON.fuer !== spiel.key || !SAISON.art) saisonVorbereiten();
+  const art = SAISON.art, ohneSchnee = !!(spiel.eigenesWetter && spiel.eigenesWetter());
+  x.save();
+  if (art === 'sommer') {
+    // Sonne oben links: weicher Schein und langsam drehende Strahlen
+    const g = x.createRadialGradient(10, 10, 0, 10, 10, 170); g.addColorStop(0, 'rgba(255,236,150,.6)'); g.addColorStop(.45, 'rgba(255,214,90,.2)'); g.addColorStop(1, 'rgba(255,214,90,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 200, 200);
+    x.translate(10, 10); x.rotate(t * .05); x.fillStyle = 'rgba(255,236,160,.16)';
+    for (let i = 0; i < 9; i++) { x.rotate(Math.PI * 2 / 9); x.beginPath(); x.moveTo(0, 0); x.lineTo(230, -16); x.lineTo(230, 16); x.closePath(); x.fill(); }
+    x.setTransform(SKAL, 0, 0, c.height / H, 0, 0);
+  }
+  for (const p of SAISON.teile) {
+    if (p.art === 'schnee' && ohneSchnee) continue;
+    p.y += p.vy * dt; p.ph += dt; p.rot += p.vr * dt;
+    const wx = p.x + Math.sin(p.ph * (p.art === 'blatt' ? 1.3 : .9)) * (p.art === 'blatt' ? 16 : 8);
+    if (p.art !== 'funkel' && p.y > H + 10) { Object.assign(p, saisonTeil(p.art, true)); p.y = -10; }
+    if (p.art === 'schnee') { x.globalAlpha = p.a * .5; x.fillStyle = '#8FA3BE'; x.beginPath(); x.arc(wx + .5, p.y + .8, p.r + .7, 0, 7); x.fill(); x.globalAlpha = p.a; x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(wx, p.y, p.r, 0, 7); x.fill(); }
+    else if (p.art === 'konfetti') { x.globalAlpha = .85; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.scale(1, Math.abs(Math.cos(p.ph * 3)) * .8 + .2); x.fillStyle = p.f; x.fillRect(-p.r, -p.r * .55, p.r * 2, p.r * 1.1); x.restore(); }
+    else if (p.art === 'bluete' || p.art === 'blatt') {
+      x.globalAlpha = p.art === 'blatt' ? .82 : .75; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.fillStyle = p.f; x.beginPath();
+      if (p.art === 'bluete') x.ellipse(0, 0, p.r, p.r * .6, 0, 0, 7); else { x.moveTo(-p.r, 0); x.quadraticCurveTo(0, -p.r * .9, p.r, 0); x.quadraticCurveTo(0, p.r * .9, -p.r, 0); }
+      x.fill(); if (p.art === 'blatt') { x.strokeStyle = 'rgba(80,40,10,.45)'; x.lineWidth = .8; x.beginPath(); x.moveTo(-p.r, 0); x.lineTo(p.r, 0); x.stroke(); } x.restore();
+    } else if (p.art === 'funkel') { const a = (Math.sin(p.ph * 2.2) + 1) / 2; x.globalAlpha = a * .7; x.fillStyle = '#FFF6C8'; x.save(); x.translate(wx, p.y); x.rotate(Math.PI / 4); x.fillRect(-p.r * 2.4, -p.r * .35, p.r * 4.8, p.r * .7); x.fillRect(-p.r * .35, -p.r * 2.4, p.r * .7, p.r * 4.8); x.restore(); }
+  }
+  x.globalAlpha = 1;
+  if (art === 'advent' || art === 'weihnacht') {
+    // Lichterkette oben: Kabel hängt in zwei Bögen durch, Birnen leuchten abwechselnd
+    const y0 = 3, durch = 14, pkt = (px) => y0 + Math.abs(Math.sin(px / W * Math.PI * 2)) * durch;
+    x.strokeStyle = 'rgba(40,60,30,.85)'; x.lineWidth = 1.6; x.beginPath(); for (let px = 0; px <= W; px += 6) x.lineTo(px, pkt(px)); x.stroke();
+    for (let i = 0, px = 12; px < W; px += 24, i++) {
+      const f = LICHT_FARBEN[i % LICHT_FARBEN.length], py = pkt(px) + 5, an = .55 + .45 * Math.sin(t * 2.2 + i * 1.7);
+      x.globalAlpha = an; x.drawImage(lichtGlanz(f), px - 13, py - 11, 26, 26); x.globalAlpha = 1;
+      x.fillStyle = '#3B4A2E'; x.fillRect(px - 2, py - 6, 4, 3.5);
+      x.fillStyle = f; x.beginPath(); x.ellipse(px, py, 3.2, 4.6, 0, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.arc(px - 1, py - 1.5, 1.1, 0, 7); x.fill();
+    }
+  }
+  if (art === 'karneval') {
+    // Luftschlangen in den oberen Ecken
+    const schlange = (sx, f, dir) => { x.strokeStyle = f; x.lineWidth = 2.4; x.lineCap = 'round'; x.beginPath(); for (let i = 0; i <= 40; i++) { const u = i / 40; x.lineTo(sx + dir * (u * 60 + Math.sin(u * 14 + t * 1.5) * 7), u * 95 + Math.cos(u * 14) * 6); } x.stroke(); };
+    schlange(4, '#FF5A4E', 1); schlange(18, '#FFC72C', 1); schlange(W - 4, '#58B4FF', -1); schlange(W - 18, '#5BD46A', -1);
+  }
+  x.restore();
+}
+
+// Goldstücke: ganz selten taucht in einer Runde ein goldenes Ding auf. Wer es fängt, schaltet eine Teigi-Sache frei
+// (gibt es nicht im Laden). Das Spiel fragt goldKommt() und ruft goldErschienen() und goldGefangen(px, py).
+const GOLD = {
+  lauf: { ding: 'Goldkorn', sache: 'Stirnband' }, chaos: { ding: 'Goldbrezel', sache: 'Brezel-Haarreif' }, tour: { ding: 'Goldpaket', sache: 'Fahrermütze' },
+  schutz: { ding: 'Goldähre', sache: 'Ritterhelm' }, schleuder: { ding: 'Goldform', sache: 'Fliegerbrille' }, stapler: { ding: 'Goldlaib', sache: 'Bauhelm' },
+};
+let GOLD_SCHON = {}, GOLD_TEST = false;
+const GOLD_RUNDE = { kommt: false, da: false, gefangen: false };
+/** true: in dieser Runde soll das Goldstück noch erscheinen (das Spiel wählt den Moment, z. B. nach 20 s) */
+const goldKommt = () => GOLD_RUNDE.kommt && !GOLD_RUNDE.da;
+function goldErschienen(){ GOLD_RUNDE.da = true; const g = GOLD[spiel.key]; if (g) { schwebText(`${g.ding}! Schnell!`, W / 2, 140, '#B8860B', 21); brumm(20); } }
+function goldGefangen(px, py){
+  if (GOLD_RUNDE.gefangen) return; GOLD_RUNDE.gefangen = true;
+  const g = GOLD[spiel.key] || { ding: 'Gold', sache: '' };
+  blitz(.45, '255,230,140'); brumm(90);
+  teilchen(px, py, { n: 40, form: 'stern', farben: ['#FFC72C', '#FFF1B8', '#FFFFFF', '#E0A526'], tempo: 280, groesse: [3, 7], leben: [.8, 1.5] });
+  schwebText(GOLD_SCHON[spiel.key] ? `${g.ding} gefangen!` : `Neu für Teigi: ${g.sache}`, W / 2, 150, '#B8860B', 21);
+  nachAussen({ typ: 'lt-abschalten-gold', key: spiel.key });
+  GOLD_SCHON[spiel.key] = GOLD_SCHON[spiel.key] || 'neu';
+}
+/** Goldener Schein um ein Goldstück (das Spiel malt das Ding selbst darüber) */
+function goldGlanz(px, py, r = 20, t = 0){
+  const g = x.createRadialGradient(px, py, 0, px, py, r * 2.2); g.addColorStop(0, 'rgba(255,230,120,.75)'); g.addColorStop(.5, 'rgba(255,200,40,.28)'); g.addColorStop(1, 'rgba(255,200,40,0)');
+  x.fillStyle = g; x.beginPath(); x.arc(px, py, r * 2.2, 0, 7); x.fill();
+  x.save(); x.translate(px, py); x.rotate(t * 1.6); x.fillStyle = 'rgba(255,246,200,.55)';
+  for (let i = 0; i < 6; i++) { x.rotate(Math.PI / 3); x.beginPath(); x.moveTo(0, -2); x.lineTo(r * 2, 0); x.lineTo(0, 2); x.fill(); }
+  x.restore();
+  const a = (Math.sin(t * 5) + 1) / 2; x.globalAlpha = a; x.fillStyle = '#FFFFFF'; x.save(); x.translate(px + r * .6, py - r * .6); x.rotate(Math.PI / 4); x.fillRect(-4, -.8, 8, 1.6); x.fillRect(-.8, -4, 1.6, 8); x.restore(); x.globalAlpha = 1;
+}
+function goldEndZeile(){
+  if (!GOLD_RUNDE.gefangen) return '';
+  const g = GOLD[spiel.key]; if (!g) return '';
+  return `<span class="marke gold" style="display:inline-flex;margin-top:2px">${GOLD_SCHON[spiel.key] === 'neu' ? `${g.ding} gefunden! Neu für Teigi: ${g.sache}` : `${g.ding} gefunden!`}</span>`;
+}
+
+// Tagesaufgabe: eine pro Tag, für alle gleich. Spiele zählen mit statPlus(name) bzw. statMax(name, wert).
+let RUNDE_STAT = {};
+function statPlus(n, v = 1){ RUNDE_STAT[n] = (RUNDE_STAT[n] || 0) + v; aufgabePruefen(); }
+function statMax(n, v){ if (v > (RUNDE_STAT[n] || 0)) { RUNDE_STAT[n] = v; aufgabePruefen(); } }
+const AUFGABEN = [
+  { id: 'lauf-koerner', spiel: 'lauf', stat: 'koerner', ziel: 40, text: 'Sammle 40 Körner in einer Runde' },
+  { id: 'stapler-brote', spiel: 'stapler', stat: 'brote', ziel: 15, text: 'Staple 15 Brote in einer Runde' },
+  { id: 'tour-filialen', spiel: 'tour', stat: 'filialen', ziel: 5, text: 'Beliefere 5 Filialen in einer Runde' },
+  { id: 'chaos-verkauft', spiel: 'chaos', stat: 'verkauft', ziel: 15, text: 'Verkaufe 15 Backwaren in einer Runde' },
+  { id: 'schutz-gefangen', spiel: 'schutz', stat: 'gefangen', ziel: 25, text: 'Fange 25 Schädlinge in einer Runde' },
+  { id: 'schleuder-formen', spiel: 'schleuder', stat: 'formen', ziel: 8, text: 'Fülle 8 Backformen in einer Runde' },
+  { id: 'lauf-meter', spiel: 'lauf', stat: 'meter', ziel: 400, text: 'Lauf 400 Meter weit' },
+  { id: 'stapler-perfekt', spiel: 'stapler', stat: 'perfektFolge', ziel: 3, text: 'Setze 3 Brote perfekt hintereinander' },
+  { id: 'tour-folge', spiel: 'tour', stat: 'ohneUnfall', ziel: 3, text: 'Beliefere 3 Filialen ohne Unfall hintereinander' },
+  { id: 'chaos-tage', spiel: 'chaos', stat: 'tage', ziel: 3, text: 'Schaffe 3 Tage in der Backstube' },
+  { id: 'schutz-wellen', spiel: 'schutz', stat: 'wellen', ziel: 4, text: 'Halte 4 Wellen durch' },
+  { id: 'schleuder-sterne', spiel: 'schleuder', stat: 'sterne', ziel: 6, text: 'Hol 6 Sterne in einer Runde' },
+];
+let AUFGABE_TEST = null, AUFGABE_ERLEDIGT = '';
+const tagKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function aufgabeHeute(d = new Date()){
+  if (AUFGABE_TEST) return AUFGABEN.find((a) => a.id === AUFGABE_TEST) || AUFGABEN[0];
+  const n = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  return AUFGABEN[(n * 5) % AUFGABEN.length];
+}
+const aufgabeErledigt = () => { try { return AUFGABE_ERLEDIGT === tagKey() || localStorage.getItem('lt_abschalten_aufgabe') === tagKey(); } catch { return AUFGABE_ERLEDIGT === tagKey(); } };
+function aufgabePruefen(){
+  if (!laeuft || rundeGemuetlich || aufgabeErledigt()) return;
+  const a = aufgabeHeute(); if (a.spiel !== spiel.key || (RUNDE_STAT[a.stat] || 0) < a.ziel) return;
+  AUFGABE_ERLEDIGT = tagKey(); try { localStorage.setItem('lt_abschalten_aufgabe', tagKey()); } catch {}
+  schwebText('Tagesaufgabe geschafft!', W / 2, 180, '#2F9A47', 22); brumm(60);
+  teilchen(W / 2, 180, { n: 30, form: 'stern', farben: ['#7DBE6E', '#FFC72C', '#FFFFFF'], tempo: 240 });
+  nachAussen({ typ: 'lt-abschalten-aufgabe', tag: tagKey(), id: a.id });
+}
+function aufgabeHtml(){
+  const a = aufgabeHeute(), sp = SPIELE[a.spiel]; if (!sp) return '';
+  const ok = aufgabeErledigt();
+  return `<div class="aufgabe${ok ? ' ok' : ''}"><span><b>${ok ? 'Tagesaufgabe geschafft' : 'Tagesaufgabe'}:</b> ${a.text}${a.spiel !== spiel.key ? ` (${sp.name})` : ''}.</span>${!ok && a.spiel !== spiel.key ? `<button type="button" class="zur-aufgabe" data-k="${a.spiel}" aria-label="Zum ${sp.name}">Hin</button>` : ''}</div>`;
+}
+function aufgabeKnopf(){
+  ueber.querySelector('.zur-aufgabe')?.addEventListener('click', (e) => {
+    const k = e.currentTarget.dataset.k;
+    if (imRahmen) nachAussen({ typ: 'lt-abschalten-wechsel', key: k }); else if (typeof waehle === 'function') waehle(k);
+  });
+}
+const aufgabeStil = document.createElement('style');
+aufgabeStil.textContent = '.aufgabe{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px 6px 12px;border-radius:12px;background:#F3FAEF;border:1.5px solid #CFE6C6;text-align:left;font-size:12.5px;line-height:1.3;color:#2B170A}.aufgabe span{flex:1}.aufgabe b{color:#2F7A3A}.aufgabe.ok{background:#EAF6E4}.aufgabe .zur-aufgabe{flex:0 0 auto;padding:0 12px;border-radius:999px;border:none;background:#2F9A47;color:#fff;font:800 13px var(--text);cursor:pointer;min-height:32px}'
+  + '.ueber .fordern{margin-top:2px;border:2px solid #E0A526;background:#FFF8E1;color:#4B2A14;font:800 15px var(--text);border-radius:999px;min-height:44px;padding:0 18px;cursor:pointer}';
+document.head.appendChild(aufgabeStil);
+
+// Geister-Lauf: das Spiel liefert am Ende geistDaten() (klein halten), gespeichert nur bei neuem Rekord.
+function geistLesen(k){ try { const v = localStorage.getItem('lt_abschalten_geist_' + k); return v ? JSON.parse(v) : null; } catch { return null; } }
+function geistSchreiben(k, d){ try { if (d) { const s = JSON.stringify(d); if (s.length < 60000) localStorage.setItem('lt_abschalten_geist_' + k, s); } } catch {} }
+
+function rundeVorbereiten(){
+  RUNDE_STAT = {};
+  const schon = !!GOLD_SCHON[spiel.key];
+  Object.assign(GOLD_RUNDE, { kommt: GOLD_TEST || Math.random() < (schon ? .1 : .2), da: false, gefangen: false });
+}
+// Für Prüfungen: ?saison=advent&gold=1&aufgabe=stapler-brote
+try { const q = new URLSearchParams(location.search); if (q.get('saison')) SAISON_TEST = q.get('saison'); if (q.get('gold')) GOLD_TEST = true; if (q.get('aufgabe')) AUFGABE_TEST = q.get('aufgabe'); } catch {}
 
 // ═══ Teigi-Lauf: Teigi rennt durch die Backstube, springt über Mehlsäcke, Blechwagen und Brotkörbe ═══
 const LAUF_BODEN = 420;      // Fußlinie von Teigi und den Hindernissen
@@ -690,6 +886,52 @@ function lauf_zielFahne(fx, t, name){
   text(name, fx + 2 + (w - 8) / 2, top + h / 2 + Math.sin(t * 5 + 3.5) * 1.2, { gr: 12, farbe: '#FFFFFF', schat: false });
 }
 
+// ── Goldkorn (ganz selten) ──
+function lauf_goldKorn(gx, gy, t){
+  if (typeof goldGlanz === 'function') goldGlanz(gx, gy, 18, t);
+  const s = Math.max(.45, Math.abs(Math.cos(t * 2.6)));
+  x.save(); x.translate(gx, gy); x.rotate(.35); x.scale(s * 1.7, 1.7);
+  x.beginPath(); x.ellipse(0, 0, 6, 9.5, 0, 0, 7);
+  x.fillStyle = linear(-6, -9, 6, 9, [[0, '#FFF1B8'], [.45, '#FFC72C'], [1, '#C98A00']]); x.fill();
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.1; x.stroke();
+  x.strokeStyle = 'rgba(150,95,0,.6)'; x.lineWidth = .9; x.beginPath(); x.moveTo(0, -7); x.quadraticCurveTo(1.6, 0, 0, 7); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,.9)'; x.beginPath(); x.ellipse(-2.2, -3.5, 1.4, 3, .2, 0, 7); x.fill();
+  x.restore();
+}
+// ── Geister-Lauf: blasser, bläulicher Teigi des besten Laufs ──
+const LAUF_GEIST = { bild: null, quelle: '' };
+function lauf_geistBild(){
+  if (!teigiBereit) return null;
+  if (LAUF_GEIST.bild && LAUF_GEIST.quelle === TEIGI_BILD.src) return LAUF_GEIST.bild;
+  const k = document.createElement('canvas'); k.width = k.height = 160; const g = k.getContext('2d');
+  g.drawImage(TEIGI_BILD, 0, 0, 160, 160);
+  g.globalCompositeOperation = 'source-atop'; g.fillStyle = 'rgba(205,228,255,.62)'; g.fillRect(0, 0, 160, 160);
+  LAUF_GEIST.bild = k; LAUF_GEIST.quelle = TEIGI_BILD.src; return k;
+}
+function lauf_geistMalen(gx, fussY, t){
+  const b = lauf_geistBild(), g = LAUF_GR, bob = Math.sin(t * 9) * 1.5;
+  x.globalAlpha = .42;
+  if (b) x.drawImage(b, gx - g / 2, fussY - g * .93 + bob, g, g);
+  else { rr(gx - g * .25, fussY - g * .8, g * .5, g * .7, 10); x.fillStyle = '#DDEBFF'; x.fill(); }
+  x.globalAlpha = .5; x.strokeStyle = 'rgba(200,225,255,.9)'; x.lineWidth = 1.2; x.setLineDash([3, 4]);
+  x.beginPath(); x.ellipse(gx, fussY - g * .45 + bob, g * .36, g * .5, 0, 0, 7); x.stroke(); x.setLineDash([]);
+  x.globalAlpha = 1;
+  // kleines Schild über dem Geist
+  const ty = fussY - g - 4 + bob;
+  x.globalAlpha = .85; rr(gx - 30, ty - 9, 60, 18, 9); x.fillStyle = 'rgba(52,72,110,.7)'; x.fill(); x.globalAlpha = 1;
+  text('Bestzeit', gx, ty, { gr: 10.5, farbe: '#EEF5FF', schat: false });
+}
+function lauf_geistPfeil(rechts, meter){
+  const txt = `Bestzeit ${rechts ? '+' : '-'}${meter} m`;
+  x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(txt).width + 34, y0 = 268;
+  const px = rechts ? W - 10 - w : 10;
+  rr(px, y0, w, 26, 13); x.fillStyle = 'rgba(52,72,110,.72)'; x.fill();
+  x.strokeStyle = 'rgba(205,228,255,.7)'; x.lineWidth = 1; x.stroke();
+  const ax = rechts ? px + w - 14 : px + 14, d = rechts ? 1 : -1;
+  x.fillStyle = '#DDEBFF'; x.beginPath(); x.moveTo(ax + d * 6, y0 + 13); x.lineTo(ax - d * 3, y0 + 6); x.lineTo(ax - d * 3, y0 + 20); x.closePath(); x.fill();
+  text(txt, px + w / 2 - d * 6, y0 + 13.5, { gr: 12, farbe: '#EEF5FF', schat: false });
+}
+
 // ── Teigi selbst (ohne mitwandernden Bodenschatten) ──
 function lauf_figur(px, fussY, g, { sx = 1, sy = 1, rot = 0, schritt = 0, amBoden = true, blink = false, fuss } = {}){
   const fy0 = fuss ?? fussY;
@@ -712,6 +954,9 @@ function lauf_figur(px, fussY, g, { sx = 1, sy = 1, rot = 0, schritt = 0, amBode
   x.globalAlpha = 1;
 }
 
+const lauf_statPlus = (n, v) => { if (typeof statPlus === 'function') statPlus(n, v); };
+const lauf_statMax = (n, v) => { if (typeof statMax === 'function') statMax(n, v); };
+
 SPIELE.lauf = {
   key: 'lauf', name: 'Teigi-Lauf', kurz: 'Springen',
   anleitung: 'Tippen zum Springen, in der Luft nochmal tippen für einen Doppelsprung. Spring über Mehlsäcke, Blechwagen und Brotkörbe und sammle goldene Körner. Am Ofen wartet eine Bonus-Frage.',
@@ -723,11 +968,29 @@ SPIELE.lauf = {
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
+    // Goldkorn und Geister-Lauf
+    this.goldZeit = zufall(15, 40); this.gold = null;
+    this.aufnahme = { d: [], y: [], dt: .1 }; this.aufT = 0; this.aufWeg = 0;
+    const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('lauf') : null;
+    this.geist = null;
+    if (gd && Array.isArray(gd.d) && gd.d.length > 5 && Array.isArray(gd.y) && gd.dt > 0) {
+      const summe = []; let w = 0; for (const d of gd.d) { w += d; summe.push(w); }
+      this.geist = { dt: gd.dt, summe, y: gd.y, aus: false };
+    }
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
   },
   meter(){ return Math.floor(this.weg / 32); },
   punkte(){ return this.meter() + this.k * 5 + this.extra; },
   aktuellePunkte(){ return this.punkte(); },
+  /** Für den Geister-Lauf: alle 0,1 s gelaufene Strecke (Zuwachs) und Sprunghöhe */
+  geistDaten(){ const a = this.aufnahme; return a && a.d.length > 5 ? { v: 1, dt: a.dt, d: a.d, y: a.y } : null; },
+  geistJetzt(){
+    const g = this.geist; if (!g || g.aus) return null;
+    const f = this.zeit / g.dt, i = Math.floor(f);
+    if (i >= g.summe.length - 1) return null;
+    const u = f - i, w0 = i > 0 ? g.summe[i - 1] : 0;
+    return { weg: lerp(w0, g.summe[i], u), y: lerp(g.y[i] || 0, g.y[i + 1] || 0, u) };
+  },
   medaillen: [250, 900, 2500],
   springen(){
     if (this.tot >= 0) return;
@@ -813,6 +1076,33 @@ SPIELE.lauf = {
     this.brezeln = this.brezeln.filter((b) => b.x > -40 && !b.weg);
     for (const s of this.staub) { s.x -= v * s.v * .3; s.y += Math.sin(this.zeit + s.p) * .1; if (s.x < -4) { s.x = W + 4; s.y = zufall(60, 380); } }
 
+    // Aufnahme für den Geister-Lauf (klein: Zuwachs in px und Höhe, ganze Zahlen)
+    this.aufT += dt;
+    while (this.aufT >= this.aufnahme.dt) {
+      this.aufT -= this.aufnahme.dt; const a = this.aufnahme;
+      a.d.push(Math.round(this.weg - this.aufWeg)); this.aufWeg += a.d[a.d.length - 1]; a.y.push(Math.round(this.y));
+      if (a.d.length > 2400) { const d = [], yy = []; for (let i = 0; i + 1 < a.d.length; i += 2) { d.push(a.d[i] + a.d[i + 1]); yy.push(a.y[i + 1]); } a.d = d; a.y = yy; a.dt *= 2; }
+    }
+    // Geist am Ende seines Laufs: kleiner Puff
+    if (this.geist && !this.geist.aus && this.zeit / this.geist.dt >= this.geist.summe.length - 1) {
+      this.geist.aus = true;
+      const gx = LAUF_TX + this.geist.summe[this.geist.summe.length - 1] - this.weg;
+      if (gx > -20 && gx < W + 20) { teilchen(gx, LAUF_BODEN - 36, { n: 16, farben: ['rgba(220,235,255,.9)', 'rgba(255,255,255,.8)'], tempo: 90, groesse: [4, 9], schwer: -40, leben: [.5, .9] }); schwebText('Bestzeit vorbei', gx, LAUF_BODEN - 100, '#4A6A9A', 16); }
+    }
+    lauf_statMax('meter', this.meter());
+    // Goldkorn: schwebt langsam heran, auf und ab, nach ein paar Sekunden ist es weg
+    if (!this.gold && this.zeit > this.goldZeit && typeof goldKommt === 'function' && goldKommt()) {
+      const frei = this.hind.every((h) => h.x + h.w < W - 40 || h.x > W + 120);
+      if (frei) { this.gold = { x: W + 24, y: LAUF_BODEN - 120, t: 0 }; goldErschienen(); }
+    }
+    if (this.gold) {
+      const g = this.gold; g.t += dt; g.x -= dt * (this.tempo * .3 + 20); g.y = LAUF_BODEN - 120 + Math.sin(g.t * 2.3) * 55;
+      if (Math.abs(g.x - LAUF_TX) < 32 && Math.abs(g.y - (LAUF_BODEN + this.y - 32)) < 40) {
+        if (typeof goldGefangen === 'function') goldGefangen(g.x, g.y);
+        this.extra += 50; schwebText('+50', g.x, g.y - 30, '#B07A00', 20); this.gold = null;
+      } else if (g.x < -30) this.gold = null;
+    }
+
     // Nachschub
     if (this.weg >= this.naechstAb && !this.ofenSperre) this.erzeugen();
     this.ofenIn -= dt; this.brezelIn -= dt;
@@ -854,7 +1144,7 @@ SPIELE.lauf = {
       this.flagge = { name: ziel.name, weg: this.weg + Math.max(5, (ziel.punkte - this.punkte()) / rate) * 32 };
     }
     for (const k of this.koerner) if (!k.weg && Math.abs(k.x - LAUF_TX) < 26 && Math.abs(k.y - mitte) < 38) {
-      k.weg = true; this.k++;
+      k.weg = true; this.k++; lauf_statPlus('koerner', 1);
       teilchen(k.x, k.y, { n: 6, tempo: 90, groesse: [1.5, 3], leben: [.25, .45], schwer: 0 });
       if (--this.gruppen[k.g] === 0) { this.extra += 10; brumm(25); schwebText('Alle! +10', k.x + 10, k.y - 22, '#B07A00', 18); }
     }
@@ -938,6 +1228,14 @@ SPIELE.lauf = {
       else if (h.art === 'stapel') { lauf_sack(h.x - 2, LAUF_BODEN, h.w + 4, h.h * .52, h.wackel); lauf_sack(h.x + 3, LAUF_BODEN - h.h * .5, h.w - 6, h.h * .5, h.wackel); }
       else if (h.art === 'wagen') lauf_wagen(h.x, LAUF_BODEN, h.w, h.h);
       else lauf_korb(h.x, LAUF_BODEN, h.w, h.h);
+    }
+    if (this.gold) lauf_goldKorn(this.gold.x, this.gold.y, t);
+    // Geister-Lauf
+    const gj = laeuft && this.tot < 0 ? this.geistJetzt() : null;
+    if (gj) {
+      const gx = LAUF_TX + gj.weg - (this.weg || 0);
+      if (gx > -30 && gx < W + 30) lauf_geistMalen(gx, LAUF_BODEN + gj.y, t);
+      else { const m = Math.round((gj.weg - (this.weg || 0)) / 32); if (m !== 0) lauf_geistPfeil(m > 0, Math.abs(m)); }
     }
     // Teigi
     const y = this.y || 0, hoehe = -y;
@@ -1068,6 +1366,7 @@ function ch_statisch(){
   // Markise über dem Fenster
   for (let i = 0; i < 12; i++) { const mx = fx - 6 + i * (fw + 12) / 12, mw = (fw + 12) / 12; x.fillStyle = i % 2 ? '#FFFFFF' : '#FFC72C'; x.beginPath(); x.moveTo(mx, 30); x.lineTo(mx + mw, 30); x.lineTo(mx + mw, 40); x.arc(mx + mw / 2, 40, mw / 2, 0, Math.PI); x.closePath(); x.fill(); }
   x.fillStyle = 'rgba(80,40,10,.18)'; x.fillRect(fx - 6, 30, fw + 12, 3);
+  ch_saisonDeko();
   // Lampen
   for (const lx of [122, 238]) { x.strokeStyle = '#4B2A14'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(lx, 0); x.lineTo(lx, 12); x.stroke(); x.fillStyle = linear(lx - 12, 0, lx + 12, 0, [[0, '#7A4418'], [.4, '#C98A3E'], [1, '#5E3418']]); x.beginPath(); x.moveTo(lx - 5, 12); x.lineTo(lx + 5, 12); x.lineTo(lx + 13, 22); x.lineTo(lx - 13, 22); x.closePath(); x.fill(); x.fillStyle = radial(lx, 24, 0, 40, [[0, 'rgba(255,226,140,.55)'], [1, 'rgba(255,226,140,0)']]); x.beginPath(); x.arc(lx, 24, 40, 0, 7); x.fill(); x.fillStyle = '#FFF4C8'; x.beginPath(); x.ellipse(lx, 22, 9, 2.5, 0, 0, 7); x.fill(); }
   // ── Backstube: Ziegelwand ──
@@ -1206,6 +1505,24 @@ function ch_blase(k, zeit){
   x.restore();
 }
 
+/** Goldbrezel: Mitte (0, 0), Breite etwa 60 * s */
+function ch_goldBrezel(s){
+  x.save(); x.scale(s, s); x.lineCap = 'round'; x.lineJoin = 'round';
+  const pfad = () => { x.beginPath(); x.moveTo(-14, 16); x.bezierCurveTo(-34, 6, -30, -22, -10, -20); x.bezierCurveTo(4, -18, 6, -2, 0, 6); x.bezierCurveTo(-6, -2, -4, -18, 10, -20); x.bezierCurveTo(30, -22, 34, 6, 14, 16); x.moveTo(-10, 2); x.lineTo(12, 18); x.moveTo(10, 2); x.lineTo(-12, 18); };
+  pfad(); x.strokeStyle = '#7A4F00'; x.lineWidth = 12.5; x.stroke();
+  pfad(); x.strokeStyle = linear(-30, -22, 30, 18, [[0, '#FFF1B8'], [.45, '#FFC72C'], [1, '#C98A00']]); x.lineWidth = 9.5; x.stroke();
+  x.translate(-1.2, -2.2); pfad(); x.strokeStyle = 'rgba(255,250,220,.75)'; x.lineWidth = 2.6; x.stroke();
+  x.fillStyle = '#FFFFFF'; [[-22, -8], [-13, -17], [16, -15], [23, -3], [-4, 13], [6, 11]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 1.3, 0, 7); x.fill(); });
+  x.restore();
+}
+function ch_saisonDeko(){
+  let art = null; try { art = SAISON_TEST || saisonHeute(); } catch { return; }
+  if (art !== 'advent' && art !== 'weihnacht') return;
+  // Tannengirlande unter der Markise mit Kugeln
+  for (let px = 18; px < 344; px += 5) { const py = 42 + Math.sin(px / 54) * 2.5; x.fillStyle = zufallFest(px) > .5 ? '#2E6B3A' : '#3F8A4A'; x.save(); x.translate(px, py); x.rotate(zufallFest(px + 9) * 2 - 1); x.beginPath(); x.ellipse(0, 0, 5, 2.4, 0, 0, 7); x.fill(); x.restore(); }
+  [[60, '#D0402A'], [128, '#FFC72C'], [196, '#D0402A'], [264, '#FFC72C'], [318, '#D0402A']].forEach(([px, f]) => { const py = 47 + Math.sin(px / 54) * 2.5; x.fillStyle = radial(px, py, 0, 5, [[0, '#FFFFFF'], [.3, f], [1, f]], px - 1.5, py - 1.5); x.beginPath(); x.arc(px, py, 4, 0, 7); x.fill(); });
+}
+
 SPIELE.chaos = {
   medaillen: [600, 1800, 4000],
   key: 'chaos', name: 'Backstuben-Chaos', kurz: 'Backen',
@@ -1215,7 +1532,7 @@ SPIELE.chaos = {
     this.punkte = 0; this.leben = 3; this.zeit = 0; this.naechst = 1.2; this.tag = 1; this.tagDauer = 50; this.tagZeit = 50;
     this.serviert = 0; this.tagServiert = 0; this.perfekt = 0; this.tagPerfekt = 0; this.combo = 0; this.letzte = -99;
     this.phase = 'spiel'; this.phaseT = 0; this.banner = 1.8; this.ersteKunden = 0; this.lernSchritte = 0; this.vorbei = 0; this.rauch = 0; this.ofenWackel = [0, 0, 0, 0]; this.kisteHuepf = [0, 0, 0];
-    this.gem = !!GEMUETLICH; this.maxLeben = 3; this.verb = { schnell: 0, geduld: 0, fenster: 0, ofen4: 0, auslage: 0, leben: 0 }; this.karten = null; this.frageGestellt = false; ch_anz = 3; ch_ablN = 4;
+    this.gem = !!GEMUETLICH; this.maxLeben = 3; this.verb = { schnell: 0, geduld: 0, fenster: 0, ofen4: 0, auslage: 0, leben: 0 }; this.karten = null; this.frageGestellt = false; ch_anz = 3; ch_ablN = 4; this.gold = null; this.goldZeit = zufall(15, 45);
   },
   aktuellePunkte(){ return this.punkte || 0; },
   fenster(s){ const d = CH_SORTEN[s], extra = this.tag === 1 ? .8 : 0, eng = Math.max(.62, 1 - (this.tag - 1) * .08); const mitte = (d.g0 + d.g1) / 2, halb = ((d.g1 - d.g0) / 2 * eng + extra) * (1 + .25 * (this.verb ? this.verb.fenster : 0)); return [mitte - halb, mitte + halb]; },
@@ -1223,6 +1540,7 @@ SPIELE.chaos = {
   kisteRect(i){ return { x: ch_kisteX(i), y: CH_KISTE_Y, w: CH_OFEN_W, h: CH_KISTE_H + 8 }; },
   in(p, r){ return p.x > r.x - 4 && p.x < r.x + r.w + 4 && p.y > r.y - 4 && p.y < r.y + r.h + 4; },
   runter(p){
+    if (this.gold && !this.gold.weg && this.phase === 'spiel' && Math.hypot(p.x - this.gold.x, p.y - this.gold.y) < 34) { this.gold.weg = true; this.punkte += 50; schwebText('+50', this.gold.x, this.gold.y - 26, '#B8860B', 20); goldGefangen(this.gold.x, this.gold.y); return; }
     if (this.phase === 'verbessern' && this.karten && this.phaseT > .5) { this.karten.forEach((k, j) => { const r = this.kartenRect(j); if (this.in(p, r)) this.waehleKarte(k); }); return; }
     if (this.phase !== 'spiel' || this.vorbei) return;
     for (let i = 0; i < 3; i++) if (this.in(p, this.kisteRect(i))) { this.wahl = this.wahl === i ? null : i; this.wahlT = 0; this.kisteHuepf[i] = 1; mehlWolke(ch_kisteX(i) + 54, CH_KISTE_Y + 20, 5); return; }
@@ -1249,13 +1567,13 @@ SPIELE.chaos = {
     const ziel = this.kunden.filter((k) => !k.zust && k.unter < k.n && k.s === s && k.ein >= 1).sort((a, b) => (b.t / b.max) - (a.t / a.max))[0];
     if (ziel) { ziel.unter++; this.flug.push({ s, x0: sx, y0: sy, x1: ch_blaseX(ziel.slot), y1: CH_BLASE_Y, t: 0, d: .6, k: ziel }); return; }
     if (this.ablage.length < ch_ablN) { const j = this.ablage.length; this.ablage.push({ s, da: false }); this.flug.push({ s, x0: sx, y0: sy, x1: ch_ablageX(j), y1: 172, t: 0, d: .5, ab: this.ablage[j] }); return; }
-    this.punkte += 2; schwebText('+2 verkauft', sx, sy - 20, '#7A6450', 14);
+    this.punkte += 2; schwebText('+2 verkauft', sx, sy - 20, '#7A6450', 14); statPlus('verkauft', 1);
   },
   bedienen(k){
     k.zust = 'froh'; k.wegT = 0;
     const geduld = 1 - k.t / k.max;
     this.combo = this.zeit - this.letzte < 6 ? Math.min(6, this.combo + 1) : 1; this.letzte = this.zeit;
-    const p = (10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5; this.punkte += p; this.serviert++; this.tagServiert++; brumm(20);
+    const p = (10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5; this.punkte += p; this.serviert++; this.tagServiert++; brumm(20); statPlus('verkauft', k.n);
     const kx = ch_slotX(k.slot);
     schwebText('+' + p, kx, 70, F.gruen, 22);
     if (this.combo > 1) schwebText('Combo ×' + this.combo, kx, 100, '#C98A00', 16);
@@ -1277,6 +1595,7 @@ SPIELE.chaos = {
     for (let i = 0; i < 4; i++) this.ofenWackel[i] = Math.max(0, this.ofenWackel[i] - dt * 2.5);
     for (let i = 0; i < 3; i++) { this.kisteHuepf[i] = Math.max(0, this.kisteHuepf[i] - dt * 3); }
     if (this.banner > 0) this.banner -= dt;
+    if (this.gold) { const g = this.gold; g.t += dt; const u = g.t / g.dauer; g.x = g.dir > 0 ? lerp(-30, W + 30, u) : lerp(W + 30, -30, u); g.y = 126 + Math.sin(g.t * 3.2) * 16; if (u >= 1) g.weg = true; }
     // Flüge
     for (const f of this.flug) { f.t += dt / f.d; if (f.t >= 1 && !f.fertig) { f.fertig = true; if (f.k) { if (!f.k.zust) { f.k.da++; if (f.k.da >= f.k.n) this.bedienen(f.k); else { schwebText('Noch 1', ch_blaseX(f.k.slot), 108, F.braun, 14); teilchen(ch_blaseX(f.k.slot), CH_BLASE_Y, { n: 6, tempo: 80 }); } } } else if (f.ab) { f.ab.da = true; } } }
     this.flug = this.flug.filter((f) => !f.fertig);
@@ -1299,9 +1618,10 @@ SPIELE.chaos = {
       for (let i = 0; i < ch_anz; i++) { const o = this.oefen[i]; if (!o) continue; o.t += dt * (1 + .2 * this.verb.schnell) * (this.gem && o.t > o.f[1] - .3 ? .3 : 1); o.ein = Math.min(1, o.ein + dt * 4);
         if (o.t > o.f[1]) { this.rauch -= dt; if (this.rauch <= 0) { this.rauch = .12; const r = this.ofenRect(i); teilchen(r.x + zufall(30, 78), r.y + 34, { n: 1, farben: ['rgba(80,75,70,.55)', 'rgba(130,125,120,.45)'], tempo: 18, groesse: [6, 11], schwer: -70, leben: [.9, 1.5] }); } } }
       this.tagZeit -= dt; this.naechst -= dt;
+      if (!this.gold && goldKommt() && this.zeit > this.goldZeit && this.tagZeit > 7) { const dir = Math.random() < .5 ? 1 : -1; this.gold = { t: 0, dauer: 4.8, dir, x: dir > 0 ? -30 : W + 30, y: 128, weg: false }; goldErschienen(); }
       if (this.naechst <= 0) { this.neuerKunde(); const basis = this.tag === 1 ? 4.6 : Math.max(.9, 5.2 - (this.tag - 2) * .42); this.naechst = zufall(basis, basis + 2.2) * (this.gem ? 1.4 : 1); if (this.kunden.filter((k) => !k.zust).length === 0) this.naechst = 1; }
       if (this.leben <= 0) { this.vorbei = .01; return; }
-      if (this.tagZeit <= 0) { this.phase = 'abschluss'; this.phaseT = 0; this.tagBonus = this.tagServiert * 5; this.punkte += this.tagBonus;
+      if (this.tagZeit <= 0) { statMax('tage', this.tag); this.phase = 'abschluss'; this.phaseT = 0; this.tagBonus = this.tagServiert * 5; this.punkte += this.tagBonus;
         for (const k of this.kunden) if (!k.zust) { k.zust = 'froh'; k.wegT = .4; }
         this.oefen = Array(ch_anz).fill(null); this.ablage = []; this.wahl = null; }
     } else if (this.phase === 'abschluss') {
@@ -1370,6 +1690,7 @@ SPIELE.chaos = {
     if (this.banner > 0 && laeuft) { const a = Math.min(1, this.banner * 2), s = ease.feder(Math.min(1, (1.8 - this.banner) * 3)); x.save(); x.globalAlpha = a; x.translate(W / 2, 272); x.scale(s, s); rr(-90, -26, 180, 52, 18); x.fillStyle = linear(0, -26, 0, 26, [[0, '#5A3820'], [1, '#3A2010']]); x.fill(); x.strokeStyle = '#FFC72C'; x.lineWidth = 2; x.stroke(); text(`Tag ${this.tag || 1}`, 0, -6, { gr: 22, farbe: '#FFE08A', schrift: 'Fraunces' }); text(this.tag === 1 ? 'Die ersten Kunden kommen' : 'Mehr Kunden, weniger Geduld', 0, 14, { gr: 11, farbe: '#F5E6C8', art: '700', schat: false }); x.restore(); }
     if (this.phase === 'spiel' && !(this.tag === 1 && this.serviert < 2)) this.verbLeiste();
     if (this.gem && laeuft && this.phase === 'spiel') text('Gemütlich', 8, 470, { gr: 10, farbe: 'rgba(75,42,20,.6)', ausr: 'left', schat: false });
+    if (this.gold && !this.gold.weg) { const g = this.gold; goldGlanz(g.x, g.y, 22, zeit); x.save(); x.translate(g.x, g.y); x.rotate(Math.sin(zeit * 4) * .25); ch_goldBrezel(.95 + Math.sin(zeit * 6) * .05); x.restore(); }
     if (this.phase === 'abschluss') this.abschlussMalen();
     if (this.phase === 'verbessern') this.kartenMalen(zeit);
   },
@@ -1478,6 +1799,7 @@ SPIELE.chaos = {
     x.restore();
   },
   testZug(){
+    if (this.gold && !this.gold.weg && this.gold.t > 1.2) return { x: this.gold.x, y: this.gold.y, warte: 250 };
     if (this.phase === 'verbessern' && this.karten && !this.gewaehlt && this.phaseT > .6) { const r = this.kartenRect(0); return { x: r.x + r.w / 2, y: r.y + r.h / 2, warte: 400 }; }
     if (this.phase !== 'spiel' || this.vorbei) return { x: 180, y: 470, warte: 400 };
     for (let i = 0; i < ch_anz; i++) { const o = this.oefen[i]; if (o && (o.t > o.f[1] || o.t >= o.f[0] + (o.f[1] - o.f[0]) * .35)) return { x: ch_ofenX(i) + ch_ofenW() / 2, y: CH_OFEN_Y + 60, warte: 200 }; }
@@ -1745,8 +2067,11 @@ SPIELE.tour = {
     this.gemuetlich = typeof GEMUETLICH !== 'undefined' && GEMUETLICH;
     const mo = new Date().getMonth(); this.winter = mo >= 10 || mo <= 1;
     this.himmel = this.stimmungZiel(0); this.niederY = 0;
+    this.goldPaket = null; this.goldZeit = zufall(15, 42); this.folge = 0; this.abschnittUnfall = false;
   },
   aktuellePunkte(){ return this.punkte(); },
+  /** eigener Regen oder Schnee: dann malt core keinen Saison-Schnee dazu */
+  eigenesWetter(){ const h = this.himmel; return !!h && h.regen + h.schnee > .3; },
   /** Tageszeit und Wetter je Abschnitt: Morgen, Tag, Tag mit Regen (Winter: Schnee), Abend, Abend mit Regen/Schnee */
   stimmungZiel(n){
     const i = n % 5, nass = i === 2 || i === 4;
@@ -1801,7 +2126,7 @@ SPIELE.tour = {
       if (this.rest() < 620) { this.modus = 'bremsen'; this.dinge = this.dinge.filter((d) => d.y > -30); this.spur = 2; }
     } else if (this.modus === 'bremsen') {
       this.tempo = Math.min(this.tempo, Math.sqrt(2 * 300 * Math.max(0, this.rest())) + 8);
-      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); brumm(30); }
+      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); brumm(30); statPlus('filialen'); this.folge = this.abschnittUnfall ? 0 : this.folge + 1; this.abschnittUnfall = false; statMax('ohneUnfall', this.folge); }
     } else if (this.modus === 'abladen') {
       this.szene += dt; this.tempo = 0;
       if (this.szene > 2.1) {
@@ -1837,6 +2162,19 @@ SPIELE.tour = {
       else if (d.art === 'kiste' && d.y > TOUR_Y + 70 && !d.vorbei) { d.vorbei = true; this.kombi = 0; }
     }
     this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && d.art === 'kiste'));
+    // Goldpaket: schwebt an einem Ballon langsam heran und wechselt ab und zu die Spur
+    if (goldKommt() && this.modus === 'fahrt' && this.fahrzeit > this.goldZeit && this.tempo > 150) { this.goldPaket = { s: ganz(0, 2), x: 0, y: -40, wechsel: 1.4, weg: 0 }; this.goldPaket.x = TOUR_SPUR[this.goldPaket.s]; goldErschienen(); }
+    const gp = this.goldPaket;
+    if (gp) {
+      if (gp.weg) { gp.weg += dt; if (gp.weg > .6) this.goldPaket = null; }
+      else {
+        gp.y += 82 * dt; gp.wechsel -= dt;
+        if (gp.wechsel <= 0 && gp.y < TOUR_Y - 150) { gp.s = klemm(gp.s + (Math.random() < .5 ? -1 : 1), 0, 2); gp.wechsel = zufall(1.2, 1.8); }
+        gp.x += (TOUR_SPUR[gp.s] - gp.x) * Math.min(1, dt * 3);
+        if (Math.abs(gp.x - this.xs) < 38 && Math.abs(gp.y - TOUR_Y) < 56 && this.modus !== 'aus') { this.bonus += 50; goldGefangen(gp.x, gp.y); schwebText('+50', gp.x, gp.y - 40, F.goldDunkel, 22); this.goldPaket = null; }
+        else if (gp.y > TOUR_Y + 70) gp.weg = .01;
+      }
+    }
     for (const f of this.fliegen) f.t += dt; this.fliegen = this.fliegen.filter((f) => f.t < 1);
     setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), 3)]);
   },
@@ -1858,11 +2196,11 @@ SPIELE.tour = {
     }
     if (this.schutz > 0 || this.modus !== 'fahrt') return;
     if (this.gemuetlich) { // gemütlich: nur kurz wackeln, kein Leben weg
-      d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
+      d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 }; this.abschnittUnfall = true;
       this.schutz = .8; this.kombi = 0; wackeln(5); brumm(40); mehlWolke(wx, wy - 40, 5); schwebText('Hoppla', wx, wy - 80, F.braun, 18); return;
     }
     d.weg = true; brumm(70); d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
-    this.leben--; this.schutz = 1.6; this.kombi = 0; this.tempo *= .55;
+    this.leben--; this.schutz = 1.6; this.kombi = 0; this.tempo *= .55; this.abschnittUnfall = true;
     wackeln(9); blitz(.35, '255,90,40');
     teilchen(wx, wy - 46, { n: 26, farben: ['#FFE27A', '#FFB02E', '#FF7A1A', '#FFFFFF'], tempo: 260, groesse: [1.5, 3.5], schwer: 300, leben: [.25, .6] });
     mehlWolke(wx, wy - 40, 8);
@@ -1883,6 +2221,23 @@ SPIELE.tour = {
     if (ziel === this.spur && gefahr[this.spur] > 1.4) { const kiste = this.dinge.find((d) => d.art === 'kiste' && !d.weg && Math.abs(d.s - this.spur) === 1 && d.y > 120 && d.y < 330); if (kiste && gefahr[kiste.s] > 1.2) ziel = kiste.s; }
     if (ziel === this.spur) return { x: this.xs, y: TOUR_Y, warte: 140 };
     return { x: ziel < this.spur ? this.xs - 70 : this.xs + 70, y: 300, warte: 160 };
+  },
+  /** Goldpaket am Ballon */
+  malGold(g, zeit){
+    const a = g.weg ? Math.max(0, 1 - g.weg / .6) : 1, hb = Math.sin(zeit * 3) * 3, px = g.x, py = g.y + hb;
+    x.globalAlpha = a;
+    bodenSchatten(px + 14, g.y + 26, 18, 7, .3);
+    goldGlanz(px, py, 20, zeit);
+    // Schnur und Ballon
+    x.strokeStyle = 'rgba(90,60,10,.7)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(px, py - 12); x.quadraticCurveTo(px + 4, py - 24, px + 2, py - 36); x.stroke();
+    x.fillStyle = radial(px + 2, py - 48, 2, 15, [[0, '#FFF6D0'], [.5, '#FFC72C'], [1, '#C98A00']], px - 3, py - 54); x.beginPath(); x.ellipse(px + 2, py - 48, 11, 13, 0, 0, 7); x.fill();
+    x.strokeStyle = '#8A5A0A'; x.lineWidth = 1; x.stroke(); x.fillStyle = 'rgba(255,255,255,.7)'; x.beginPath(); x.ellipse(px - 2, py - 53, 3, 4.5, -.4, 0, 7); x.fill();
+    // Paket
+    x.fillStyle = linear(px - 15, 0, px + 15, 0, [[0, '#C98A00'], [.3, '#FFF1B8'], [.55, '#FFC72C'], [1, '#A87208']]); rr(px - 15, py - 12, 30, 24, 4); x.fill();
+    x.strokeStyle = '#7A4E06'; x.lineWidth = 1.4; x.stroke();
+    x.fillStyle = '#B23A2A'; x.fillRect(px - 2.5, py - 12, 5, 24); x.fillRect(px - 15, py - 2.5, 30, 5);
+    x.fillStyle = '#D9533F'; x.beginPath(); x.ellipse(px - 5, py - 13, 5, 3, -.5, 0, 7); x.ellipse(px + 5, py - 13, 5, 3, .5, 0, 7); x.fill();
+    x.globalAlpha = 1;
   },
   /** Tageszeit (Tönung, Dunkelheit mit Lichtern) und Regen/Schnee über die ganze Szene */
   lichtUndWetter(hm, deko, zeit){
@@ -2018,6 +2373,7 @@ SPIELE.tour = {
         x.fillStyle = '#4A4F57'; x.beginPath(); x.arc(bx, by, 4, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(bx - 1, by - 1, 1.6, 0, 7); x.fill();
       }
     }
+    if (this.goldPaket) this.malGold(this.goldPaket, zeit);
     this.lichtUndWetter(hm, deko, zeit);
     // Fahrtwind bei hohem Tempo
     if ((this.tempo || 0) > 330) { const a = Math.min(.35, (this.tempo - 330) / 500); x.strokeStyle = `rgba(255,255,255,${a})`; x.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const lx = 80 + tour_zf(i) * 200, ly = ((zeit * this.tempo * 1.6 + i * 97) % (H + 80)) - 40; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, ly + 26); x.stroke(); } }
@@ -2234,6 +2590,17 @@ function sz_falleMalen(f, zeit, ausw){
   if (ausw === true) { x.strokeStyle = '#FFC72C'; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 25, 0, 7); x.stroke(); }
 }
 
+/** Goldähre: Mitte (0, 0), etwa 46 px hoch */
+function sz_goldAehre(){
+  x.lineCap = 'round';
+  x.strokeStyle = '#7A4F00'; x.lineWidth = 4; x.beginPath(); x.moveTo(2, 24); x.quadraticCurveTo(0, 8, 0, -16); x.stroke();
+  x.strokeStyle = '#E0A526'; x.lineWidth = 2.2; x.stroke();
+  const korn = (kx, ky, w) => { x.save(); x.translate(kx, ky); x.rotate(w); x.fillStyle = linear(-4, -7, 4, 7, [[0, '#FFF1B8'], [.5, '#FFC72C'], [1, '#C98A00']]); x.strokeStyle = '#7A4F00'; x.lineWidth = 1.2; x.beginPath(); x.ellipse(0, 0, 4, 7, 0, 0, 7); x.fill(); x.stroke(); x.fillStyle = 'rgba(255,255,240,.8)'; x.beginPath(); x.ellipse(-1.2, -2.5, 1.2, 2.4, 0, 0, 7); x.fill(); x.restore(); };
+  for (let i = 0; i < 4; i++) { const ky = 8 - i * 7.5; korn(-5, ky, -.45); korn(5, ky, .45); }
+  korn(0, -22, 0);
+  x.strokeStyle = 'rgba(201,138,0,.8)'; x.lineWidth = 1; for (let i = 0; i < 4; i++) { const ky = 4 - i * 7.5; x.beginPath(); x.moveTo(-7, ky - 6); x.lineTo(-12, ky - 14); x.moveTo(7, ky - 6); x.lineTo(12, ky - 14); x.stroke(); }
+}
+
 function sz_kornIcon(px, py, s){ x.save(); x.translate(px, py); x.rotate(.45); x.fillStyle = linear(-4, -7, 4, 7, [[0, '#F7C64A'], [1, '#B9800E']]); x.beginPath(); x.ellipse(0, 0, 4.2 * s, 7 * s, 0, 0, 7); x.fill(); x.strokeStyle = 'rgba(255,245,200,.85)'; x.lineWidth = 1.1 * s; x.beginPath(); x.moveTo(-1 * s, -4 * s); x.quadraticCurveTo(1 * s, 0, 0, 4 * s); x.stroke(); x.restore(); }
 
 SPIELE.schutz = {
@@ -2243,7 +2610,7 @@ SPIELE.schutz = {
   start(){
     this.gem = !!GEMUETLICH; this.geld = this.gem ? 150 : 75; this.lager = this.gem ? 10 : 5; this.lagerMax = this.lager; this.welle = 0; this.tiere = []; this.fallen = []; this.schuesse = []; this.koerner = [];
     this.pause = 6; this.spawnRest = 0; this.spawnT = 0; this.punkte = 0; this.menu = null; this.zeit = 0; this.banner = 0; this.bannerText = ''; this.bannerSub = '';
-    this.vorbei = 0; this.besiegt = 0; this.reichZeig = null; this.lagerWackel = 0; this.frageNach = false;
+    this.vorbei = 0; this.besiegt = 0; this.reichZeig = null; this.lagerWackel = 0; this.frageNach = false; this.gold = null; this.goldZeit = zufall(15, 45);
   },
   aktuellePunkte(){ return (this.punkte || 0) + (this.welle || 0) * 25; },
   falleAuf(i){ return this.fallen.find((f) => f.platz === i); },
@@ -2262,6 +2629,7 @@ SPIELE.schutz = {
     if (this.menu) {
       for (const b of this.menuKnoepfe()) if (Math.hypot(p.x - b.x, p.y - b.y) < 27) { this.knopf(b); return; }
     }
+    if (this.gold && !this.gold.weg && Math.hypot(p.x - this.gold.x, p.y - this.gold.y) < 32) { const g = this.gold; g.weg = true; this.punkte += 50; this.geld += 15; schwebText('+15', g.x, g.y - 28, '#B9800E', 18); goldGefangen(g.x, g.y); this.menu = null; return; }
     for (let i = 0; i < SZ_PLAETZE.length; i++) { const [px, py] = SZ_PLAETZE[i]; if (Math.hypot(p.x - px, p.y - py) < 26) { this.menu = this.menu && this.menu.platz === i ? null : { platz: i, t: 0 }; return; } }
     this.menu = null;
   },
@@ -2293,6 +2661,8 @@ SPIELE.schutz = {
     this.lagerWackel = Math.max(0, this.lagerWackel - dt * 2);
     for (const k of this.koerner) k.t += dt / .7; this.koerner = this.koerner.filter((k) => k.t < 1);
     if (this.vorbei) { this.vorbei += dt; if (this.vorbei > 1 && laeuft) ende(this.aktuellePunkte(), `Bis Welle ${this.welle} das Mehl verteidigt, ${this.besiegt} Schädlinge vertrieben.`); return; }
+    if (!this.gold && goldKommt() && this.zeit > this.goldZeit && this.welle >= 1) { const d = zufall(240, SZ_LAENGE - 260), p = sz_punktAuf(d); this.gold = { d, t: 0, dauer: 5, x: p.x, y: p.y, weg: false }; goldErschienen(); }
+    if (this.gold) { const g = this.gold; g.t += dt; g.d += 14 * dt; const p = sz_punktAuf(g.d); if (p) { g.x = p.x; g.y = p.y - 6 - Math.abs(Math.sin(g.t * 3)) * 8; } if (g.t > g.dauer) g.weg = true; }
     // Wellen
     if (this.pause > 0) { this.pause -= dt; if (this.pause <= 0) this.neueWelle(); }
     else if (this.warteschlange && this.warteschlange.length) {
@@ -2300,7 +2670,7 @@ SPIELE.schutz = {
       if (this.spawnT <= 0) { const art = this.warteschlange.shift(), w = this.welle; const f = Math.pow(1.2, w - 1); const hp = art === 'maus' ? 7 * f : art === 'motte' ? 5 * f : 26 * f; const v = art === 'maus' ? (w === 1 ? 38 : 44 + w) : art === 'motte' ? 54 + w : 28; this.tiere.push({ art, d: 0, hp, max: hp, v, seed: Math.random(), treffer: 0, gelockt: 0 }); this.spawnT = w === 1 ? 1.7 : Math.max(.55, 1.25 - w * .06); }
     } else if (!this.tiere.length && this.welle > 0) {
       const bonus = 10 + this.welle * 2; this.geld += bonus; this.punkte += this.welle * 25;
-      this.banner = 2; this.bannerText = 'Welle geschafft'; brumm(25); this.bannerSub = `+${bonus} Körner`;
+      this.banner = 2; this.bannerText = 'Welle geschafft'; brumm(25); statMax('wellen', this.welle); this.bannerSub = `+${bonus} Körner`;
       this.pause = 4.5; this.warteschlange = null;
       if (this.welle % 2 === 0) setTimeout(() => { if (laeuft && !this.vorbei) frage((ok) => { if (ok) { this.geld += 40; schwebText('+40 Körner', W / 2, 240, '#C98A00', 22); teilchen(W / 2, 240, { n: 20, form: 'stern' }); } }); }, 900);
     }
@@ -2325,7 +2695,7 @@ SPIELE.schutz = {
       if (f.art === 'falle') { f.schnapp = 1; teilchen(zx, zy, { n: 6, farben: ['#FFFFFF', '#FFE08A'], form: 'stern', tempo: 90, groesse: [2, 4], leben: [.2, .4] }); }
       else { ziel.gelockt = 1; teilchen(zx, zy, { n: 3, farben: ['#FFF6C8', '#FFE08A'], tempo: 50, groesse: [1.5, 3], schwer: 0, leben: [.2, .4] }); }
       if (ziel.hp <= 0) {
-        ziel.weg = true; this.besiegt++;
+        ziel.weg = true; this.besiegt++; statPlus('gefangen', 1);
         const geld = ziel.art === 'dick' ? 12 : ziel.art === 'motte' ? 5 : 4; this.geld += geld; this.punkte += ziel.art === 'dick' ? 30 : ziel.art === 'motte' ? 12 : 10;
         mehlWolke(zx, zy, 10); teilchen(zx, zy, { n: 8, farben: ['#E3A928', '#F7C64A', '#FFF1B8'], form: 'krume', tempo: 110 });
         schwebText('+' + geld, zx, zy - 14, '#B9800E', 16);
@@ -2366,6 +2736,7 @@ SPIELE.schutz = {
     // Körner fliegen nach oben
     for (const k of this.koerner || []) { const t = ease.ein(k.t); sz_kornIcon(lerp(k.x0, 180, t), lerp(k.y0, 22, t) - Math.sin(t * Math.PI) * 30, 1 - t * .3); }
     if (this.gem && laeuft) text('Gemütlich', 16, 472, { gr: 10, farbe: 'rgba(255,240,215,.75)', ausr: 'left', schat: false });
+    if (this.gold && !this.gold.weg) { const g = this.gold, aus = Math.max(0, Math.min(1, (g.dauer - g.t) / .6)); x.globalAlpha = aus; bodenSchatten(g.x, g.y + 26, 14, 4, .3); goldGlanz(g.x, g.y, 20, zeit); x.save(); x.translate(g.x, g.y); x.rotate(Math.sin(zeit * 3) * .18); x.scale(1.05, 1.05); sz_goldAehre(); x.restore(); x.globalAlpha = 1; }
     // Menü
     if (this.menu) this.menuMalen(zeit);
     // Hinweis am Anfang
@@ -2402,6 +2773,7 @@ SPIELE.schutz = {
     }
   },
   testZug(){
+    if (this.gold && !this.gold.weg && this.gold.t > 1.2) return { x: this.gold.x, y: this.gold.y, warte: 250 };
     if (this.vorbei) return { x: 180, y: 120, warte: 300 };
     const plan = [[5, 'falle'], [1, 'falle'], [2, 'licht'], [4, 'minz'], [7, 'licht'], [6, 'falle'], [3, 'falle'], [0, 'licht']];
     if (this.menu) { const b = this.menuKnoepfe().find((k) => (k.typ === 'bau' && plan.some(([pi, a]) => pi === this.menu.platz && a === k.art)) || k.typ === 'up'); if (b && this.geld >= b.preis) return { x: b.x, y: b.y, warte: 300 }; return { x: 180, y: 120, warte: 300 }; }
@@ -2493,6 +2865,7 @@ const schl_frei = (o) => { let m = 0; for (const k in o) if (o[k] > 0 && Number(
 function schl_rechtecke(lv){
   const r = [];
   for (const p of lv.plattformen) {
+    if (p.art === 'wippe') { r.push({ x: p.cx - 3.5, y: p.cy + 6, w: 7, h: SCHL_BODEN - p.cy - 6 }); continue; }
     r.push({ x: p.x, y: p.y, w: p.w, h: 10 });
     if (p.art === 'wagen') { r.push({ x: p.x + 4, y: p.y + 10, w: 5, h: SCHL_BODEN - p.y - 10 }); r.push({ x: p.x + p.w - 9, y: p.y + 10, w: 5, h: SCHL_BODEN - p.y - 10 }); }
   }
@@ -2500,17 +2873,13 @@ function schl_rechtecke(lv){
     if (o.art === 'stikken') { r.push({ x: o.x, y: o.y, w: 6, h: SCHL_BODEN - o.y }); r.push({ x: o.x + o.w - 6, y: o.y, w: 6, h: SCHL_BODEN - o.y }); for (let yy = o.y; yy < SCHL_BODEN - 30; yy += 36) r.push({ x: o.x, y: yy, w: o.w, h: 5 }); }
     if (o.art === 'haenge') { r.push({ x: o.x, y: o.y, w: o.w, h: 9 }); r.push({ x: o.x + 6, y: 16, w: 2, h: o.y - 16 }); r.push({ x: o.x + o.w - 8, y: 16, w: 2, h: o.y - 16 }); }
   }
+  for (const l of lv.luefter || []) for (const k of schl_luefterKoerper(l)) r.push(k);
   return r;
 }
 
-/** Ein Physik-Schritt für die Kugel. Rückgabe: getroffene Form oder null */
-function schl_schritt(b, rechtecke, formen, dt){
-  b.vy += SCHL_G * dt; const vorUnten = b.y + SCHL_R; b.x += b.vx * dt; b.y += b.vy * dt;
-  for (const f of formen) {
-    if (f.voll) continue;
-    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3) return f;
-  }
-  const kiste = (rx, ry, rw, rh, e) => {
+/** Kugel gegen Rechteck (prallt ab) */
+function schl_kiste(b, rx, ry, rw, rh, e){
+  {
     const cx = klemm(b.x, rx, rx + rw), cy = klemm(b.y, ry, ry + rh); let dx = b.x - cx, dy = b.y - cy; const d2 = dx * dx + dy * dy;
     if (d2 >= SCHL_R * SCHL_R) return;
     let d = Math.sqrt(d2), nx, ny;
@@ -2520,13 +2889,74 @@ function schl_schritt(b, rechtecke, formen, dt){
     const vn = b.vx * nx + b.vy * ny;
     if (vn < 0) { const tx = b.vx - vn * nx, ty = b.vy - vn * ny; b.vx = tx * .9 - vn * nx * e; b.vy = ty * .9 - vn * ny * e; if (-vn > 120) { b.stoss = Math.max(b.stoss || 0, Math.min(1, -vn / 600)); b.stossN = [nx, ny]; b.abprall = (b.abprall || 0) + 1; } }
     b.kontakt = true;
-  };
+  }
+}
+/** Kugel gegen gedrehtes Rechteck: Rechteck in Koordinaten um (ox, oy), um rot gedreht */
+function schl_kisteRot(b, ox, oy, rot, rx, ry, rw, rh, e){
+  const c = Math.cos(rot), sn = Math.sin(rot), dx = b.x - ox, dy = b.y - oy;
+  const L = { x: c * dx + sn * dy, y: -sn * dx + c * dy, vx: c * b.vx + sn * b.vy, vy: -sn * b.vx + c * b.vy };
+  schl_kiste(L, rx, ry, rw, rh, e);
+  if (!L.kontakt) return;
+  b.x = ox + c * L.x - sn * L.y; b.y = oy + sn * L.x + c * L.y; b.vx = c * L.vx - sn * L.vy; b.vy = sn * L.vx + c * L.vy;
+  b.kontakt = true; if (L.stoss) { b.stoss = Math.max(b.stoss || 0, L.stoss); b.stossN = [c * L.stossN[0] - sn * L.stossN[1], sn * L.stossN[0] + c * L.stossN[1]]; b.abprall = (b.abprall || 0) + 1; }
+}
+// ── Neue Hindernisse ab Level 13: wackelndes Blech (Wippe) und Ventilator ──
+const SCHL_WIPPE_LEN = 84;
+/** Erster gelungener Versuch je neuem Level (mit dem Prüfskript ermittelt; bei Änderungen am Aufbau neu ermitteln) */
+let SCHL_NEU_START = { 13: 5, 14: 6, 15: 5, 16: 1, 17: 3, 18: 5, 19: 0, 20: 20, 21: 16, 22: 3, 23: 1, 24: 0, 25: 1, 26: 10, 27: 3, 28: 0, 29: 5, 30: 6, 31: 3, 32: 9, 33: 3, 34: 6, 35: 0, 36: 4, 37: 19, 38: 6, 39: 0, 40: 3 };
+/** Lüfter an/aus im Takt: weiches Hoch- und Runterfahren */
+function schl_luefterStaerke(l, t){
+  if (!l.takt) return 1;
+  const u = ((t + l.ph) % l.per + l.per) % l.per, an = l.per * .58, r = .45;
+  if (u < r) return u / r; if (u < an) return 1; if (u < an + r) return 1 - (u - an) / r; return 0;
+}
+/** Feste Teile eines Lüfters (Gehäuse und Ständer) */
+function schl_luefterKoerper(l){
+  if (l.art === 'boden') return [{ x: l.x - 34, y: SCHL_BODEN - 24, w: 68, h: 24 }];
+  return [{ x: l.x - 9, y: l.y - 27, w: 18, h: 54 }];
+}
+/** Windfeld eines Lüfters: Rechteck und Beschleunigung bei voller Stärke */
+function schl_wind(l){
+  if (l.art === 'boden') return { x: l.x - 30, y: l.hoch, w: 60, h: SCHL_BODEN - 24 - l.hoch, ax: 0, ay: -1500 };
+  return l.dir < 0 ? { x: l.x - 12 - l.weite, y: l.y - 30, w: l.weite, h: 60, ax: -l.kraft, ay: 0 } : { x: l.x + 12, y: l.y - 30, w: l.weite, h: 60, ax: l.kraft, ay: 0 };
+}
+/** Alles, was sich bewegt, auf Zeit t stellen (Schienen, Wippen, Lüfter) */
+function schl_dyn(lv, t){
+  for (const f of lv.formen) if (f.bahn && !f.voll) f.x = f.x0 + Math.sin(t * Math.PI * 2 / f.bahn.per + f.bahn.ph) * f.bahn.a;
+  for (const p of lv.plattformen) if (p.art === 'wippe') {
+    const f = lv.formen[p.form], w = t * Math.PI * 2 / p.per + p.ph;
+    p.rot = p.amp * Math.sin(w); p.s = p.rutsch * Math.sin(w - .8);
+    const c = Math.cos(p.rot), sn = Math.sin(p.rot), ly = -6 - f.h;
+    f.x = p.cx + c * p.s - sn * ly; f.y = p.cy + sn * p.s + c * ly; f.rot = p.rot; f.wippe = p;
+  }
+  for (const l of lv.luefter || []) l.s = schl_luefterStaerke(l, t);
+}
+
+/** Ein Physik-Schritt für die Kugel. Rückgabe: getroffene Form oder null */
+function schl_schritt(b, rechtecke, formen, dt, lv){
+  if (lv && lv.luefter) for (const l of lv.luefter) if (l.s > .01) { const z = schl_wind(l); if (b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h) { const nah = z.ax < 0 ? (b.x - z.x) / z.w : z.ax > 0 ? 1 - (b.x - z.x) / z.w : (b.y - z.y) / z.h; const k = l.s * (.45 + .55 * nah); b.vx += z.ax * k * dt; b.vy += z.ay * k * dt; b.wind = 1; } }
+  b.vy += SCHL_G * dt; const vorUnten = b.y + SCHL_R; b.x += b.vx * dt; b.y += b.vy * dt;
+  for (const f of formen) {
+    if (f.voll) continue;
+    if (f.wippe) { // gedrehte Form: im eigenen Koordinatensystem prüfen
+      const c = Math.cos(f.rot), sn = Math.sin(f.rot), dx = b.x - f.x, dy = b.y - f.y, ly = -sn * dx + c * dy, lx = c * dx + sn * dy, lvy = -sn * b.vx + c * b.vy;
+      if (lvy > 0 && ly - lvy * dt + SCHL_R <= 1 && ly + SCHL_R > 1 && Math.abs(lx) < f.w / 2 + 3) return f;
+      continue;
+    }
+    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3) return f;
+  }
   b.kontakt = false;
-  for (const r of rechtecke) kiste(r.x, r.y, r.w, r.h, .5);
+  for (const r of rechtecke) schl_kiste(b, r.x, r.y, r.w, r.h, .5);
   for (const f of formen) {
     const l = f.x - f.w / 2;
-    if (f.voll) kiste(l, f.y - 10, f.w, f.h + 10, .35);
-    else { kiste(l - 2, f.y - 2, 5, f.h + 2, .35); kiste(l + f.w - 3, f.y - 2, 5, f.h + 2, .35); kiste(l, f.y + f.h - 5, f.w, 5, .35); }
+    if (f.wippe) {
+      const p = f.wippe, hw = f.w / 2;
+      if (f.voll) schl_kisteRot(b, f.x, f.y, f.rot, -hw, -10, f.w, f.h + 10, .35);
+      else { schl_kisteRot(b, f.x, f.y, f.rot, -hw - 2, -2, 5, f.h + 2, .35); schl_kisteRot(b, f.x, f.y, f.rot, hw - 3, -2, 5, f.h + 2, .35); schl_kisteRot(b, f.x, f.y, f.rot, -hw, f.h - 5, f.w, 5, .35); }
+      schl_kisteRot(b, p.cx, p.cy, p.rot, -SCHL_WIPPE_LEN / 2, -6, SCHL_WIPPE_LEN, 6, .45);
+    }
+    else if (f.voll) schl_kiste(b, l, f.y - 10, f.w, f.h + 10, .35);
+    else { schl_kiste(b, l - 2, f.y - 2, 5, f.h + 2, .35); schl_kiste(b, l + f.w - 3, f.y - 2, 5, f.h + 2, .35); schl_kiste(b, l, f.y + f.h - 5, f.w, 5, .35); }
   }
   if (b.y + SCHL_R > SCHL_BODEN) { b.y = SCHL_BODEN - SCHL_R; if (b.vy > 120) { b.stoss = Math.min(1, b.vy / 600); b.stossN = [0, -1]; } b.vy = -b.vy * .35; b.vx *= .82; b.kontakt = true; }
   if (b.x < SCHL_R) { b.x = SCHL_R; b.vx = Math.abs(b.vx) * .5; }
@@ -2540,15 +2970,16 @@ function schl_klemmZug(dx, dy){
 }
 
 /** Prüft, welche Formen mit welchen Schüssen erreichbar sind (für faire Level und für den Test) */
-function schl_pruefe(lv, formen, t0){
+function schl_pruefe(lv, formen, t0, genug){
   const rechtecke = schl_rechtecke(lv), treffer = formen.map(() => []);
   for (let a = -10; a <= 82; a += 3.5) for (let s = 28; s <= SCHL_MAX; s += 4) {
+    if (genug && treffer.every((l, i) => l.length >= genug || formen[i].voll)) return treffer;
     const w = a * Math.PI / 180, [dx, dy] = schl_klemmZug(-Math.cos(w) * s, Math.sin(w) * s);
     if (Math.abs(Math.hypot(dx, dy) - s) > 2) continue;
     const b = { x: SCHL_A.x + dx, y: SCHL_A.y + dy, vx: -dx * SCHL_K, vy: -dy * SCHL_K };
     for (let t = 0; t < 3.4; t += 1 / 120) {
-      if (t0 !== undefined) for (const fm of formen) if (fm.bahn && !fm.voll) fm.x = fm.x0 + Math.sin((t0 + t) * Math.PI * 2 / fm.bahn.per + fm.bahn.ph) * fm.bahn.a;
-      const f = schl_schritt(b, rechtecke, formen, 1 / 120);
+      if (t0 !== undefined) schl_dyn(lv, t0 + t);
+      const f = schl_schritt(b, rechtecke, formen, 1 / 120, lv);
       if (f) { treffer[formen.indexOf(f)].push({ dx, dy }); break; }
       if (b.x > W + 20 || (b.y > SCHL_BODEN - SCHL_R - 1 && Math.abs(b.vy) < 40)) break;
     }
@@ -2564,6 +2995,7 @@ SPIELE.schleuder = {
     this.gemuetlich = typeof GEMUETLICH !== 'undefined' && GEMUETLICH;
     this.einzel = this.nochmalEinzel || 0; this.nochmalEinzel = 0;
     this.level = this.einzel ? this.einzel - 1 : 0; this.punkteN = 0; this.sterne = 0; this.zeit = 0; this.ball = null; this.ziehen = null; this.zustand = 'spiel'; this.lauf = 0; this.naechstes = null; this.naechstesV = 0; this.endeGerufen = false;
+    this.gold = null; this.goldZeit = zufall(15, 40); this.hinweisNeu = null;
     this.neuesLevel();
   },
   aktuellePunkte(){ return this.punkteN || 0; },
@@ -2573,7 +3005,81 @@ SPIELE.schleuder = {
     this.nochmalEinzel = n; this.start(); this.nochmalEinzel = n; // „Nochmal“ spielt dasselbe Level wieder
     if (!n) this.nochmalEinzel = 0;
   },
+  /** Plan der neuen Level 13 bis 22 (danach gemischt): Wippen, Lüfter (s = Seite, b = Boden, t = im Takt), Hindernisse, Schienen */
+  NEU_PLAN: {
+    13: { wippen: 1, amp: .2 }, 14: { luefter: ['s'] }, 15: { wippen: 1, amp: .28, hind: 1 }, 16: { luefter: ['b'] }, 17: { luefter: ['st'] },
+    18: { wippen: 2, amp: .3 }, 19: { wippen: 1, amp: .3, luefter: ['st'] }, 20: { wippen: 1, amp: .32, luefter: ['bt'], hind: 1 },
+    21: { wippen: 1, amp: .34, luefter: ['s', 'b'] }, 22: { wippen: 2, amp: .36, luefter: ['st'], hind: 1 },
+  },
+  NEU_HINWEIS: { 13: 'Neu: Das Blech wackelt. Pass den Moment ab!', 14: 'Neu: Der Ventilator pustet den Teig weg.', 16: 'Neu: Der Lüfter pustet nach oben.', 17: 'Der Ventilator geht an und aus.' },
+  neuPlan(lvNr, R){
+    if (this.NEU_PLAN[lvNr]) return this.NEU_PLAN[lvNr];
+    const z = (a, b) => a + Math.floor(R() * (b - a + 1));
+    return { wippen: z(0, 2), amp: .3 + R() * .08, luefter: ['s', 'st', 'b', 'bt'].filter(() => R() < .35).slice(0, 2), hind: z(0, 1), beweg: z(0, 1) };
+  },
+  /** Level ab 13: wie die alten, dazu Wippen und Lüfter. Jede Form muss zu irgendeinem Zeitpunkt sicher erreichbar sein. */
+  baueNeu(lvNr, stufe, versuch){
+    // bekannte Level: erster gelungener Versuch ist schon geprüft (spart Rechenzeit, ergibt genau denselben Aufbau)
+    const bekannt = SCHL_NEU_START[lvNr];
+    if (bekannt !== undefined && versuch < bekannt) return null;
+    const ohnePruefung = bekannt === versuch;
+    const R = schl_gen(lvNr * 7000003 + versuch * 104729 + 91), rz = (a, b) => a + R() * (b - a);
+    const plan = this.neuPlan(lvNr, R);
+    const leichter = (n) => Math.max(0, (n || 0) - (stufe >= 2 ? 1 : 0));
+    const formen = [], plattformen = [], hindernisse = [], luefter = [];
+    const unten = (q) => q.art === 'wagen' || q.art === 'wippe' ? SCHL_BODEN : q.y + 10;
+    // belegte Flächen je Plattform (mit Platz für die Form darüber und dem Schwenk der Wippe)
+    const flaechen = (q) => q.art === 'wippe' ? [{ x: q.cx - 48, y: q.cy - 52, w: 96, h: 72 }, { x: q.cx - 6, y: q.cy, w: 12, h: SCHL_BODEN - q.cy }]
+      : q.art === 'wagen' ? [{ x: q.x, y: q.y - 40, w: q.w, h: SCHL_BODEN - q.y + 40 }] : [{ x: q.x, y: q.y - 40, w: q.w, h: 50 }];
+    const stoesst = (p, ohne) => plattformen.some((c, i) => i !== ohne && flaechen(p).some((a) => flaechen(c).some((b) => a.x < b.x + b.w + 6 && b.x < a.x + a.w + 6 && a.y < b.y + b.h + 4 && b.y < a.y + a.h + 4)));
+    const nW = Math.min(stufe >= 2 ? 1 : 2, plan.wippen || 0);
+    for (let v = 0; v < 400 && formen.length < 3; v++) {
+      const wip = formen.length < nW, art = R() < .5 ? 'kasten' : 'korb', { w, h } = SCHL_FORM[art];
+      const f = { art, x: nW === 2 && wip ? (formen.length ? rz(262, 326) : rz(160, 200)) : rz(wip ? 168 : 160, wip ? 326 : 338), y: rz(wip ? 232 : 190, (wip ? 352 : 398) - h), w, h, voll: false, fuell: 0 }; f.x0 = f.x;
+      if (formen.some((o) => { const dx = Math.abs(o.x - f.x); return dx < 64 && !(dx >= 40 && Math.abs(o.y - f.y) >= 110); })) continue;
+      const py = f.y + f.h;
+      const p = wip ? { art: 'wippe', x: f.x - SCHL_WIPPE_LEN / 2 - 6, y: py - 22, w: SCHL_WIPPE_LEN + 12, cx: f.x, cy: py + 6, amp: plan.amp, per: rz(2.6, 3.6), ph: R() * 6.28, rutsch: 9, form: formen.length, rot: 0, s: 0 }
+        : { art: py > 362 ? 'wagen' : 'regal', x: f.x - (f.w + 18) / 2, y: py, w: f.w + 18 };
+      if (stoesst(p, -1)) continue;
+      formen.push(f); plattformen.push(p);
+    }
+    if (formen.length < 3) return null;
+    // Schiene (nur bei gemischten Leveln)
+    if (leichter(plan.beweg)) for (let i = 0; i < 3; i++) { const f = formen[i], p = plattformen[i]; if (p.art === 'wippe') continue; for (let a = Math.min(f.x - 158, 328 - f.x, 26); a >= 16; a -= 4) { const bw = f.w + 18 + a * 2, q = { art: 'schiene', x: f.x - bw / 2, y: f.y + f.h, w: bw }; if (!stoesst(q, i)) { f.bahn = { a, per: rz(3.6, 5), ph: R() * 6.28 }; plattformen[i] = q; break; } } break; }
+    const frei = (rx, ry, rw, rh) => formen.every((f, i) => { const p = plattformen[i], a = f.bahn ? f.bahn.a : 0, hw = p.art === 'wippe' ? SCHL_WIPPE_LEN / 2 + 6 : f.w / 2 + a; return rx + rw < f.x - hw - 10 || rx > f.x + hw + 10 || ry + rh < f.y - 74 || ry > (p.art === 'wippe' ? SCHL_BODEN : f.y + f.h + 12); })
+      && plattformen.every((p) => rx + rw < p.x - 8 || rx > p.x + p.w + 8 || ry + rh < p.y - 8 || ry > unten(p) + 8);
+    const getrennt = (rx, rw) => hindernisse.every((o) => rx + rw < o.x - 16 || rx > o.x + o.w + 16) && luefter.every((l) => rx + rw < l.x - 50 || rx > l.x + 50);
+    // Lüfter
+    for (const code of (stufe >= 3 ? [] : plan.luefter || []).slice(0, stufe >= 2 ? 1 : 2)) {
+      const takt = code.length > 1, per = rz(3.6, 4.6), ph = R() * per;
+      for (let v = 0; v < 60; v++) {
+        let l;
+        if (code[0] === 'b') { l = { art: 'boden', x: rz(150, 318), hoch: rz(110, 170), takt, per, ph, s: 1 }; if (!frei(l.x - 36, SCHL_BODEN - 26, 72, 26) || !getrennt(l.x - 36, 72)) continue; }
+        else { const dir = R() < .5 ? -1 : 1; l = { art: 'seite', dir, x: dir < 0 ? rz(330, 342) : rz(122, 140), y: dir < 0 ? rz(130, 330) : rz(150, 270), weite: rz(150, 190), kraft: rz(620, 760), takt, per, ph, s: 1 }; if (!frei(l.x - 12, l.y - 30, 24, 60) || !getrennt(l.x - 12, 24)) continue; }
+        luefter.push(l); break;
+      }
+    }
+    if (stufe < 2 && luefter.length < (plan.luefter || []).length) return null;
+    const nH = Math.max(0, (plan.hind || 0) - (stufe >= 1 ? 1 : 0));
+    for (let v = 0; v < 60 && hindernisse.length < nH; v++) {
+      if (R() < .5) { const w = 52, h = rz(90, 170), ox = rz(120, 300), oy = SCHL_BODEN - h; if (frei(ox, oy, w, h) && getrennt(ox, w)) hindernisse.push({ art: 'stikken', x: ox, y: oy, w }); }
+      else { const w = rz(66, 88), ox = rz(120, 330 - w), oy = rz(70, 200); if (frei(ox, 16, w, oy - 16 + 12) && getrennt(ox, w)) hindernisse.push({ art: 'haenge', x: ox, y: oy, w }); }
+    }
+    const lv = { formen, plattformen, hindernisse, luefter, neu: true, art: [nW ? 'wippe' : '', luefter.length ? 'luefter' : ''].filter(Boolean) };
+    if (stufe >= 3 && (nW === 0) && !luefter.length) return null;
+    if (ohnePruefung) { schl_dyn(lv, 0); return lv; }
+    // Prüfen über mehrere Zeitpunkte: jede Form braucht zu einem Zeitpunkt mindestens 3 Treffer-Schüsse
+    const ok = formen.map(() => false);
+    for (const t0 of [0, .7, 1.4, 2.1, 2.8, 3.5, 4.2]) {
+      const t = schl_pruefe(lv, formen, t0, 3);
+      t.forEach((l, i) => { if (l.length >= 3) ok[i] = true; });
+      if (ok.every(Boolean)) break;
+    }
+    schl_dyn(lv, 0); for (const f of formen) if (f.bahn) f.x = f.x0;
+    return ok.every(Boolean) ? lv : null;
+  },
   baueLevel(lvNr, stufe, versuch = 0){
+    if (lvNr >= 13) return this.baueNeu(lvNr, stufe, versuch);
     const R = schl_gen(lvNr * 1000003 + versuch * 7919 + 17), rz = (a, b) => a + R() * (b - a);
     const n = 3, formen = [], plattformen = [], hindernisse = [];
     const yMin = lvNr === 1 ? 250 : lvNr === 2 ? 190 : 140;
@@ -2625,19 +3131,31 @@ SPIELE.schleuder = {
     this.naechstesV = 0;
     for (let v = 0; v < 30 && !lv; v++) lv = this.baueLevel(1, 3, 100 + v);
     if (!lv) lv = { formen: [{ art: 'kasten', x: 180, x0: 180, y: 374, w: 60, h: 26, voll: false, fuell: 0 }, { art: 'korb', x: 256, x0: 256, y: 290, w: 64, h: 28, voll: false, fuell: 0 }, { art: 'kasten', x: 320, x0: 320, y: 220, w: 60, h: 26, voll: false, fuell: 0 }], plattformen: [{ art: 'wagen', x: 139, y: 400, w: 82 }, { art: 'regal', x: 213, y: 318, w: 86 }, { art: 'regal', x: 279, y: 246, w: 82 }], hindernisse: [] };
-    this.lv = lv; this.rechtecke = schl_rechtecke(lv);
+    this.lv = lv; this.rechtecke = schl_rechtecke(lv); this.gold = null;
+    this.hinweisNeu = this.NEU_HINWEIS[this.level] ? { t: this.NEU_HINWEIS[this.level], z: 3.4 } : null;
   },
-  formenBewegen(){ for (const f of this.lv.formen) if (f.bahn && !f.voll) f.x = f.x0 + Math.sin(this.zeit * Math.PI * 2 / f.bahn.per + f.bahn.ph) * f.bahn.a; },
+  formenBewegen(){ schl_dyn(this.lv, this.zeit); },
   // ── Level-Auswahl ──
   knopfRect: { x: 10, y: 72, w: 104, h: 30 },
+  auswahlFrei(){ return Math.max(schl_frei(schl_sterneLesen()), this.einzel ? 0 : this.level); },
+  auswahlSeiten(){ return Math.ceil((this.auswahlFrei() + 1) / 16); },
   auswahlKacheln(){
-    const sterne = schl_sterneLesen(), frei = Math.max(schl_frei(sterne), this.einzel ? 0 : this.level), von = Math.max(1, frei - 14), liste = [];
-    for (let i = 0; i < Math.min(16, frei + 2 - von); i++) { const n = von + i, sp = i % 4, ze = Math.floor(i / 4); liste.push({ n, x: 33 + sp * 76, y: 146 + ze * 70, w: 66, h: 60, offen: n <= frei, st: sterne[n] || 0 }); }
+    const sterne = schl_sterneLesen(), frei = this.auswahlFrei(), seite = klemm(this.auswahlSeite || 0, 0, this.auswahlSeiten() - 1), von = 1 + seite * 16, liste = [];
+    for (let i = 0; i < 16 && von + i <= frei + 1; i++) { const n = von + i, sp = i % 4, ze = Math.floor(i / 4); liste.push({ n, x: 33 + sp * 76, y: 146 + ze * 70, w: 66, h: 60, offen: n <= frei, st: sterne[n] || 0 }); }
     return liste;
   },
-  auswahlOeffnen(){ this.vorAuswahl = this.zustand; this.zustand = 'auswahl'; this.auswahlZeit = 0; this.ziehen = null; },
+  /** Kennzeichen der Level ab 13 (für die Auswahl): Wippe und/oder Lüfter */
+  levelZeichen(n){
+    if (n < 13) return [];
+    const p = this.NEU_PLAN[n]; if (!p) return ['mix'];
+    return [p.wippen ? 'wippe' : '', (p.luefter || []).length ? 'luefter' : ''].filter(Boolean);
+  },
+  auswahlOeffnen(){ this.vorAuswahl = this.zustand; this.zustand = 'auswahl'; this.auswahlZeit = 0; this.ziehen = null; this.auswahlSeite = Math.floor((Math.max(1, this.level) - 1) / 16); },
   auswahlTipp(p){
     const in_ = (r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+    const seiten = this.auswahlSeiten(), sei = klemm(this.auswahlSeite || 0, 0, seiten - 1);
+    if (seiten > 1 && in_({ x: 22, y: 88, w: 46, h: 42 })) { if (sei > 0) { this.auswahlSeite = sei - 1; brumm(15); } return; }
+    if (seiten > 1 && in_({ x: 292, y: 88, w: 46, h: 42 })) { if (sei < seiten - 1) { this.auswahlSeite = sei + 1; brumm(15); } return; }
     for (const k of this.auswahlKacheln()) if (in_(k)) { if (k.offen) { brumm(20); this.levelWaehlen(k.n); } else { wackeln(3); brumm(40); } return; }
     if (in_({ x: 33, y: 432, w: 140, h: 30 })) { this.levelWaehlen(0); return; }
     if (in_({ x: 187, y: 432, w: 140, h: 30 }) || p.y < 76 || p.y > 470) this.zustand = this.vorAuswahl || 'spiel';
@@ -2648,6 +3166,16 @@ SPIELE.schleuder = {
     x.fillStyle = F.braun; for (let i = 0; i < 4; i++) { rr(r.x + 10 + (i % 2) * 7, r.y + 8 + Math.floor(i / 2) * 7, 5.5, 5.5, 1.5); x.fill(); }
     text(`Level ${this.level}`, r.x + 60, r.y + r.h / 2 + .5, { gr: 13, farbe: F.braun, schat: false });
     x.strokeStyle = F.braun; x.lineWidth = 1.8; x.lineCap = 'round'; x.beginPath(); x.moveTo(r.x + r.w - 15, r.y + 13); x.lineTo(r.x + r.w - 11, r.y + 17); x.lineTo(r.x + r.w - 7, r.y + 13); x.stroke();
+  },
+  /** Kleine Zeichen für neue Hindernisse in der Level-Auswahl */
+  malZeichen(z, px, py){
+    x.save(); x.translate(px, py);
+    x.fillStyle = '#EAF2FA'; x.strokeStyle = '#7FA6C8'; x.lineWidth = 1; x.beginPath(); x.arc(0, 0, 7, 0, 7); x.fill(); x.stroke();
+    x.strokeStyle = '#3F6E96'; x.fillStyle = '#3F6E96'; x.lineWidth = 1.5; x.lineCap = 'round';
+    if (z === 'luefter') { for (let i = 0; i < 3; i++) { x.save(); x.rotate(i * 2.094); x.beginPath(); x.ellipse(0, -2.6, 1.6, 2.8, .5, 0, 7); x.fill(); x.restore(); } x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill(); }
+    else if (z === 'wippe') { x.beginPath(); x.moveTo(-4.5, 1.8); x.lineTo(4.5, -1.8); x.stroke(); x.beginPath(); x.moveTo(0, 0); x.lineTo(-2, 4); x.lineTo(2, 4); x.closePath(); x.fill(); }
+    else { x.beginPath(); x.arc(-2, 0, 1.3, 0, 7); x.arc(2.4, 0, 1.3, 0, 7); x.fill(); }
+    x.restore();
   },
   malStern(px, py, r, an){
     x.beginPath(); for (let k = 0; k < 10; k++) { const rr2 = k % 2 ? r * .45 : r; x.lineTo(px + Math.cos(k * Math.PI / 5 - Math.PI / 2) * rr2, py + Math.sin(k * Math.PI / 5 - Math.PI / 2) * rr2); } x.closePath();
@@ -2660,6 +3188,12 @@ SPIELE.schleuder = {
     schatten(18, 8); x.fillStyle = linear(0, 76, 0, 470, [[0, '#FFFBF2'], [1, '#FFEFD0']]); rr(18, 78, 324, 392, 24); x.fill(); ohneSchatten();
     x.strokeStyle = F.gold; x.lineWidth = 3; x.stroke();
     text('Level wählen', 180, 106, { gr: 22, farbe: F.braun, schrift: 'Fraunces' });
+    const seiten = this.auswahlSeiten(), sei = klemm(this.auswahlSeite || 0, 0, seiten - 1);
+    if (seiten > 1) for (const [bx, r2, an] of [[45, -1, sei > 0], [315, 1, sei < seiten - 1]]) {
+      x.fillStyle = an ? linear(0, 92, 0, 122, [[0, '#FFD95A'], [1, '#F2B400']]) : '#EFE5D3'; x.beginPath(); x.arc(bx, 107, 16, 0, 7); x.fill();
+      x.strokeStyle = an ? '#B98200' : '#DCCDB4'; x.lineWidth = 1.5; x.stroke();
+      x.strokeStyle = an ? F.braun : '#B9A98F'; x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(bx - r2 * 3, 100); x.lineTo(bx + r2 * 4, 107); x.lineTo(bx - r2 * 3, 114); x.stroke();
+    }
     const st = schl_sterneLesen(); let summe = 0; for (const k in st) summe += st[k];
     { const t3 = `${summe} ${summe === 1 ? 'Stern' : 'Sterne'} gesammelt`; x.font = '800 12.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w3 = x.measureText(t3).width; this.malStern(180 - w3 / 2 - 4, 130, 7, true); text(t3, 180 + 8, 130.5, { gr: 12.5, farbe: F.goldDunkel, schat: false }); }
     for (const k of this.auswahlKacheln()) {
@@ -2668,6 +3202,7 @@ SPIELE.schleuder = {
         x.fillStyle = aktiv ? '#FFF1C2' : '#FFFFFF'; rr(k.x, k.y, k.w, k.h, 14); x.fill();
         x.strokeStyle = aktiv ? '#E0A526' : '#EADBC0'; x.lineWidth = aktiv ? 3 : 2; x.stroke();
         text(String(k.n), k.x + k.w / 2, k.y + 23, { gr: 20, farbe: F.braun, schrift: 'Fraunces', schat: false });
+        { const zs = this.levelZeichen(k.n); zs.forEach((z, i) => this.malZeichen(z, zs.length > 1 && i === 0 ? k.x + 11 : k.x + k.w - 11, k.y + 11)); }
         for (let i = 0; i < 3; i++) this.malStern(k.x + k.w / 2 + (i - 1) * 15, k.y + 45 - (i === 1 ? 2 : 0), 6, i < k.st);
       } else {
         x.fillStyle = '#EDE3D2'; rr(k.x, k.y, k.w, k.h, 14); x.fill(); x.strokeStyle = '#DCCDB4'; x.lineWidth = 2; x.stroke();
@@ -2711,15 +3246,20 @@ SPIELE.schleuder = {
     this.zeit += dt; this.einflug = Math.min(1, this.einflug + dt * 1.8); this.laden = Math.min(1, this.laden + dt * 2.6); this.schnapp = Math.max(0, (this.schnapp || 0) - dt * 3);
     this.formenBewegen();
     for (const f of this.lv.formen) if (f.voll) f.fuell = Math.min(1, f.fuell + dt * 1.4);
+    if (this.hinweisNeu) { this.hinweisNeu.z -= dt; if (this.hinweisNeu.z <= 0) this.hinweisNeu = null; }
+    if (goldKommt() && this.zeit > this.goldZeit && this.zustand === 'spiel' && !this.ball && this.einflug >= 1 && this.lv.formen.filter((f) => !f.voll).length >= 2) this.goldSetzen();
+    if (this.gold) { const g = this.gold; g.rest -= dt; g.y = g.y0 + Math.sin(this.zeit * 2.2) * 5; if (g.rest <= 0 && !(this.ball && g.rest > -1.5)) { mehlWolke(g.x, g.y, 6); this.gold = null; } }
     const b = this.ball;
     if (b) {
       // feste Schrittweite wie in der Prüfung, damit jeder Schuss genau so fliegt wie berechnet
       b.acc = (b.acc || 0) + dt;
       while (b.acc >= 1 / 120 && this.ball) {
         b.acc -= 1 / 120; b.px = b.x; b.py = b.y;
-        const f = schl_schritt(b, this.rechtecke, this.lv.formen, 1 / 120);
+        schl_dyn(this.lv, this.zeit - b.acc); const f = schl_schritt(b, this.rechtecke, this.lv.formen, 1 / 120, this.lv);
         if (b.stoss > 0) { b.quetsch = Math.max(b.quetsch, b.stoss); b.qN = b.stossN; if (b.stoss > .3) mehlWolke(b.x, b.y, 3); b.stoss = 0; }
         if (f) this.treffer(f, b);
+        // Goldform: reicht, sie im Flug zu treffen
+        else if (this.ball && this.gold && Math.hypot(b.x - this.gold.x, b.y - this.gold.y - this.gold.h / 2) < 32) this.treffer(this.gold, b);
       }
       if (this.ball) {
         b.t += dt; b.quetsch = Math.max(0, b.quetsch - dt * 4);
@@ -2751,7 +3291,43 @@ SPIELE.schleuder = {
     const k = this.kugeln + (this.ball ? 1 : 0);
     setHud([{ icon: 'punkte', text: this.punkteN.toLocaleString('de-DE') }, { icon: 'korn', text: `${k} ${k === 1 ? 'Kugel' : 'Kugeln'}` }]);
   },
+  /** Goldform: schwebt an einer freien Stelle, bleibt 7 s; im Flug treffen genügt */
+  goldSetzen(){
+    // Raster freier Stellen (die festen Plätze lagen oft zu nah an den Formen)
+    const kandidaten = [];
+    for (let gx = 140; gx <= 320; gx += 30) for (let gy = 110; gy <= 290; gy += 30) kandidaten.push([gx, gy]);
+    kandidaten.sort(() => Math.random() - .5);
+    for (const [gx, gy] of kandidaten) {
+      const g = { art: 'kasten', gold: true, x: gx, x0: gx, y: gy, y0: gy, w: 54, h: 22, voll: false, fuell: 0, rest: 7 };
+      const r = { x: gx - 40, y: gy - 50, w: 80, h: 90 };
+      const stoert = this.lv.formen.some((f) => Math.abs(f.x - gx) < 70 && Math.abs(f.y - gy) < 80) || this.rechtecke.some((q) => q.x < r.x + r.w && r.x < q.x + q.w && q.y < r.y + r.h && r.y < q.y + q.h);
+      if (stoert) continue;
+      this.gold = g; goldErschienen(); return;
+    }
+    this.goldZeit = this.zeit + 4; // später nochmal versuchen
+  },
+  goldForm(f, zeit){
+    const a = f.rest < 1 ? Math.max(0, f.rest) : 1, l = f.x - f.w / 2, o = f.y;
+    x.globalAlpha = a;
+    goldGlanz(f.x, o + f.h / 2, 24, zeit);
+    // kleine Flügel aus Teig, damit sie schwebt
+    for (const s2 of [-1, 1]) { x.save(); x.translate(f.x + s2 * (f.w / 2 + 4), o + 6); x.rotate(s2 * (.3 + Math.sin(zeit * 14) * .35)); x.fillStyle = 'rgba(255,248,226,.95)'; x.strokeStyle = 'rgba(160,110,30,.55)'; x.lineWidth = 1; x.beginPath(); x.ellipse(s2 * 9, -4, 11, 5, s2 * -.4, 0, 7); x.fill(); x.stroke(); x.restore(); }
+    x.beginPath(); x.moveTo(l, o); x.lineTo(l + f.w, o); x.lineTo(l + f.w - 6, o + f.h); x.lineTo(l + 6, o + f.h); x.closePath();
+    x.fillStyle = linear(l, 0, l + f.w, 0, [[0, '#C98A00'], [.22, '#FFF1B8'], [.45, '#FFC72C'], [.75, '#E0A526'], [1, '#8A5A0A']]); x.fill();
+    x.strokeStyle = '#7A4E06'; x.lineWidth = 1.4; x.stroke();
+    x.fillStyle = linear(0, o - 3, 0, o + 3, [[0, '#FFF6D0'], [1, '#C98A00']]); rr(l - 2, o - 3, f.w + 4, 6, 3); x.fill();
+    x.fillStyle = '#6B4400'; x.beginPath(); x.ellipse(f.x, o, f.w / 2 - 3, 2, 0, 0, 7); x.fill();
+    // Restzeit als Ring
+    x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 3; x.beginPath(); x.arc(f.x, o - 22, 7, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(f.rest / 7, 0, 1)); x.stroke();
+    x.strokeStyle = 'rgba(122,78,6,.6)'; x.lineWidth = 1; x.beginPath(); x.arc(f.x, o - 22, 9, 0, 7); x.stroke();
+    x.globalAlpha = 1;
+  },
   treffer(f, b){
+    if (f.gold) { // Goldform: Kugel kommt zurück, kleine Extra-Punkte
+      this.ball = null; this.gold = null; this.kugeln++; this.geschossen--; this.punkteN += 50;
+      goldGefangen(f.x, f.y); schwebText('+50', f.x, f.y - 30, F.goldDunkel, 22); schwebText('Kugel zurück', f.x, f.y - 54, F.braun, 14); return;
+    }
+    statPlus('formen');
     f.voll = true; f.fuell = 0; f.trefferZeit = this.zeit; this.ball = null; brumm(25);
     this.lauf++;
     let p = 50; const bande = (b.abprall || 0) > 0;
@@ -2770,15 +3346,16 @@ SPIELE.schleuder = {
   geschafft(){
     this.zustand = 'fertig'; this.uhr = 0; this.restGezaehlt = 0; this.restBonus = this.kugeln;
     const n = this.geschossen <= 3 ? 3 : this.geschossen === 4 ? 2 : 1; this.levelSterne = n; this.sterne += n;
-    schl_sterneSetzen(this.level, this.gemuetlich ? 1 : n); brumm(30);
+    schl_sterneSetzen(this.level, this.gemuetlich ? 1 : n); brumm(30); statPlus('sterne', n);
     for (let i = 0; i < 3; i++) setTimeout(() => { if (i < n && this.zustand === 'fertig') teilchen(180 + (i - 1) * 50, 200, { n: 14, form: 'stern', tempo: 160 }); }, 250 + i * 220);
   },
   testZug(){
     if (this.zustand !== 'spiel' || this.ball || this.einflug < 1 || this.laden < 1) return { x: 20, y: 30, warte: 300 };
     const formen = this.lv.formen;
-    const merk = formen.map((f) => f.x); const t = schl_pruefe(this.lv, formen, this.zeit + .3); formen.forEach((f, i) => { f.x = merk[i]; });
+    const t = schl_pruefe(this.lv, formen, this.zeit + .3); schl_dyn(this.lv, this.zeit);
     let wahl = null;
-    for (let i = 0; i < formen.length; i++) if (!formen[i].voll && t[i].length) { wahl = t[i][Math.floor(t[i].length / 2)]; if (!formen[i].bahn) break; }
+    for (let i = 0; i < formen.length; i++) if (!formen[i].voll && t[i].length) { wahl = t[i][Math.floor(t[i].length / 2)]; if (!formen[i].bahn && !formen[i].wippe) break; }
+    if (!wahl && this.lv.neu) return { x: 20, y: 30, warte: 250 }; // auf einen besseren Moment warten
     if (!wahl) wahl = { dx: -60, dy: 40 };
     return { zieh: true, x: SCHL_A.x, y: SCHL_A.y, zx: SCHL_A.x + wahl.dx, zy: SCHL_A.y + wahl.dy, warte: 2200 };
   },
@@ -2792,10 +3369,11 @@ SPIELE.schleuder = {
     x.fillStyle = 'rgba(255,255,255,.55)'; for (const [a, c] of [[3, -2], [-1, 4], [5, 3], [-5, 1]]) { x.beginPath(); x.arc(a, c, .9, 0, 7); x.fill(); }
     x.restore();
   },
-  form(f, zeit){
+  form(f, zeit, aufWippe){
     const { w, h } = f, l = f.x - w / 2, o = f.y;
+    if (f.gold) { this.goldForm(f, zeit); return; }
     // Schatten auf dem Brett
-    bodenSchatten(f.x + 3, o + h + 1, w * .55, 4, .35);
+    if (!aufWippe) bodenSchatten(f.x + 3, o + h + 1, w * .55, 4, .35);
     if (f.voll) {
       const t = ease.feder(Math.min(1, f.fuell * 1.4)), back = klemm((f.fuell - .35) / .65, 0, 1);
       const hoch = 4 + t * 14;
@@ -2829,7 +3407,7 @@ SPIELE.schleuder = {
       x.fillStyle = '#C8453A'; x.fillRect(l + 10, o + 6, 13, 1.6);
     }
     // Ziel-Hinweis über offenen Formen
-    if (!f.voll) {
+    if (!f.voll && !aufWippe) {
       const hb = Math.sin(zeit * 4 + f.x) * 3, py = o - 22 + hb;
       x.fillStyle = radial(f.x, o - 2, 2, w * .6, [[0, `rgba(255,214,90,${.28 + Math.sin(zeit * 4) * .08})`], [1, 'rgba(255,214,90,0)']]); x.beginPath(); x.ellipse(f.x, o - 2, w * .6, 14, 0, 0, 7); x.fill();
       x.fillStyle = F.gold; x.strokeStyle = F.braun; x.lineWidth = 1.6; x.beginPath(); x.moveTo(f.x - 7, py - 5); x.lineTo(f.x + 7, py - 5); x.lineTo(f.x, py + 3); x.closePath(); x.fill(); x.stroke();
@@ -2839,6 +3417,16 @@ SPIELE.schleuder = {
     }
   },
   plattform(p, f){
+    if (p.art === 'wippe') {
+      // Ständer aus Edelstahl mit Fuß
+      const fx = p.cx, top = p.cy + 2;
+      bodenSchatten(fx + 3, SCHL_BODEN, 26, 4, .35);
+      x.fillStyle = linear(fx - 4, 0, fx + 4, 0, [[0, '#EEF2F5'], [.5, '#B5BEC7'], [1, '#6E7984']]); rr(fx - 3.5, top, 7, SCHL_BODEN - top - 8, 2); x.fill();
+      x.strokeStyle = '#7E8994'; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.moveTo(fx, SCHL_BODEN - 16); x.lineTo(fx - 20, SCHL_BODEN - 3); x.moveTo(fx, SCHL_BODEN - 16); x.lineTo(fx + 20, SCHL_BODEN - 3); x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(fx - 1, SCHL_BODEN - 17); x.lineTo(fx - 20, SCHL_BODEN - 5); x.stroke();
+      for (const s2 of [-1, 1]) { x.fillStyle = '#2E2B29'; rr(fx + s2 * 20 - 4, SCHL_BODEN - 4, 8, 4, 2); x.fill(); }
+      return;
+    }
     if (p.art === 'wagen') {
       // Rollwagen aus Edelstahl
       for (const lx of [p.x + 4, p.x + p.w - 9]) { x.fillStyle = linear(lx, 0, lx + 5, 0, [[0, '#E6EBEF'], [1, '#7E8994']]); x.fillRect(lx, p.y + 8, 5, SCHL_BODEN - p.y - 14); }
@@ -2855,6 +3443,80 @@ SPIELE.schleuder = {
     } else holz(p.x, p.y, p.w, 10, 4);
     // Winkel an der Wand
     for (const ex of [p.x + 10, p.x + p.w - 18]) { x.fillStyle = 'rgba(40,30,25,.18)'; x.beginPath(); x.moveTo(ex + 2, p.y + 12); x.lineTo(ex + 10, p.y + 12); x.lineTo(ex + 2, p.y + 28); x.closePath(); x.fill(); x.fillStyle = '#4A4440'; x.beginPath(); x.moveTo(ex, p.y + 10); x.lineTo(ex + 8, p.y + 10); x.lineTo(ex, p.y + 25); x.closePath(); x.fill(); }
+  },
+  /** Wackelndes Blech mit Form darauf (gedreht um den Drehpunkt) */
+  wippe(p, zeit){
+    const f = this.lv.formen[p.form];
+    x.save(); x.translate(p.cx, p.cy); x.rotate(p.rot || 0);
+    // Blech
+    x.fillStyle = 'rgba(40,30,20,.18)'; rr(-SCHL_WIPPE_LEN / 2 + 2, 1, SCHL_WIPPE_LEN, 4, 2); x.fill();
+    x.fillStyle = linear(0, -6, 0, 0, [[0, '#F2F5F7'], [.45, '#B9C2CA'], [1, '#6E7984']]); rr(-SCHL_WIPPE_LEN / 2, -6, SCHL_WIPPE_LEN, 6, 2); x.fill();
+    for (const s2 of [-1, 1]) { x.fillStyle = linear(0, -11, 0, 0, [[0, '#E6EBEF'], [1, '#7E8994']]); rr(s2 * SCHL_WIPPE_LEN / 2 - (s2 > 0 ? 3 : 0), -11, 3, 11, 1.2); x.fill(); }
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.fillRect(-SCHL_WIPPE_LEN / 2 + 3, -5.5, SCHL_WIPPE_LEN - 6, 1);
+    x.restore();
+    // Form mit dem Blech gedreht
+    x.save(); x.translate(f.x, f.y); x.rotate(f.rot || 0); x.translate(-f.x, -f.y); this.form(f, zeit, true); x.restore();
+    // Drehpunkt
+    x.fillStyle = radial(p.cx, p.cy, 1, 7, [[0, '#FFF1B8'], [.6, '#E0A526'], [1, '#8A5A0A']], p.cx - 2, p.cy - 2); x.beginPath(); x.arc(p.cx, p.cy, 6, 0, 7); x.fill();
+    x.fillStyle = '#5A3A0A'; x.beginPath(); x.arc(p.cx, p.cy, 1.8, 0, 7); x.fill();
+    // Zielpfeil bleibt aufrecht über der Form
+    if (!f.voll) { const hb = Math.sin(zeit * 4 + f.x) * 3, py = f.y - 24 + hb; x.fillStyle = F.gold; x.strokeStyle = F.braun; x.lineWidth = 1.6; x.beginPath(); x.moveTo(f.x - 7, py - 5); x.lineTo(f.x + 7, py - 5); x.lineTo(f.x, py + 3); x.closePath(); x.fill(); x.stroke(); }
+  },
+  /** Ventilator: Seite (an der Wand) oder Boden-Gebläse, Rotor dreht nach Stärke */
+  luefter(l, zeit){
+    l.dreh = (l.dreh || 0) + (l.s || 0) * .55 + .01;
+    const an = (l.s || 0) > .5;
+    if (l.art === 'boden') {
+      const bx = l.x - 34, by = SCHL_BODEN - 24;
+      bodenSchatten(l.x + 3, SCHL_BODEN, 38, 5, .4);
+      x.fillStyle = linear(0, by, 0, by + 24, [[0, '#E9EDF0'], [.5, '#A7B1BA'], [1, '#6E7984']]); rr(bx, by, 68, 22, 5); x.fill();
+      x.save(); rr(bx + 6, by + 3, 56, 10, 3); x.clip(); x.fillStyle = '#2A2F35'; x.fillRect(bx, by, 68, 16);
+      for (let i = 0; i < 4; i++) { const a = l.dreh + i * Math.PI / 2, w2 = Math.cos(a) * 24; x.fillStyle = 'rgba(160,170,180,.85)'; x.beginPath(); x.ellipse(l.x + w2 * .5, by + 8, Math.abs(w2) * .5 + 1.5, 4, 0, 0, 7); x.fill(); }
+      x.restore();
+      x.strokeStyle = 'rgba(230,236,240,.95)'; x.lineWidth = 1.4; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(bx + 8 + k * 6.5, by + 3); x.lineTo(bx + 8 + k * 6.5, by + 13); x.stroke(); }
+      x.fillStyle = an ? '#5BD46A' : '#B4433A'; x.beginPath(); x.arc(bx + 60, by + 17.5, 2.2, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.6)'; x.fillRect(bx + 4, by + 1, 60, 1.2);
+      return;
+    }
+    const d = l.dir, cx = l.x, cy = l.y;
+    // Halter an der Wand
+    x.fillStyle = '#5E5650'; rr(cx - d * 16 - 5, cy - 9, 10, 18, 3); x.fill();
+    x.strokeStyle = '#7E8994'; x.lineWidth = 4; x.beginPath(); x.moveTo(cx - d * 14, cy); x.lineTo(cx - d * 6, cy); x.stroke();
+    // Motor
+    x.fillStyle = linear(0, cy - 10, 0, cy + 10, [[0, '#F0F3F6'], [1, '#7E8994']]); rr(cx - d * 8 - 6, cy - 9, 12, 18, 5); x.fill();
+    // Rotor (von der Seite: Blätter wandern auf und ab)
+    for (let i = 0; i < 3; i++) { const a = l.dreh + i * 2.094, yy = Math.sin(a) * 19, tief = Math.cos(a); x.fillStyle = tief > 0 ? 'rgba(98,150,200,.95)' : 'rgba(70,112,155,.9)'; x.beginPath(); x.ellipse(cx + d * 1, cy + yy, 3.6, 7 + 3.5 * Math.abs(tief), 0, 0, 7); x.fill(); }
+    x.fillStyle = '#E0A526'; x.beginPath(); x.ellipse(cx + d * 2, cy, 2.6, 4.5, 0, 0, 7); x.fill();
+    if ((l.s || 0) > .4) { x.fillStyle = `rgba(200,210,220,${.25 * l.s})`; x.beginPath(); x.ellipse(cx + d, cy, 4, 24, 0, 0, 7); x.fill(); }
+    // Schutzgitter
+    x.strokeStyle = 'rgba(60,66,76,.95)'; x.lineWidth = 2.4; x.beginPath(); x.ellipse(cx, cy, 10, 28, 0, 0, 7); x.stroke();
+    x.strokeStyle = 'rgba(120,130,140,.7)'; x.lineWidth = 1; for (const k of [-4.5, 0, 4.5]) { x.beginPath(); x.ellipse(cx + k * .3, cy, Math.max(1, 9 - Math.abs(k) * 1.3), 27, 0, 0, 7); x.stroke(); }
+    x.strokeStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.ellipse(cx - 1, cy, 8, 26, 0, Math.PI * 1.1, Math.PI * 1.6); x.stroke();
+    x.fillStyle = an ? '#5BD46A' : '#B4433A'; x.beginPath(); x.arc(cx - d * 8, cy + 6, 2, 0, 7); x.fill();
+  },
+  /** Luftlinien und Mehlstaub zeigen Richtung und Stärke */
+  wind(l, zeit){
+    const s2 = l.s || 0; if (s2 < .03) return;
+    const z = schl_wind(l), hor = l.art !== 'boden';
+    x.fillStyle = hor ? linear(z.x, 0, z.x + z.w, 0, z.ax < 0 ? [[0, 'rgba(120,170,220,0)'], [1, `rgba(120,170,220,${.3 * s2})`]] : [[0, `rgba(120,170,220,${.3 * s2})`], [1, 'rgba(120,170,220,0)']])
+      : linear(0, z.y, 0, z.y + z.h, [[0, 'rgba(120,170,220,0)'], [1, `rgba(120,170,220,${.3 * s2})`]]);
+    rr(z.x, z.y, z.w, z.h, 16); x.fill();
+    const len = hor ? z.w : z.h, quer = hor ? z.h : z.w, tempo = 230 * s2 + 20;
+    x.lineCap = 'round';
+    for (let i = 0; i < 9; i++) {
+      const u = ((zeit * tempo + i * 53) % (len + 30)) - 15, q = (i + .5) / 9 * quer, wel = Math.sin(zeit * 6 + i) * 2.5, lg = 18 + (i % 3) * 7;
+      const a = s2 * Math.min(1, u / 30, (len - u) / 30 + .2) * .8; if (a <= 0) continue;
+      let x1, y1, x2, y2;
+      if (hor) { const ux = z.ax < 0 ? z.x + z.w - u : z.x + u; x1 = ux; x2 = ux + (z.ax < 0 ? lg : -lg); y1 = y2 = z.y + q + wel; }
+      else { const uy = z.y + z.h - u; y1 = uy; y2 = uy + lg; x1 = x2 = z.x + q + wel; }
+      x.strokeStyle = `rgba(60,100,150,${a * .75})`; x.lineWidth = 4; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+      x.strokeStyle = `rgba(255,255,255,${a})`; x.lineWidth = 1.8; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+    }
+    for (let i = 0; i < 7; i++) {
+      const u = ((zeit * tempo * 1.3 + i * 71) % len), q = schl_zf(i + l.x) * quer + Math.sin(zeit * 4 + i * 2) * 4;
+      const px = hor ? (z.ax < 0 ? z.x + z.w - u : z.x + u) : z.x + q, py = hor ? z.y + q : z.y + z.h - u;
+      x.globalAlpha = s2 * .9; x.fillStyle = '#FFFDF6'; x.beginPath(); x.arc(px, py, 1.8, 0, 7); x.fill(); x.strokeStyle = 'rgba(140,110,70,.35)'; x.lineWidth = .8; x.stroke(); x.globalAlpha = 1;
+    }
   },
   hindernis(o){
     if (o.art === 'stikken') {
@@ -2924,9 +3586,13 @@ SPIELE.schleuder = {
     const ein = ease.aus(this.einflug ?? 1), dy = (1 - ein) * -36;
     x.save(); x.globalAlpha = ein; x.translate(0, dy);
     for (const o of this.lv.hindernisse) this.hindernis(o);
+    for (const l of this.lv.luefter || []) this.luefter(l, zeit);
     for (const p of this.lv.plattformen) this.plattform(p);
-    for (const f of this.lv.formen) this.form(f, zeit);
+    for (const f of this.lv.formen) if (!f.wippe) this.form(f, zeit);
+    for (const p of this.lv.plattformen) if (p.art === 'wippe') this.wippe(p, zeit);
+    for (const l of this.lv.luefter || []) this.wind(l, zeit);
     x.restore();
+    if (this.gold) this.form(this.gold, zeit);
     // Schüssel mit den übrigen Kugeln
     const bx = 34, by = SCHL_BODEN;
     bodenSchatten(bx + 3, by, 30, 5, .35);
@@ -2975,6 +3641,11 @@ SPIELE.schleuder = {
     if (this.zustand === 'spiel' && this.einflug < 1 && this.level > 0) {
       const a = Math.sin(this.einflug * Math.PI);
       x.globalAlpha = a; x.fillStyle = 'rgba(43,23,10,.7)'; rr(120, 90, 120, 40, 20); x.fill(); text(`Level ${this.level}`, 180, 110, { gr: 20, farbe: '#FFE08A', schrift: 'Fraunces', schat: false }); x.globalAlpha = 1;
+    }
+    if (this.hinweisNeu && this.zustand === 'spiel') {
+      const h2 = this.hinweisNeu, a = Math.min(1, h2.z / .4, (3.4 - h2.z) / .3);
+      x.globalAlpha = klemm(a, 0, 1); x.font = '800 13.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = Math.min(330, x.measureText(h2.t).width + 30);
+      x.fillStyle = 'rgba(43,23,10,.78)'; rr(180 - w / 2, 136, w, 30, 15); x.fill(); text(h2.t, 180, 151.5, { gr: 13.5, farbe: '#FFF1C2', schat: false }); x.globalAlpha = 1;
     }
     if (this.zustand === 'fertig') {
       const t = this.uhr, sk = t < .45 ? ease.feder(t / .45) : 1;
@@ -3060,13 +3731,40 @@ function stap_backen(){
   STAP_BG.bild = l; STAP_BG.breite = c.width; STAP_BG.hoehe = c.height;
 }
 
+/** Goldlaib: ganz seltenes Goldstück im Brot-Stapler */
+function stap_goldLaib(cx, cy, w, h){
+  x.save(); x.translate(cx, cy);
+  x.beginPath(); x.ellipse(0, 0, w / 2, h / 2, 0, 0, 7);
+  x.fillStyle = radial(0, h * .1, 2, Math.max(w, h) * .62, [[0, '#FFF1B8'], [.5, '#FFC72C'], [1, '#C98A00']], -w * .18, -h * .3); x.fill();
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.6; x.stroke();
+  x.save(); x.clip();
+  x.fillStyle = linear(0, -h / 2, 0, h / 2, [[0, 'rgba(255,255,230,.45)'], [.5, 'rgba(255,255,230,0)'], [1, 'rgba(120,70,0,.35)']]); x.fillRect(-w / 2, -h / 2, w, h);
+  x.lineCap = 'round';
+  for (let i = 0; i < 3; i++) {
+    const px = -w * .28 + i * w * .28;
+    x.strokeStyle = 'rgba(150,95,0,.6)'; x.lineWidth = Math.max(2.4, h * .14); x.beginPath(); x.moveTo(px - w * .06, h * .2 + 1); x.quadraticCurveTo(px, -2, px + w * .06, -h * .2 + 1); x.stroke();
+    x.strokeStyle = 'rgba(255,248,210,.95)'; x.lineWidth = Math.max(1.2, h * .07); x.beginPath(); x.moveTo(px - w * .06, h * .2); x.quadraticCurveTo(px, -3, px + w * .06, -h * .2); x.stroke();
+  }
+  x.fillStyle = radial(-w * .2, -h * .25, 0, w * .3, [[0, 'rgba(255,255,255,.6)'], [1, 'rgba(255,255,255,0)']]); x.fillRect(-w / 2, -h / 2, w, h);
+  x.restore(); x.restore();
+}
+/** Geist: blasse Markierung, wie hoch der beste Versuch zur gleichen Zeit war */
+function stap_geistSchild(px, py, txt, pfeil){
+  x.font = '800 11.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(txt).width + (pfeil ? 30 : 20);
+  rr(px - w, py - 11, w, 22, 11); x.fillStyle = 'rgba(52,72,110,.82)'; x.fill();
+  x.strokeStyle = 'rgba(205,228,255,.75)'; x.lineWidth = 1; x.stroke();
+  if (pfeil) { const ax = px - w + 12, d = pfeil; x.fillStyle = '#DDEBFF'; x.beginPath(); x.moveTo(ax, py - 6 * d); x.lineTo(ax - 5, py + 3 * d); x.lineTo(ax + 5, py + 3 * d); x.closePath(); x.fill(); }
+  text(txt, px - w / 2 + (pfeil ? 5 : 0), py + .5, { gr: 11.5, farbe: '#EEF5FF', schat: false });
+}
+
 /** Ein (evtl. abgeschnittenes) Brot zeichnen: volles Brot bei fx mit Breite fw, sichtbar nur zwischen l und r */
 function stap_stueck(s, cy, { glanz = 0 } = {}){
   const h = s.h;
   x.save();
   x.beginPath(); x.rect(s.l, cy - h, s.r - s.l, h * 2); x.clip();
-  brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
-  if (s.art === 'stuten') {
+  if (s.gold) stap_goldLaib(s.fx, cy, s.fw, h);
+  else brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
+  if (s.art === 'stuten' && !s.gold) {
     // aufgerissene Oberseite wie beim echten Stuten, dazu Backform-Kante
     const ky = cy - h * .2, a = s.fw * .36;
     x.lineCap = 'round';
@@ -3107,6 +3805,11 @@ SPIELE.stapler = {
     this.rekordH = stap_rekordHoehe(); this.rekordGezeigt = false;
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.zielZeile = null; this.zielSchaetzen();
+    // Geister-Lauf: Zeitpunkte (Zehntelsekunden), zu denen im besten Versuch ein Brot lag
+    this.landeZeiten = [];
+    const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
+    this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
+    this.goldZeit = zufall(15, 40);
     this.neuesBrot(STAP_MAX);
   },
   neuesBrot(w){
@@ -3118,10 +3821,13 @@ SPIELE.stapler = {
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
   hangY(){ return this.oben - 96 - this.akt.h / 2; },
-  ganzesBrot(a){ return { art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
+  ganzesBrot(a){ return { gold: a.gold, art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
   top(){ return this.stapel[this.stapel.length - 1]; },
   punkte(){ return this.anzahl * 10 + this.bonus; },
   aktuellePunkte(){ return this.punkte(); },
+  geistDaten(){ return this.landeZeiten && this.landeZeiten.length > 1 ? { v: 1, t: this.landeZeiten, e: Math.round(this.zeit * 10) } : null; },
+  /** Wie viele Brote lagen im besten Versuch nach der gleichen Zeit? */
+  geistBrote(){ const g = this.geist; if (!g || g.aus) return -1; const z = this.zeit * 10; let n = 0; while (n < g.t.length && g.t[n] <= z) n++; return n; },
   medaillen: [150, 500, 1200],
   /** Höhe (in Broten) grob schätzen, bei der der nächste Kollegen-Rekord erreicht wäre */
   zielSchaetzen(){
@@ -3147,7 +3853,7 @@ SPIELE.stapler = {
     if (r - l < 4) {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
-      this.stuecke.push({ art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
+      this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
       this.tot = 0; wackeln(8); blitz(.25, '255,200,180'); brumm(70);
       schwebText('Daneben!', W / 2, cy + this.kamera - 60, F.rot, 24);
       stap_rekordHoeheSetzen(this.anzahl);
@@ -3155,9 +3861,9 @@ SPIELE.stapler = {
     }
     const neu = { art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0 };
     const dx = a.x - tm;
-    if (Math.abs(dx) < 5.5) {
+    if (Math.abs(dx) < 7) {
       // Perfekt: einrasten, nichts bricht ab
-      this.perfekt++;
+      this.perfekt++; if (typeof statMax === 'function') statMax('perfektFolge', this.perfekt);
       neu.fx = tm; neu.fw = a.w; neu.l = tm - a.w / 2; neu.r = tm + a.w / 2;
       neu.glanz = 1;
       const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
@@ -3175,16 +3881,28 @@ SPIELE.stapler = {
       neu.fx = a.x; neu.fw = a.w; neu.l = l; neu.r = r;
       const sy = cy + this.kamera;
       // Überstand bricht ab
-      if (al < l - .5) { this.stuecke.push({ art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
-      if (ar > r + .5) { this.stuecke.push({ art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (al < l - .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (ar > r + .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
       schwebText('+10', a.x, sy - 40, F.gruen, 18);
     }
+    if (a.gold) {
+      neu.gold = true; this.bonus += 50;
+      if (typeof goldGefangen === 'function') goldGefangen(a.x, cy + this.kamera);
+      schwebText('+50', a.x, cy + this.kamera - 70, '#B07A00', 20);
+    }
     this.stapel.push(neu); this.anzahl++;
+    this.landeZeiten.push(Math.round(this.zeit * 10));
+    if (typeof statPlus === 'function') statPlus('brote', 1);
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
     this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
+    // Goldlaib: ganz selten, nicht am Anfang
+    if (this.anzahl >= 4 && this.zeit > this.goldZeit && typeof goldKommt === 'function' && goldKommt()) {
+      Object.assign(this.akt, { gold: true, goldT: 5.5, art: 'laib', h: STAP_HOEHE.laib, mohn: false });
+      goldErschienen();
+    }
   },
 
   tick(dt){
@@ -3217,6 +3935,20 @@ SPIELE.stapler = {
             teilchen(m, this.oben + this.kamera, { n: 20, form: 'stern', tempo: 180, groesse: [3, 6] });
           } else schwebText('Weiter geht\'s', W / 2, 170, F.braun, 20);
         });
+      }
+    }
+    if (this.geist && !this.geist.aus && this.zeit * 10 > this.geist.e) {
+      this.geist.aus = true;
+      const n = this.geist.t.length, st = this.stapel, sy = (st[n] ? st[n].y - st[n].h / 2 : this.oben - (n - this.anzahl) * 32) + this.kamera;
+      if (sy > 60 && sy < H) { teilchen(W - 60, sy, { n: 14, farben: ['rgba(220,235,255,.9)', 'rgba(255,255,255,.8)'], tempo: 80, groesse: [3, 7], schwer: -30, leben: [.5, .9] }); schwebText('Bester Versuch vorbei', W - 110, sy - 22, '#9DB8E0', 14); }
+    }
+    if (a.zustand === 'haengt' && a.gold) {
+      a.goldT -= dt;
+      if (a.goldT <= 0) {
+        const hy = this.hangY() + this.kamera;
+        teilchen(a.x, hy, { n: 18, form: 'stern', farben: ['#FFC72C', '#FFF1B8'], tempo: 140, groesse: [2, 4], schwer: -60 });
+        schwebText('Goldlaib ist weg', a.x, hy - 30, '#B07A00', 16);
+        const w = a.w; this.neuesBrot(w); this.akt.sperre = .5;
       }
     }
     if (a.zustand === 'haengt') {
@@ -3268,14 +4000,27 @@ SPIELE.stapler = {
       rr(20, sy - 11, 30, 18, 9); x.fillStyle = 'rgba(43,23,10,.8)'; x.fill();
       text(String(i), 35, sy - 2, { gr: 11, farbe: '#FFE7A0', schat: false });
     }
+    const gn = laeuft && this.tot < 0 ? this.geistBrote() : -1;
     // Bestmarke
     if (this.rekordH > 0 && st.length > this.rekordH) {
       const s = st[this.rekordH], sy = s.y - s.h / 2;
-      if (sy + kam > -20 && sy + kam < H + 20) { x.strokeStyle = 'rgba(255,199,44,.85)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+      if (sy + kam > -20 && sy + kam < H + 20) { x.strokeStyle = 'rgba(255,199,44,.85)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); if (gn !== this.rekordH) text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
     } else if (this.rekordH > 0 && laeuft) {
       // Bestmarke liegt noch höher: Abstand schätzen
       const sy = this.oben - (this.rekordH - this.anzahl) * 30;
       if (sy + kam > 50 && sy + kam < H) { x.strokeStyle = 'rgba(255,199,44,.75)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+    }
+    // Geist: wie hoch war der beste Versuch zur gleichen Zeit
+    if (gn >= 0) {
+      const sy = gn === 0 ? STAP_BRETT : st[gn] ? st[gn].y - st[gn].h / 2 : this.oben - (gn - this.anzahl) * 32;
+      const diff = gn - this.anzahl;
+      if (sy + kam < 100) stap_geistSchild(W - 12, 100 - kam, `Bester Versuch +${diff}`, 1);
+      else if (sy + kam > H - 20) stap_geistSchild(W - 12, H - 30 - kam, `Bester Versuch ${diff}`, -1);
+      else {
+        x.strokeStyle = 'rgba(205,228,255,.8)'; x.setLineDash([4, 4]); x.lineWidth = 2; x.beginPath(); x.moveTo(W * .52, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]);
+        x.fillStyle = 'rgba(205,228,255,.9)'; x.beginPath(); x.arc(W * .52, sy, 3, 0, 7); x.fill();
+        stap_geistSchild(W - 12, sy - 15, diff === 0 ? 'Bester Versuch: gleichauf' : 'Bester Versuch', 0);
+      }
     }
     // Kollegen-Ziel
     if (this.zielZeile && laeuft) {
@@ -3317,10 +4062,15 @@ SPIELE.stapler = {
         // Seile
         x.strokeStyle = '#E8D7B4'; x.lineWidth = 1.6;
         x.beginPath(); x.moveTo(a.x - 6, rail + 8); x.lineTo(a.x - a.w * .3, hy - a.h * .3); x.moveTo(a.x + 6, rail + 8); x.lineTo(a.x + a.w * .3, hy - a.h * .3); x.stroke();
+        if (a.gold && typeof goldGlanz === 'function') goldGlanz(a.x, hy, Math.max(18, a.w * .3), t);
         x.save(); x.translate(a.x, hy); x.scale(e, e); x.rotate(-Math.cos(a.ph) * .06 * Math.min(1, a.omega / 3)); x.translate(-a.x, -hy);
         x.globalAlpha = Math.min(1, a.ein * 2);
         stap_stueck(this.ganzesBrot(a), hy + Math.sin(t * 3) * 1.5);
         x.globalAlpha = 1; x.restore();
+        if (a.gold) {
+          x.strokeStyle = 'rgba(43,23,10,.55)'; x.lineWidth = 5; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, 0, 7); x.stroke();
+          x.strokeStyle = '#FFC72C'; x.lineWidth = 3.4; x.lineCap = 'round'; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(a.goldT / 5.5, 0, 1)); x.stroke();
+        }
         // kleine Klammern
         [-1, 1].forEach((sg) => { x.fillStyle = linear(0, hy - a.h * .4, 0, hy - a.h * .2, [[0, '#FFE7A0'], [1, '#B98200']]); rr(a.x + sg * a.w * .3 - 4, hy - a.h * .42, 8, 7, 2); x.fill(); });
       } else {
@@ -3382,6 +4132,8 @@ addEventListener('message', (e) => {
   if (e.origin !== location.origin) return;
   const d = e.data || {};
   if (d.typ !== 'lt-abschalten-daten') return;
+  if (d.goldSchon && typeof d.goldSchon === 'object') Object.keys(d.goldSchon).forEach((k) => { if (d.goldSchon[k] && !GOLD_SCHON[k]) GOLD_SCHON[k] = true; });
+  if (typeof d.aufgabeErledigt === 'string' && d.aufgabeErledigt) AUFGABE_ERLEDIGT = d.aufgabeErledigt;
   if (Array.isArray(d.fragen) && d.fragen.length >= 5) FRAGEN = d.fragen;
   if (d.ziele && typeof d.ziele === 'object') ZIELE = d.ziele;
   if (d.medaillen && typeof d.medaillen === 'object') MEDAILLEN = d.medaillen;

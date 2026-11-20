@@ -61,13 +61,40 @@ function stap_backen(){
   STAP_BG.bild = l; STAP_BG.breite = c.width; STAP_BG.hoehe = c.height;
 }
 
+/** Goldlaib: ganz seltenes Goldstück im Brot-Stapler */
+function stap_goldLaib(cx, cy, w, h){
+  x.save(); x.translate(cx, cy);
+  x.beginPath(); x.ellipse(0, 0, w / 2, h / 2, 0, 0, 7);
+  x.fillStyle = radial(0, h * .1, 2, Math.max(w, h) * .62, [[0, '#FFF1B8'], [.5, '#FFC72C'], [1, '#C98A00']], -w * .18, -h * .3); x.fill();
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.6; x.stroke();
+  x.save(); x.clip();
+  x.fillStyle = linear(0, -h / 2, 0, h / 2, [[0, 'rgba(255,255,230,.45)'], [.5, 'rgba(255,255,230,0)'], [1, 'rgba(120,70,0,.35)']]); x.fillRect(-w / 2, -h / 2, w, h);
+  x.lineCap = 'round';
+  for (let i = 0; i < 3; i++) {
+    const px = -w * .28 + i * w * .28;
+    x.strokeStyle = 'rgba(150,95,0,.6)'; x.lineWidth = Math.max(2.4, h * .14); x.beginPath(); x.moveTo(px - w * .06, h * .2 + 1); x.quadraticCurveTo(px, -2, px + w * .06, -h * .2 + 1); x.stroke();
+    x.strokeStyle = 'rgba(255,248,210,.95)'; x.lineWidth = Math.max(1.2, h * .07); x.beginPath(); x.moveTo(px - w * .06, h * .2); x.quadraticCurveTo(px, -3, px + w * .06, -h * .2); x.stroke();
+  }
+  x.fillStyle = radial(-w * .2, -h * .25, 0, w * .3, [[0, 'rgba(255,255,255,.6)'], [1, 'rgba(255,255,255,0)']]); x.fillRect(-w / 2, -h / 2, w, h);
+  x.restore(); x.restore();
+}
+/** Geist: blasse Markierung, wie hoch der beste Versuch zur gleichen Zeit war */
+function stap_geistSchild(px, py, txt, pfeil){
+  x.font = '800 11.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(txt).width + (pfeil ? 30 : 20);
+  rr(px - w, py - 11, w, 22, 11); x.fillStyle = 'rgba(52,72,110,.82)'; x.fill();
+  x.strokeStyle = 'rgba(205,228,255,.75)'; x.lineWidth = 1; x.stroke();
+  if (pfeil) { const ax = px - w + 12, d = pfeil; x.fillStyle = '#DDEBFF'; x.beginPath(); x.moveTo(ax, py - 6 * d); x.lineTo(ax - 5, py + 3 * d); x.lineTo(ax + 5, py + 3 * d); x.closePath(); x.fill(); }
+  text(txt, px - w / 2 + (pfeil ? 5 : 0), py + .5, { gr: 11.5, farbe: '#EEF5FF', schat: false });
+}
+
 /** Ein (evtl. abgeschnittenes) Brot zeichnen: volles Brot bei fx mit Breite fw, sichtbar nur zwischen l und r */
 function stap_stueck(s, cy, { glanz = 0 } = {}){
   const h = s.h;
   x.save();
   x.beginPath(); x.rect(s.l, cy - h, s.r - s.l, h * 2); x.clip();
-  brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
-  if (s.art === 'stuten') {
+  if (s.gold) stap_goldLaib(s.fx, cy, s.fw, h);
+  else brot(s.art, s.fx, cy, s.fw, h, { schatten: false, ton: s.ton ?? 1, mohn: s.mohn });
+  if (s.art === 'stuten' && !s.gold) {
     // aufgerissene Oberseite wie beim echten Stuten, dazu Backform-Kante
     const ky = cy - h * .2, a = s.fw * .36;
     x.lineCap = 'round';
@@ -108,6 +135,11 @@ SPIELE.stapler = {
     this.rekordH = stap_rekordHoehe(); this.rekordGezeigt = false;
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.zielZeile = null; this.zielSchaetzen();
+    // Geister-Lauf: Zeitpunkte (Zehntelsekunden), zu denen im besten Versuch ein Brot lag
+    this.landeZeiten = [];
+    const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
+    this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
+    this.goldZeit = zufall(15, 40);
     this.neuesBrot(STAP_MAX);
   },
   neuesBrot(w){
@@ -119,10 +151,13 @@ SPIELE.stapler = {
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
   hangY(){ return this.oben - 96 - this.akt.h / 2; },
-  ganzesBrot(a){ return { art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
+  ganzesBrot(a){ return { gold: a.gold, art: a.art, l: a.x - a.w / 2 - 1, r: a.x + a.w / 2 + 1, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn }; },
   top(){ return this.stapel[this.stapel.length - 1]; },
   punkte(){ return this.anzahl * 10 + this.bonus; },
   aktuellePunkte(){ return this.punkte(); },
+  geistDaten(){ return this.landeZeiten && this.landeZeiten.length > 1 ? { v: 1, t: this.landeZeiten, e: Math.round(this.zeit * 10) } : null; },
+  /** Wie viele Brote lagen im besten Versuch nach der gleichen Zeit? */
+  geistBrote(){ const g = this.geist; if (!g || g.aus) return -1; const z = this.zeit * 10; let n = 0; while (n < g.t.length && g.t[n] <= z) n++; return n; },
   medaillen: [150, 500, 1200],
   /** Höhe (in Broten) grob schätzen, bei der der nächste Kollegen-Rekord erreicht wäre */
   zielSchaetzen(){
@@ -148,7 +183,7 @@ SPIELE.stapler = {
     if (r - l < 4) {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
-      this.stuecke.push({ art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
+      this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: a.x, py: cy, vx: kippt * 90, vy: -60, rot: 0, vr: kippt * 3.2 });
       this.tot = 0; wackeln(8); blitz(.25, '255,200,180'); brumm(70);
       schwebText('Daneben!', W / 2, cy + this.kamera - 60, F.rot, 24);
       stap_rekordHoeheSetzen(this.anzahl);
@@ -156,9 +191,9 @@ SPIELE.stapler = {
     }
     const neu = { art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0 };
     const dx = a.x - tm;
-    if (Math.abs(dx) < 5.5) {
+    if (Math.abs(dx) < 7) {
       // Perfekt: einrasten, nichts bricht ab
-      this.perfekt++;
+      this.perfekt++; if (typeof statMax === 'function') statMax('perfektFolge', this.perfekt);
       neu.fx = tm; neu.fw = a.w; neu.l = tm - a.w / 2; neu.r = tm + a.w / 2;
       neu.glanz = 1;
       const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
@@ -176,16 +211,28 @@ SPIELE.stapler = {
       neu.fx = a.x; neu.fw = a.w; neu.l = l; neu.r = r;
       const sy = cy + this.kamera;
       // Überstand bricht ab
-      if (al < l - .5) { this.stuecke.push({ art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
-      if (ar > r + .5) { this.stuecke.push({ art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (al < l - .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: al, r: l, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (al + l) / 2, py: cy, vx: -50 - (l - al) * .6, vy: -80, rot: 0, vr: -zufall(2.5, 4.5) }); teilchen(l, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
+      if (ar > r + .5) { this.stuecke.push({ gold: a.gold, art: a.art, l: r, r: ar, fx: a.x, fw: a.w, h: a.h, mohn: a.mohn, px: (r + ar) / 2, py: cy, vx: 50 + (ar - r) * .6, vy: -80, rot: 0, vr: zufall(2.5, 4.5) }); teilchen(r, sy, { n: 9, form: 'krume', farben: ['#F4D9A6', '#C27F36', '#E3AE68'], tempo: 120, schwer: 700, groesse: [2, 4] }); }
       schwebText('+10', a.x, sy - 40, F.gruen, 18);
     }
+    if (a.gold) {
+      neu.gold = true; this.bonus += 50;
+      if (typeof goldGefangen === 'function') goldGefangen(a.x, cy + this.kamera);
+      schwebText('+50', a.x, cy + this.kamera - 70, '#B07A00', 20);
+    }
     this.stapel.push(neu); this.anzahl++;
+    this.landeZeiten.push(Math.round(this.zeit * 10));
+    if (typeof statPlus === 'function') statPlus('brote', 1);
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
     this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
+    // Goldlaib: ganz selten, nicht am Anfang
+    if (this.anzahl >= 4 && this.zeit > this.goldZeit && typeof goldKommt === 'function' && goldKommt()) {
+      Object.assign(this.akt, { gold: true, goldT: 5.5, art: 'laib', h: STAP_HOEHE.laib, mohn: false });
+      goldErschienen();
+    }
   },
 
   tick(dt){
@@ -218,6 +265,20 @@ SPIELE.stapler = {
             teilchen(m, this.oben + this.kamera, { n: 20, form: 'stern', tempo: 180, groesse: [3, 6] });
           } else schwebText('Weiter geht\'s', W / 2, 170, F.braun, 20);
         });
+      }
+    }
+    if (this.geist && !this.geist.aus && this.zeit * 10 > this.geist.e) {
+      this.geist.aus = true;
+      const n = this.geist.t.length, st = this.stapel, sy = (st[n] ? st[n].y - st[n].h / 2 : this.oben - (n - this.anzahl) * 32) + this.kamera;
+      if (sy > 60 && sy < H) { teilchen(W - 60, sy, { n: 14, farben: ['rgba(220,235,255,.9)', 'rgba(255,255,255,.8)'], tempo: 80, groesse: [3, 7], schwer: -30, leben: [.5, .9] }); schwebText('Bester Versuch vorbei', W - 110, sy - 22, '#9DB8E0', 14); }
+    }
+    if (a.zustand === 'haengt' && a.gold) {
+      a.goldT -= dt;
+      if (a.goldT <= 0) {
+        const hy = this.hangY() + this.kamera;
+        teilchen(a.x, hy, { n: 18, form: 'stern', farben: ['#FFC72C', '#FFF1B8'], tempo: 140, groesse: [2, 4], schwer: -60 });
+        schwebText('Goldlaib ist weg', a.x, hy - 30, '#B07A00', 16);
+        const w = a.w; this.neuesBrot(w); this.akt.sperre = .5;
       }
     }
     if (a.zustand === 'haengt') {
@@ -269,14 +330,27 @@ SPIELE.stapler = {
       rr(20, sy - 11, 30, 18, 9); x.fillStyle = 'rgba(43,23,10,.8)'; x.fill();
       text(String(i), 35, sy - 2, { gr: 11, farbe: '#FFE7A0', schat: false });
     }
+    const gn = laeuft && this.tot < 0 ? this.geistBrote() : -1;
     // Bestmarke
     if (this.rekordH > 0 && st.length > this.rekordH) {
       const s = st[this.rekordH], sy = s.y - s.h / 2;
-      if (sy + kam > -20 && sy + kam < H + 20) { x.strokeStyle = 'rgba(255,199,44,.85)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+      if (sy + kam > -20 && sy + kam < H + 20) { x.strokeStyle = 'rgba(255,199,44,.85)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); if (gn !== this.rekordH) text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
     } else if (this.rekordH > 0 && laeuft) {
       // Bestmarke liegt noch höher: Abstand schätzen
       const sy = this.oben - (this.rekordH - this.anzahl) * 30;
       if (sy + kam > 50 && sy + kam < H) { x.strokeStyle = 'rgba(255,199,44,.75)'; x.setLineDash([7, 5]); x.lineWidth = 2; x.beginPath(); x.moveTo(16, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]); text('Bestmarke', W - 56, sy - 10, { gr: 11, farbe: '#FFD86B' }); }
+    }
+    // Geist: wie hoch war der beste Versuch zur gleichen Zeit
+    if (gn >= 0) {
+      const sy = gn === 0 ? STAP_BRETT : st[gn] ? st[gn].y - st[gn].h / 2 : this.oben - (gn - this.anzahl) * 32;
+      const diff = gn - this.anzahl;
+      if (sy + kam < 100) stap_geistSchild(W - 12, 100 - kam, `Bester Versuch +${diff}`, 1);
+      else if (sy + kam > H - 20) stap_geistSchild(W - 12, H - 30 - kam, `Bester Versuch ${diff}`, -1);
+      else {
+        x.strokeStyle = 'rgba(205,228,255,.8)'; x.setLineDash([4, 4]); x.lineWidth = 2; x.beginPath(); x.moveTo(W * .52, sy); x.lineTo(W - 16, sy); x.stroke(); x.setLineDash([]);
+        x.fillStyle = 'rgba(205,228,255,.9)'; x.beginPath(); x.arc(W * .52, sy, 3, 0, 7); x.fill();
+        stap_geistSchild(W - 12, sy - 15, diff === 0 ? 'Bester Versuch: gleichauf' : 'Bester Versuch', 0);
+      }
     }
     // Kollegen-Ziel
     if (this.zielZeile && laeuft) {
@@ -318,10 +392,15 @@ SPIELE.stapler = {
         // Seile
         x.strokeStyle = '#E8D7B4'; x.lineWidth = 1.6;
         x.beginPath(); x.moveTo(a.x - 6, rail + 8); x.lineTo(a.x - a.w * .3, hy - a.h * .3); x.moveTo(a.x + 6, rail + 8); x.lineTo(a.x + a.w * .3, hy - a.h * .3); x.stroke();
+        if (a.gold && typeof goldGlanz === 'function') goldGlanz(a.x, hy, Math.max(18, a.w * .3), t);
         x.save(); x.translate(a.x, hy); x.scale(e, e); x.rotate(-Math.cos(a.ph) * .06 * Math.min(1, a.omega / 3)); x.translate(-a.x, -hy);
         x.globalAlpha = Math.min(1, a.ein * 2);
         stap_stueck(this.ganzesBrot(a), hy + Math.sin(t * 3) * 1.5);
         x.globalAlpha = 1; x.restore();
+        if (a.gold) {
+          x.strokeStyle = 'rgba(43,23,10,.55)'; x.lineWidth = 5; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, 0, 7); x.stroke();
+          x.strokeStyle = '#FFC72C'; x.lineWidth = 3.4; x.lineCap = 'round'; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(a.goldT / 5.5, 0, 1)); x.stroke();
+        }
         // kleine Klammern
         [-1, 1].forEach((sg) => { x.fillStyle = linear(0, hy - a.h * .4, 0, hy - a.h * .2, [[0, '#FFE7A0'], [1, '#B98200']]); rr(a.x + sg * a.w * .3 - 4, hy - a.h * .42, 8, 7, 2); x.fill(); });
       } else {

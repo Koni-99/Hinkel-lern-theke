@@ -251,8 +251,11 @@ SPIELE.tour = {
     this.gemuetlich = typeof GEMUETLICH !== 'undefined' && GEMUETLICH;
     const mo = new Date().getMonth(); this.winter = mo >= 10 || mo <= 1;
     this.himmel = this.stimmungZiel(0); this.niederY = 0;
+    this.goldPaket = null; this.goldZeit = zufall(15, 42); this.folge = 0; this.abschnittUnfall = false;
   },
   aktuellePunkte(){ return this.punkte(); },
+  /** eigener Regen oder Schnee: dann malt core keinen Saison-Schnee dazu */
+  eigenesWetter(){ const h = this.himmel; return !!h && h.regen + h.schnee > .3; },
   /** Tageszeit und Wetter je Abschnitt: Morgen, Tag, Tag mit Regen (Winter: Schnee), Abend, Abend mit Regen/Schnee */
   stimmungZiel(n){
     const i = n % 5, nass = i === 2 || i === 4;
@@ -307,7 +310,7 @@ SPIELE.tour = {
       if (this.rest() < 620) { this.modus = 'bremsen'; this.dinge = this.dinge.filter((d) => d.y > -30); this.spur = 2; }
     } else if (this.modus === 'bremsen') {
       this.tempo = Math.min(this.tempo, Math.sqrt(2 * 300 * Math.max(0, this.rest())) + 8);
-      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); brumm(30); }
+      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); brumm(30); statPlus('filialen'); this.folge = this.abschnittUnfall ? 0 : this.folge + 1; this.abschnittUnfall = false; statMax('ohneUnfall', this.folge); }
     } else if (this.modus === 'abladen') {
       this.szene += dt; this.tempo = 0;
       if (this.szene > 2.1) {
@@ -343,6 +346,19 @@ SPIELE.tour = {
       else if (d.art === 'kiste' && d.y > TOUR_Y + 70 && !d.vorbei) { d.vorbei = true; this.kombi = 0; }
     }
     this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && d.art === 'kiste'));
+    // Goldpaket: schwebt an einem Ballon langsam heran und wechselt ab und zu die Spur
+    if (goldKommt() && this.modus === 'fahrt' && this.fahrzeit > this.goldZeit && this.tempo > 150) { this.goldPaket = { s: ganz(0, 2), x: 0, y: -40, wechsel: 1.4, weg: 0 }; this.goldPaket.x = TOUR_SPUR[this.goldPaket.s]; goldErschienen(); }
+    const gp = this.goldPaket;
+    if (gp) {
+      if (gp.weg) { gp.weg += dt; if (gp.weg > .6) this.goldPaket = null; }
+      else {
+        gp.y += 82 * dt; gp.wechsel -= dt;
+        if (gp.wechsel <= 0 && gp.y < TOUR_Y - 150) { gp.s = klemm(gp.s + (Math.random() < .5 ? -1 : 1), 0, 2); gp.wechsel = zufall(1.2, 1.8); }
+        gp.x += (TOUR_SPUR[gp.s] - gp.x) * Math.min(1, dt * 3);
+        if (Math.abs(gp.x - this.xs) < 38 && Math.abs(gp.y - TOUR_Y) < 56 && this.modus !== 'aus') { this.bonus += 50; goldGefangen(gp.x, gp.y); schwebText('+50', gp.x, gp.y - 40, F.goldDunkel, 22); this.goldPaket = null; }
+        else if (gp.y > TOUR_Y + 70) gp.weg = .01;
+      }
+    }
     for (const f of this.fliegen) f.t += dt; this.fliegen = this.fliegen.filter((f) => f.t < 1);
     setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), 3)]);
   },
@@ -364,11 +380,11 @@ SPIELE.tour = {
     }
     if (this.schutz > 0 || this.modus !== 'fahrt') return;
     if (this.gemuetlich) { // gemütlich: nur kurz wackeln, kein Leben weg
-      d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
+      d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 }; this.abschnittUnfall = true;
       this.schutz = .8; this.kombi = 0; wackeln(5); brumm(40); mehlWolke(wx, wy - 40, 5); schwebText('Hoppla', wx, wy - 80, F.braun, 18); return;
     }
     d.weg = true; brumm(70); d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
-    this.leben--; this.schutz = 1.6; this.kombi = 0; this.tempo *= .55;
+    this.leben--; this.schutz = 1.6; this.kombi = 0; this.tempo *= .55; this.abschnittUnfall = true;
     wackeln(9); blitz(.35, '255,90,40');
     teilchen(wx, wy - 46, { n: 26, farben: ['#FFE27A', '#FFB02E', '#FF7A1A', '#FFFFFF'], tempo: 260, groesse: [1.5, 3.5], schwer: 300, leben: [.25, .6] });
     mehlWolke(wx, wy - 40, 8);
@@ -389,6 +405,23 @@ SPIELE.tour = {
     if (ziel === this.spur && gefahr[this.spur] > 1.4) { const kiste = this.dinge.find((d) => d.art === 'kiste' && !d.weg && Math.abs(d.s - this.spur) === 1 && d.y > 120 && d.y < 330); if (kiste && gefahr[kiste.s] > 1.2) ziel = kiste.s; }
     if (ziel === this.spur) return { x: this.xs, y: TOUR_Y, warte: 140 };
     return { x: ziel < this.spur ? this.xs - 70 : this.xs + 70, y: 300, warte: 160 };
+  },
+  /** Goldpaket am Ballon */
+  malGold(g, zeit){
+    const a = g.weg ? Math.max(0, 1 - g.weg / .6) : 1, hb = Math.sin(zeit * 3) * 3, px = g.x, py = g.y + hb;
+    x.globalAlpha = a;
+    bodenSchatten(px + 14, g.y + 26, 18, 7, .3);
+    goldGlanz(px, py, 20, zeit);
+    // Schnur und Ballon
+    x.strokeStyle = 'rgba(90,60,10,.7)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(px, py - 12); x.quadraticCurveTo(px + 4, py - 24, px + 2, py - 36); x.stroke();
+    x.fillStyle = radial(px + 2, py - 48, 2, 15, [[0, '#FFF6D0'], [.5, '#FFC72C'], [1, '#C98A00']], px - 3, py - 54); x.beginPath(); x.ellipse(px + 2, py - 48, 11, 13, 0, 0, 7); x.fill();
+    x.strokeStyle = '#8A5A0A'; x.lineWidth = 1; x.stroke(); x.fillStyle = 'rgba(255,255,255,.7)'; x.beginPath(); x.ellipse(px - 2, py - 53, 3, 4.5, -.4, 0, 7); x.fill();
+    // Paket
+    x.fillStyle = linear(px - 15, 0, px + 15, 0, [[0, '#C98A00'], [.3, '#FFF1B8'], [.55, '#FFC72C'], [1, '#A87208']]); rr(px - 15, py - 12, 30, 24, 4); x.fill();
+    x.strokeStyle = '#7A4E06'; x.lineWidth = 1.4; x.stroke();
+    x.fillStyle = '#B23A2A'; x.fillRect(px - 2.5, py - 12, 5, 24); x.fillRect(px - 15, py - 2.5, 30, 5);
+    x.fillStyle = '#D9533F'; x.beginPath(); x.ellipse(px - 5, py - 13, 5, 3, -.5, 0, 7); x.ellipse(px + 5, py - 13, 5, 3, .5, 0, 7); x.fill();
+    x.globalAlpha = 1;
   },
   /** Tageszeit (Tönung, Dunkelheit mit Lichtern) und Regen/Schnee über die ganze Szene */
   lichtUndWetter(hm, deko, zeit){
@@ -524,6 +557,7 @@ SPIELE.tour = {
         x.fillStyle = '#4A4F57'; x.beginPath(); x.arc(bx, by, 4, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(bx - 1, by - 1, 1.6, 0, 7); x.fill();
       }
     }
+    if (this.goldPaket) this.malGold(this.goldPaket, zeit);
     this.lichtUndWetter(hm, deko, zeit);
     // Fahrtwind bei hohem Tempo
     if ((this.tempo || 0) > 330) { const a = Math.min(.35, (this.tempo - 330) / 500); x.strokeStyle = `rgba(255,255,255,${a})`; x.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const lx = 80 + tour_zf(i) * 200, ly = ((zeit * this.tempo * 1.6 + i * 97) % (H + 80)) - 40; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, ly + 26); x.stroke(); } }

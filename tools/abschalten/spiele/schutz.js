@@ -171,6 +171,17 @@ function sz_falleMalen(f, zeit, ausw){
   if (ausw === true) { x.strokeStyle = '#FFC72C'; x.lineWidth = 3; x.beginPath(); x.arc(px, py, 25, 0, 7); x.stroke(); }
 }
 
+/** Goldähre: Mitte (0, 0), etwa 46 px hoch */
+function sz_goldAehre(){
+  x.lineCap = 'round';
+  x.strokeStyle = '#7A4F00'; x.lineWidth = 4; x.beginPath(); x.moveTo(2, 24); x.quadraticCurveTo(0, 8, 0, -16); x.stroke();
+  x.strokeStyle = '#E0A526'; x.lineWidth = 2.2; x.stroke();
+  const korn = (kx, ky, w) => { x.save(); x.translate(kx, ky); x.rotate(w); x.fillStyle = linear(-4, -7, 4, 7, [[0, '#FFF1B8'], [.5, '#FFC72C'], [1, '#C98A00']]); x.strokeStyle = '#7A4F00'; x.lineWidth = 1.2; x.beginPath(); x.ellipse(0, 0, 4, 7, 0, 0, 7); x.fill(); x.stroke(); x.fillStyle = 'rgba(255,255,240,.8)'; x.beginPath(); x.ellipse(-1.2, -2.5, 1.2, 2.4, 0, 0, 7); x.fill(); x.restore(); };
+  for (let i = 0; i < 4; i++) { const ky = 8 - i * 7.5; korn(-5, ky, -.45); korn(5, ky, .45); }
+  korn(0, -22, 0);
+  x.strokeStyle = 'rgba(201,138,0,.8)'; x.lineWidth = 1; for (let i = 0; i < 4; i++) { const ky = 4 - i * 7.5; x.beginPath(); x.moveTo(-7, ky - 6); x.lineTo(-12, ky - 14); x.moveTo(7, ky - 6); x.lineTo(12, ky - 14); x.stroke(); }
+}
+
 function sz_kornIcon(px, py, s){ x.save(); x.translate(px, py); x.rotate(.45); x.fillStyle = linear(-4, -7, 4, 7, [[0, '#F7C64A'], [1, '#B9800E']]); x.beginPath(); x.ellipse(0, 0, 4.2 * s, 7 * s, 0, 0, 7); x.fill(); x.strokeStyle = 'rgba(255,245,200,.85)'; x.lineWidth = 1.1 * s; x.beginPath(); x.moveTo(-1 * s, -4 * s); x.quadraticCurveTo(1 * s, 0, 0, 4 * s); x.stroke(); x.restore(); }
 
 SPIELE.schutz = {
@@ -180,7 +191,7 @@ SPIELE.schutz = {
   start(){
     this.gem = !!GEMUETLICH; this.geld = this.gem ? 150 : 75; this.lager = this.gem ? 10 : 5; this.lagerMax = this.lager; this.welle = 0; this.tiere = []; this.fallen = []; this.schuesse = []; this.koerner = [];
     this.pause = 6; this.spawnRest = 0; this.spawnT = 0; this.punkte = 0; this.menu = null; this.zeit = 0; this.banner = 0; this.bannerText = ''; this.bannerSub = '';
-    this.vorbei = 0; this.besiegt = 0; this.reichZeig = null; this.lagerWackel = 0; this.frageNach = false;
+    this.vorbei = 0; this.besiegt = 0; this.reichZeig = null; this.lagerWackel = 0; this.frageNach = false; this.gold = null; this.goldZeit = zufall(15, 45);
   },
   aktuellePunkte(){ return (this.punkte || 0) + (this.welle || 0) * 25; },
   falleAuf(i){ return this.fallen.find((f) => f.platz === i); },
@@ -199,6 +210,7 @@ SPIELE.schutz = {
     if (this.menu) {
       for (const b of this.menuKnoepfe()) if (Math.hypot(p.x - b.x, p.y - b.y) < 27) { this.knopf(b); return; }
     }
+    if (this.gold && !this.gold.weg && Math.hypot(p.x - this.gold.x, p.y - this.gold.y) < 32) { const g = this.gold; g.weg = true; this.punkte += 50; this.geld += 15; schwebText('+15', g.x, g.y - 28, '#B9800E', 18); goldGefangen(g.x, g.y); this.menu = null; return; }
     for (let i = 0; i < SZ_PLAETZE.length; i++) { const [px, py] = SZ_PLAETZE[i]; if (Math.hypot(p.x - px, p.y - py) < 26) { this.menu = this.menu && this.menu.platz === i ? null : { platz: i, t: 0 }; return; } }
     this.menu = null;
   },
@@ -230,6 +242,8 @@ SPIELE.schutz = {
     this.lagerWackel = Math.max(0, this.lagerWackel - dt * 2);
     for (const k of this.koerner) k.t += dt / .7; this.koerner = this.koerner.filter((k) => k.t < 1);
     if (this.vorbei) { this.vorbei += dt; if (this.vorbei > 1 && laeuft) ende(this.aktuellePunkte(), `Bis Welle ${this.welle} das Mehl verteidigt, ${this.besiegt} Schädlinge vertrieben.`); return; }
+    if (!this.gold && goldKommt() && this.zeit > this.goldZeit && this.welle >= 1) { const d = zufall(240, SZ_LAENGE - 260), p = sz_punktAuf(d); this.gold = { d, t: 0, dauer: 5, x: p.x, y: p.y, weg: false }; goldErschienen(); }
+    if (this.gold) { const g = this.gold; g.t += dt; g.d += 14 * dt; const p = sz_punktAuf(g.d); if (p) { g.x = p.x; g.y = p.y - 6 - Math.abs(Math.sin(g.t * 3)) * 8; } if (g.t > g.dauer) g.weg = true; }
     // Wellen
     if (this.pause > 0) { this.pause -= dt; if (this.pause <= 0) this.neueWelle(); }
     else if (this.warteschlange && this.warteschlange.length) {
@@ -237,7 +251,7 @@ SPIELE.schutz = {
       if (this.spawnT <= 0) { const art = this.warteschlange.shift(), w = this.welle; const f = Math.pow(1.2, w - 1); const hp = art === 'maus' ? 7 * f : art === 'motte' ? 5 * f : 26 * f; const v = art === 'maus' ? (w === 1 ? 38 : 44 + w) : art === 'motte' ? 54 + w : 28; this.tiere.push({ art, d: 0, hp, max: hp, v, seed: Math.random(), treffer: 0, gelockt: 0 }); this.spawnT = w === 1 ? 1.7 : Math.max(.55, 1.25 - w * .06); }
     } else if (!this.tiere.length && this.welle > 0) {
       const bonus = 10 + this.welle * 2; this.geld += bonus; this.punkte += this.welle * 25;
-      this.banner = 2; this.bannerText = 'Welle geschafft'; brumm(25); this.bannerSub = `+${bonus} Körner`;
+      this.banner = 2; this.bannerText = 'Welle geschafft'; brumm(25); statMax('wellen', this.welle); this.bannerSub = `+${bonus} Körner`;
       this.pause = 4.5; this.warteschlange = null;
       if (this.welle % 2 === 0) setTimeout(() => { if (laeuft && !this.vorbei) frage((ok) => { if (ok) { this.geld += 40; schwebText('+40 Körner', W / 2, 240, '#C98A00', 22); teilchen(W / 2, 240, { n: 20, form: 'stern' }); } }); }, 900);
     }
@@ -262,7 +276,7 @@ SPIELE.schutz = {
       if (f.art === 'falle') { f.schnapp = 1; teilchen(zx, zy, { n: 6, farben: ['#FFFFFF', '#FFE08A'], form: 'stern', tempo: 90, groesse: [2, 4], leben: [.2, .4] }); }
       else { ziel.gelockt = 1; teilchen(zx, zy, { n: 3, farben: ['#FFF6C8', '#FFE08A'], tempo: 50, groesse: [1.5, 3], schwer: 0, leben: [.2, .4] }); }
       if (ziel.hp <= 0) {
-        ziel.weg = true; this.besiegt++;
+        ziel.weg = true; this.besiegt++; statPlus('gefangen', 1);
         const geld = ziel.art === 'dick' ? 12 : ziel.art === 'motte' ? 5 : 4; this.geld += geld; this.punkte += ziel.art === 'dick' ? 30 : ziel.art === 'motte' ? 12 : 10;
         mehlWolke(zx, zy, 10); teilchen(zx, zy, { n: 8, farben: ['#E3A928', '#F7C64A', '#FFF1B8'], form: 'krume', tempo: 110 });
         schwebText('+' + geld, zx, zy - 14, '#B9800E', 16);
@@ -303,6 +317,7 @@ SPIELE.schutz = {
     // Körner fliegen nach oben
     for (const k of this.koerner || []) { const t = ease.ein(k.t); sz_kornIcon(lerp(k.x0, 180, t), lerp(k.y0, 22, t) - Math.sin(t * Math.PI) * 30, 1 - t * .3); }
     if (this.gem && laeuft) text('Gemütlich', 16, 472, { gr: 10, farbe: 'rgba(255,240,215,.75)', ausr: 'left', schat: false });
+    if (this.gold && !this.gold.weg) { const g = this.gold, aus = Math.max(0, Math.min(1, (g.dauer - g.t) / .6)); x.globalAlpha = aus; bodenSchatten(g.x, g.y + 26, 14, 4, .3); goldGlanz(g.x, g.y, 20, zeit); x.save(); x.translate(g.x, g.y); x.rotate(Math.sin(zeit * 3) * .18); x.scale(1.05, 1.05); sz_goldAehre(); x.restore(); x.globalAlpha = 1; }
     // Menü
     if (this.menu) this.menuMalen(zeit);
     // Hinweis am Anfang
@@ -339,6 +354,7 @@ SPIELE.schutz = {
     }
   },
   testZug(){
+    if (this.gold && !this.gold.weg && this.gold.t > 1.2) return { x: this.gold.x, y: this.gold.y, warte: 250 };
     if (this.vorbei) return { x: 180, y: 120, warte: 300 };
     const plan = [[5, 'falle'], [1, 'falle'], [2, 'licht'], [4, 'minz'], [7, 'licht'], [6, 'falle'], [3, 'falle'], [0, 'licht']];
     if (this.menu) { const b = this.menuKnoepfe().find((k) => (k.typ === 'bau' && plan.some(([pi, a]) => pi === this.menu.platz && a === k.art)) || k.typ === 'up'); if (b && this.geld >= b.preis) return { x: b.x, y: b.y, warte: 300 }; return { x: 180, y: 120, warte: 300 }; }
