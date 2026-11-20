@@ -73,7 +73,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         {ort('Hauptseiten', 'am Handy und Tablet unten, am Computer als Leiste links')}
         {ort('Start', 'Tages-Challenge, Team-Challenge, Lob der Woche, Umfragen, Geburtstage. Ganz unten zum Aufklappen: „Deine Zahlen“ mit Statistik, Lern-Bon, Serie und Abzeichen')}
         {ort('Lernen', 'Quiz nach Themen, Fehler-Stapel, Lieblingsfragen, Hör-Lernen, Lernpfad')}
-        {ort('Spielen', 'Theken-Simulator, Telefon-Bestellung, Bilderquiz, Ofen-Kette, Rechen-Trainer, Quiz Battle und mehr')}
+        {ort('Spielen', 'Theken-Simulator, Telefon-Bestellung, Bilderquiz, Ofen-Kette, Rechen-Trainer, Quiz Battle und mehr; ganz unten „Zum Abschalten“ mit sechs Spielen zum Entspannen')}
         {ort('Lupe oben', 'Sucht überall: Produkte, Fragen aus dem Quiz, Hilfe-Themen und Seiten. Mit dem Mikrofon kannst du auch sprechen, das geht auch im Suchfeld unter Nachschlagen.')}
         {ort('Nachschlagen', 'Steckbriefe der Produkte, Fachwissen, Englisch, Kundenfragen, Gute Sätze für die Theke, Kundenstimmen')}
         {ort('Bestenliste', 'Punkte im Team, Monatsmeister')}
@@ -192,6 +192,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         <div><strong>Rechen-Trainer:</strong> Unter Spielen → „Schnell an der Kasse“. 8 Aufgaben wie in der Prüfung mit echten Hinkel-Preisen: zusammenrechnen, Rückgeld, Preis pro Kilo, Rabatt, Mehrwertsteuer herausrechnen und Dreisatz. Ohne Zeitdruck, nach jeder Aufgabe steht der Rechenweg da.</div>
         <div><strong>Prüfung auswerten:</strong> Nach einer Prüfung oder Prüfungs-Simulation zeigt die App, wie gut du in jedem Thema warst (Warenkunde, Verkauf, Hygiene und Recht, Rechnen, Arbeit und Wirtschaft). Mit „Hier noch üben“ übst du genau die Themen, die noch wackeln.</div>
       </>, 3)}
+      {box(boxIcon(ICON.flag), 'Zum Abschalten', <><div>Ganz unten auf der Spiele-Seite gibt es sechs Spiele, um zwischendurch den Kopf frei zu bekommen: <strong>Teigi-Lauf</strong> (tippen zum Springen, Körner sammeln), <strong>Backstuben-Chaos</strong> (Teig in den Ofen, rechtzeitig raus, Kunden bedienen), <strong>Lieferwagen-Tour</strong> (Spur wechseln, ausweichen, Filialen beliefern), <strong>Schädlinge abwehren</strong> (Fallen stellen, damit Mäuse und Motten nicht ins Mehllager kommen), <strong>Teig-Schleuder</strong> (zielen und Backformen füllen) und <strong>Brot-Stapler</strong> (Brote möglichst hoch stapeln).</div><div>Hier gibt es keine Punkte für die Bestenliste, nur deinen eigenen Rekord und eine kleine Bestenliste pro Spiel. Ab und zu kommt eine leichte Bonus-Frage, die du auch überspringen kannst.</div></>, 6)}
       {box(boxIcon(ICON.flame), 'Ofen-Kette', <>
         <div>Unter Spielen → „Ofen-Kette“ fallen Teile aus Produktfotos in den Ofen. Schieben, drehen, fallen lassen: mit den Knöpfen oder am Spielfeld (wischen schiebt, tippen dreht, schnell nach unten wischen lässt fallen).</div>
         <div><strong>Goldbraun:</strong> 4 gleiche Produkte nebeneinander verschwinden, ihr Name leuchtet kurz auf. Eine volle Reihe ist fertig gebacken. Was nachrutscht, kann eine Kette auslösen, die zählt mehrfach.</div>

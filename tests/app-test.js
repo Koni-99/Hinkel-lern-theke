@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Zum Abschalten', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -908,6 +908,45 @@ async function offlineTests() {
     const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 266: Zum Abschalten (sechs Spiele im iframe, eigener Rekord, kleine Bestenliste, keine Punkte für die Gesamtwertung)
+  teile.push(['Version 266: Zum Abschalten', async () => {
+    const A = kompiliere(['src/hilfen/abschalten.ts']).hilfen_abschalten;
+    const pr = {};
+    ok('Abschalten: Rekord nur, wenn höher', A.rekordMerken(pr, 'lauf', 120) && !A.rekordMerken(pr, 'lauf', 80) && pr._abschalten.lauf === 120 && !A.rekordMerken(pr, 'gibtsnicht', 5));
+    const bl = A.bestenliste({ anna: { _displayName: 'Anna', _abschalten: { lauf: 50 } }, ben: { _displayName: 'Ben', _abschalten: { lauf: 90 } }, admin: { _abschalten: { lauf: 999 } } }, 'lauf');
+    ok('Abschalten: Bestenliste sortiert, ohne Ausbilder', bl.length === 2 && bl[0].name === 'Ben', JSON.stringify(bl));
+    const lf = A.leichteFragen([{ question: 'Kurz?', options: ['a', 'b', 'c'], correct: 1, level: 'easy' }, { question: 'Schwer?', options: ['a', 'b', 'c'], correct: 0, level: 'hard' }]);
+    ok('Abschalten: nur leichte Fragen', lf.length === 1 && lf[0][2] === 1);
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.ben._abschalten = { stapler: 77 };
+    const d = await device({ user: 'Anna', backup: probe, viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Spielen"]:visible').first()); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    ok('Spiele-Seite: Bereich „Zum Abschalten“ ganz unten mit 6 Spielen', (await bereich.locator('button').count()) === 6 && (await d.page.evaluate(() => { const s = [...document.querySelectorAll('main section')]; return s[s.length - 1]?.classList.contains('lt-spiele-abschalten'); })));
+    await click(bereich.locator('button', { hasText: 'Brot-Stapler' }).first()); await settle(d.page, 800);
+    for (let w = 0; w < 50 && !(await d.page.locator('iframe.lt-abschalten-rahmen').count()); w++) await sleep(100);
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let los = 0;
+    for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
+    ok('Abschalten: Spiel lädt im Rahmen (Brot-Stapler)', los === 1 && /Brot-Stapler/.test(await rahmen.locator('.ueber').innerText().catch(() => '')));
+    ok('Abschalten: Teigi-Begleiter ausgeblendet', await d.page.evaluate(() => { const t = document.querySelector('.lt-teigi-begleiter'); return !t || getComputedStyle(t).display === 'none'; }));
+    await rahmen.locator('.ueber .los').click();
+    await sleep(600);
+    await rahmen.locator('#c').click({ position: { x: 150, y: 200 } }).catch(() => {});
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    await fr.evaluate(() => ende(88, 'Test'));
+    let zeile = '';
+    for (let w = 0; w < 60 && !/Anna/.test(zeile); w++) { zeile = await d.page.locator('.lt-abschalten-liste').innerText().catch(() => ''); if (!/Anna/.test(zeile)) await sleep(100); }
+    ok('Abschalten: Rekord landet in der kleinen Bestenliste (Anna 88 vor Ben 77)', /1\.\s*Anna \(du\)\s*88/.test(zeile) && /2\.\s*Ben\s*77/.test(zeile), zeile.slice(0, 200));
+    await click(d.page.locator('.lt-abschalten-wahl button', { hasText: 'Teigi-Lauf' })); await sleep(800);
+    let ueb = '';
+    for (let w = 0; w < 40 && !/Teigi-Lauf/.test(ueb); w++) { ueb = await rahmen.locator('.ueber').innerText().catch(() => ''); if (!/Teigi-Lauf/.test(ueb)) await sleep(100); }
+    ok('Abschalten: anderes Spiel wählen (Teigi-Lauf)', /Teigi-Lauf/.test(ueb), ueb.slice(0, 80));
+    ok('Abschalten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 265: Adventskalender mit Tüte, Geschenk (nur hier) und 100 Punkten, alle 24 = Goldener Stern

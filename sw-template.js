@@ -48,13 +48,17 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.includes('/stimme/')) return;
 
   if (req.mode === 'navigate') {
+    // Version 266: auch die Spiele „Zum Abschalten“ (abschalten/index.html, im iframe) sind eine eigene Seite.
+    // Nur die App-Seite selbst wird als INDEX gespeichert, andere Seiten unter ihrer eigenen Adresse.
+    const unterseite = url.pathname.includes('/abschalten/');
+    const schluessel = unterseite ? new URL('abschalten/index.html', SCOPE).href : INDEX;
     e.respondWith(
       fetchMitZeitlimit(req, 5000)
         .then((res) => {
-          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(INDEX, copy)); }
+          if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(schluessel, copy)); }
           return res;
         })
-        .catch(() => caches.match(INDEX).then((hit) => hit || Response.error()))
+        .catch(() => caches.match(schluessel).then((hit) => hit || Response.error()))
     );
     return;
   }
