@@ -79,6 +79,7 @@ const schl_frei = (o) => { let m = 0; for (const k in o) if (o[k] > 0 && Number(
 function schl_rechtecke(lv){
   const r = [];
   for (const p of lv.plattformen) {
+    if (p.art === 'wippe') { r.push({ x: p.cx - 3.5, y: p.cy + 6, w: 7, h: SCHL_BODEN - p.cy - 6 }); continue; }
     r.push({ x: p.x, y: p.y, w: p.w, h: 10 });
     if (p.art === 'wagen') { r.push({ x: p.x + 4, y: p.y + 10, w: 5, h: SCHL_BODEN - p.y - 10 }); r.push({ x: p.x + p.w - 9, y: p.y + 10, w: 5, h: SCHL_BODEN - p.y - 10 }); }
   }
@@ -86,17 +87,13 @@ function schl_rechtecke(lv){
     if (o.art === 'stikken') { r.push({ x: o.x, y: o.y, w: 6, h: SCHL_BODEN - o.y }); r.push({ x: o.x + o.w - 6, y: o.y, w: 6, h: SCHL_BODEN - o.y }); for (let yy = o.y; yy < SCHL_BODEN - 30; yy += 36) r.push({ x: o.x, y: yy, w: o.w, h: 5 }); }
     if (o.art === 'haenge') { r.push({ x: o.x, y: o.y, w: o.w, h: 9 }); r.push({ x: o.x + 6, y: 16, w: 2, h: o.y - 16 }); r.push({ x: o.x + o.w - 8, y: 16, w: 2, h: o.y - 16 }); }
   }
+  for (const l of lv.luefter || []) for (const k of schl_luefterKoerper(l)) r.push(k);
   return r;
 }
 
-/** Ein Physik-Schritt für die Kugel. Rückgabe: getroffene Form oder null */
-function schl_schritt(b, rechtecke, formen, dt){
-  b.vy += SCHL_G * dt; const vorUnten = b.y + SCHL_R; b.x += b.vx * dt; b.y += b.vy * dt;
-  for (const f of formen) {
-    if (f.voll) continue;
-    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3) return f;
-  }
-  const kiste = (rx, ry, rw, rh, e) => {
+/** Kugel gegen Rechteck (prallt ab) */
+function schl_kiste(b, rx, ry, rw, rh, e){
+  {
     const cx = klemm(b.x, rx, rx + rw), cy = klemm(b.y, ry, ry + rh); let dx = b.x - cx, dy = b.y - cy; const d2 = dx * dx + dy * dy;
     if (d2 >= SCHL_R * SCHL_R) return;
     let d = Math.sqrt(d2), nx, ny;
@@ -106,13 +103,74 @@ function schl_schritt(b, rechtecke, formen, dt){
     const vn = b.vx * nx + b.vy * ny;
     if (vn < 0) { const tx = b.vx - vn * nx, ty = b.vy - vn * ny; b.vx = tx * .9 - vn * nx * e; b.vy = ty * .9 - vn * ny * e; if (-vn > 120) { b.stoss = Math.max(b.stoss || 0, Math.min(1, -vn / 600)); b.stossN = [nx, ny]; b.abprall = (b.abprall || 0) + 1; } }
     b.kontakt = true;
-  };
+  }
+}
+/** Kugel gegen gedrehtes Rechteck: Rechteck in Koordinaten um (ox, oy), um rot gedreht */
+function schl_kisteRot(b, ox, oy, rot, rx, ry, rw, rh, e){
+  const c = Math.cos(rot), sn = Math.sin(rot), dx = b.x - ox, dy = b.y - oy;
+  const L = { x: c * dx + sn * dy, y: -sn * dx + c * dy, vx: c * b.vx + sn * b.vy, vy: -sn * b.vx + c * b.vy };
+  schl_kiste(L, rx, ry, rw, rh, e);
+  if (!L.kontakt) return;
+  b.x = ox + c * L.x - sn * L.y; b.y = oy + sn * L.x + c * L.y; b.vx = c * L.vx - sn * L.vy; b.vy = sn * L.vx + c * L.vy;
+  b.kontakt = true; if (L.stoss) { b.stoss = Math.max(b.stoss || 0, L.stoss); b.stossN = [c * L.stossN[0] - sn * L.stossN[1], sn * L.stossN[0] + c * L.stossN[1]]; b.abprall = (b.abprall || 0) + 1; }
+}
+// ── Neue Hindernisse ab Level 13: wackelndes Blech (Wippe) und Ventilator ──
+const SCHL_WIPPE_LEN = 84;
+/** Erster gelungener Versuch je neuem Level (mit dem Prüfskript ermittelt; bei Änderungen am Aufbau neu ermitteln) */
+let SCHL_NEU_START = { 13: 5, 14: 6, 15: 5, 16: 1, 17: 3, 18: 5, 19: 0, 20: 20, 21: 16, 22: 3, 23: 1, 24: 0, 25: 1, 26: 10, 27: 3, 28: 0, 29: 5, 30: 6, 31: 3, 32: 9, 33: 3, 34: 6, 35: 0, 36: 4, 37: 19, 38: 6, 39: 0, 40: 3 };
+/** Lüfter an/aus im Takt: weiches Hoch- und Runterfahren */
+function schl_luefterStaerke(l, t){
+  if (!l.takt) return 1;
+  const u = ((t + l.ph) % l.per + l.per) % l.per, an = l.per * .58, r = .45;
+  if (u < r) return u / r; if (u < an) return 1; if (u < an + r) return 1 - (u - an) / r; return 0;
+}
+/** Feste Teile eines Lüfters (Gehäuse und Ständer) */
+function schl_luefterKoerper(l){
+  if (l.art === 'boden') return [{ x: l.x - 34, y: SCHL_BODEN - 24, w: 68, h: 24 }];
+  return [{ x: l.x - 9, y: l.y - 27, w: 18, h: 54 }];
+}
+/** Windfeld eines Lüfters: Rechteck und Beschleunigung bei voller Stärke */
+function schl_wind(l){
+  if (l.art === 'boden') return { x: l.x - 30, y: l.hoch, w: 60, h: SCHL_BODEN - 24 - l.hoch, ax: 0, ay: -1500 };
+  return l.dir < 0 ? { x: l.x - 12 - l.weite, y: l.y - 30, w: l.weite, h: 60, ax: -l.kraft, ay: 0 } : { x: l.x + 12, y: l.y - 30, w: l.weite, h: 60, ax: l.kraft, ay: 0 };
+}
+/** Alles, was sich bewegt, auf Zeit t stellen (Schienen, Wippen, Lüfter) */
+function schl_dyn(lv, t){
+  for (const f of lv.formen) if (f.bahn && !f.voll) f.x = f.x0 + Math.sin(t * Math.PI * 2 / f.bahn.per + f.bahn.ph) * f.bahn.a;
+  for (const p of lv.plattformen) if (p.art === 'wippe') {
+    const f = lv.formen[p.form], w = t * Math.PI * 2 / p.per + p.ph;
+    p.rot = p.amp * Math.sin(w); p.s = p.rutsch * Math.sin(w - .8);
+    const c = Math.cos(p.rot), sn = Math.sin(p.rot), ly = -6 - f.h;
+    f.x = p.cx + c * p.s - sn * ly; f.y = p.cy + sn * p.s + c * ly; f.rot = p.rot; f.wippe = p;
+  }
+  for (const l of lv.luefter || []) l.s = schl_luefterStaerke(l, t);
+}
+
+/** Ein Physik-Schritt für die Kugel. Rückgabe: getroffene Form oder null */
+function schl_schritt(b, rechtecke, formen, dt, lv){
+  if (lv && lv.luefter) for (const l of lv.luefter) if (l.s > .01) { const z = schl_wind(l); if (b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h) { const nah = z.ax < 0 ? (b.x - z.x) / z.w : z.ax > 0 ? 1 - (b.x - z.x) / z.w : (b.y - z.y) / z.h; const k = l.s * (.45 + .55 * nah); b.vx += z.ax * k * dt; b.vy += z.ay * k * dt; b.wind = 1; } }
+  b.vy += SCHL_G * dt; const vorUnten = b.y + SCHL_R; b.x += b.vx * dt; b.y += b.vy * dt;
+  for (const f of formen) {
+    if (f.voll) continue;
+    if (f.wippe) { // gedrehte Form: im eigenen Koordinatensystem prüfen
+      const c = Math.cos(f.rot), sn = Math.sin(f.rot), dx = b.x - f.x, dy = b.y - f.y, ly = -sn * dx + c * dy, lx = c * dx + sn * dy, lvy = -sn * b.vx + c * b.vy;
+      if (lvy > 0 && ly - lvy * dt + SCHL_R <= 1 && ly + SCHL_R > 1 && Math.abs(lx) < f.w / 2 + 3) return f;
+      continue;
+    }
+    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3) return f;
+  }
   b.kontakt = false;
-  for (const r of rechtecke) kiste(r.x, r.y, r.w, r.h, .5);
+  for (const r of rechtecke) schl_kiste(b, r.x, r.y, r.w, r.h, .5);
   for (const f of formen) {
     const l = f.x - f.w / 2;
-    if (f.voll) kiste(l, f.y - 10, f.w, f.h + 10, .35);
-    else { kiste(l - 2, f.y - 2, 5, f.h + 2, .35); kiste(l + f.w - 3, f.y - 2, 5, f.h + 2, .35); kiste(l, f.y + f.h - 5, f.w, 5, .35); }
+    if (f.wippe) {
+      const p = f.wippe, hw = f.w / 2;
+      if (f.voll) schl_kisteRot(b, f.x, f.y, f.rot, -hw, -10, f.w, f.h + 10, .35);
+      else { schl_kisteRot(b, f.x, f.y, f.rot, -hw - 2, -2, 5, f.h + 2, .35); schl_kisteRot(b, f.x, f.y, f.rot, hw - 3, -2, 5, f.h + 2, .35); schl_kisteRot(b, f.x, f.y, f.rot, -hw, f.h - 5, f.w, 5, .35); }
+      schl_kisteRot(b, p.cx, p.cy, p.rot, -SCHL_WIPPE_LEN / 2, -6, SCHL_WIPPE_LEN, 6, .45);
+    }
+    else if (f.voll) schl_kiste(b, l, f.y - 10, f.w, f.h + 10, .35);
+    else { schl_kiste(b, l - 2, f.y - 2, 5, f.h + 2, .35); schl_kiste(b, l + f.w - 3, f.y - 2, 5, f.h + 2, .35); schl_kiste(b, l, f.y + f.h - 5, f.w, 5, .35); }
   }
   if (b.y + SCHL_R > SCHL_BODEN) { b.y = SCHL_BODEN - SCHL_R; if (b.vy > 120) { b.stoss = Math.min(1, b.vy / 600); b.stossN = [0, -1]; } b.vy = -b.vy * .35; b.vx *= .82; b.kontakt = true; }
   if (b.x < SCHL_R) { b.x = SCHL_R; b.vx = Math.abs(b.vx) * .5; }
@@ -126,15 +184,16 @@ function schl_klemmZug(dx, dy){
 }
 
 /** Prüft, welche Formen mit welchen Schüssen erreichbar sind (für faire Level und für den Test) */
-function schl_pruefe(lv, formen, t0){
+function schl_pruefe(lv, formen, t0, genug){
   const rechtecke = schl_rechtecke(lv), treffer = formen.map(() => []);
   for (let a = -10; a <= 82; a += 3.5) for (let s = 28; s <= SCHL_MAX; s += 4) {
+    if (genug && treffer.every((l, i) => l.length >= genug || formen[i].voll)) return treffer;
     const w = a * Math.PI / 180, [dx, dy] = schl_klemmZug(-Math.cos(w) * s, Math.sin(w) * s);
     if (Math.abs(Math.hypot(dx, dy) - s) > 2) continue;
     const b = { x: SCHL_A.x + dx, y: SCHL_A.y + dy, vx: -dx * SCHL_K, vy: -dy * SCHL_K };
     for (let t = 0; t < 3.4; t += 1 / 120) {
-      if (t0 !== undefined) for (const fm of formen) if (fm.bahn && !fm.voll) fm.x = fm.x0 + Math.sin((t0 + t) * Math.PI * 2 / fm.bahn.per + fm.bahn.ph) * fm.bahn.a;
-      const f = schl_schritt(b, rechtecke, formen, 1 / 120);
+      if (t0 !== undefined) schl_dyn(lv, t0 + t);
+      const f = schl_schritt(b, rechtecke, formen, 1 / 120, lv);
       if (f) { treffer[formen.indexOf(f)].push({ dx, dy }); break; }
       if (b.x > W + 20 || (b.y > SCHL_BODEN - SCHL_R - 1 && Math.abs(b.vy) < 40)) break;
     }
@@ -150,6 +209,7 @@ SPIELE.schleuder = {
     this.gemuetlich = typeof GEMUETLICH !== 'undefined' && GEMUETLICH;
     this.einzel = this.nochmalEinzel || 0; this.nochmalEinzel = 0;
     this.level = this.einzel ? this.einzel - 1 : 0; this.punkteN = 0; this.sterne = 0; this.zeit = 0; this.ball = null; this.ziehen = null; this.zustand = 'spiel'; this.lauf = 0; this.naechstes = null; this.naechstesV = 0; this.endeGerufen = false;
+    this.gold = null; this.goldZeit = zufall(15, 40); this.hinweisNeu = null;
     this.neuesLevel();
   },
   aktuellePunkte(){ return this.punkteN || 0; },
@@ -159,7 +219,81 @@ SPIELE.schleuder = {
     this.nochmalEinzel = n; this.start(); this.nochmalEinzel = n; // „Nochmal“ spielt dasselbe Level wieder
     if (!n) this.nochmalEinzel = 0;
   },
+  /** Plan der neuen Level 13 bis 22 (danach gemischt): Wippen, Lüfter (s = Seite, b = Boden, t = im Takt), Hindernisse, Schienen */
+  NEU_PLAN: {
+    13: { wippen: 1, amp: .2 }, 14: { luefter: ['s'] }, 15: { wippen: 1, amp: .28, hind: 1 }, 16: { luefter: ['b'] }, 17: { luefter: ['st'] },
+    18: { wippen: 2, amp: .3 }, 19: { wippen: 1, amp: .3, luefter: ['st'] }, 20: { wippen: 1, amp: .32, luefter: ['bt'], hind: 1 },
+    21: { wippen: 1, amp: .34, luefter: ['s', 'b'] }, 22: { wippen: 2, amp: .36, luefter: ['st'], hind: 1 },
+  },
+  NEU_HINWEIS: { 13: 'Neu: Das Blech wackelt. Pass den Moment ab!', 14: 'Neu: Der Ventilator pustet den Teig weg.', 16: 'Neu: Der Lüfter pustet nach oben.', 17: 'Der Ventilator geht an und aus.' },
+  neuPlan(lvNr, R){
+    if (this.NEU_PLAN[lvNr]) return this.NEU_PLAN[lvNr];
+    const z = (a, b) => a + Math.floor(R() * (b - a + 1));
+    return { wippen: z(0, 2), amp: .3 + R() * .08, luefter: ['s', 'st', 'b', 'bt'].filter(() => R() < .35).slice(0, 2), hind: z(0, 1), beweg: z(0, 1) };
+  },
+  /** Level ab 13: wie die alten, dazu Wippen und Lüfter. Jede Form muss zu irgendeinem Zeitpunkt sicher erreichbar sein. */
+  baueNeu(lvNr, stufe, versuch){
+    // bekannte Level: erster gelungener Versuch ist schon geprüft (spart Rechenzeit, ergibt genau denselben Aufbau)
+    const bekannt = SCHL_NEU_START[lvNr];
+    if (bekannt !== undefined && versuch < bekannt) return null;
+    const ohnePruefung = bekannt === versuch;
+    const R = schl_gen(lvNr * 7000003 + versuch * 104729 + 91), rz = (a, b) => a + R() * (b - a);
+    const plan = this.neuPlan(lvNr, R);
+    const leichter = (n) => Math.max(0, (n || 0) - (stufe >= 2 ? 1 : 0));
+    const formen = [], plattformen = [], hindernisse = [], luefter = [];
+    const unten = (q) => q.art === 'wagen' || q.art === 'wippe' ? SCHL_BODEN : q.y + 10;
+    // belegte Flächen je Plattform (mit Platz für die Form darüber und dem Schwenk der Wippe)
+    const flaechen = (q) => q.art === 'wippe' ? [{ x: q.cx - 48, y: q.cy - 52, w: 96, h: 72 }, { x: q.cx - 6, y: q.cy, w: 12, h: SCHL_BODEN - q.cy }]
+      : q.art === 'wagen' ? [{ x: q.x, y: q.y - 40, w: q.w, h: SCHL_BODEN - q.y + 40 }] : [{ x: q.x, y: q.y - 40, w: q.w, h: 50 }];
+    const stoesst = (p, ohne) => plattformen.some((c, i) => i !== ohne && flaechen(p).some((a) => flaechen(c).some((b) => a.x < b.x + b.w + 6 && b.x < a.x + a.w + 6 && a.y < b.y + b.h + 4 && b.y < a.y + a.h + 4)));
+    const nW = Math.min(stufe >= 2 ? 1 : 2, plan.wippen || 0);
+    for (let v = 0; v < 400 && formen.length < 3; v++) {
+      const wip = formen.length < nW, art = R() < .5 ? 'kasten' : 'korb', { w, h } = SCHL_FORM[art];
+      const f = { art, x: nW === 2 && wip ? (formen.length ? rz(262, 326) : rz(160, 200)) : rz(wip ? 168 : 160, wip ? 326 : 338), y: rz(wip ? 232 : 190, (wip ? 352 : 398) - h), w, h, voll: false, fuell: 0 }; f.x0 = f.x;
+      if (formen.some((o) => { const dx = Math.abs(o.x - f.x); return dx < 64 && !(dx >= 40 && Math.abs(o.y - f.y) >= 110); })) continue;
+      const py = f.y + f.h;
+      const p = wip ? { art: 'wippe', x: f.x - SCHL_WIPPE_LEN / 2 - 6, y: py - 22, w: SCHL_WIPPE_LEN + 12, cx: f.x, cy: py + 6, amp: plan.amp, per: rz(2.6, 3.6), ph: R() * 6.28, rutsch: 9, form: formen.length, rot: 0, s: 0 }
+        : { art: py > 362 ? 'wagen' : 'regal', x: f.x - (f.w + 18) / 2, y: py, w: f.w + 18 };
+      if (stoesst(p, -1)) continue;
+      formen.push(f); plattformen.push(p);
+    }
+    if (formen.length < 3) return null;
+    // Schiene (nur bei gemischten Leveln)
+    if (leichter(plan.beweg)) for (let i = 0; i < 3; i++) { const f = formen[i], p = plattformen[i]; if (p.art === 'wippe') continue; for (let a = Math.min(f.x - 158, 328 - f.x, 26); a >= 16; a -= 4) { const bw = f.w + 18 + a * 2, q = { art: 'schiene', x: f.x - bw / 2, y: f.y + f.h, w: bw }; if (!stoesst(q, i)) { f.bahn = { a, per: rz(3.6, 5), ph: R() * 6.28 }; plattformen[i] = q; break; } } break; }
+    const frei = (rx, ry, rw, rh) => formen.every((f, i) => { const p = plattformen[i], a = f.bahn ? f.bahn.a : 0, hw = p.art === 'wippe' ? SCHL_WIPPE_LEN / 2 + 6 : f.w / 2 + a; return rx + rw < f.x - hw - 10 || rx > f.x + hw + 10 || ry + rh < f.y - 74 || ry > (p.art === 'wippe' ? SCHL_BODEN : f.y + f.h + 12); })
+      && plattformen.every((p) => rx + rw < p.x - 8 || rx > p.x + p.w + 8 || ry + rh < p.y - 8 || ry > unten(p) + 8);
+    const getrennt = (rx, rw) => hindernisse.every((o) => rx + rw < o.x - 16 || rx > o.x + o.w + 16) && luefter.every((l) => rx + rw < l.x - 50 || rx > l.x + 50);
+    // Lüfter
+    for (const code of (stufe >= 3 ? [] : plan.luefter || []).slice(0, stufe >= 2 ? 1 : 2)) {
+      const takt = code.length > 1, per = rz(3.6, 4.6), ph = R() * per;
+      for (let v = 0; v < 60; v++) {
+        let l;
+        if (code[0] === 'b') { l = { art: 'boden', x: rz(150, 318), hoch: rz(110, 170), takt, per, ph, s: 1 }; if (!frei(l.x - 36, SCHL_BODEN - 26, 72, 26) || !getrennt(l.x - 36, 72)) continue; }
+        else { const dir = R() < .5 ? -1 : 1; l = { art: 'seite', dir, x: dir < 0 ? rz(330, 342) : rz(122, 140), y: dir < 0 ? rz(130, 330) : rz(150, 270), weite: rz(150, 190), kraft: rz(620, 760), takt, per, ph, s: 1 }; if (!frei(l.x - 12, l.y - 30, 24, 60) || !getrennt(l.x - 12, 24)) continue; }
+        luefter.push(l); break;
+      }
+    }
+    if (stufe < 2 && luefter.length < (plan.luefter || []).length) return null;
+    const nH = Math.max(0, (plan.hind || 0) - (stufe >= 1 ? 1 : 0));
+    for (let v = 0; v < 60 && hindernisse.length < nH; v++) {
+      if (R() < .5) { const w = 52, h = rz(90, 170), ox = rz(120, 300), oy = SCHL_BODEN - h; if (frei(ox, oy, w, h) && getrennt(ox, w)) hindernisse.push({ art: 'stikken', x: ox, y: oy, w }); }
+      else { const w = rz(66, 88), ox = rz(120, 330 - w), oy = rz(70, 200); if (frei(ox, 16, w, oy - 16 + 12) && getrennt(ox, w)) hindernisse.push({ art: 'haenge', x: ox, y: oy, w }); }
+    }
+    const lv = { formen, plattformen, hindernisse, luefter, neu: true, art: [nW ? 'wippe' : '', luefter.length ? 'luefter' : ''].filter(Boolean) };
+    if (stufe >= 3 && (nW === 0) && !luefter.length) return null;
+    if (ohnePruefung) { schl_dyn(lv, 0); return lv; }
+    // Prüfen über mehrere Zeitpunkte: jede Form braucht zu einem Zeitpunkt mindestens 3 Treffer-Schüsse
+    const ok = formen.map(() => false);
+    for (const t0 of [0, .7, 1.4, 2.1, 2.8, 3.5, 4.2]) {
+      const t = schl_pruefe(lv, formen, t0, 3);
+      t.forEach((l, i) => { if (l.length >= 3) ok[i] = true; });
+      if (ok.every(Boolean)) break;
+    }
+    schl_dyn(lv, 0); for (const f of formen) if (f.bahn) f.x = f.x0;
+    return ok.every(Boolean) ? lv : null;
+  },
   baueLevel(lvNr, stufe, versuch = 0){
+    if (lvNr >= 13) return this.baueNeu(lvNr, stufe, versuch);
     const R = schl_gen(lvNr * 1000003 + versuch * 7919 + 17), rz = (a, b) => a + R() * (b - a);
     const n = 3, formen = [], plattformen = [], hindernisse = [];
     const yMin = lvNr === 1 ? 250 : lvNr === 2 ? 190 : 140;
@@ -211,19 +345,31 @@ SPIELE.schleuder = {
     this.naechstesV = 0;
     for (let v = 0; v < 30 && !lv; v++) lv = this.baueLevel(1, 3, 100 + v);
     if (!lv) lv = { formen: [{ art: 'kasten', x: 180, x0: 180, y: 374, w: 60, h: 26, voll: false, fuell: 0 }, { art: 'korb', x: 256, x0: 256, y: 290, w: 64, h: 28, voll: false, fuell: 0 }, { art: 'kasten', x: 320, x0: 320, y: 220, w: 60, h: 26, voll: false, fuell: 0 }], plattformen: [{ art: 'wagen', x: 139, y: 400, w: 82 }, { art: 'regal', x: 213, y: 318, w: 86 }, { art: 'regal', x: 279, y: 246, w: 82 }], hindernisse: [] };
-    this.lv = lv; this.rechtecke = schl_rechtecke(lv);
+    this.lv = lv; this.rechtecke = schl_rechtecke(lv); this.gold = null;
+    this.hinweisNeu = this.NEU_HINWEIS[this.level] ? { t: this.NEU_HINWEIS[this.level], z: 3.4 } : null;
   },
-  formenBewegen(){ for (const f of this.lv.formen) if (f.bahn && !f.voll) f.x = f.x0 + Math.sin(this.zeit * Math.PI * 2 / f.bahn.per + f.bahn.ph) * f.bahn.a; },
+  formenBewegen(){ schl_dyn(this.lv, this.zeit); },
   // ── Level-Auswahl ──
   knopfRect: { x: 10, y: 72, w: 104, h: 30 },
+  auswahlFrei(){ return Math.max(schl_frei(schl_sterneLesen()), this.einzel ? 0 : this.level); },
+  auswahlSeiten(){ return Math.ceil((this.auswahlFrei() + 1) / 16); },
   auswahlKacheln(){
-    const sterne = schl_sterneLesen(), frei = Math.max(schl_frei(sterne), this.einzel ? 0 : this.level), von = Math.max(1, frei - 14), liste = [];
-    for (let i = 0; i < Math.min(16, frei + 2 - von); i++) { const n = von + i, sp = i % 4, ze = Math.floor(i / 4); liste.push({ n, x: 33 + sp * 76, y: 146 + ze * 70, w: 66, h: 60, offen: n <= frei, st: sterne[n] || 0 }); }
+    const sterne = schl_sterneLesen(), frei = this.auswahlFrei(), seite = klemm(this.auswahlSeite || 0, 0, this.auswahlSeiten() - 1), von = 1 + seite * 16, liste = [];
+    for (let i = 0; i < 16 && von + i <= frei + 1; i++) { const n = von + i, sp = i % 4, ze = Math.floor(i / 4); liste.push({ n, x: 33 + sp * 76, y: 146 + ze * 70, w: 66, h: 60, offen: n <= frei, st: sterne[n] || 0 }); }
     return liste;
   },
-  auswahlOeffnen(){ this.vorAuswahl = this.zustand; this.zustand = 'auswahl'; this.auswahlZeit = 0; this.ziehen = null; },
+  /** Kennzeichen der Level ab 13 (für die Auswahl): Wippe und/oder Lüfter */
+  levelZeichen(n){
+    if (n < 13) return [];
+    const p = this.NEU_PLAN[n]; if (!p) return ['mix'];
+    return [p.wippen ? 'wippe' : '', (p.luefter || []).length ? 'luefter' : ''].filter(Boolean);
+  },
+  auswahlOeffnen(){ this.vorAuswahl = this.zustand; this.zustand = 'auswahl'; this.auswahlZeit = 0; this.ziehen = null; this.auswahlSeite = Math.floor((Math.max(1, this.level) - 1) / 16); },
   auswahlTipp(p){
     const in_ = (r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+    const seiten = this.auswahlSeiten(), sei = klemm(this.auswahlSeite || 0, 0, seiten - 1);
+    if (seiten > 1 && in_({ x: 22, y: 88, w: 46, h: 42 })) { if (sei > 0) { this.auswahlSeite = sei - 1; brumm(15); } return; }
+    if (seiten > 1 && in_({ x: 292, y: 88, w: 46, h: 42 })) { if (sei < seiten - 1) { this.auswahlSeite = sei + 1; brumm(15); } return; }
     for (const k of this.auswahlKacheln()) if (in_(k)) { if (k.offen) { brumm(20); this.levelWaehlen(k.n); } else { wackeln(3); brumm(40); } return; }
     if (in_({ x: 33, y: 432, w: 140, h: 30 })) { this.levelWaehlen(0); return; }
     if (in_({ x: 187, y: 432, w: 140, h: 30 }) || p.y < 76 || p.y > 470) this.zustand = this.vorAuswahl || 'spiel';
@@ -234,6 +380,16 @@ SPIELE.schleuder = {
     x.fillStyle = F.braun; for (let i = 0; i < 4; i++) { rr(r.x + 10 + (i % 2) * 7, r.y + 8 + Math.floor(i / 2) * 7, 5.5, 5.5, 1.5); x.fill(); }
     text(`Level ${this.level}`, r.x + 60, r.y + r.h / 2 + .5, { gr: 13, farbe: F.braun, schat: false });
     x.strokeStyle = F.braun; x.lineWidth = 1.8; x.lineCap = 'round'; x.beginPath(); x.moveTo(r.x + r.w - 15, r.y + 13); x.lineTo(r.x + r.w - 11, r.y + 17); x.lineTo(r.x + r.w - 7, r.y + 13); x.stroke();
+  },
+  /** Kleine Zeichen für neue Hindernisse in der Level-Auswahl */
+  malZeichen(z, px, py){
+    x.save(); x.translate(px, py);
+    x.fillStyle = '#EAF2FA'; x.strokeStyle = '#7FA6C8'; x.lineWidth = 1; x.beginPath(); x.arc(0, 0, 7, 0, 7); x.fill(); x.stroke();
+    x.strokeStyle = '#3F6E96'; x.fillStyle = '#3F6E96'; x.lineWidth = 1.5; x.lineCap = 'round';
+    if (z === 'luefter') { for (let i = 0; i < 3; i++) { x.save(); x.rotate(i * 2.094); x.beginPath(); x.ellipse(0, -2.6, 1.6, 2.8, .5, 0, 7); x.fill(); x.restore(); } x.beginPath(); x.arc(0, 0, 1, 0, 7); x.fill(); }
+    else if (z === 'wippe') { x.beginPath(); x.moveTo(-4.5, 1.8); x.lineTo(4.5, -1.8); x.stroke(); x.beginPath(); x.moveTo(0, 0); x.lineTo(-2, 4); x.lineTo(2, 4); x.closePath(); x.fill(); }
+    else { x.beginPath(); x.arc(-2, 0, 1.3, 0, 7); x.arc(2.4, 0, 1.3, 0, 7); x.fill(); }
+    x.restore();
   },
   malStern(px, py, r, an){
     x.beginPath(); for (let k = 0; k < 10; k++) { const rr2 = k % 2 ? r * .45 : r; x.lineTo(px + Math.cos(k * Math.PI / 5 - Math.PI / 2) * rr2, py + Math.sin(k * Math.PI / 5 - Math.PI / 2) * rr2); } x.closePath();
@@ -246,6 +402,12 @@ SPIELE.schleuder = {
     schatten(18, 8); x.fillStyle = linear(0, 76, 0, 470, [[0, '#FFFBF2'], [1, '#FFEFD0']]); rr(18, 78, 324, 392, 24); x.fill(); ohneSchatten();
     x.strokeStyle = F.gold; x.lineWidth = 3; x.stroke();
     text('Level wählen', 180, 106, { gr: 22, farbe: F.braun, schrift: 'Fraunces' });
+    const seiten = this.auswahlSeiten(), sei = klemm(this.auswahlSeite || 0, 0, seiten - 1);
+    if (seiten > 1) for (const [bx, r2, an] of [[45, -1, sei > 0], [315, 1, sei < seiten - 1]]) {
+      x.fillStyle = an ? linear(0, 92, 0, 122, [[0, '#FFD95A'], [1, '#F2B400']]) : '#EFE5D3'; x.beginPath(); x.arc(bx, 107, 16, 0, 7); x.fill();
+      x.strokeStyle = an ? '#B98200' : '#DCCDB4'; x.lineWidth = 1.5; x.stroke();
+      x.strokeStyle = an ? F.braun : '#B9A98F'; x.lineWidth = 2.6; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(bx - r2 * 3, 100); x.lineTo(bx + r2 * 4, 107); x.lineTo(bx - r2 * 3, 114); x.stroke();
+    }
     const st = schl_sterneLesen(); let summe = 0; for (const k in st) summe += st[k];
     { const t3 = `${summe} ${summe === 1 ? 'Stern' : 'Sterne'} gesammelt`; x.font = '800 12.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w3 = x.measureText(t3).width; this.malStern(180 - w3 / 2 - 4, 130, 7, true); text(t3, 180 + 8, 130.5, { gr: 12.5, farbe: F.goldDunkel, schat: false }); }
     for (const k of this.auswahlKacheln()) {
@@ -254,6 +416,7 @@ SPIELE.schleuder = {
         x.fillStyle = aktiv ? '#FFF1C2' : '#FFFFFF'; rr(k.x, k.y, k.w, k.h, 14); x.fill();
         x.strokeStyle = aktiv ? '#E0A526' : '#EADBC0'; x.lineWidth = aktiv ? 3 : 2; x.stroke();
         text(String(k.n), k.x + k.w / 2, k.y + 23, { gr: 20, farbe: F.braun, schrift: 'Fraunces', schat: false });
+        { const zs = this.levelZeichen(k.n); zs.forEach((z, i) => this.malZeichen(z, zs.length > 1 && i === 0 ? k.x + 11 : k.x + k.w - 11, k.y + 11)); }
         for (let i = 0; i < 3; i++) this.malStern(k.x + k.w / 2 + (i - 1) * 15, k.y + 45 - (i === 1 ? 2 : 0), 6, i < k.st);
       } else {
         x.fillStyle = '#EDE3D2'; rr(k.x, k.y, k.w, k.h, 14); x.fill(); x.strokeStyle = '#DCCDB4'; x.lineWidth = 2; x.stroke();
@@ -297,15 +460,20 @@ SPIELE.schleuder = {
     this.zeit += dt; this.einflug = Math.min(1, this.einflug + dt * 1.8); this.laden = Math.min(1, this.laden + dt * 2.6); this.schnapp = Math.max(0, (this.schnapp || 0) - dt * 3);
     this.formenBewegen();
     for (const f of this.lv.formen) if (f.voll) f.fuell = Math.min(1, f.fuell + dt * 1.4);
+    if (this.hinweisNeu) { this.hinweisNeu.z -= dt; if (this.hinweisNeu.z <= 0) this.hinweisNeu = null; }
+    if (goldKommt() && this.zeit > this.goldZeit && this.zustand === 'spiel' && !this.ball && this.einflug >= 1 && this.lv.formen.filter((f) => !f.voll).length >= 2) this.goldSetzen();
+    if (this.gold) { const g = this.gold; g.rest -= dt; g.y = g.y0 + Math.sin(this.zeit * 2.2) * 5; if (g.rest <= 0 && !(this.ball && g.rest > -1.5)) { mehlWolke(g.x, g.y, 6); this.gold = null; } }
     const b = this.ball;
     if (b) {
       // feste Schrittweite wie in der Prüfung, damit jeder Schuss genau so fliegt wie berechnet
       b.acc = (b.acc || 0) + dt;
       while (b.acc >= 1 / 120 && this.ball) {
         b.acc -= 1 / 120; b.px = b.x; b.py = b.y;
-        const f = schl_schritt(b, this.rechtecke, this.lv.formen, 1 / 120);
+        schl_dyn(this.lv, this.zeit - b.acc); const f = schl_schritt(b, this.rechtecke, this.lv.formen, 1 / 120, this.lv);
         if (b.stoss > 0) { b.quetsch = Math.max(b.quetsch, b.stoss); b.qN = b.stossN; if (b.stoss > .3) mehlWolke(b.x, b.y, 3); b.stoss = 0; }
         if (f) this.treffer(f, b);
+        // Goldform: reicht, sie im Flug zu treffen
+        else if (this.ball && this.gold && Math.hypot(b.x - this.gold.x, b.y - this.gold.y - this.gold.h / 2) < 32) this.treffer(this.gold, b);
       }
       if (this.ball) {
         b.t += dt; b.quetsch = Math.max(0, b.quetsch - dt * 4);
@@ -337,7 +505,43 @@ SPIELE.schleuder = {
     const k = this.kugeln + (this.ball ? 1 : 0);
     setHud([{ icon: 'punkte', text: this.punkteN.toLocaleString('de-DE') }, { icon: 'korn', text: `${k} ${k === 1 ? 'Kugel' : 'Kugeln'}` }]);
   },
+  /** Goldform: schwebt an einer freien Stelle, bleibt 7 s; im Flug treffen genügt */
+  goldSetzen(){
+    // Raster freier Stellen (die festen Plätze lagen oft zu nah an den Formen)
+    const kandidaten = [];
+    for (let gx = 140; gx <= 320; gx += 30) for (let gy = 110; gy <= 290; gy += 30) kandidaten.push([gx, gy]);
+    kandidaten.sort(() => Math.random() - .5);
+    for (const [gx, gy] of kandidaten) {
+      const g = { art: 'kasten', gold: true, x: gx, x0: gx, y: gy, y0: gy, w: 54, h: 22, voll: false, fuell: 0, rest: 7 };
+      const r = { x: gx - 40, y: gy - 50, w: 80, h: 90 };
+      const stoert = this.lv.formen.some((f) => Math.abs(f.x - gx) < 70 && Math.abs(f.y - gy) < 80) || this.rechtecke.some((q) => q.x < r.x + r.w && r.x < q.x + q.w && q.y < r.y + r.h && r.y < q.y + q.h);
+      if (stoert) continue;
+      this.gold = g; goldErschienen(); return;
+    }
+    this.goldZeit = this.zeit + 4; // später nochmal versuchen
+  },
+  goldForm(f, zeit){
+    const a = f.rest < 1 ? Math.max(0, f.rest) : 1, l = f.x - f.w / 2, o = f.y;
+    x.globalAlpha = a;
+    goldGlanz(f.x, o + f.h / 2, 24, zeit);
+    // kleine Flügel aus Teig, damit sie schwebt
+    for (const s2 of [-1, 1]) { x.save(); x.translate(f.x + s2 * (f.w / 2 + 4), o + 6); x.rotate(s2 * (.3 + Math.sin(zeit * 14) * .35)); x.fillStyle = 'rgba(255,248,226,.95)'; x.strokeStyle = 'rgba(160,110,30,.55)'; x.lineWidth = 1; x.beginPath(); x.ellipse(s2 * 9, -4, 11, 5, s2 * -.4, 0, 7); x.fill(); x.stroke(); x.restore(); }
+    x.beginPath(); x.moveTo(l, o); x.lineTo(l + f.w, o); x.lineTo(l + f.w - 6, o + f.h); x.lineTo(l + 6, o + f.h); x.closePath();
+    x.fillStyle = linear(l, 0, l + f.w, 0, [[0, '#C98A00'], [.22, '#FFF1B8'], [.45, '#FFC72C'], [.75, '#E0A526'], [1, '#8A5A0A']]); x.fill();
+    x.strokeStyle = '#7A4E06'; x.lineWidth = 1.4; x.stroke();
+    x.fillStyle = linear(0, o - 3, 0, o + 3, [[0, '#FFF6D0'], [1, '#C98A00']]); rr(l - 2, o - 3, f.w + 4, 6, 3); x.fill();
+    x.fillStyle = '#6B4400'; x.beginPath(); x.ellipse(f.x, o, f.w / 2 - 3, 2, 0, 0, 7); x.fill();
+    // Restzeit als Ring
+    x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 3; x.beginPath(); x.arc(f.x, o - 22, 7, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(f.rest / 7, 0, 1)); x.stroke();
+    x.strokeStyle = 'rgba(122,78,6,.6)'; x.lineWidth = 1; x.beginPath(); x.arc(f.x, o - 22, 9, 0, 7); x.stroke();
+    x.globalAlpha = 1;
+  },
   treffer(f, b){
+    if (f.gold) { // Goldform: Kugel kommt zurück, kleine Extra-Punkte
+      this.ball = null; this.gold = null; this.kugeln++; this.geschossen--; this.punkteN += 50;
+      goldGefangen(f.x, f.y); schwebText('+50', f.x, f.y - 30, F.goldDunkel, 22); schwebText('Kugel zurück', f.x, f.y - 54, F.braun, 14); return;
+    }
+    statPlus('formen');
     f.voll = true; f.fuell = 0; f.trefferZeit = this.zeit; this.ball = null; brumm(25);
     this.lauf++;
     let p = 50; const bande = (b.abprall || 0) > 0;
@@ -356,15 +560,16 @@ SPIELE.schleuder = {
   geschafft(){
     this.zustand = 'fertig'; this.uhr = 0; this.restGezaehlt = 0; this.restBonus = this.kugeln;
     const n = this.geschossen <= 3 ? 3 : this.geschossen === 4 ? 2 : 1; this.levelSterne = n; this.sterne += n;
-    schl_sterneSetzen(this.level, this.gemuetlich ? 1 : n); brumm(30);
+    schl_sterneSetzen(this.level, this.gemuetlich ? 1 : n); brumm(30); statPlus('sterne', n);
     for (let i = 0; i < 3; i++) setTimeout(() => { if (i < n && this.zustand === 'fertig') teilchen(180 + (i - 1) * 50, 200, { n: 14, form: 'stern', tempo: 160 }); }, 250 + i * 220);
   },
   testZug(){
     if (this.zustand !== 'spiel' || this.ball || this.einflug < 1 || this.laden < 1) return { x: 20, y: 30, warte: 300 };
     const formen = this.lv.formen;
-    const merk = formen.map((f) => f.x); const t = schl_pruefe(this.lv, formen, this.zeit + .3); formen.forEach((f, i) => { f.x = merk[i]; });
+    const t = schl_pruefe(this.lv, formen, this.zeit + .3); schl_dyn(this.lv, this.zeit);
     let wahl = null;
-    for (let i = 0; i < formen.length; i++) if (!formen[i].voll && t[i].length) { wahl = t[i][Math.floor(t[i].length / 2)]; if (!formen[i].bahn) break; }
+    for (let i = 0; i < formen.length; i++) if (!formen[i].voll && t[i].length) { wahl = t[i][Math.floor(t[i].length / 2)]; if (!formen[i].bahn && !formen[i].wippe) break; }
+    if (!wahl && this.lv.neu) return { x: 20, y: 30, warte: 250 }; // auf einen besseren Moment warten
     if (!wahl) wahl = { dx: -60, dy: 40 };
     return { zieh: true, x: SCHL_A.x, y: SCHL_A.y, zx: SCHL_A.x + wahl.dx, zy: SCHL_A.y + wahl.dy, warte: 2200 };
   },
@@ -378,10 +583,11 @@ SPIELE.schleuder = {
     x.fillStyle = 'rgba(255,255,255,.55)'; for (const [a, c] of [[3, -2], [-1, 4], [5, 3], [-5, 1]]) { x.beginPath(); x.arc(a, c, .9, 0, 7); x.fill(); }
     x.restore();
   },
-  form(f, zeit){
+  form(f, zeit, aufWippe){
     const { w, h } = f, l = f.x - w / 2, o = f.y;
+    if (f.gold) { this.goldForm(f, zeit); return; }
     // Schatten auf dem Brett
-    bodenSchatten(f.x + 3, o + h + 1, w * .55, 4, .35);
+    if (!aufWippe) bodenSchatten(f.x + 3, o + h + 1, w * .55, 4, .35);
     if (f.voll) {
       const t = ease.feder(Math.min(1, f.fuell * 1.4)), back = klemm((f.fuell - .35) / .65, 0, 1);
       const hoch = 4 + t * 14;
@@ -415,7 +621,7 @@ SPIELE.schleuder = {
       x.fillStyle = '#C8453A'; x.fillRect(l + 10, o + 6, 13, 1.6);
     }
     // Ziel-Hinweis über offenen Formen
-    if (!f.voll) {
+    if (!f.voll && !aufWippe) {
       const hb = Math.sin(zeit * 4 + f.x) * 3, py = o - 22 + hb;
       x.fillStyle = radial(f.x, o - 2, 2, w * .6, [[0, `rgba(255,214,90,${.28 + Math.sin(zeit * 4) * .08})`], [1, 'rgba(255,214,90,0)']]); x.beginPath(); x.ellipse(f.x, o - 2, w * .6, 14, 0, 0, 7); x.fill();
       x.fillStyle = F.gold; x.strokeStyle = F.braun; x.lineWidth = 1.6; x.beginPath(); x.moveTo(f.x - 7, py - 5); x.lineTo(f.x + 7, py - 5); x.lineTo(f.x, py + 3); x.closePath(); x.fill(); x.stroke();
@@ -425,6 +631,16 @@ SPIELE.schleuder = {
     }
   },
   plattform(p, f){
+    if (p.art === 'wippe') {
+      // Ständer aus Edelstahl mit Fuß
+      const fx = p.cx, top = p.cy + 2;
+      bodenSchatten(fx + 3, SCHL_BODEN, 26, 4, .35);
+      x.fillStyle = linear(fx - 4, 0, fx + 4, 0, [[0, '#EEF2F5'], [.5, '#B5BEC7'], [1, '#6E7984']]); rr(fx - 3.5, top, 7, SCHL_BODEN - top - 8, 2); x.fill();
+      x.strokeStyle = '#7E8994'; x.lineWidth = 4; x.lineCap = 'round'; x.beginPath(); x.moveTo(fx, SCHL_BODEN - 16); x.lineTo(fx - 20, SCHL_BODEN - 3); x.moveTo(fx, SCHL_BODEN - 16); x.lineTo(fx + 20, SCHL_BODEN - 3); x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(fx - 1, SCHL_BODEN - 17); x.lineTo(fx - 20, SCHL_BODEN - 5); x.stroke();
+      for (const s2 of [-1, 1]) { x.fillStyle = '#2E2B29'; rr(fx + s2 * 20 - 4, SCHL_BODEN - 4, 8, 4, 2); x.fill(); }
+      return;
+    }
     if (p.art === 'wagen') {
       // Rollwagen aus Edelstahl
       for (const lx of [p.x + 4, p.x + p.w - 9]) { x.fillStyle = linear(lx, 0, lx + 5, 0, [[0, '#E6EBEF'], [1, '#7E8994']]); x.fillRect(lx, p.y + 8, 5, SCHL_BODEN - p.y - 14); }
@@ -441,6 +657,80 @@ SPIELE.schleuder = {
     } else holz(p.x, p.y, p.w, 10, 4);
     // Winkel an der Wand
     for (const ex of [p.x + 10, p.x + p.w - 18]) { x.fillStyle = 'rgba(40,30,25,.18)'; x.beginPath(); x.moveTo(ex + 2, p.y + 12); x.lineTo(ex + 10, p.y + 12); x.lineTo(ex + 2, p.y + 28); x.closePath(); x.fill(); x.fillStyle = '#4A4440'; x.beginPath(); x.moveTo(ex, p.y + 10); x.lineTo(ex + 8, p.y + 10); x.lineTo(ex, p.y + 25); x.closePath(); x.fill(); }
+  },
+  /** Wackelndes Blech mit Form darauf (gedreht um den Drehpunkt) */
+  wippe(p, zeit){
+    const f = this.lv.formen[p.form];
+    x.save(); x.translate(p.cx, p.cy); x.rotate(p.rot || 0);
+    // Blech
+    x.fillStyle = 'rgba(40,30,20,.18)'; rr(-SCHL_WIPPE_LEN / 2 + 2, 1, SCHL_WIPPE_LEN, 4, 2); x.fill();
+    x.fillStyle = linear(0, -6, 0, 0, [[0, '#F2F5F7'], [.45, '#B9C2CA'], [1, '#6E7984']]); rr(-SCHL_WIPPE_LEN / 2, -6, SCHL_WIPPE_LEN, 6, 2); x.fill();
+    for (const s2 of [-1, 1]) { x.fillStyle = linear(0, -11, 0, 0, [[0, '#E6EBEF'], [1, '#7E8994']]); rr(s2 * SCHL_WIPPE_LEN / 2 - (s2 > 0 ? 3 : 0), -11, 3, 11, 1.2); x.fill(); }
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.fillRect(-SCHL_WIPPE_LEN / 2 + 3, -5.5, SCHL_WIPPE_LEN - 6, 1);
+    x.restore();
+    // Form mit dem Blech gedreht
+    x.save(); x.translate(f.x, f.y); x.rotate(f.rot || 0); x.translate(-f.x, -f.y); this.form(f, zeit, true); x.restore();
+    // Drehpunkt
+    x.fillStyle = radial(p.cx, p.cy, 1, 7, [[0, '#FFF1B8'], [.6, '#E0A526'], [1, '#8A5A0A']], p.cx - 2, p.cy - 2); x.beginPath(); x.arc(p.cx, p.cy, 6, 0, 7); x.fill();
+    x.fillStyle = '#5A3A0A'; x.beginPath(); x.arc(p.cx, p.cy, 1.8, 0, 7); x.fill();
+    // Zielpfeil bleibt aufrecht über der Form
+    if (!f.voll) { const hb = Math.sin(zeit * 4 + f.x) * 3, py = f.y - 24 + hb; x.fillStyle = F.gold; x.strokeStyle = F.braun; x.lineWidth = 1.6; x.beginPath(); x.moveTo(f.x - 7, py - 5); x.lineTo(f.x + 7, py - 5); x.lineTo(f.x, py + 3); x.closePath(); x.fill(); x.stroke(); }
+  },
+  /** Ventilator: Seite (an der Wand) oder Boden-Gebläse, Rotor dreht nach Stärke */
+  luefter(l, zeit){
+    l.dreh = (l.dreh || 0) + (l.s || 0) * .55 + .01;
+    const an = (l.s || 0) > .5;
+    if (l.art === 'boden') {
+      const bx = l.x - 34, by = SCHL_BODEN - 24;
+      bodenSchatten(l.x + 3, SCHL_BODEN, 38, 5, .4);
+      x.fillStyle = linear(0, by, 0, by + 24, [[0, '#E9EDF0'], [.5, '#A7B1BA'], [1, '#6E7984']]); rr(bx, by, 68, 22, 5); x.fill();
+      x.save(); rr(bx + 6, by + 3, 56, 10, 3); x.clip(); x.fillStyle = '#2A2F35'; x.fillRect(bx, by, 68, 16);
+      for (let i = 0; i < 4; i++) { const a = l.dreh + i * Math.PI / 2, w2 = Math.cos(a) * 24; x.fillStyle = 'rgba(160,170,180,.85)'; x.beginPath(); x.ellipse(l.x + w2 * .5, by + 8, Math.abs(w2) * .5 + 1.5, 4, 0, 0, 7); x.fill(); }
+      x.restore();
+      x.strokeStyle = 'rgba(230,236,240,.95)'; x.lineWidth = 1.4; for (let k = 0; k < 9; k++) { x.beginPath(); x.moveTo(bx + 8 + k * 6.5, by + 3); x.lineTo(bx + 8 + k * 6.5, by + 13); x.stroke(); }
+      x.fillStyle = an ? '#5BD46A' : '#B4433A'; x.beginPath(); x.arc(bx + 60, by + 17.5, 2.2, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.6)'; x.fillRect(bx + 4, by + 1, 60, 1.2);
+      return;
+    }
+    const d = l.dir, cx = l.x, cy = l.y;
+    // Halter an der Wand
+    x.fillStyle = '#5E5650'; rr(cx - d * 16 - 5, cy - 9, 10, 18, 3); x.fill();
+    x.strokeStyle = '#7E8994'; x.lineWidth = 4; x.beginPath(); x.moveTo(cx - d * 14, cy); x.lineTo(cx - d * 6, cy); x.stroke();
+    // Motor
+    x.fillStyle = linear(0, cy - 10, 0, cy + 10, [[0, '#F0F3F6'], [1, '#7E8994']]); rr(cx - d * 8 - 6, cy - 9, 12, 18, 5); x.fill();
+    // Rotor (von der Seite: Blätter wandern auf und ab)
+    for (let i = 0; i < 3; i++) { const a = l.dreh + i * 2.094, yy = Math.sin(a) * 19, tief = Math.cos(a); x.fillStyle = tief > 0 ? 'rgba(98,150,200,.95)' : 'rgba(70,112,155,.9)'; x.beginPath(); x.ellipse(cx + d * 1, cy + yy, 3.6, 7 + 3.5 * Math.abs(tief), 0, 0, 7); x.fill(); }
+    x.fillStyle = '#E0A526'; x.beginPath(); x.ellipse(cx + d * 2, cy, 2.6, 4.5, 0, 0, 7); x.fill();
+    if ((l.s || 0) > .4) { x.fillStyle = `rgba(200,210,220,${.25 * l.s})`; x.beginPath(); x.ellipse(cx + d, cy, 4, 24, 0, 0, 7); x.fill(); }
+    // Schutzgitter
+    x.strokeStyle = 'rgba(60,66,76,.95)'; x.lineWidth = 2.4; x.beginPath(); x.ellipse(cx, cy, 10, 28, 0, 0, 7); x.stroke();
+    x.strokeStyle = 'rgba(120,130,140,.7)'; x.lineWidth = 1; for (const k of [-4.5, 0, 4.5]) { x.beginPath(); x.ellipse(cx + k * .3, cy, Math.max(1, 9 - Math.abs(k) * 1.3), 27, 0, 0, 7); x.stroke(); }
+    x.strokeStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.ellipse(cx - 1, cy, 8, 26, 0, Math.PI * 1.1, Math.PI * 1.6); x.stroke();
+    x.fillStyle = an ? '#5BD46A' : '#B4433A'; x.beginPath(); x.arc(cx - d * 8, cy + 6, 2, 0, 7); x.fill();
+  },
+  /** Luftlinien und Mehlstaub zeigen Richtung und Stärke */
+  wind(l, zeit){
+    const s2 = l.s || 0; if (s2 < .03) return;
+    const z = schl_wind(l), hor = l.art !== 'boden';
+    x.fillStyle = hor ? linear(z.x, 0, z.x + z.w, 0, z.ax < 0 ? [[0, 'rgba(120,170,220,0)'], [1, `rgba(120,170,220,${.3 * s2})`]] : [[0, `rgba(120,170,220,${.3 * s2})`], [1, 'rgba(120,170,220,0)']])
+      : linear(0, z.y, 0, z.y + z.h, [[0, 'rgba(120,170,220,0)'], [1, `rgba(120,170,220,${.3 * s2})`]]);
+    rr(z.x, z.y, z.w, z.h, 16); x.fill();
+    const len = hor ? z.w : z.h, quer = hor ? z.h : z.w, tempo = 230 * s2 + 20;
+    x.lineCap = 'round';
+    for (let i = 0; i < 9; i++) {
+      const u = ((zeit * tempo + i * 53) % (len + 30)) - 15, q = (i + .5) / 9 * quer, wel = Math.sin(zeit * 6 + i) * 2.5, lg = 18 + (i % 3) * 7;
+      const a = s2 * Math.min(1, u / 30, (len - u) / 30 + .2) * .8; if (a <= 0) continue;
+      let x1, y1, x2, y2;
+      if (hor) { const ux = z.ax < 0 ? z.x + z.w - u : z.x + u; x1 = ux; x2 = ux + (z.ax < 0 ? lg : -lg); y1 = y2 = z.y + q + wel; }
+      else { const uy = z.y + z.h - u; y1 = uy; y2 = uy + lg; x1 = x2 = z.x + q + wel; }
+      x.strokeStyle = `rgba(60,100,150,${a * .75})`; x.lineWidth = 4; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+      x.strokeStyle = `rgba(255,255,255,${a})`; x.lineWidth = 1.8; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke();
+    }
+    for (let i = 0; i < 7; i++) {
+      const u = ((zeit * tempo * 1.3 + i * 71) % len), q = schl_zf(i + l.x) * quer + Math.sin(zeit * 4 + i * 2) * 4;
+      const px = hor ? (z.ax < 0 ? z.x + z.w - u : z.x + u) : z.x + q, py = hor ? z.y + q : z.y + z.h - u;
+      x.globalAlpha = s2 * .9; x.fillStyle = '#FFFDF6'; x.beginPath(); x.arc(px, py, 1.8, 0, 7); x.fill(); x.strokeStyle = 'rgba(140,110,70,.35)'; x.lineWidth = .8; x.stroke(); x.globalAlpha = 1;
+    }
   },
   hindernis(o){
     if (o.art === 'stikken') {
@@ -510,9 +800,13 @@ SPIELE.schleuder = {
     const ein = ease.aus(this.einflug ?? 1), dy = (1 - ein) * -36;
     x.save(); x.globalAlpha = ein; x.translate(0, dy);
     for (const o of this.lv.hindernisse) this.hindernis(o);
+    for (const l of this.lv.luefter || []) this.luefter(l, zeit);
     for (const p of this.lv.plattformen) this.plattform(p);
-    for (const f of this.lv.formen) this.form(f, zeit);
+    for (const f of this.lv.formen) if (!f.wippe) this.form(f, zeit);
+    for (const p of this.lv.plattformen) if (p.art === 'wippe') this.wippe(p, zeit);
+    for (const l of this.lv.luefter || []) this.wind(l, zeit);
     x.restore();
+    if (this.gold) this.form(this.gold, zeit);
     // Schüssel mit den übrigen Kugeln
     const bx = 34, by = SCHL_BODEN;
     bodenSchatten(bx + 3, by, 30, 5, .35);
@@ -561,6 +855,11 @@ SPIELE.schleuder = {
     if (this.zustand === 'spiel' && this.einflug < 1 && this.level > 0) {
       const a = Math.sin(this.einflug * Math.PI);
       x.globalAlpha = a; x.fillStyle = 'rgba(43,23,10,.7)'; rr(120, 90, 120, 40, 20); x.fill(); text(`Level ${this.level}`, 180, 110, { gr: 20, farbe: '#FFE08A', schrift: 'Fraunces', schat: false }); x.globalAlpha = 1;
+    }
+    if (this.hinweisNeu && this.zustand === 'spiel') {
+      const h2 = this.hinweisNeu, a = Math.min(1, h2.z / .4, (3.4 - h2.z) / .3);
+      x.globalAlpha = klemm(a, 0, 1); x.font = '800 13.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = Math.min(330, x.measureText(h2.t).width + 30);
+      x.fillStyle = 'rgba(43,23,10,.78)'; rr(180 - w / 2, 136, w, 30, 15); x.fill(); text(h2.t, 180, 151.5, { gr: 13.5, farbe: '#FFF1C2', schat: false }); x.globalAlpha = 1;
     }
     if (this.zustand === 'fertig') {
       const t = this.uhr, sk = t < .45 ? ease.feder(t / .45) : 1;

@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 267;
+const APP_VERSION: number = 268;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -20,7 +20,7 @@ import { gelesenAm, gelesenBestaetigen, offeneLobPunkte, lobPunkteGutschreiben, 
 import { LobKarte } from './screens/LobKarte';
 import { IdeenSeite, KundenstimmenSeite, GeburtstagSeite, GeburtstagsKarte } from './screens/RueckmeldeSeiten';
 import { alleIdeen } from './hilfen/rueckmeldungen';
-import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen, steckbriefSchicken } from './hilfen/nachrichten';
+import { ungelesen as einzelUngelesen, neueAntworten, nachrichtGelesen, steckbriefSchicken, herausforderungSchicken } from './hilfen/nachrichten';
 import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSeite';
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
@@ -58,7 +58,7 @@ const StatistikView = lazy(() => import('./ui/statistik').then((m) => ({ default
 const EinarbeitungSeite = lazy(() => import('./screens/EinarbeitungSeite').then((m) => ({ default: m.EinarbeitungSeite })));
 import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
 import { AdventView, AdventDone } from './games/Advent';
-import { rekordMerken } from './hilfen/abschalten';
+import { rekordMerken, goldGutschreiben, aufgabeMerken, GOLD_SACHEN } from './hilfen/abschalten';
 import { ADVENT_PUNKTE, ADVENT_FINALE, adventBelohnung, belohnungGutschreiben, finaleGutschreiben, type AdventBelohnung } from './hilfen/advent';
 import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
 import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
@@ -482,6 +482,9 @@ export default function App() {
   const [thekePruefung, setThekePruefung] = useState(false); // Version 255: Prüfungsgespräch direkt starten (aus der Ausbildung)
   const [sucheAuf, setSucheAuf] = useState(false); // Version 251: Suche überall
   const [hilfeThema, setHilfeThema] = useState<string | undefined>(undefined);
+  // Version 268: Herausforderung annehmen → Zum Abschalten mit dem Spiel öffnen
+  const [abschaltenWunsch, setAbschaltenWunsch] = useState<{ key: string; n: number } | null>(null);
+  const zeigeAbschalten = (key: string) => { try { sessionStorage.setItem('lt_abschalten', key); } catch { /* egal */ } setAbschaltenWunsch((w) => ({ key, n: (w?.n || 0) + 1 })); setActiveTab('abschalten'); };
   const zeigeSteckbrief = (name: string) => { setSpickArea('produkt'); setSpickView(undefined); setSteckbriefZiel((z) => ({ name, n: (z?.n || 0) + 1 })); setActiveTab('flashcards'); };
 
   // Größere Schrift (A+), wird pro Gerät gemerkt
@@ -2802,7 +2805,11 @@ export default function App() {
         {activeTab === 'telefon' && <TelefonBestellungView onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'saetze' && <ThekenSaetzeSeite onBack={() => setActiveTab('nachschlagen')} />}
         {activeTab === 'rechnen' && <RechenTrainerView onSaveScore={saveScoreToLeaderboard} />}
-        {activeTab === 'abschalten' && <AbschaltenSeite progress={cloudData.progress || {}} userKey={userKeyLower} fragen={questions} onBack={() => setActiveTab('spielen')} onRekord={(key, punkte) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); rekordMerken(pr, key, punkte); return curr; }); }} />}
+        {activeTab === 'abschalten' && <AbschaltenSeite progress={cloudData.progress || {}} userKey={userKeyLower} fragen={questions} onBack={() => setActiveTab('spielen')} onRekord={(key, punkte) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); rekordMerken(pr, key, punkte); return curr; }); }} wunsch={abschaltenWunsch} aktionen={{
+          onGold: (key) => { if (!username || isAdmin) return; const k = username.toLowerCase(); const neu = !(Array.isArray(cloudData.progress?.[k]?._shopOwned) && cloudData.progress[k]._shopOwned.includes(GOLD_SACHEN[key]?.id)); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); goldGutschreiben(pr, key); return curr; }); if (neu && GOLD_SACHEN[key]) window.setTimeout(() => setToast(`${GOLD_SACHEN[key].ding} gefangen! Neu für Teigi: ${GOLD_SACHEN[key].sache}. Anziehen im Laden unter „Teigi“.`), 900); },
+          onAufgabe: (tag, id) => { if (!username || isAdmin) return; const k = username.toLowerCase(); mutateCloudData((curr) => { const pr = curr.progress[k] || (curr.progress[k] = { _displayName: username }); aufgabeMerken(pr, tag, id); return curr; }); window.setTimeout(() => setToast('Tagesaufgabe geschafft! Sie zählt für deine Sticker im Stickerheft.'), 700); },
+          onHerausfordern: (an, text, key, punkte) => { if (!username || isAdmin) return; mutateCloudData(herausforderungSchicken(username.toLowerCase(), username, an, text, key, punkte)); const namen = Object.values(an); setToast(`Herausforderung an ${namen.length === 1 ? namen[0] : `${namen.length} Kollegen`} geschickt.`); },
+        }} />}
         {activeTab === 'ofen' && <OfenKetteView images={productImages} scores={cloudData.scores || []} userKey={userKeyLower} onSaveScore={saveScoreToLeaderboard} />}
         {activeTab === 'preisduell' && <PreisDuellView images={spielBilder} best={Number(myStats.priceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(n) => recordStatBest('priceBest', n)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
         {activeTab === 'schneiden' && <SchneideProfiView images={spielBilder} best={Number(myStats.sliceBest) || 0} onSaveScore={saveScoreToLeaderboard} onFinished={(r) => recordStatBest('sliceBest', r)} onLearn={learnFromGame} known={myKnown} onKnown={markKnown} />}
@@ -2823,7 +2830,7 @@ export default function App() {
         {activeTab === 'ansturm' && <ThekenAnsturmView images={spielBilder} onSaveScore={saveScoreToLeaderboard} onBest={(n: number) => recordStatBest('ansturmBest', n)} />}
         {activeTab === 'jahr' && yearData && <YearReviewView d={yearData} onBack={() => setActiveTab('home')} />}
         {activeTab === 'profil' && profileData && <ProfileView d={profileData} onBack={() => setActiveTab('scoreboard')} onPraise={isAdmin ? (t: string) => sendPraise(profileKey, t) : undefined} />}
-        {activeTab === 'nachrichten' && <NachrichtenSeite cloudData={cloudData} username={username} alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} />}
+        {activeTab === 'nachrichten' && <NachrichtenSeite cloudData={cloudData} username={username} alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={setToast} onSteckbrief={zeigeSteckbrief} onSpiel={zeigeAbschalten} />}
         {activeTab === 'ideen' && <IdeenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} />}
         {activeTab === 'kundenstimmen' && <KundenstimmenSeite cloudData={cloudData} username={username} mutateCloudData={mutateCloudData} setToast={setToast} produkte={Array.from(new Set(SHOP_PRODUCTS.map((p: any) => String(p.name)))).sort()} />}
         {activeTab === 'monat' && <MeinMonat username={username} scores={cloudData.scores || []} tage={myDays} snap={myProg._monatSnap} gemeistertJetzt={masteredNow}
@@ -3051,7 +3058,7 @@ export default function App() {
         onSeite={(t: string) => { setSucheAuf(false); setActiveTab(t); }}
         onHilfe={(t: string) => { setSucheAuf(false); setHilfeThema(t); setActiveTab('hilfe'); }} />}
       {einzelNeu.length > 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && activeTab !== 'nachrichten' && (
-        <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} onSteckbrief={zeigeSteckbrief} />
+        <EinzelNachrichtPopup key={einzelNeu[0].von + einzelNeu[0].id} n={einzelNeu[0]} onFertig={einzelFertig} onSteckbrief={zeigeSteckbrief} onSpiel={zeigeAbschalten} />
       )}
       {geschenkNeu.length > 0 && einzelNeu.length === 0 && !lobDue && !losPrize && !needRole && !introDue && !showIntro && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && !loginDue && loginOpenDay === 0 && !showWeekReview && !showLevelUp && newBadges.length === 0 && (
         <div className="lt-overlay" style={{ position: 'fixed', inset: 0, zIndex: 108, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>

@@ -13,6 +13,8 @@ addEventListener('message', (e) => {
   if (e.origin !== location.origin) return;
   const d = e.data || {};
   if (d.typ !== 'lt-abschalten-daten') return;
+  if (d.goldSchon && typeof d.goldSchon === 'object') Object.keys(d.goldSchon).forEach((k) => { if (d.goldSchon[k] && !GOLD_SCHON[k]) GOLD_SCHON[k] = true; });
+  if (typeof d.aufgabeErledigt === 'string' && d.aufgabeErledigt) AUFGABE_ERLEDIGT = d.aufgabeErledigt;
   if (Array.isArray(d.fragen) && d.fragen.length >= 5) FRAGEN = d.fragen;
   if (d.ziele && typeof d.ziele === 'object') ZIELE = d.ziele;
   if (d.medaillen && typeof d.medaillen === 'object') MEDAILLEN = d.medaillen;

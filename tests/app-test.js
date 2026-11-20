@@ -957,6 +957,68 @@ async function offlineTests() {
     ok('Abschalten: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
+  teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {
+    const C = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts', 'src/basis/laden.tsx']);
+    const A = C.hilfen_abschalten, N = C.hilfen_nachrichten, L = C.basis_laden;
+    const pr = {};
+    ok('Goldstück: erstes Mal neue Teigi-Sache, danach nur gezählt', A.goldGutschreiben(pr, 'stapler') === true && A.goldGutschreiben(pr, 'stapler') === false && pr._shopOwned.includes('tz_g_bauhelm') && pr._abGold.stapler === 2 && A.goldSchon(pr).stapler === true);
+    ok('Goldstück-Sachen: nicht im Laden, nicht in der Tüte, alle sechs da', Object.values(A.GOLD_SACHEN).every((g) => { const it = L.TIP_SHOP.find((i) => i.id === g.id); return it && it.spiel && !L.imLaden(it); }) && Array.from({ length: 300 }, () => L.tueteAuslosen([])).every((t) => t.art !== 'teil' || !t.it.spiel));
+    ok('Tagesaufgabe: nur einmal pro Tag gemerkt', A.aufgabeMerken(pr, '2026-11-20', 'lauf-koerner') && !A.aufgabeMerken(pr, '2026-11-20', 'stapler-brote') && !A.aufgabeMerken(pr, 'gestern', 'x') && A.aufgabenAnzahl(pr) === 1);
+    const cu = { progress: {} };
+    N.herausforderungSchicken('anna', 'Anna', { ben: 'Ben', anna: 'Anna', admin: 'x' }, A.herausforderungText('stapler', 1240), 'stapler', 1240, 5)(cu);
+    const m = cu.progress.anna._nachrichten.m5;
+    ok('Herausforderung: Nachricht mit Spiel und Punkten, nur an Kollegen', m && Object.keys(m.an).join() === 'ben' && m.ab.k === 'stapler' && m.ab.p === 1240 && /1\.240 Punkte bei „Brot-Stapler“/.test(m.t), JSON.stringify(m));
+    const d = await device({ user: 'Anna', backup: JSON.parse(JSON.stringify(SAMPLE)), viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Spielen"]:visible').first()); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    await click(bereich.locator('button', { hasText: 'Brot-Stapler' }).first()); await settle(d.page, 800);
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let los = 0;
+    for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
+    ok('Startkarte zeigt die Tagesaufgabe', /Tagesaufgabe/i.test(await rahmen.locator('.ueber .aufgabe').innerText().catch(() => '')));
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    await fr.evaluate(() => { SAISON_TEST = 'advent'; SAISON.art = null; AUFGABE_TEST = 'stapler-brote'; zeigeStart(); });
+    await rahmen.locator('.ueber .los').click(); await sleep(500);
+    await fr.evaluate(() => statPlus('brote', 15));
+    let txt = '';
+    for (let w = 0; w < 50 && !/Tagesaufgabe geschafft/.test(txt); w++) { txt = await d.page.locator('body').innerText().catch(() => ''); if (!/Tagesaufgabe geschafft/.test(txt)) await sleep(100); }
+    ok('Tagesaufgabe geschafft: Meldung in der App', /Tagesaufgabe geschafft/.test(txt));
+    await fr.evaluate(() => goldGefangen(180, 200));
+    for (let w = 0; w < 50 && !/Neu für Teigi: Bauhelm/.test(txt); w++) { txt = await d.page.locator('body').innerText().catch(() => ''); if (!/Neu für Teigi: Bauhelm/.test(txt)) await sleep(100); }
+    ok('Goldlaib gefangen: Meldung „Neu für Teigi: Bauhelm“', /Neu für Teigi: Bauhelm/.test(txt));
+    await fr.evaluate(() => ende(321, 'Test'));
+    const fordern = rahmen.locator('.ueber .fordern');
+    for (let w = 0; w < 40 && !(await fordern.count()); w++) await sleep(100);
+    const endText = await rahmen.locator('.ueber').innerText().catch(() => '');
+    ok('Endkarte: Goldstück-Zeile und Knopf „Kollegen herausfordern“', (await fordern.count()) === 1 && /Goldlaib gefunden/i.test(endText), endText.slice(0, 200));
+    await fordern.click();
+    const dlg = d.page.locator('.lt-fordern');
+    for (let w = 0; w < 40 && !(await dlg.count()); w++) await sleep(100);
+    await click(dlg.locator('.lt-fordern-wer button', { hasText: 'Ben' }));
+    await click(dlg.locator('.lt-fordern-los'));
+    txt = '';
+    for (let w = 0; w < 40 && !/Herausforderung an Ben geschickt/.test(txt); w++) { txt = await d.page.locator('body').innerText().catch(() => ''); if (!/Herausforderung an Ben/.test(txt)) await sleep(100); }
+    ok('Herausforderung an Ben geschickt', /Herausforderung an Ben geschickt/.test(txt));
+    ok('Zum Abschalten 268: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+    // Ben bekommt die Herausforderung als Pop-up und kann sie annehmen
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.progress.anna._nachrichten = { m1: { an: { ben: 'Ben' }, t: 'Schlag meine 321 Punkte bei „Teig-Schleuder“!', ts: Date.now() - 1000, ab: { k: 'schleuder', p: 321 } } };
+    const b = await device({ user: 'Ben', backup: probe, viewport: { width: 390, height: 844 } });
+    const ann = b.page.locator('.lt-einzel-popup .lt-ab-annehmen');
+    for (let w = 0; w < 60 && !(await ann.count()); w++) await sleep(100);
+    ok('Ben: Pop-up mit „Herausforderung annehmen“', (await ann.count()) === 1);
+    await click(ann);
+    const rb = b.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let ue = '';
+    for (let w = 0; w < 80 && !/Teig-Schleuder/.test(ue); w++) { ue = await rb.locator('.ueber').innerText().catch(() => ''); if (!/Teig-Schleuder/.test(ue)) await sleep(100); }
+    ok('Ben: Herausforderung öffnet die Teig-Schleuder', /Teig-Schleuder/.test(ue), ue.slice(0, 80));
+    ok('Herausforderung annehmen: keine Fehler', b.errors.length === 0, b.errors[0]);
+    await b.ctx.close();
+  }]);
   // Version 265: Adventskalender mit Tüte, Geschenk (nur hier) und 100 Punkten, alle 24 = Goldener Stern
   teile.push(['Version 265: Adventskalender-Belohnungen', async () => {
     const C = kompiliere(['src/hilfen/advent.ts', 'src/basis/laden.tsx']);

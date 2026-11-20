@@ -35,12 +35,12 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .pille{display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 8px;border-radius:999px;background:linear-gradient(180deg,rgba(255,252,244,.94),rgba(255,243,220,.9));color:#2B170A;font:800 14px/1 var(--text);font-variant-numeric:tabular-nums;box-shadow:0 4px 10px -4px rgba(31,20,12,.45),inset 0 1px 0 #fff;white-space:nowrap}
 .pille i{display:inline-flex;width:17px;height:17px}.pille i svg{width:100%;height:100%}
 .pille i.herz{width:15px;height:15px;margin-right:-2px}
-.ueber{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(120% 80% at 50% 30%,rgba(43,23,10,.35),rgba(20,10,4,.78));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:einblenden .3s ease}
-.ueber .karte{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 18px 18px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#FFF1D6);color:#2B170A;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 #fff;animation:hoch .45s cubic-bezier(.2,1.4,.4,1)}
+.ueber{position:absolute;inset:0;z-index:4;display:flex;align-items:safe center;justify-content:center;padding:14px;overflow-y:auto;background:radial-gradient(120% 80% at 50% 30%,rgba(43,23,10,.35),rgba(20,10,4,.78));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:einblenden .3s ease}
+.ueber .karte{width:100%;max-width:300px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 16px 16px;margin:auto 0;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#FFF1D6);color:#2B170A;text-align:center;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 1px 0 #fff;animation:hoch .45s cubic-bezier(.2,1.4,.4,1)}
 .ueber .marke{font-size:11.5px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#8A6A3A;background:#FFF0C2;padding:4px 10px;border-radius:999px}
 .ueber .marke.gold{background:linear-gradient(90deg,#FFC72C,#FFE58A,#FFC72C);color:#4B2A14;animation:glanz 1.6s ease-in-out infinite}
 .ueber h2{margin:0;font-family:var(--display);font-size:30px;line-height:1.05}
-.ueber p{margin:0;font-size:14.5px;color:#6B5640;line-height:1.45}
+.ueber p{margin:0;font-size:13.5px;color:#6B5640;line-height:1.45}
 .ueber .zahl{font-family:var(--display);font-size:54px;line-height:1;font-weight:800;color:#4B2A14;font-variant-numeric:tabular-nums}
 .ueber .rekord{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#8A6A3A}.ueber .rekord svg{width:16px;height:16px}
 .ueber .los{margin-top:4px;min-height:54px;min-width:200px;border:none;border-radius:16px;padding:0 24px;font:800 18px var(--text);cursor:pointer;color:#2B170A;background:linear-gradient(180deg,#FFD95A,#F2B400);box-shadow:0 6px 0 #B98200,0 12px 22px -8px rgba(185,130,0,.8);transition:transform .1s,box-shadow .1s}

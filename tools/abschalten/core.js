@@ -217,7 +217,7 @@ function schleife(t){
   if (laeuft && !frageOffen && !pausiert) { spiel.tick(dt); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
   if (!frageOffen && !pausiert) fxTick(dt);
   x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
-  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore();
+  spiel.malen(t / 1000); saisonMalen(t / 1000, frageOffen || pausiert ? 0 : dt); fxMalen(); zielMalen(); x.restore();
   pauseKnopf.hidden = !laeuft || frageOffen || pausiert;
   requestAnimationFrame(schleife);
 }
@@ -240,7 +240,7 @@ pauseKnopf.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hid
 feld.appendChild(pauseKnopf);
 const pauseStil = document.createElement('style');
 pauseStil.textContent = '.pause-knopf{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;width:36px;height:36px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;background:rgba(43,23,10,.55);color:#FFE9B0;cursor:pointer;box-shadow:0 4px 10px -4px rgba(0,0,0,.5)}.pause-knopf:active{transform:translateX(-50%) scale(.92)}'
-  + '.schalter{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;border:2px solid #EADBC0;background:#FFFFFF;cursor:pointer;text-align:left;font:700 14px var(--text);color:#2B170A}.schalter .spur{flex:0 0 42px;height:24px;border-radius:999px;background:#D9CBB2;position:relative;transition:background .2s}.schalter .spur::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.schalter[aria-pressed="true"] .spur{background:#2F9A47}.schalter[aria-pressed="true"] .spur::after{left:21px}.schalter small{display:block;font-weight:600;font-size:12px;color:#8A6A3A}'
+  + '.schalter{display:flex;align-items:center;gap:10px;width:100%;padding:5px 12px;border-radius:12px;border:2px solid #EADBC0;background:#FFFFFF;cursor:pointer;text-align:left;font:700 14px var(--text);color:#2B170A}.schalter .spur{flex:0 0 42px;height:24px;border-radius:999px;background:#D9CBB2;position:relative;transition:background .2s}.schalter .spur::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.schalter[aria-pressed="true"] .spur{background:#2F9A47}.schalter[aria-pressed="true"] .spur::after{left:21px}.schalter small{display:block;font-weight:600;font-size:12px;color:#8A6A3A}'
   + '.medaillen{display:flex;gap:10px;justify-content:center;align-items:flex-end}.medaillen span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;color:#8A6A3A}.medaillen span.weg{opacity:.35;filter:grayscale(1)}'
   + '.ueber .zeile{font-size:13.5px;font-weight:700;color:#8A6A3A}';
 document.head.appendChild(pauseStil);
@@ -262,12 +262,13 @@ function zeigeStart(){
   runde++; laeuft = false; pausiert = false; ueber.hidden = false; ueber.className = 'ueber start';
   const r = rekordLesen(spiel.key);
   const ziel = naechstesZiel(r);
-  ueber.innerHTML = `<div class="karte"><span class="marke">Zum Abschalten</span><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${medaillenHtml(spiel.key, r)}${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}${ziel ? `<span class="zeile">Nächstes Ziel: ${ziel.name} mit ${ziel.punkte.toLocaleString('de-DE')}</span>` : ''}<button class="schalter" type="button" aria-pressed="${GEMUETLICH}"><span class="spur"></span><span>Gemütlich spielen<small>Langsamer, ohne Zeitdruck. Zählt nicht für den Rekord.</small></span></button><button class="los">Los geht's</button></div>`;
+  ueber.innerHTML = `<div class="karte"><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${medaillenHtml(spiel.key, r)}${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}${ziel ? `<span class="zeile">Nächstes Ziel: ${ziel.name} mit ${ziel.punkte.toLocaleString('de-DE')}</span>` : ''}${aufgabeHtml()}<button class="schalter" type="button" aria-pressed="${GEMUETLICH}"><span class="spur"></span><span>Gemütlich spielen<small>Zählt nicht für den Rekord.</small></span></button><button class="los">Los geht's</button></div>`;
   const sch = ueber.querySelector('.schalter');
   sch.addEventListener('click', () => { GEMUETLICH = !GEMUETLICH; sch.setAttribute('aria-pressed', String(GEMUETLICH)); try { localStorage.setItem('lt_abschalten_gemuetlich', GEMUETLICH ? '1' : '0'); } catch {} });
   ueber.querySelector('.los').addEventListener('click', starten);
+  aufgabeKnopf();
 }
-function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; spiel.start(); laeuft = true; startZeit = performance.now(); }
+function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; startZeit = performance.now(); }
 function ende(punkte, zeile){
   laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80);
   const alt = rekordLesen(spiel.key);
@@ -276,13 +277,16 @@ function ende(punkte, zeile){
   const medAlt = medailleFuer(spiel.key, alt), medNeu = rundeGemuetlich ? 0 : medailleFuer(spiel.key, punkte);
   const m = medaillenVon(spiel.key), naechste = m ? m.find((g) => g > Math.max(alt, punkte)) : null;
   const meineRunde = runde, meinSpiel = spiel;
+  if (neu && spiel.geistDaten) geistSchreiben(spiel.key, spiel.geistDaten());
+  const goldZeile = goldEndZeile();
   setTimeout(() => {
     if (meineRunde !== runde || meinSpiel !== spiel) return; // inzwischen neu gestartet oder anderes Spiel gewählt
     ueber.hidden = false; ueber.className = 'ueber ende';
     const medZeile = medNeu > medAlt ? `<span class="marke gold" style="display:inline-flex;align-items:center;gap:6px">${medailleSvg(medNeu, 20)}${MEDAILLE_NAME[medNeu]} geschafft!</span>` : '';
     const nochZeile = !rundeGemuetlich && naechste ? `<span class="zeile">Noch ${(naechste - Math.max(alt, punkte)).toLocaleString('de-DE')} bis ${MEDAILLE_NAME[m.indexOf(naechste) + 1]}</span>` : '';
-    ueber.innerHTML = `<div class="karte">${rundeGemuetlich ? '<span class="marke">Gemütliche Runde</span>' : neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}${medZeile}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p>${rundeGemuetlich ? '<span class="zeile">Gemütlich zählt nicht für den Rekord.</span>' : `<span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span>`}${nochZeile}<button class="los">Nochmal</button></div>`;
+    ueber.innerHTML = `<div class="karte">${rundeGemuetlich ? '<span class="marke">Gemütliche Runde</span>' : neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}${medZeile}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p>${rundeGemuetlich ? '<span class="zeile">Gemütlich zählt nicht für den Rekord.</span>' : `<span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span>`}${nochZeile}${goldZeile}<button class="los">Nochmal</button>${!rundeGemuetlich && punkte > 0 && imRahmen ? '<button class="fordern" type="button">Kollegen herausfordern</button>' : ''}</div>`;
     ueber.querySelector('.los').addEventListener('click', starten);
+    ueber.querySelector('.fordern')?.addEventListener('click', () => nachAussen({ typ: 'lt-abschalten-herausfordern', key: meinSpiel.key, punkte }));
     if (neu || medNeu > medAlt) { brumm(60); for (let i = 0; i < 4; i++) setTimeout(() => teilchen(zufall(60, 300), zufall(80, 200), { n: 26, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], tempo: 260, form: 'stern', groesse: [3, 6], leben: [.8, 1.4] }), i * 180); }
   }, 450);
 }
@@ -295,3 +299,195 @@ c.addEventListener('pointermove', (e) => { if (!zeiger || !laeuft) return; spiel
 const loslassen = (e) => { if (!zeiger) return; const p = pos(e); const s = zeiger; zeiger = null; if (laeuft) spiel.hoch?.(p, s); };
 c.addEventListener('pointerup', loslassen); c.addEventListener('pointercancel', loslassen);
 addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && spiel.taste) { if ([' ', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.key)) e.preventDefault(); spiel.taste(e.key); } });
+
+// ── Version 268: Saison-Deko, Goldstücke, Tagesaufgabe, Geister-Lauf, Kollegen herausfordern ──
+const imRahmen = (() => { try { return parent !== window; } catch { return true; } })();
+function nachAussen(d){ try { if (imRahmen) parent.postMessage(d, location.origin); } catch {} }
+
+// Saison-Deko: kommt von selbst nach Datum. Liegt über dem Spiel, aber nur leicht (stört nicht beim Spielen).
+// Ein Spiel kann sie ausschalten (spiel.saisonAus = true) oder eigenes Wetter melden (spiel.eigenesWetter() → kein Schnee).
+let SAISON_TEST = null;
+function osterSonntag(j){ const a = j % 19, b = Math.floor(j / 100), cc = j % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(cc / 4), k = cc % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), ta = ((h + l - 7 * m + 114) % 31) + 1; return new Date(j, mo - 1, ta); }
+function saisonHeute(d = new Date()){
+  const mo = d.getMonth() + 1, ta = d.getDate(), tag = new Date(d.getFullYear(), d.getMonth(), ta);
+  const os = osterSonntag(d.getFullYear()), weiber = new Date(os); weiber.setDate(os.getDate() - 52); const veilchen = new Date(os); veilchen.setDate(os.getDate() - 47);
+  if ((mo === 11 && ta === 11) || (tag >= weiber && tag <= veilchen)) return 'karneval';
+  if (mo === 12 && ta <= 24) return 'advent';
+  if ((mo === 12 && ta > 24) || (mo === 1 && ta <= 6)) return 'weihnacht';
+  if (mo <= 2) return 'winter';
+  if (mo <= 5) return 'fruehling';
+  if (mo <= 8) return 'sommer';
+  return 'herbst';
+}
+const SAISON_NAME = { advent: 'Adventszeit', weihnacht: 'Weihnachtszeit', winter: 'Winter', karneval: 'Karneval', fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst' };
+const SAISON = { art: null, teile: [], fuer: null };
+const LICHT_FARBEN = ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#FF9AD0'];
+const lichtSprite = {};
+function lichtGlanz(f){
+  if (lichtSprite[f]) return lichtSprite[f];
+  const k = document.createElement('canvas'); k.width = k.height = 64; const g = k.getContext('2d');
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, f + 'CC'); r.addColorStop(.35, f + '55'); r.addColorStop(1, f + '00');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return (lichtSprite[f] = k);
+}
+function saisonTeil(art, oben){
+  const t = { x: zufall(0, W), y: oben ? zufall(-H, 0) : zufall(0, H), ph: zufall(0, 7), rot: zufall(0, 6), vr: zufall(-2, 2) };
+  if (art === 'schnee') Object.assign(t, { r: zufall(1.2, 3.4), vy: zufall(18, 42), a: zufall(.5, .9) });
+  if (art === 'konfetti') Object.assign(t, { r: zufall(3, 5.5), vy: zufall(40, 75), f: ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#C77DFF', '#FF9AD0'][ganz(0, 5)], vr: zufall(-6, 6) });
+  if (art === 'bluete') Object.assign(t, { r: zufall(3.5, 6), vy: zufall(22, 40), f: ['#FFD3E2', '#FFFFFF', '#FFB8D0'][ganz(0, 2)] });
+  if (art === 'blatt') Object.assign(t, { r: zufall(5, 8), vy: zufall(26, 46), f: ['#E07B22', '#C9461E', '#D9A126', '#9A5A1E'][ganz(0, 3)] });
+  if (art === 'funkel') Object.assign(t, { r: zufall(1, 2.4), vy: zufall(-6, 6), y: zufall(20, H * .55) });
+  t.art = art; return t;
+}
+function saisonVorbereiten(){
+  const art = SAISON_TEST || saisonHeute(); SAISON.art = art; SAISON.fuer = spiel && spiel.key; SAISON.teile = [];
+  const mach = (a, n) => { for (let i = 0; i < (ohneBewegung ? Math.ceil(n / 3) : n); i++) SAISON.teile.push(saisonTeil(a, false)); };
+  if (art === 'advent' || art === 'weihnacht') mach('schnee', 26);
+  if (art === 'winter') mach('schnee', 18);
+  if (art === 'karneval') mach('konfetti', 26);
+  if (art === 'fruehling') mach('bluete', 12);
+  if (art === 'herbst') mach('blatt', 10);
+  if (art === 'sommer') mach('funkel', 10);
+}
+function saisonMalen(t, dt){
+  if (!spiel || spiel.saisonAus) return;
+  if (SAISON.fuer !== spiel.key || !SAISON.art) saisonVorbereiten();
+  const art = SAISON.art, ohneSchnee = !!(spiel.eigenesWetter && spiel.eigenesWetter());
+  x.save();
+  if (art === 'sommer') {
+    // Sonne oben links: weicher Schein und langsam drehende Strahlen
+    const g = x.createRadialGradient(10, 10, 0, 10, 10, 170); g.addColorStop(0, 'rgba(255,236,150,.6)'); g.addColorStop(.45, 'rgba(255,214,90,.2)'); g.addColorStop(1, 'rgba(255,214,90,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 200, 200);
+    x.translate(10, 10); x.rotate(t * .05); x.fillStyle = 'rgba(255,236,160,.16)';
+    for (let i = 0; i < 9; i++) { x.rotate(Math.PI * 2 / 9); x.beginPath(); x.moveTo(0, 0); x.lineTo(230, -16); x.lineTo(230, 16); x.closePath(); x.fill(); }
+    x.setTransform(SKAL, 0, 0, c.height / H, 0, 0);
+  }
+  for (const p of SAISON.teile) {
+    if (p.art === 'schnee' && ohneSchnee) continue;
+    p.y += p.vy * dt; p.ph += dt; p.rot += p.vr * dt;
+    const wx = p.x + Math.sin(p.ph * (p.art === 'blatt' ? 1.3 : .9)) * (p.art === 'blatt' ? 16 : 8);
+    if (p.art !== 'funkel' && p.y > H + 10) { Object.assign(p, saisonTeil(p.art, true)); p.y = -10; }
+    if (p.art === 'schnee') { x.globalAlpha = p.a * .5; x.fillStyle = '#8FA3BE'; x.beginPath(); x.arc(wx + .5, p.y + .8, p.r + .7, 0, 7); x.fill(); x.globalAlpha = p.a; x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(wx, p.y, p.r, 0, 7); x.fill(); }
+    else if (p.art === 'konfetti') { x.globalAlpha = .85; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.scale(1, Math.abs(Math.cos(p.ph * 3)) * .8 + .2); x.fillStyle = p.f; x.fillRect(-p.r, -p.r * .55, p.r * 2, p.r * 1.1); x.restore(); }
+    else if (p.art === 'bluete' || p.art === 'blatt') {
+      x.globalAlpha = p.art === 'blatt' ? .82 : .75; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.fillStyle = p.f; x.beginPath();
+      if (p.art === 'bluete') x.ellipse(0, 0, p.r, p.r * .6, 0, 0, 7); else { x.moveTo(-p.r, 0); x.quadraticCurveTo(0, -p.r * .9, p.r, 0); x.quadraticCurveTo(0, p.r * .9, -p.r, 0); }
+      x.fill(); if (p.art === 'blatt') { x.strokeStyle = 'rgba(80,40,10,.45)'; x.lineWidth = .8; x.beginPath(); x.moveTo(-p.r, 0); x.lineTo(p.r, 0); x.stroke(); } x.restore();
+    } else if (p.art === 'funkel') { const a = (Math.sin(p.ph * 2.2) + 1) / 2; x.globalAlpha = a * .7; x.fillStyle = '#FFF6C8'; x.save(); x.translate(wx, p.y); x.rotate(Math.PI / 4); x.fillRect(-p.r * 2.4, -p.r * .35, p.r * 4.8, p.r * .7); x.fillRect(-p.r * .35, -p.r * 2.4, p.r * .7, p.r * 4.8); x.restore(); }
+  }
+  x.globalAlpha = 1;
+  if (art === 'advent' || art === 'weihnacht') {
+    // Lichterkette oben: Kabel hängt in zwei Bögen durch, Birnen leuchten abwechselnd
+    const y0 = 3, durch = 14, pkt = (px) => y0 + Math.abs(Math.sin(px / W * Math.PI * 2)) * durch;
+    x.strokeStyle = 'rgba(40,60,30,.85)'; x.lineWidth = 1.6; x.beginPath(); for (let px = 0; px <= W; px += 6) x.lineTo(px, pkt(px)); x.stroke();
+    for (let i = 0, px = 12; px < W; px += 24, i++) {
+      const f = LICHT_FARBEN[i % LICHT_FARBEN.length], py = pkt(px) + 5, an = .55 + .45 * Math.sin(t * 2.2 + i * 1.7);
+      x.globalAlpha = an; x.drawImage(lichtGlanz(f), px - 13, py - 11, 26, 26); x.globalAlpha = 1;
+      x.fillStyle = '#3B4A2E'; x.fillRect(px - 2, py - 6, 4, 3.5);
+      x.fillStyle = f; x.beginPath(); x.ellipse(px, py, 3.2, 4.6, 0, 0, 7); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.arc(px - 1, py - 1.5, 1.1, 0, 7); x.fill();
+    }
+  }
+  if (art === 'karneval') {
+    // Luftschlangen in den oberen Ecken
+    const schlange = (sx, f, dir) => { x.strokeStyle = f; x.lineWidth = 2.4; x.lineCap = 'round'; x.beginPath(); for (let i = 0; i <= 40; i++) { const u = i / 40; x.lineTo(sx + dir * (u * 60 + Math.sin(u * 14 + t * 1.5) * 7), u * 95 + Math.cos(u * 14) * 6); } x.stroke(); };
+    schlange(4, '#FF5A4E', 1); schlange(18, '#FFC72C', 1); schlange(W - 4, '#58B4FF', -1); schlange(W - 18, '#5BD46A', -1);
+  }
+  x.restore();
+}
+
+// Goldstücke: ganz selten taucht in einer Runde ein goldenes Ding auf. Wer es fängt, schaltet eine Teigi-Sache frei
+// (gibt es nicht im Laden). Das Spiel fragt goldKommt() und ruft goldErschienen() und goldGefangen(px, py).
+const GOLD = {
+  lauf: { ding: 'Goldkorn', sache: 'Stirnband' }, chaos: { ding: 'Goldbrezel', sache: 'Brezel-Haarreif' }, tour: { ding: 'Goldpaket', sache: 'Fahrermütze' },
+  schutz: { ding: 'Goldähre', sache: 'Ritterhelm' }, schleuder: { ding: 'Goldform', sache: 'Fliegerbrille' }, stapler: { ding: 'Goldlaib', sache: 'Bauhelm' },
+};
+let GOLD_SCHON = {}, GOLD_TEST = false;
+const GOLD_RUNDE = { kommt: false, da: false, gefangen: false };
+/** true: in dieser Runde soll das Goldstück noch erscheinen (das Spiel wählt den Moment, z. B. nach 20 s) */
+const goldKommt = () => GOLD_RUNDE.kommt && !GOLD_RUNDE.da;
+function goldErschienen(){ GOLD_RUNDE.da = true; const g = GOLD[spiel.key]; if (g) { schwebText(`${g.ding}! Schnell!`, W / 2, 140, '#B8860B', 21); brumm(20); } }
+function goldGefangen(px, py){
+  if (GOLD_RUNDE.gefangen) return; GOLD_RUNDE.gefangen = true;
+  const g = GOLD[spiel.key] || { ding: 'Gold', sache: '' };
+  blitz(.45, '255,230,140'); brumm(90);
+  teilchen(px, py, { n: 40, form: 'stern', farben: ['#FFC72C', '#FFF1B8', '#FFFFFF', '#E0A526'], tempo: 280, groesse: [3, 7], leben: [.8, 1.5] });
+  schwebText(GOLD_SCHON[spiel.key] ? `${g.ding} gefangen!` : `Neu für Teigi: ${g.sache}`, W / 2, 150, '#B8860B', 21);
+  nachAussen({ typ: 'lt-abschalten-gold', key: spiel.key });
+  GOLD_SCHON[spiel.key] = GOLD_SCHON[spiel.key] || 'neu';
+}
+/** Goldener Schein um ein Goldstück (das Spiel malt das Ding selbst darüber) */
+function goldGlanz(px, py, r = 20, t = 0){
+  const g = x.createRadialGradient(px, py, 0, px, py, r * 2.2); g.addColorStop(0, 'rgba(255,230,120,.75)'); g.addColorStop(.5, 'rgba(255,200,40,.28)'); g.addColorStop(1, 'rgba(255,200,40,0)');
+  x.fillStyle = g; x.beginPath(); x.arc(px, py, r * 2.2, 0, 7); x.fill();
+  x.save(); x.translate(px, py); x.rotate(t * 1.6); x.fillStyle = 'rgba(255,246,200,.55)';
+  for (let i = 0; i < 6; i++) { x.rotate(Math.PI / 3); x.beginPath(); x.moveTo(0, -2); x.lineTo(r * 2, 0); x.lineTo(0, 2); x.fill(); }
+  x.restore();
+  const a = (Math.sin(t * 5) + 1) / 2; x.globalAlpha = a; x.fillStyle = '#FFFFFF'; x.save(); x.translate(px + r * .6, py - r * .6); x.rotate(Math.PI / 4); x.fillRect(-4, -.8, 8, 1.6); x.fillRect(-.8, -4, 1.6, 8); x.restore(); x.globalAlpha = 1;
+}
+function goldEndZeile(){
+  if (!GOLD_RUNDE.gefangen) return '';
+  const g = GOLD[spiel.key]; if (!g) return '';
+  return `<span class="marke gold" style="display:inline-flex;margin-top:2px">${GOLD_SCHON[spiel.key] === 'neu' ? `${g.ding} gefunden! Neu für Teigi: ${g.sache}` : `${g.ding} gefunden!`}</span>`;
+}
+
+// Tagesaufgabe: eine pro Tag, für alle gleich. Spiele zählen mit statPlus(name) bzw. statMax(name, wert).
+let RUNDE_STAT = {};
+function statPlus(n, v = 1){ RUNDE_STAT[n] = (RUNDE_STAT[n] || 0) + v; aufgabePruefen(); }
+function statMax(n, v){ if (v > (RUNDE_STAT[n] || 0)) { RUNDE_STAT[n] = v; aufgabePruefen(); } }
+const AUFGABEN = [
+  { id: 'lauf-koerner', spiel: 'lauf', stat: 'koerner', ziel: 40, text: 'Sammle 40 Körner in einer Runde' },
+  { id: 'stapler-brote', spiel: 'stapler', stat: 'brote', ziel: 15, text: 'Staple 15 Brote in einer Runde' },
+  { id: 'tour-filialen', spiel: 'tour', stat: 'filialen', ziel: 5, text: 'Beliefere 5 Filialen in einer Runde' },
+  { id: 'chaos-verkauft', spiel: 'chaos', stat: 'verkauft', ziel: 15, text: 'Verkaufe 15 Backwaren in einer Runde' },
+  { id: 'schutz-gefangen', spiel: 'schutz', stat: 'gefangen', ziel: 25, text: 'Fange 25 Schädlinge in einer Runde' },
+  { id: 'schleuder-formen', spiel: 'schleuder', stat: 'formen', ziel: 8, text: 'Fülle 8 Backformen in einer Runde' },
+  { id: 'lauf-meter', spiel: 'lauf', stat: 'meter', ziel: 400, text: 'Lauf 400 Meter weit' },
+  { id: 'stapler-perfekt', spiel: 'stapler', stat: 'perfektFolge', ziel: 3, text: 'Setze 3 Brote perfekt hintereinander' },
+  { id: 'tour-folge', spiel: 'tour', stat: 'ohneUnfall', ziel: 3, text: 'Beliefere 3 Filialen ohne Unfall hintereinander' },
+  { id: 'chaos-tage', spiel: 'chaos', stat: 'tage', ziel: 3, text: 'Schaffe 3 Tage in der Backstube' },
+  { id: 'schutz-wellen', spiel: 'schutz', stat: 'wellen', ziel: 4, text: 'Halte 4 Wellen durch' },
+  { id: 'schleuder-sterne', spiel: 'schleuder', stat: 'sterne', ziel: 6, text: 'Hol 6 Sterne in einer Runde' },
+];
+let AUFGABE_TEST = null, AUFGABE_ERLEDIGT = '';
+const tagKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+function aufgabeHeute(d = new Date()){
+  if (AUFGABE_TEST) return AUFGABEN.find((a) => a.id === AUFGABE_TEST) || AUFGABEN[0];
+  const n = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  return AUFGABEN[(n * 5) % AUFGABEN.length];
+}
+const aufgabeErledigt = () => { try { return AUFGABE_ERLEDIGT === tagKey() || localStorage.getItem('lt_abschalten_aufgabe') === tagKey(); } catch { return AUFGABE_ERLEDIGT === tagKey(); } };
+function aufgabePruefen(){
+  if (!laeuft || rundeGemuetlich || aufgabeErledigt()) return;
+  const a = aufgabeHeute(); if (a.spiel !== spiel.key || (RUNDE_STAT[a.stat] || 0) < a.ziel) return;
+  AUFGABE_ERLEDIGT = tagKey(); try { localStorage.setItem('lt_abschalten_aufgabe', tagKey()); } catch {}
+  schwebText('Tagesaufgabe geschafft!', W / 2, 180, '#2F9A47', 22); brumm(60);
+  teilchen(W / 2, 180, { n: 30, form: 'stern', farben: ['#7DBE6E', '#FFC72C', '#FFFFFF'], tempo: 240 });
+  nachAussen({ typ: 'lt-abschalten-aufgabe', tag: tagKey(), id: a.id });
+}
+function aufgabeHtml(){
+  const a = aufgabeHeute(), sp = SPIELE[a.spiel]; if (!sp) return '';
+  const ok = aufgabeErledigt();
+  return `<div class="aufgabe${ok ? ' ok' : ''}"><span><b>${ok ? 'Tagesaufgabe geschafft' : 'Tagesaufgabe'}:</b> ${a.text}${a.spiel !== spiel.key ? ` (${sp.name})` : ''}.</span>${!ok && a.spiel !== spiel.key ? `<button type="button" class="zur-aufgabe" data-k="${a.spiel}" aria-label="Zum ${sp.name}">Hin</button>` : ''}</div>`;
+}
+function aufgabeKnopf(){
+  ueber.querySelector('.zur-aufgabe')?.addEventListener('click', (e) => {
+    const k = e.currentTarget.dataset.k;
+    if (imRahmen) nachAussen({ typ: 'lt-abschalten-wechsel', key: k }); else if (typeof waehle === 'function') waehle(k);
+  });
+}
+const aufgabeStil = document.createElement('style');
+aufgabeStil.textContent = '.aufgabe{display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px 6px 12px;border-radius:12px;background:#F3FAEF;border:1.5px solid #CFE6C6;text-align:left;font-size:12.5px;line-height:1.3;color:#2B170A}.aufgabe span{flex:1}.aufgabe b{color:#2F7A3A}.aufgabe.ok{background:#EAF6E4}.aufgabe .zur-aufgabe{flex:0 0 auto;padding:0 12px;border-radius:999px;border:none;background:#2F9A47;color:#fff;font:800 13px var(--text);cursor:pointer;min-height:32px}'
+  + '.ueber .fordern{margin-top:2px;border:2px solid #E0A526;background:#FFF8E1;color:#4B2A14;font:800 15px var(--text);border-radius:999px;min-height:44px;padding:0 18px;cursor:pointer}';
+document.head.appendChild(aufgabeStil);
+
+// Geister-Lauf: das Spiel liefert am Ende geistDaten() (klein halten), gespeichert nur bei neuem Rekord.
+function geistLesen(k){ try { const v = localStorage.getItem('lt_abschalten_geist_' + k); return v ? JSON.parse(v) : null; } catch { return null; } }
+function geistSchreiben(k, d){ try { if (d) { const s = JSON.stringify(d); if (s.length < 60000) localStorage.setItem('lt_abschalten_geist_' + k, s); } } catch {} }
+
+function rundeVorbereiten(){
+  RUNDE_STAT = {};
+  const schon = !!GOLD_SCHON[spiel.key];
+  Object.assign(GOLD_RUNDE, { kommt: GOLD_TEST || Math.random() < (schon ? .1 : .2), da: false, gefangen: false });
+}
+// Für Prüfungen: ?saison=advent&gold=1&aufgabe=stapler-brote
+try { const q = new URLSearchParams(location.search); if (q.get('saison')) SAISON_TEST = q.get('saison'); if (q.get('gold')) GOLD_TEST = true; if (q.get('aufgabe')) AUFGABE_TEST = q.get('aufgabe'); } catch {}
