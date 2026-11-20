@@ -90,7 +90,7 @@ export function HilfeView({ levels, jokers, onTour, onBack, onInstall, thema }: 
         {ort('Trinkgeld', 'Geld für den Laden: Zeichen, Farben, Joker')}
         {ort('Schatzkammer', 'dort bezahlst du mit Punkten statt mit Trinkgeld')}
         {ort('Joker', 'helfen im Quiz oder im Battle, kaufst du im Laden')}
-        {ort('Rubbellos', 'im Laden kaufen, auf der Startseite freirubbeln')}
+        {ort('Rubbellos', 'im Laden kaufen, auf der Startseite drei Felder freirubbeln: drei gleiche Bilder gewinnen')}
         {ort('Abzeichen', 'für besondere Erfolge, als Sticker in deinem Stickerheft')}
         {ort('Krone', 'für die meisten Punkte in einem Monat')}
         {ort('Glücksfrage', 'kommt nach 5 richtigen in Folge, zählt dreifach, kein Abzug')}
