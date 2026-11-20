@@ -5,15 +5,36 @@ const CH_SORTEN = [
   { n: 'Brötchen', art: 'broetchen', g0: 3.6, g1: 6.2, w: 40, h: 29, bw: 24, bh: 18 },
   { n: 'Brezel', art: 'brezel', g0: 4.6, g1: 7.6, w: 58, h: 44, bw: 34, bh: 26 },
 ];
-const CH_OFEN_Y = 202, CH_OFEN_H = 134, CH_OFEN_W = 108, CH_KISTE_Y = 346, CH_KISTE_H = 82;
-const ch_ofenX = (i) => 10 + i * 116;
+const CH_BLASE_Y = 76, CH_OFEN_Y = 202, CH_OFEN_H = 134, CH_OFEN_W = 108, CH_KISTE_Y = 346, CH_KISTE_H = 82;
+let ch_anz = 3, ch_ablN = 4;
+const ch_ofenW = () => (ch_anz === 4 ? 81 : 108);
+const ch_ofenX = (i) => (ch_anz === 4 ? 9 + i * 87 : 10 + i * 116);
+const ch_kisteX = (i) => 10 + i * 116;
 const ch_slotX = (i) => 64 + i * 116;
-const ch_ablageX = (j) => 66 + j * 76;
+const ch_ablageX = (j) => (ch_ablN === 6 ? 40 + j * 56 : 66 + j * 76);
 const ch_blaseX = (slot) => ch_slotX(slot) + (slot === 2 ? -36 : 36);
 const CH_HAUT = ['#F6D3B6', '#EDBB94', '#D69A6C', '#A86B45', '#7A4A2E', '#F3C7A2'];
 const CH_HAAR = ['#3B2416', '#6B3E1F', '#C98A3E', '#1E1A18', '#9C9C9C', '#B4502A', '#E8C36A'];
 const CH_HEMD = [['#E7714F', '#B84A2E'], ['#4F8FC9', '#2E5E8E'], ['#68A866', '#3E7A3C'], ['#C57BB8', '#8E4D84'], ['#F0B43C', '#B9811A'], ['#5BA6A0', '#337A74'], ['#8A6BD1', '#5B42A0']];
-let ch_bg = null;
+let ch_bg = null, ch_bgSchl = '';
+const CH_VERB = {
+  schnell: { n: 'Schnellerer Ofen', k: 'Turbo', z: ['Alle Öfen backen', '20 % schneller'] },
+  fenster: { n: 'Gutes Gespür', k: 'Grün', z: ['Der grüne Bereich', 'wird breiter'] },
+  geduld: { n: 'Geduldige Kunden', k: 'Geduld', z: ['Kunden warten', '25 % länger'] },
+  ofen4: { n: 'Vierter Ofen', k: '4 Öfen', z: ['Ein Ofen mehr', 'in der Backstube'] },
+  auslage: { n: 'Größere Auslage', k: 'Vitrine', z: ['6 statt 4 Plätze', 'in der Vitrine'] },
+  leben: { n: 'Extra-Herz', k: 'Herz', z: ['Ein Herz mehr,', 'gleich aufgefüllt'] },
+};
+/** Kleines Symbol je Verbesserung, Mitte bei (0, 0), etwa 40 px */
+function ch_verbIcon(k){
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  if (k === 'schnell') { x.fillStyle = linear(0, -18, 0, 18, [[0, '#FFE27A'], [.5, '#FF9A2E'], [1, '#E0452E']]); x.beginPath(); x.moveTo(0, -20); x.bezierCurveTo(14, -6, 16, 6, 10, 14); x.quadraticCurveTo(0, 22, -10, 14); x.bezierCurveTo(-16, 4, -8, -4, -4, -8); x.quadraticCurveTo(-2, 0, 2, 2); x.quadraticCurveTo(4, -10, 0, -20); x.fill(); x.fillStyle = '#FFF4C8'; x.beginPath(); x.ellipse(1, 10, 4, 6, 0, 0, 7); x.fill(); }
+  else if (k === 'fenster') { rr(-20, -6, 40, 12, 6); x.fillStyle = '#F2C66B'; x.fill(); x.fillStyle = '#3DBA5A'; rr(-12, -6, 24, 12, 3); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2; x.beginPath(); x.moveTo(-16, -12); x.lineTo(-20, -12); x.moveTo(16, -12); x.lineTo(20, -12); x.stroke(); x.fillStyle = '#FFFFFF'; x.beginPath(); x.moveTo(0, -4); x.lineTo(-6, -14); x.lineTo(6, -14); x.closePath(); x.fill(); x.strokeStyle = '#FFE08A'; x.beginPath(); x.moveTo(-10, 12); x.lineTo(-18, 12); x.moveTo(10, 12); x.lineTo(18, 12); x.stroke(); }
+  else if (k === 'geduld') { x.fillStyle = '#F6D3B6'; x.beginPath(); x.arc(0, 0, 16, 0, 7); x.fill(); x.fillStyle = '#2B170A'; x.strokeStyle = '#2B170A'; x.lineWidth = 2.2; x.beginPath(); x.arc(-6, -2, 3.5, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(6, -2, 3.5, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(0, 4, 6, .2, Math.PI - .2); x.stroke(); x.strokeStyle = '#3DAA55'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 19, -Math.PI / 2, Math.PI * 1.3); x.stroke(); }
+  else if (k === 'ofen4') { rr(-17, -18, 34, 36, 6); x.fillStyle = linear(-17, 0, 17, 0, [[0, '#8E99A4'], [.3, '#DCE3E9'], [1, '#6E7884']]); x.fill(); rr(-12, -9, 24, 16, 4); x.fillStyle = radial(0, 4, 1, 16, [[0, '#FFC060'], [1, '#B4501A']]); x.fill(); x.fillStyle = '#2A2E34'; rr(-12, -15, 24, 4, 2); x.fill(); x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(14, 14, 8, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(10, 14); x.lineTo(18, 14); x.moveTo(14, 10); x.lineTo(14, 18); x.stroke(); }
+  else if (k === 'auslage') { rr(-20, -12, 40, 24, 4); x.fillStyle = 'rgba(200,230,240,.75)'; x.fill(); x.strokeStyle = '#C08A52'; x.lineWidth = 3; x.stroke(); brot('broetchen', -9, 2, 14, 10, { schatten: false }); brot('brezel', 8, 1, 16, 12, { schatten: false }); x.fillStyle = 'rgba(255,255,255,.5)'; x.fillRect(-16, -10, 6, 20); }
+  else if (k === 'leben') { x.fillStyle = linear(0, -16, 0, 16, [[0, '#FF6B55'], [1, '#B42318']]); x.beginPath(); x.moveTo(0, 16); x.bezierCurveTo(-24, 0, -14, -20, 0, -8); x.bezierCurveTo(14, -20, 24, 0, 0, 16); x.fill(); x.fillStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.ellipse(-7, -6, 4, 2.5, -.6, 0, 7); x.fill(); }
+}
 
 /** Gebäck zeichnen, ton fließend 0 … 2 (überblendet zwischen roh, perfekt, verbrannt) */
 function ch_ware(s, cx, cy, sk, ton, schat){
@@ -59,23 +80,23 @@ function ch_statisch(){
   for (let r = 0; r < 19; r++) { const yy = 188 + r * 14; for (let k = -((r % 2) * 16); k < W; k += 32) { const z = zufallFest(r * 31 + k); x.fillStyle = `rgb(${158 + z * 30 | 0},${88 + z * 18 | 0},${58 + z * 12 | 0})`; rr(k + 1.5, yy + 1.5, 29, 11, 2.5); x.fill(); x.fillStyle = 'rgba(255,220,180,.12)'; x.fillRect(k + 3, yy + 2, 26, 2); } }
   x.fillStyle = linear(0, 186, 0, 230, [[0, 'rgba(40,15,5,.45)'], [1, 'rgba(40,15,5,0)']]); x.fillRect(0, 186, W, 44);
   // ── Öfen (Gehäuse) ──
-  for (let i = 0; i < 3; i++) ch_ofenGehaeuse(ch_ofenX(i), CH_OFEN_Y, i);
+  for (let i = 0; i < ch_anz; i++) ch_ofenGehaeuse(ch_ofenX(i), CH_OFEN_Y, i);
   // ── Werkbank und Boden ──
   x.fillStyle = linear(0, 436, 0, 480, [[0, '#D9C2A0'], [1, '#BFA27A']]); x.fillRect(0, 436, W, 44);
   x.strokeStyle = 'rgba(110,75,35,.22)'; x.lineWidth = 1; for (let k = 0; k <= W; k += 40) { x.beginPath(); x.moveTo(k, 436); x.lineTo(k + (k - 180) * .3, 480); x.stroke(); } x.beginPath(); x.moveTo(0, 456); x.lineTo(W, 456); x.stroke();
   holz(0, 424, W, 16, 3, '#C08A52', '#8A5A2C');
   x.fillStyle = 'rgba(40,20,5,.3)'; x.fillRect(0, 440, W, 4);
-  for (let i = 0; i < 3; i++) ch_kiste(ch_ofenX(i), CH_KISTE_Y, i);
+  for (let i = 0; i < 3; i++) ch_kiste(ch_kisteX(i), CH_KISTE_Y, i);
   // ── Theke (vorne über den Kunden) ──
   x.fillStyle = 'rgba(40,20,5,.25)'; x.fillRect(0, 186, W, 8);
-  x.fillStyle = linear(0, 156, 0, 186, [[0, '#F7EBD6'], [1, '#EBD7B4']]); x.fillRect(0, 156, W, 30); x.fillStyle = 'rgba(150,200,215,.22)'; x.fillRect(0, 156, W, 30); x.fillStyle = linear(0, 156, 0, 164, [[0, 'rgba(60,40,20,.25)'], [1, 'rgba(60,40,20,0)']]); x.fillRect(0, 158, W, 8); for (const j of [0, 1, 2, 3]) { x.fillStyle = 'rgba(255,255,255,.55)'; rr(ch_ablageX(j) - 26, 179, 52, 5, 2.5); x.fill(); }
+  x.fillStyle = linear(0, 156, 0, 186, [[0, '#F7EBD6'], [1, '#EBD7B4']]); x.fillRect(0, 156, W, 30); x.fillStyle = 'rgba(150,200,215,.22)'; x.fillRect(0, 156, W, 30); x.fillStyle = linear(0, 156, 0, 164, [[0, 'rgba(60,40,20,.25)'], [1, 'rgba(60,40,20,0)']]); x.fillRect(0, 158, W, 8); for (let j = 0; j < ch_ablN; j++) { x.fillStyle = 'rgba(255,255,255,.55)'; rr(ch_ablageX(j) - (ch_ablN === 6 ? 22 : 26), 179, ch_ablN === 6 ? 44 : 52, 5, 2.5); x.fill(); }
   
   holz(-4, 146, W + 8, 12, 4, '#D6A36A', '#9A6434');
   x.fillStyle = linear(0, 184, 0, 194, [[0, '#6E4423'], [1, '#4B2A14']]); x.fillRect(0, 184, W, 8);
 }
 
 function ch_ofenGehaeuse(ox, oy, i){
-  const w = CH_OFEN_W, h = CH_OFEN_H;
+  const w = ch_ofenW(), h = CH_OFEN_H;
   bodenSchatten(ox + w / 2, oy + h + 2, w * .55, 7, .45);
   rr(ox, oy, w, h, 14); x.fillStyle = linear(ox, 0, ox + w, 0, [[0, '#8E99A4'], [.18, '#DCE3E9'], [.5, '#B4BEC8'], [.85, '#8B96A1'], [1, '#6E7884']]); x.fill();
   x.strokeStyle = 'rgba(40,50,60,.55)'; x.lineWidth = 1.5; x.stroke();
@@ -93,7 +114,7 @@ function ch_ofenGehaeuse(ox, oy, i){
   rr(ox + 10, oy + 106, w - 20, 12, 6); x.fillStyle = '#2A2E34'; x.fill();
   // Glutfach
   rr(ox + 12, oy + 121, w - 24, 9, 4); x.fillStyle = '#2A1A12'; x.fill();
-  for (let k = 0; k < 8; k++) { x.fillStyle = '#3A2418'; x.fillRect(ox + 16 + k * 10, oy + 122, 4, 7); }
+  for (let k = 0; k < Math.floor((w - 28) / 10); k++) { x.fillStyle = '#3A2418'; x.fillRect(ox + 16 + k * 10, oy + 122, 4, 7); }
 }
 
 function ch_kiste(kx, ky, s){
@@ -171,7 +192,7 @@ function ch_kundeMalen(k, zeit){
 function ch_blase(k, zeit){
   if (k.zust || k.ein < .7) return;
   const geduld = 1 - k.t / k.max;
-  const dir = k.slot === 2 ? -1 : 1; let cx = ch_blaseX(k.slot), cy = 64;
+  const dir = k.slot === 2 ? -1 : 1; let cx = ch_blaseX(k.slot), cy = CH_BLASE_Y;
   if (geduld < .25) cx += Math.sin(zeit * 30) * 1.2;
   const pop = ease.feder(Math.min(1, (k.ein - .7) / .3));
   x.save(); x.translate(cx, cy); x.scale(pop, pop);
@@ -191,22 +212,26 @@ function ch_blase(k, zeit){
 }
 
 SPIELE.chaos = {
+  medaillen: [600, 1800, 4000],
   key: 'chaos', name: 'Backstuben-Chaos', kurz: 'Backen',
   anleitung: 'Tippe eine Teig-Kiste, dann einen freien Ofen. Hol die Ware raus, wenn der Zeiger im Grünen ist. Sie geht von selbst zum passenden Kunden.',
   start(){
     this.oefen = [null, null, null]; this.kunden = []; this.flug = []; this.ablage = []; this.wahl = null; this.wahlT = 0;
     this.punkte = 0; this.leben = 3; this.zeit = 0; this.naechst = 1.2; this.tag = 1; this.tagDauer = 50; this.tagZeit = 50;
     this.serviert = 0; this.tagServiert = 0; this.perfekt = 0; this.tagPerfekt = 0; this.combo = 0; this.letzte = -99;
-    this.phase = 'spiel'; this.phaseT = 0; this.banner = 1.8; this.ersteKunden = 0; this.lernSchritte = 0; this.vorbei = 0; this.rauch = 0; this.ofenWackel = [0, 0, 0]; this.kisteHuepf = [0, 0, 0];
+    this.phase = 'spiel'; this.phaseT = 0; this.banner = 1.8; this.ersteKunden = 0; this.lernSchritte = 0; this.vorbei = 0; this.rauch = 0; this.ofenWackel = [0, 0, 0, 0]; this.kisteHuepf = [0, 0, 0];
+    this.gem = !!GEMUETLICH; this.maxLeben = 3; this.verb = { schnell: 0, geduld: 0, fenster: 0, ofen4: 0, auslage: 0, leben: 0 }; this.karten = null; this.frageGestellt = false; ch_anz = 3; ch_ablN = 4;
   },
-  fenster(s){ const d = CH_SORTEN[s], extra = this.tag === 1 ? .8 : 0, eng = Math.max(.62, 1 - (this.tag - 1) * .08); const mitte = (d.g0 + d.g1) / 2, halb = (d.g1 - d.g0) / 2 * eng + extra; return [mitte - halb, mitte + halb]; },
-  ofenRect(i){ return { x: ch_ofenX(i), y: CH_OFEN_Y, w: CH_OFEN_W, h: CH_OFEN_H }; },
-  kisteRect(i){ return { x: ch_ofenX(i), y: CH_KISTE_Y, w: CH_OFEN_W, h: CH_KISTE_H + 8 }; },
+  aktuellePunkte(){ return this.punkte || 0; },
+  fenster(s){ const d = CH_SORTEN[s], extra = this.tag === 1 ? .8 : 0, eng = Math.max(.62, 1 - (this.tag - 1) * .08); const mitte = (d.g0 + d.g1) / 2, halb = ((d.g1 - d.g0) / 2 * eng + extra) * (1 + .25 * (this.verb ? this.verb.fenster : 0)); return [mitte - halb, mitte + halb]; },
+  ofenRect(i){ return { x: ch_ofenX(i), y: CH_OFEN_Y, w: ch_ofenW(), h: CH_OFEN_H }; },
+  kisteRect(i){ return { x: ch_kisteX(i), y: CH_KISTE_Y, w: CH_OFEN_W, h: CH_KISTE_H + 8 }; },
   in(p, r){ return p.x > r.x - 4 && p.x < r.x + r.w + 4 && p.y > r.y - 4 && p.y < r.y + r.h + 4; },
   runter(p){
+    if (this.phase === 'verbessern' && this.karten && this.phaseT > .5) { this.karten.forEach((k, j) => { const r = this.kartenRect(j); if (this.in(p, r)) this.waehleKarte(k); }); return; }
     if (this.phase !== 'spiel' || this.vorbei) return;
-    for (let i = 0; i < 3; i++) if (this.in(p, this.kisteRect(i))) { this.wahl = this.wahl === i ? null : i; this.wahlT = 0; this.kisteHuepf[i] = 1; mehlWolke(ch_ofenX(i) + 54, CH_KISTE_Y + 20, 5); return; }
-    for (let i = 0; i < 3; i++) if (this.in(p, this.ofenRect(i))) { this.ofenTipp(i); return; }
+    for (let i = 0; i < 3; i++) if (this.in(p, this.kisteRect(i))) { this.wahl = this.wahl === i ? null : i; this.wahlT = 0; this.kisteHuepf[i] = 1; mehlWolke(ch_kisteX(i) + 54, CH_KISTE_Y + 20, 5); return; }
+    for (let i = 0; i < ch_anz; i++) if (this.in(p, this.ofenRect(i))) { this.ofenTipp(i); return; }
   },
   ofenTipp(i){
     const o = this.oefen[i], r = this.ofenRect(i), mx = r.x + r.w / 2, my = r.y + 59;
@@ -217,29 +242,29 @@ SPIELE.chaos = {
     }
     this.oefen[i] = null;
     const [g0, g1] = o.f;
-    if (o.t < g0) { schwebText('Noch zu blass', mx, my - 10, '#B07A1A', 16); teilchen(mx, my, { n: 10, farben: ['#F3DDB0', '#E9CC97'], form: 'krume', tempo: 120 }); this.combo = 0; this.ofenWackel[i] = 1; return; }
-    if (o.t > g1) { schwebText('Verbrannt', mx, my - 10, F.rot, 17); teilchen(mx, my, { n: 12, farben: ['rgba(70,65,60,.7)', 'rgba(120,115,110,.6)'], tempo: 70, groesse: [5, 11], schwer: -60, leben: [.7, 1.3] }); this.combo = 0; wackeln(4); this.ofenWackel[i] = 1; return; }
+    if (o.t < g0) { schwebText('Noch zu blass', mx, my - 10, '#B07A1A', 16); brumm(60); teilchen(mx, my, { n: 10, farben: ['#F3DDB0', '#E9CC97'], form: 'krume', tempo: 120 }); this.combo = 0; this.ofenWackel[i] = 1; return; }
+    if (o.t > g1) { schwebText('Verbrannt', mx, my - 10, F.rot, 17); brumm(70); teilchen(mx, my, { n: 12, farben: ['rgba(70,65,60,.7)', 'rgba(120,115,110,.6)'], tempo: 70, groesse: [5, 11], schwer: -60, leben: [.7, 1.3] }); this.combo = 0; wackeln(4); this.ofenWackel[i] = 1; return; }
     const mitte = (g0 + g1) / 2, perfekt = Math.abs(o.t - mitte) < (g1 - g0) * .18;
-    if (perfekt) { this.perfekt++; this.tagPerfekt++; this.punkte += 5; schwebText('Perfekt! +5', mx, my - 18, '#C98A00', 17); teilchen(mx, my, { n: 16, form: 'stern', tempo: 150 }); }
+    if (perfekt) { brumm(25); this.perfekt++; this.tagPerfekt++; this.punkte += 5; schwebText('Perfekt! +5', mx, my - 18, '#C98A00', 17); teilchen(mx, my, { n: 16, form: 'stern', tempo: 150 }); }
     else teilchen(mx, my, { n: 8, tempo: 110 });
     this.lernSchritte = Math.max(this.lernSchritte, 2);
     this.schicken(o.s, mx, my);
   },
   schicken(s, sx, sy){
     const ziel = this.kunden.filter((k) => !k.zust && k.unter < k.n && k.s === s && k.ein >= 1).sort((a, b) => (b.t / b.max) - (a.t / a.max))[0];
-    if (ziel) { ziel.unter++; this.flug.push({ s, x0: sx, y0: sy, x1: ch_blaseX(ziel.slot), y1: 64, t: 0, d: .6, k: ziel }); return; }
-    if (this.ablage.length < 4) { const j = this.ablage.length; this.ablage.push({ s, da: false }); this.flug.push({ s, x0: sx, y0: sy, x1: ch_ablageX(j), y1: 172, t: 0, d: .5, ab: this.ablage[j] }); return; }
+    if (ziel) { ziel.unter++; this.flug.push({ s, x0: sx, y0: sy, x1: ch_blaseX(ziel.slot), y1: CH_BLASE_Y, t: 0, d: .6, k: ziel }); return; }
+    if (this.ablage.length < ch_ablN) { const j = this.ablage.length; this.ablage.push({ s, da: false }); this.flug.push({ s, x0: sx, y0: sy, x1: ch_ablageX(j), y1: 172, t: 0, d: .5, ab: this.ablage[j] }); return; }
     this.punkte += 2; schwebText('+2 verkauft', sx, sy - 20, '#7A6450', 14);
   },
   bedienen(k){
     k.zust = 'froh'; k.wegT = 0;
     const geduld = 1 - k.t / k.max;
     this.combo = this.zeit - this.letzte < 6 ? Math.min(6, this.combo + 1) : 1; this.letzte = this.zeit;
-    const p = (10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5; this.punkte += p; this.serviert++; this.tagServiert++;
+    const p = (10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5; this.punkte += p; this.serviert++; this.tagServiert++; brumm(20);
     const kx = ch_slotX(k.slot);
     schwebText('+' + p, kx, 70, F.gruen, 22);
     if (this.combo > 1) schwebText('Combo ×' + this.combo, kx, 100, '#C98A00', 16);
-    teilchen(ch_blaseX(k.slot), 64, { n: 14, farben: ['#FFC72C', '#FFF1B8', '#7DBE6E'], form: 'stern', tempo: 140 });
+    teilchen(ch_blaseX(k.slot), CH_BLASE_Y, { n: 14, farben: ['#FFC72C', '#FFF1B8', '#7DBE6E'], form: 'stern', tempo: 140 });
   },
   neuerKunde(){
     const frei = [0, 1, 2].filter((sl) => !this.kunden.some((k) => k.slot === sl));
@@ -249,70 +274,94 @@ SPIELE.chaos = {
     if (this.ersteKunden === 0) s = 1; else if (this.ersteKunden === 1) s = 2;
     this.ersteKunden++;
     const n = this.tag >= 3 && Math.random() < Math.min(.5, .2 + (this.tag - 3) * .08) ? 2 : 1;
-    const max = (this.tag === 1 ? 34 : Math.max(10, 26 - (this.tag - 2) * 2.2)) * (n > 1 ? 1.45 : 1);
+    const max = (this.tag === 1 ? 34 : Math.max(7, 26 - (this.tag - 2) * 2.1)) * (n > 1 ? 1.45 : 1) * (1 + .25 * this.verb.geduld);
     this.kunden.push({ s, t: 0, max, slot, ein: 0, seed: Math.random(), haut: ganz(0, CH_HAUT.length - 1), haarF: ganz(0, CH_HAAR.length - 1), hemd: ganz(0, CH_HEMD.length - 1), stil: ganz(0, 5), brille: Math.random() < .25, zust: null, wegT: 0, n, unter: 0, da: 0 });
   },
   tick(dt){
     this.zeit += dt; this.wahlT += dt;
-    for (let i = 0; i < 3; i++) { this.ofenWackel[i] = Math.max(0, this.ofenWackel[i] - dt * 2.5); this.kisteHuepf[i] = Math.max(0, this.kisteHuepf[i] - dt * 3); }
+    for (let i = 0; i < 4; i++) this.ofenWackel[i] = Math.max(0, this.ofenWackel[i] - dt * 2.5);
+    for (let i = 0; i < 3; i++) { this.kisteHuepf[i] = Math.max(0, this.kisteHuepf[i] - dt * 3); }
     if (this.banner > 0) this.banner -= dt;
     // Flüge
-    for (const f of this.flug) { f.t += dt / f.d; if (f.t >= 1 && !f.fertig) { f.fertig = true; if (f.k) { if (!f.k.zust) { f.k.da++; if (f.k.da >= f.k.n) this.bedienen(f.k); else { schwebText('Noch 1', ch_blaseX(f.k.slot), 92, F.braun, 14); teilchen(ch_blaseX(f.k.slot), 64, { n: 6, tempo: 80 }); } } } else if (f.ab) { f.ab.da = true; } } }
+    for (const f of this.flug) { f.t += dt / f.d; if (f.t >= 1 && !f.fertig) { f.fertig = true; if (f.k) { if (!f.k.zust) { f.k.da++; if (f.k.da >= f.k.n) this.bedienen(f.k); else { schwebText('Noch 1', ch_blaseX(f.k.slot), 108, F.braun, 14); teilchen(ch_blaseX(f.k.slot), CH_BLASE_Y, { n: 6, tempo: 80 }); } } } else if (f.ab) { f.ab.da = true; } } }
     this.flug = this.flug.filter((f) => !f.fertig);
     // Kunden
     for (const k of this.kunden) {
       k.ein = Math.min(1, k.ein + dt * 1.8);
       if (k.zust) { k.wegT += dt; continue; }
-      if (this.phase === 'spiel' && k.ein >= 1) k.t += dt;
-      if (k.t >= k.max && k.unter < k.n) { k.zust = 'sauer'; k.wegT = 0; this.leben--; this.combo = 0; wackeln(7); blitz(.25, '224,69,46'); schwebText('Zu lange gewartet', ch_slotX(k.slot), 120, F.rot, 15); }
+      if (this.phase === 'spiel' && k.ein >= 1 && !this.gem) k.t += dt;
+      if (k.t >= k.max && k.unter < k.n) { k.zust = 'sauer'; k.wegT = 0; this.leben--; brumm(80); this.combo = 0; wackeln(7); blitz(.25, '224,69,46'); schwebText('Zu lange gewartet', ch_slotX(k.slot), 120, F.rot, 15); }
     }
     this.kunden = this.kunden.filter((k) => !(k.zust && k.wegT > 1.1));
     // Auslage an wartende Kunden
     for (const k of this.kunden) if (!k.zust && k.unter < k.n && k.ein >= 1) {
       const j = this.ablage.findIndex((a) => a.da && a.s === k.s);
-      if (j >= 0) { this.ablage.splice(j, 1); k.unter++; this.flug.push({ s: k.s, x0: ch_ablageX(j), y0: 172, x1: ch_blaseX(k.slot), y1: 64, t: 0, d: .45, k }); }
+      if (j >= 0) { this.ablage.splice(j, 1); k.unter++; this.flug.push({ s: k.s, x0: ch_ablageX(j), y0: 172, x1: ch_blaseX(k.slot), y1: CH_BLASE_Y, t: 0, d: .45, k }); }
     }
     if (this.vorbei) { this.vorbei += dt; if (this.vorbei > 1.1 && laeuft) ende(this.punkte, `Bis Tag ${this.tag} gebacken und ${this.serviert} Kunden bedient.`); return; }
     if (this.phase === 'spiel') {
       // Öfen
-      for (let i = 0; i < 3; i++) { const o = this.oefen[i]; if (!o) continue; o.t += dt; o.ein = Math.min(1, o.ein + dt * 4);
+      for (let i = 0; i < ch_anz; i++) { const o = this.oefen[i]; if (!o) continue; o.t += dt * (1 + .2 * this.verb.schnell) * (this.gem && o.t > o.f[1] - .3 ? .3 : 1); o.ein = Math.min(1, o.ein + dt * 4);
         if (o.t > o.f[1]) { this.rauch -= dt; if (this.rauch <= 0) { this.rauch = .12; const r = this.ofenRect(i); teilchen(r.x + zufall(30, 78), r.y + 34, { n: 1, farben: ['rgba(80,75,70,.55)', 'rgba(130,125,120,.45)'], tempo: 18, groesse: [6, 11], schwer: -70, leben: [.9, 1.5] }); } } }
       this.tagZeit -= dt; this.naechst -= dt;
-      if (this.naechst <= 0) { this.neuerKunde(); const basis = this.tag === 1 ? 4.6 : Math.max(1.7, 5.2 - (this.tag - 2) * .45); this.naechst = zufall(basis, basis + 2.2); if (this.kunden.filter((k) => !k.zust).length === 0) this.naechst = 1; }
+      if (this.naechst <= 0) { this.neuerKunde(); const basis = this.tag === 1 ? 4.6 : Math.max(.9, 5.2 - (this.tag - 2) * .42); this.naechst = zufall(basis, basis + 2.2) * (this.gem ? 1.4 : 1); if (this.kunden.filter((k) => !k.zust).length === 0) this.naechst = 1; }
       if (this.leben <= 0) { this.vorbei = .01; return; }
       if (this.tagZeit <= 0) { this.phase = 'abschluss'; this.phaseT = 0; this.tagBonus = this.tagServiert * 5; this.punkte += this.tagBonus;
         for (const k of this.kunden) if (!k.zust) { k.zust = 'froh'; k.wegT = .4; }
-        this.oefen = [null, null, null]; this.ablage = []; this.wahl = null; }
+        this.oefen = Array(ch_anz).fill(null); this.ablage = []; this.wahl = null; }
     } else if (this.phase === 'abschluss') {
       this.phaseT += dt;
-      if (this.phaseT > 2.6 && !this.frageGestellt) { this.frageGestellt = true; frage((ok) => { if (ok) { this.punkte += 30; schwebText('+30 Bonus', W / 2, 240, F.gruen, 24); teilchen(W / 2, 240, { n: 24, form: 'stern' }); } this.naechsterTag(); }); }
+      if (this.phaseT > 2.6) { this.phase = 'verbessern'; this.phaseT = 0; this.karten = this.kartenZiehen(); if (!this.karten.length) { this.gewaehlt = 'keins'; this.gewaehltT = .7; } }
+    } else if (this.phase === 'verbessern') {
+      this.phaseT += dt;
+      if (this.gewaehlt && !this.frageGestellt) { this.gewaehltT = (this.gewaehltT || 0) + dt; if (this.gewaehltT > .7) { this.frageGestellt = true; frage((ok) => { if (ok) { this.punkte += 30; schwebText('+30 Bonus', W / 2, 240, F.gruen, 24); teilchen(W / 2, 240, { n: 24, form: 'stern' }); } this.naechsterTag(); }); } }
     }
     const sek = Math.max(0, Math.ceil(this.tagZeit));
-    setHud([{ icon: 'uhr', text: `Tag ${this.tag}  ${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}` }, { icon: 'punkte', text: this.punkte.toLocaleString('de-DE') }, herzen(Math.max(0, this.leben), 3)]);
+    setHud([{ icon: 'uhr', text: `Tag ${this.tag}  ${Math.floor(sek / 60)}:${String(sek % 60).padStart(2, '0')}` }, { icon: 'punkte', text: this.punkte.toLocaleString('de-DE') + (this.gem ? '' : `<span style="display:inline-flex;margin-left:7px">${herzen(Math.max(0, this.leben), this.maxLeben).text}</span>`) }]);
   },
-  naechsterTag(){ this.tag++; this.tagZeit = this.tagDauer; this.tagServiert = 0; this.tagPerfekt = 0; this.phase = 'spiel'; this.frageGestellt = false; this.banner = 1.8; this.naechst = 1; this.leben = Math.min(3, this.leben + 1); },
+  naechsterTag(){ this.tag++; this.tagZeit = this.tagDauer; this.tagServiert = 0; this.tagPerfekt = 0; this.phase = 'spiel'; this.frageGestellt = false; this.gewaehlt = null; this.gewaehltT = 0; this.karten = null; this.banner = 1.8; this.naechst = 1; this.leben = Math.min(this.maxLeben, this.leben + 1); },
+  kartenZiehen(){
+    const v = this.verb, moegl = [];
+    if (v.schnell < 2) moegl.push('schnell'); if (v.geduld < 2 && !this.gem) moegl.push('geduld'); if (v.fenster < 2) moegl.push('fenster');
+    if (!v.ofen4) moegl.push('ofen4'); if (!v.auslage) moegl.push('auslage'); if (this.maxLeben < 5 && !this.gem) moegl.push('leben');
+    if (this.tag === 1) { const i = moegl.indexOf('ofen4'); if (i >= 0) moegl.splice(i, 1); }
+    for (let i = moegl.length - 1; i > 0; i--) { const j = ganz(0, i); [moegl[i], moegl[j]] = [moegl[j], moegl[i]]; }
+    return moegl.slice(0, 3);
+  },
+  kartenRect(j){ const n = this.karten.length, w = 110, gap = 6, x0 = (W - (n * w + (n - 1) * gap)) / 2; return { x: x0 + j * (w + gap), y: 176, w, h: 168 }; },
+  waehleKarte(k){
+    if (this.gewaehlt) return;
+    this.gewaehlt = k; this.gewaehltT = 0; brumm(25);
+    const v = this.verb; v[k]++;
+    if (k === 'ofen4') { ch_anz = 4; this.oefen = [null, null, null, null]; }
+    if (k === 'auslage') ch_ablN = 6;
+    if (k === 'leben') { this.maxLeben++; this.leben = Math.min(this.maxLeben, this.leben + 1); }
+    const j = this.karten.indexOf(k), r = this.kartenRect(j);
+    teilchen(r.x + r.w / 2, r.y + 60, { n: 26, form: 'stern', tempo: 200 });
+  },
 
   malen(zeit){
-    if (!ch_bg || ch_bg.width !== c.width || ch_bg.height !== c.height) {
+    const schl = ch_anz + '/' + ch_ablN;
+    if (!ch_bg || ch_bg.width !== c.width || ch_bg.height !== c.height || ch_bgSchl !== schl) {
       ch_statisch();
-      if (FX.wackel === 0) { ch_bg = document.createElement('canvas'); ch_bg.width = c.width; ch_bg.height = c.height; ch_bg.getContext('2d').drawImage(c, 0, 0); }
+      if (FX.wackel === 0) { ch_bg = document.createElement('canvas'); ch_bg.width = c.width; ch_bg.height = c.height; ch_bg.getContext('2d').drawImage(c, 0, 0); ch_bgSchl = schl; }
     } else x.drawImage(ch_bg, 0, 0, W, H);
-    const kunden = this.kunden || [], oefen = this.oefen || [null, null, null];
+    const kunden = this.kunden || [], oefen = this.oefen || [null, null, null, null];
     // Kunden hinter der Theke
     x.save(); x.beginPath(); x.rect(0, 0, W, 148); x.clip();
     for (const k of kunden) ch_kundeMalen(k, zeit);
     x.restore();
     // Auslage in der Glasvitrine
-    (this.ablage || []).forEach((a, j) => { if (a.da) ch_ware(a.s, ch_ablageX(j), 172, .62, 1); });
+    (this.ablage || []).forEach((a, j) => { if (a.da) ch_ware(a.s, ch_ablageX(j), 172, ch_ablN === 6 ? .52 : .62, 1); });
     x.fillStyle = 'rgba(255,255,255,.28)'; x.beginPath(); x.moveTo(40, 158); x.lineTo(70, 158); x.lineTo(52, 184); x.lineTo(22, 184); x.fill(); x.beginPath(); x.moveTo(210, 158); x.lineTo(224, 158); x.lineTo(206, 184); x.lineTo(192, 184); x.fill();
     if (!(this.ablage || []).length) text('Auslage', 330, 172, { gr: 10, farbe: 'rgba(90,60,30,.55)', art: '800', ausr: 'right', schat: false });
     // Sprechblasen über allem
     for (const k of kunden) ch_blase(k, zeit);
     // Öfen
-    for (let i = 0; i < 3; i++) this.ofenMalen(i, oefen[i], zeit);
+    for (let i = 0; i < ch_anz; i++) this.ofenMalen(i, oefen[i], zeit);
     // Kisten (Auswahl)
     for (let i = 0; i < 3; i++) {
-      const kx = ch_ofenX(i), ky = CH_KISTE_Y, gew = this.wahl === i;
+      const kx = ch_kisteX(i), ky = CH_KISTE_Y, gew = this.wahl === i;
       const hu = this.kisteHuepf ? this.kisteHuepf[i] : 0;
       if (gew) { const pu = .5 + .5 * Math.sin(zeit * 6); x.strokeStyle = `rgba(255,199,44,${.6 + pu * .4})`; x.lineWidth = 4; rr(kx - 3, ky + 5, CH_OFEN_W + 6, CH_KISTE_H - 2, 11); x.stroke(); x.fillStyle = `rgba(255,220,120,${.12 + pu * .1})`; x.fill(); }
       text(CH_SORTEN[i].n, kx + 54, ky + 59 - hu * 3, { gr: 13, farbe: F.braun, schat: false });
@@ -324,7 +373,40 @@ SPIELE.chaos = {
     if (this.phase === 'spiel' && this.tag === 1 && this.serviert < 2 && !this.vorbei && laeuft) this.hinweis(zeit);
     // Tagesbanner
     if (this.banner > 0 && laeuft) { const a = Math.min(1, this.banner * 2), s = ease.feder(Math.min(1, (1.8 - this.banner) * 3)); x.save(); x.globalAlpha = a; x.translate(W / 2, 272); x.scale(s, s); rr(-90, -26, 180, 52, 18); x.fillStyle = linear(0, -26, 0, 26, [[0, '#5A3820'], [1, '#3A2010']]); x.fill(); x.strokeStyle = '#FFC72C'; x.lineWidth = 2; x.stroke(); text(`Tag ${this.tag || 1}`, 0, -6, { gr: 22, farbe: '#FFE08A', schrift: 'Fraunces' }); text(this.tag === 1 ? 'Die ersten Kunden kommen' : 'Mehr Kunden, weniger Geduld', 0, 14, { gr: 11, farbe: '#F5E6C8', art: '700', schat: false }); x.restore(); }
+    if (this.phase === 'spiel' && !(this.tag === 1 && this.serviert < 2)) this.verbLeiste();
+    if (this.gem && laeuft && this.phase === 'spiel') text('Gemütlich', 8, 470, { gr: 10, farbe: 'rgba(75,42,20,.6)', ausr: 'left', schat: false });
     if (this.phase === 'abschluss') this.abschlussMalen();
+    if (this.phase === 'verbessern') this.kartenMalen(zeit);
+  },
+  verbLeiste(){
+    const v = this.verb; if (!v) return;
+    const liste = []; for (const k of ['schnell', 'fenster', 'geduld', 'ofen4', 'auslage', 'leben']) if (v[k]) liste.push(k);
+    if (!liste.length) return;
+    const bw = 54, x0 = W - 6 - liste.length * (bw + 3) + 3;
+    liste.forEach((k, j) => { const bx = x0 + j * (bw + 3); rr(bx, 451, bw, 24, 12); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill(); x.save(); x.translate(bx + 12, 463); x.scale(.42, .42); ch_verbIcon(k); x.restore(); text(v[k] > 1 ? CH_VERB[k].k.slice(0, 5) + ' ×' + v[k] : CH_VERB[k].k, bx + 38, 463.5, { gr: v[k] > 1 ? 7.5 : 8.5, farbe: '#FFE08A', schat: false }); });
+  },
+  kartenMalen(zeit){
+    const a = Math.min(1, this.phaseT * 4);
+    x.fillStyle = `rgba(30,15,5,${.55 * a})`; x.fillRect(0, 0, W, H);
+    x.globalAlpha = a;
+    text('Feierabend-Bonus', W / 2, 128, { gr: 22, farbe: '#FFE08A', schrift: 'Fraunces' });
+    text('Wähle eine Verbesserung für den Rest der Runde', W / 2, 152, { gr: 11.5, farbe: '#F5E6C8', art: '700' });
+    x.globalAlpha = 1;
+    (this.karten || []).forEach((k, j) => {
+      const r = this.kartenRect(j), d = CH_VERB[k], t = klemm((this.phaseT - j * .12) * 3, 0, 1), s = ease.feder(t);
+      const gew = this.gewaehlt === k, weg = this.gewaehlt && !gew;
+      x.save(); x.translate(r.x + r.w / 2, r.y + r.h / 2 + (1 - t) * 60 - (gew ? Math.min(1, this.gewaehltT * 3) * 10 : 0)); x.scale(s * (gew ? 1.06 : 1), s * (gew ? 1.06 : 1)); x.globalAlpha = weg ? .35 : t;
+      bodenSchatten(0, r.h / 2 + 4, r.w * .5, 8, .5);
+      rr(-r.w / 2, -r.h / 2, r.w, r.h, 16); x.fillStyle = linear(0, -r.h / 2, 0, r.h / 2, [[0, '#FFFBF2'], [1, '#FFE7B8']]); x.fill();
+      x.strokeStyle = gew ? '#3DAA55' : '#E0B54A'; x.lineWidth = gew ? 4 : 2; x.stroke();
+      rr(-r.w / 2 + 8, -r.h / 2 + 8, r.w - 16, 66, 11); x.fillStyle = radial(0, -r.h / 2 + 38, 4, 50, [[0, '#6A4426'], [1, '#3A2010']]); x.fill();
+      const glanz = .5 + .5 * Math.sin(zeit * 3 + j); x.fillStyle = `rgba(255,210,100,${.15 + glanz * .15})`; x.beginPath(); x.arc(0, -r.h / 2 + 41, 26, 0, 7); x.fill();
+      x.save(); x.translate(0, -r.h / 2 + 41); ch_verbIcon(k); x.restore();
+      const teile = d.n.split(' '); if (teile.length > 1) { text(teile[0], 0, -r.h / 2 + 88, { gr: 13, farbe: F.braun, schat: false }); text(teile.slice(1).join(' '), 0, -r.h / 2 + 104, { gr: 13, farbe: F.braun, schat: false }); } else text(d.n, 0, -r.h / 2 + 96, { gr: 13, farbe: F.braun, schat: false });
+      d.z.forEach((z, i) => text(z, 0, -r.h / 2 + 126 + i * 15, { gr: 10.5, farbe: '#6B5640', art: '700', schat: false }));
+      if (gew) { x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(r.w / 2 - 12, -r.h / 2 + 12, 11, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(r.w / 2 - 17, -r.h / 2 + 12); x.lineTo(r.w / 2 - 13, -r.h / 2 + 16); x.lineTo(r.w / 2 - 7, -r.h / 2 + 8); x.stroke(); }
+      x.restore();
+    });
   },
   ofenMalen(i, o, zeit){
     const r = this.ofenRect(i), wa = this.ofenWackel ? this.ofenWackel[i] : 0;
@@ -341,7 +423,7 @@ SPIELE.chaos = {
       const d = CH_SORTEN[o.s];
       const ton = o.t < o.f[0] ? Math.pow(o.t / o.f[0], 1.3) * .92 : o.t <= o.f[1] ? 1 : 1 + Math.min(1, (o.t - o.f[1]) / 2.5);
       const auf = 1 + .08 * Math.min(1, o.t / o.f[0]);
-      ch_ware(o.s, fx + fw / 2, fy + fh - 14 - d.h * .25, .82 * auf * (.6 + .4 * ease.feder(o.ein)), ton);
+      ch_ware(o.s, fx + fw / 2, fy + fh - 14 - d.h * .25 * r.w / 108, .82 * (r.w / 108) * auf * (.6 + .4 * ease.feder(o.ein)), ton);
       x.fillStyle = `rgba(255,140,40,${.12 + Math.sin(zeit * 5) * .05})`; x.fillRect(fx, fy, fw, fh);
     } else { x.fillStyle = radial(fx + fw / 2, fy + fh, 2, fw * .7, [[0, 'rgba(120,50,20,.55)'], [1, 'rgba(20,12,8,0)']]); x.fillRect(fx, fy, fw, fh); }
     // Glas-Spiegelung
@@ -361,7 +443,7 @@ SPIELE.chaos = {
       const nx = gx + gw * Math.min(1, o.t / max);
       x.fillStyle = '#FFFFFF'; x.strokeStyle = '#2B170A'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(nx, gy + 2); x.lineTo(nx - 5, gy - 6); x.lineTo(nx + 5, gy - 6); x.closePath(); x.fill(); x.stroke(); rr(nx - 1.5, gy - 1, 3, gh + 2, 1.5); x.fill(); x.stroke();
       // Glut
-      for (let k = 0; k < 8; k++) { const g = .5 + .5 * Math.sin(zeit * 6 + k * 1.7 + i); x.fillStyle = `rgba(255,${110 + g * 80 | 0},30,${.55 + g * .45})`; x.fillRect(r.x + 16 + k * 10, r.y + 123, 4, 5); }
+      for (let k = 0; k < Math.floor((r.w - 28) / 10); k++) { const g = .5 + .5 * Math.sin(zeit * 6 + k * 1.7 + i); x.fillStyle = `rgba(255,${110 + g * 80 | 0},30,${.55 + g * .45})`; x.fillRect(r.x + 16 + k * 10, r.y + 123, 4, 5); }
     } else { text('frei', r.x + r.w / 2, gy + 4, { gr: 9.5, farbe: 'rgba(255,255,255,.55)', art: '800', schat: false }); }
     // Fertig-Ring und Schild
     if (status === 'gut') {
@@ -378,10 +460,10 @@ SPIELE.chaos = {
     const offen = this.kunden.find((k) => !k.zust && k.unter < k.n && k.ein >= 1);
     const fertigI = (this.oefen || []).findIndex((o) => o && o.t >= o.f[0] && o.t <= o.f[1]);
     const backtI = (this.oefen || []).findIndex((o) => o);
-    if (fertigI >= 0) { t = 'Jetzt den Ofen antippen'; ziel = [ch_ofenX(fertigI) + 54, CH_OFEN_Y + 60]; }
-    else if (this.wahl !== null) { const fr = this.oefen.findIndex((o) => !o); t = 'Jetzt einen freien Ofen antippen'; if (fr >= 0) ziel = [ch_ofenX(fr) + 54, CH_OFEN_Y + 60]; }
+    if (fertigI >= 0) { t = 'Jetzt den Ofen antippen'; ziel = [ch_ofenX(fertigI) + ch_ofenW() / 2, CH_OFEN_Y + 60]; }
+    else if (this.wahl !== null) { const fr = this.oefen.findIndex((o) => !o); t = 'Jetzt einen freien Ofen antippen'; if (fr >= 0) ziel = [ch_ofenX(fr) + ch_ofenW() / 2, CH_OFEN_Y + 60]; }
     else if (backtI >= 0 && !offen) { t = 'Warte, bis der Zeiger im Grünen ist'; }
-    else if (offen) { const im = this.oefen.some((o) => o && o.s === offen.s); if (im) t = 'Warte, bis der Zeiger im Grünen ist'; else { t = `Tippe die Kiste „${CH_SORTEN[offen.s].n}“`; ziel = [ch_ofenX(offen.s) + 54, CH_KISTE_Y + 30]; } }
+    else if (offen) { const im = this.oefen.some((o) => o && o.s === offen.s); if (im) t = 'Warte, bis der Zeiger im Grünen ist'; else { t = `Tippe die Kiste „${CH_SORTEN[offen.s].n}“`; ziel = [ch_kisteX(offen.s) + 54, CH_KISTE_Y + 30]; } }
     else t = this.serviert || this.flug.length ? 'Super! Die Ware geht zum Kunden' : 'Gleich kommt der erste Kunde';
     x.save(); x.font = '800 13px "Plus Jakarta Sans", system-ui, sans-serif'; const bw = x.measureText(t).width + 30; x.restore();
     rr(W / 2 - bw / 2, 446, bw, 28, 14); x.fillStyle = 'rgba(43,23,10,.86)'; x.fill(); x.strokeStyle = 'rgba(255,199,44,.8)'; x.lineWidth = 1.5; x.stroke();
@@ -401,15 +483,16 @@ SPIELE.chaos = {
     x.restore();
   },
   testZug(){
+    if (this.phase === 'verbessern' && this.karten && !this.gewaehlt && this.phaseT > .6) { const r = this.kartenRect(0); return { x: r.x + r.w / 2, y: r.y + r.h / 2, warte: 400 }; }
     if (this.phase !== 'spiel' || this.vorbei) return { x: 180, y: 470, warte: 400 };
-    for (let i = 0; i < 3; i++) { const o = this.oefen[i]; if (o && (o.t > o.f[1] || o.t >= o.f[0] + (o.f[1] - o.f[0]) * .35)) return { x: ch_ofenX(i) + 54, y: CH_OFEN_Y + 60, warte: 200 }; }
+    for (let i = 0; i < ch_anz; i++) { const o = this.oefen[i]; if (o && (o.t > o.f[1] || o.t >= o.f[0] + (o.f[1] - o.f[0]) * .35)) return { x: ch_ofenX(i) + ch_ofenW() / 2, y: CH_OFEN_Y + 60, warte: 200 }; }
     const brauch = [0, 0, 0];
     for (const k of this.kunden) if (!k.zust) brauch[k.s] += k.n - k.unter;
     for (const o of this.oefen) if (o) brauch[o.s]--;
     for (const a of this.ablage) brauch[a.s]--;
     const frei = this.oefen.findIndex((o) => !o);
     const s = brauch.findIndex((b) => b > 0);
-    if (frei >= 0 && s >= 0) { if (this.wahl === s) return { x: ch_ofenX(frei) + 54, y: CH_OFEN_Y + 60, warte: 250 }; return { x: ch_ofenX(s) + 54, y: CH_KISTE_Y + 40, warte: 250 }; }
+    if (frei >= 0 && s >= 0) { if (this.wahl === s) return { x: ch_ofenX(frei) + ch_ofenW() / 2, y: CH_OFEN_Y + 60, warte: 250 }; return { x: ch_kisteX(s) + 54, y: CH_KISTE_Y + 40, warte: 250 }; }
     return { x: 180, y: 470, warte: 300 };
   },
 };

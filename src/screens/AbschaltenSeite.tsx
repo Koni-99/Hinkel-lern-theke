@@ -5,18 +5,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { TH, cardStyle, PageHead } from '../ui/basis';
 import { dc } from '../daten/data';
-import { ABSCHALTEN_SPIELE, abschaltenSpiel, bestenliste, leichteFragen, meineRekorde } from '../hilfen/abschalten';
+import { ABSCHALTEN_SPIELE, abschaltenSpiel, bestenliste, leichteFragen, meineRekorde, kollegenZiele, MEDAILLEN, medaille, MEDAILLE_NAMEN } from '../hilfen/abschalten';
+import { TeigiGlas } from '../basis/laden';
 
 const BASIS = (import.meta as any).env?.BASE_URL || '/';
 const MERKER = 'lt_abschalten';
 
 export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack }: { progress: Record<string, any>; userKey: string; fragen: any[]; onRekord: (key: string, punkte: number) => void; onBack: () => void }) {
+  const teigiRef = useRef<HTMLDivElement | null>(null);
+  const meinPr = progress?.[userKey] || {};
   const [key, setKey] = useState<string>(() => { try { const k = sessionStorage.getItem(MERKER) || ''; return abschaltenSpiel(k) ? k : 'lauf'; } catch { return 'lauf'; } });
   const rahmen = useRef<HTMLIFrameElement | null>(null);
   const meine = meineRekorde(progress?.[userKey]);
   const frageListe = useMemo(() => leichteFragen(fragen), [fragen.length]);
-  const daten = useRef({ fragen: frageListe, rekord: meine });
-  daten.current = { fragen: frageListe, rekord: meine };
+  // Version 267: Kollegen-Rekorde als Ziel, Medaillen-Grenzen und Teigi mit Hut und Glas aus dem Laden
+  const teigiSvg = () => { const svg = teigiRef.current?.querySelector('svg'); if (!svg) return ''; const k = svg.cloneNode(true) as SVGElement; k.removeAttribute('class'); k.removeAttribute('style'); k.setAttribute('width', '292'); k.setAttribute('height', '292'); k.setAttribute('viewBox', '-13 -22 146 146'); k.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); return k.outerHTML; };
+  const daten = useRef<any>({});
+  daten.current = { fragen: frageListe, rekord: meine, ziele: kollegenZiele(progress, userKey), medaillen: MEDAILLEN };
   const onRekordRef = useRef(onRekord); onRekordRef.current = onRekord;
   useEffect(() => { try { sessionStorage.setItem(MERKER, key); } catch { /* egal */ } }, [key]);
   // Spielfeld ganz ins Bild holen (am Handy liegt sonst die Leiste unten darüber)
@@ -27,7 +32,7 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack }:
     const nachricht = (e: MessageEvent) => {
       if (e.origin !== location.origin || e.source !== rahmen.current?.contentWindow) return;
       const d: any = e.data || {};
-      if (d.typ === 'lt-abschalten-bereit') rahmen.current?.contentWindow?.postMessage({ typ: 'lt-abschalten-daten', ...daten.current }, location.origin);
+      if (d.typ === 'lt-abschalten-bereit') rahmen.current?.contentWindow?.postMessage({ typ: 'lt-abschalten-daten', ...daten.current, teigiSvg: teigiSvg(), teigiSkala: 146 / 116 }, location.origin);
       if (d.typ === 'lt-abschalten-ende' && abschaltenSpiel(d.key)) onRekordRef.current(d.key, Number(d.punkte) || 0);
     };
     addEventListener('message', nachricht);
@@ -49,11 +54,13 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack }:
           return (
             <button key={s.key} role="tab" aria-selected={an} onClick={() => setKey(s.key)} style={{ minHeight: '62px', padding: '8px 6px', borderRadius: '16px', border: 'none', cursor: 'pointer', textAlign: 'center', fontWeight: 800, fontSize: '14px', lineHeight: 1.15, background: an ? 'linear-gradient(160deg,#5A3820,#3A2010)' : dc('#FFFFFF'), color: an ? '#FFE9B0' : TH.ink, boxShadow: '0 1px 2px rgba(31,20,12,.06), 0 8px 18px -12px rgba(31,20,12,.45)' }}>
               {s.titel}
-              {meine[s.key] ? <span style={{ display: 'block', marginTop: '3px', fontSize: '11.5px', fontWeight: 700, color: an ? '#FFD86B' : '#A8740A' }}>Rekord {meine[s.key].toLocaleString('de-DE')}</span> : null}
+              {meine[s.key] ? <span style={{ display: 'block', marginTop: '3px', fontSize: '11.5px', fontWeight: 700, color: an ? '#FFD86B' : '#A8740A' }}>{medaille(s.key, meine[s.key]) ? `${MEDAILLE_NAMEN[medaille(s.key, meine[s.key])]} · ` : ''}Rekord {meine[s.key].toLocaleString('de-DE')}</span> : null}
             </button>
           );
         })}
       </div>
+      {/* unsichtbar: daraus wird Teigis Grafik mit Hut und Glas für die Spiele */}
+      <div ref={teigiRef} aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden', pointerEvents: 'none' }}><TeigiGlas stufe={2} laune="froh" size={72} hut={meinPr._teigiHut || null} glas={meinPr._teigiGlas || null} /></div>
       <iframe ref={rahmen} className="lt-abschalten-rahmen" title={spiel.titel} src={`${BASIS}abschalten/index.html#${key}`} />
       <section className="lt-abschalten-liste" style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={{ fontFamily: TH.serif, fontSize: '24px', lineHeight: 1.15 }}>Bestenliste: {spiel.titel}</div>

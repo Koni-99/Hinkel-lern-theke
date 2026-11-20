@@ -107,7 +107,7 @@ function teigi(px, py, groesse = 64, { squash = 1, rot = 0, blink = false } = {}
   bodenSchatten(px, py, groesse * .32 * squash, groesse * .07, .35);
   if (!teigiBereit) { rr(px - groesse * .25, py - groesse * .8, groesse * .5, groesse * .7, 10); x.fillStyle = '#FFF3DC'; x.fill(); return; }
   x.save(); x.translate(px, py); x.rotate(rot); x.scale(squash, 1 / squash);
-  x.drawImage(TEIGI_BILD, -groesse / 2, -groesse * .93, groesse, groesse);
+  const G = groesse * TEIGI_SKALA; x.drawImage(TEIGI_BILD, -G / 2, -G * .93, G, G);
   x.restore();
 }
 
@@ -169,15 +169,56 @@ function frage(cb){
 const rekordLesen = (k) => { try { return Number(localStorage.getItem('lt_abschalten_' + k)) || 0; } catch { return 0; } };
 const rekordSetzen = (k, v) => { try { if (v > rekordLesen(k)) localStorage.setItem('lt_abschalten_' + k, String(v)); } catch {} };
 
+// ── Version 267: Vibration, Gemütlich-Modus, Pause, Kollegen-Ziel, Medaillen, Teigi mit Laden-Sachen ──
+/** Kurz brummen (Handy), z. B. brumm(25) bei Treffer, brumm(70) bei Fehler. Nicht bei „weniger Bewegung“. */
+function brumm(ms = 30){ try { if (!ohneBewegung && navigator.vibrate) navigator.vibrate(ms); } catch {} }
+/** Gemütlich: langsamer, ohne Zeitdruck (jedes Spiel liest GEMUETLICH in start/tick). Zählt nicht für Rekord und Bestenliste. */
+let GEMUETLICH = (() => { try { return localStorage.getItem('lt_abschalten_gemuetlich') === '1'; } catch { return false; } })();
+let rundeGemuetlich = false;
+/** Kollegen-Rekorde je Spiel (von der App): { lauf: [{ name, punkte }], … }, ohne mich selbst */
+let ZIELE = {};
+/** Medaillen-Grenzen je Spiel [Bronze, Silber, Gold]; Standard aus dem Spiel (spiel.medaillen), die App darf überschreiben */
+let MEDAILLEN = {};
+const medaillenVon = (k) => MEDAILLEN[k] || (SPIELE[k] && SPIELE[k].medaillen) || null;
+const MEDAILLE_NAME = ['', 'Bronze', 'Silber', 'Gold'], MEDAILLE_FARBE = ['', '#C07A3A', '#9FA7B2', '#E0A526'];
+function medailleFuer(k, p){ const m = medaillenVon(k); if (!m) return 0; return p >= m[2] ? 3 : p >= m[1] ? 2 : p >= m[0] ? 1 : 0; }
+function medailleSvg(stufe, gr = 26){ const f = MEDAILLE_FARBE[stufe] || '#CBBBA4'; return `<svg viewBox="0 0 24 24" width="${gr}" height="${gr}" aria-hidden="true"><path d="M7 2h4l1 5-3 1zM17 2h-4l-1 5 3 1z" fill="#C0392B"/><circle cx="12" cy="15" r="7" fill="${f}" stroke="rgba(60,30,5,.45)" stroke-width="1.2"/><circle cx="12" cy="15" r="4.6" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="1.2"/><path d="M10 12.5a3 3 0 0 1 4-0.4" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".8"/></svg>`; }
+/** Teigi mit Hut und Glas aus dem Laden (die App schickt die passende Grafik) */
+/** skala: wie viel größer die Bildfläche der neuen Grafik ist (Platz für Hüte über dem Deckel) */
+let TEIGI_SKALA = 1;
+function setTeigiSvg(svg, skala = 1){ if (!svg || typeof svg !== 'string' || svg.length > 60000) return; const b = new Image(); b.onload = () => { TEIGI_BILD.src = b.src; TEIGI_SKALA = klemm(Number(skala) || 1, 1, 1.6); }; b.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); }
+
+// Kollegen-Ziel während der Runde: nächster Kollege über mir, beim Überholen eine Meldung
+let zielStand = { schon: new Set() };
+function naechstesZiel(p){ return (ZIELE[spiel.key] || []).filter((z) => z.punkte > p).sort((a, b) => a.punkte - b.punkte)[0] || null; }
+function zielTick(p){
+  if (rundeGemuetlich) return;
+  for (const z of ZIELE[spiel.key] || []) {
+    if (p > z.punkte && z.punkte > 0 && !zielStand.schon.has(z.name) && zielStand.start <= z.punkte) {
+      zielStand.schon.add(z.name);
+      schwebText(`${z.name} überholt!`, W / 2, 110, '#B8860B', 20); teilchen(W / 2, 110, { n: 22, form: 'stern', farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'], tempo: 200 }); brumm(40);
+    }
+  }
+}
+function zielMalen(){
+  if (!laeuft || rundeGemuetlich || !spiel.aktuellePunkte) return;
+  const z = naechstesZiel(spiel.aktuellePunkte()); if (!z) return;
+  const t = `Nächstes Ziel: ${z.name} ${z.punkte.toLocaleString('de-DE')}`;
+  x.font = '700 11.5px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(t).width + 18;
+  x.globalAlpha = .9; rr(W / 2 - w / 2, 46, w, 20, 10); x.fillStyle = 'rgba(43,23,10,.62)'; x.fill(); x.globalAlpha = 1;
+  x.fillStyle = '#FFE9B0'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(t, W / 2, 56.5);
+}
+
 // ── Schleife, Start, Ende ──
 const SPIELE = {};
-let spiel = null, laeuft = false, last = 0, startZeit = 0, runde = 0;
+let spiel = null, laeuft = false, last = 0, startZeit = 0, runde = 0, pausiert = false;
 function schleife(t){
   const dt = Math.min(0.04, (t - last) / 1000 || 0); last = t;
-  if (laeuft && !frageOffen) spiel.tick(dt);
-  if (!frageOffen) fxTick(dt);
-  x.save(); if (FX.wackel > 0) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
-  spiel.malen(t / 1000); fxMalen(); x.restore();
+  if (laeuft && !frageOffen && !pausiert) { spiel.tick(dt); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
+  if (!frageOffen && !pausiert) fxTick(dt);
+  x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
+  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore();
+  pauseKnopf.hidden = !laeuft || frageOffen || pausiert;
   requestAnimationFrame(schleife);
 }
 const ICON = {
@@ -191,31 +232,66 @@ const ICON = {
 /** HUD: Liste von {icon, text} oder Text */
 function setHud(teile){ const neu = teile.map((t) => typeof t === 'string' ? `<span class="pille">${t}</span>` : `<span class="pille">${t.icon ? `<i>${ICON[t.icon] || ''}</i>` : ''}${t.text}</span>`).join(''); if (hud.innerHTML !== neu) hud.innerHTML = neu; }
 function herzen(n, max = 3){ return { text: Array.from({ length: max }, (_, i) => `<i class="herz">${i < n ? ICON.herz : ICON.leer}</i>`).join('') }; }
+
+// Pause-Knopf (oben in der Mitte, unter der Anzeige)
+const pauseKnopf = document.createElement('button');
+pauseKnopf.className = 'pause-knopf'; pauseKnopf.type = 'button'; pauseKnopf.setAttribute('aria-label', 'Pause'); pauseKnopf.hidden = true;
+pauseKnopf.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg>';
+feld.appendChild(pauseKnopf);
+const pauseStil = document.createElement('style');
+pauseStil.textContent = '.pause-knopf{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;width:36px;height:36px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;background:rgba(43,23,10,.55);color:#FFE9B0;cursor:pointer;box-shadow:0 4px 10px -4px rgba(0,0,0,.5)}.pause-knopf:active{transform:translateX(-50%) scale(.92)}'
+  + '.schalter{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;border:2px solid #EADBC0;background:#FFFFFF;cursor:pointer;text-align:left;font:700 14px var(--text);color:#2B170A}.schalter .spur{flex:0 0 42px;height:24px;border-radius:999px;background:#D9CBB2;position:relative;transition:background .2s}.schalter .spur::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s}.schalter[aria-pressed="true"] .spur{background:#2F9A47}.schalter[aria-pressed="true"] .spur::after{left:21px}.schalter small{display:block;font-weight:600;font-size:12px;color:#8A6A3A}'
+  + '.medaillen{display:flex;gap:10px;justify-content:center;align-items:flex-end}.medaillen span{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:800;color:#8A6A3A}.medaillen span.weg{opacity:.35;filter:grayscale(1)}'
+  + '.ueber .zeile{font-size:13.5px;font-weight:700;color:#8A6A3A}';
+document.head.appendChild(pauseStil);
+function pausieren(){
+  if (!laeuft || pausiert || frageOffen) return;
+  pausiert = true; ueber.hidden = false; ueber.className = 'ueber start';
+  ueber.innerHTML = `<div class="karte"><span class="marke">Pause</span><h2>${spiel.name}</h2><p>Kurz durchatmen. Es geht genau da weiter, wo du aufgehört hast.</p><button class="los">Weiter</button><button class="neu" style="border:none;background:transparent;color:#8A6A3A;font:700 14px var(--text);text-decoration:underline;min-height:40px;cursor:pointer">Runde neu starten</button></div>`;
+  ueber.querySelector('.los').addEventListener('click', () => { ueber.hidden = true; pausiert = false; last = performance.now(); });
+  ueber.querySelector('.neu').addEventListener('click', () => { pausiert = false; starten(); });
+}
+pauseKnopf.addEventListener('click', pausieren);
+addEventListener('keydown', (e) => { if (e.key === 'Escape' || e.key === 'p') pausieren(); });
+
+function medaillenHtml(k, rek){
+  const m = medaillenVon(k); if (!m) return '';
+  return '<div class="medaillen">' + [1, 2, 3].map((i) => `<span class="${rek >= m[i - 1] ? '' : 'weg'}">${medailleSvg(i, 26)}${m[i - 1].toLocaleString('de-DE')}</span>`).join('') + '</div>';
+}
 function zeigeStart(){
-  runde++; laeuft = false; ueber.hidden = false; ueber.className = 'ueber start';
+  runde++; laeuft = false; pausiert = false; ueber.hidden = false; ueber.className = 'ueber start';
   const r = rekordLesen(spiel.key);
-  ueber.innerHTML = `<div class="karte"><span class="marke">Zum Abschalten</span><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}<button class="los">Los geht's</button></div>`;
+  const ziel = naechstesZiel(r);
+  ueber.innerHTML = `<div class="karte"><span class="marke">Zum Abschalten</span><h2>${spiel.name}</h2><p>${spiel.anleitung}</p>${medaillenHtml(spiel.key, r)}${r ? `<span class="rekord">${ICON.punkte}Dein Rekord: ${r.toLocaleString('de-DE')}</span>` : ''}${ziel ? `<span class="zeile">Nächstes Ziel: ${ziel.name} mit ${ziel.punkte.toLocaleString('de-DE')}</span>` : ''}<button class="schalter" type="button" aria-pressed="${GEMUETLICH}"><span class="spur"></span><span>Gemütlich spielen<small>Langsamer, ohne Zeitdruck. Zählt nicht für den Rekord.</small></span></button><button class="los">Los geht's</button></div>`;
+  const sch = ueber.querySelector('.schalter');
+  sch.addEventListener('click', () => { GEMUETLICH = !GEMUETLICH; sch.setAttribute('aria-pressed', String(GEMUETLICH)); try { localStorage.setItem('lt_abschalten_gemuetlich', GEMUETLICH ? '1' : '0'); } catch {} });
   ueber.querySelector('.los').addEventListener('click', starten);
 }
-function starten(){ runde++; ueber.hidden = true; FX.teile = []; FX.texte = []; spiel.start(); laeuft = true; startZeit = performance.now(); }
+function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; spiel.start(); laeuft = true; startZeit = performance.now(); }
 function ende(punkte, zeile){
-  laeuft = false;
-  const alt = rekordLesen(spiel.key); rekordSetzen(spiel.key, punkte); const neu = punkte > alt && punkte > 0;
+  laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80);
+  const alt = rekordLesen(spiel.key);
+  if (!rundeGemuetlich) rekordSetzen(spiel.key, punkte);
+  const neu = !rundeGemuetlich && punkte > alt && punkte > 0;
+  const medAlt = medailleFuer(spiel.key, alt), medNeu = rundeGemuetlich ? 0 : medailleFuer(spiel.key, punkte);
+  const m = medaillenVon(spiel.key), naechste = m ? m.find((g) => g > Math.max(alt, punkte)) : null;
   const meineRunde = runde, meinSpiel = spiel;
   setTimeout(() => {
     if (meineRunde !== runde || meinSpiel !== spiel) return; // inzwischen neu gestartet oder anderes Spiel gewählt
     ueber.hidden = false; ueber.className = 'ueber ende';
-    ueber.innerHTML = `<div class="karte">${neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p><span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span><button class="los">Nochmal</button></div>`;
+    const medZeile = medNeu > medAlt ? `<span class="marke gold" style="display:inline-flex;align-items:center;gap:6px">${medailleSvg(medNeu, 20)}${MEDAILLE_NAME[medNeu]} geschafft!</span>` : '';
+    const nochZeile = !rundeGemuetlich && naechste ? `<span class="zeile">Noch ${(naechste - Math.max(alt, punkte)).toLocaleString('de-DE')} bis ${MEDAILLE_NAME[m.indexOf(naechste) + 1]}</span>` : '';
+    ueber.innerHTML = `<div class="karte">${rundeGemuetlich ? '<span class="marke">Gemütliche Runde</span>' : neu ? '<span class="marke gold">Neuer Rekord</span>' : '<span class="marke">Runde vorbei</span>'}${medZeile}<div class="zahl">${punkte.toLocaleString('de-DE')}</div><p>${zeile}</p>${rundeGemuetlich ? '<span class="zeile">Gemütlich zählt nicht für den Rekord.</span>' : `<span class="rekord">${ICON.punkte}Rekord: ${Math.max(alt, punkte).toLocaleString('de-DE')}</span>`}${nochZeile}<button class="los">Nochmal</button></div>`;
     ueber.querySelector('.los').addEventListener('click', starten);
-    if (neu) { for (let i = 0; i < 4; i++) setTimeout(() => teilchen(zufall(60, 300), zufall(80, 200), { n: 26, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], tempo: 260, form: 'stern', groesse: [3, 6], leben: [.8, 1.4] }), i * 180); }
+    if (neu || medNeu > medAlt) { brumm(60); for (let i = 0; i < 4; i++) setTimeout(() => teilchen(zufall(60, 300), zufall(80, 200), { n: 26, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], tempo: 260, form: 'stern', groesse: [3, 6], leben: [.8, 1.4] }), i * 180); }
   }, 450);
 }
 
 // ── Eingabe ──
 let zeiger = null;
 const pos = (e) => { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
-c.addEventListener('pointerdown', (e) => { if (!laeuft || frageOffen) return; e.preventDefault(); c.setPointerCapture?.(e.pointerId); zeiger = pos(e); spiel.runter?.(zeiger); });
+c.addEventListener('pointerdown', (e) => { if (!laeuft || frageOffen || pausiert) return; e.preventDefault(); c.setPointerCapture?.(e.pointerId); zeiger = pos(e); spiel.runter?.(zeiger); });
 c.addEventListener('pointermove', (e) => { if (!zeiger || !laeuft) return; spiel.zieh?.(pos(e)); });
 const loslassen = (e) => { if (!zeiger) return; const p = pos(e); const s = zeiger; zeiger = null; if (laeuft) spiel.hoch?.(p, s); };
 c.addEventListener('pointerup', loslassen); c.addEventListener('pointercancel', loslassen);
-addEventListener('keydown', (e) => { if (laeuft && !frageOffen && spiel.taste) { if ([' ', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.key)) e.preventDefault(); spiel.taste(e.key); } });
+addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && spiel.taste) { if ([' ', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown'].includes(e.key)) e.preventDefault(); spiel.taste(e.key); } });

@@ -182,6 +182,31 @@ function tour_baumBild(){
   });
 }
 
+// ── Schnee am Rand: durchsichtige Kachel, liegt über der Straße, wenn es schneit ──
+function tour_schneeKachel(){
+  return tour_leinwand(360, TOUR_KACHEL, (g) => {
+    const K = TOUR_KACHEL;
+    const flocke = (px, py, r, a) => { g.fillStyle = tour_rad(g, px, py, 0, r, [[0, `rgba(255,255,255,${a})`], [.7, `rgba(246,250,255,${a * .85})`], [1, 'rgba(240,246,255,0)']]); g.beginPath(); g.arc(px, py, r, 0, 7); g.fill(); };
+    // Dächer und Höfe fast ganz weiß
+    for (const [x0, x1] of [[0, 42], [318, 360]]) {
+      g.fillStyle = 'rgba(250,252,255,.72)'; g.fillRect(x0, 0, x1 - x0, K);
+      for (let i = 0; i < 90; i++) flocke(x0 + tour_zf(i + x0) * (x1 - x0), tour_zf(i * 3 + x0) * K, 6 + tour_zf(i + 7) * 8, .5);
+      g.fillStyle = 'rgba(150,170,200,.16)'; for (let i = 0; i < 40; i++) g.fillRect(x0 + tour_zf(i + 99) * (x1 - x0), tour_zf(i + 300) * K, 1.4, 6);
+    }
+    // Gehwege fleckig, am Bordstein ein Schneewall
+    for (const [gx, gw] of [[42, 26], [292, 26]]) for (let i = 0; i < 70; i++) flocke(gx + tour_zf(i + gx) * gw, tour_zf(i * 5 + gx) * K, 5 + tour_zf(i + 11) * 7, .55);
+    for (const [bx, r] of [[70, 1], [290, -1]]) for (let yy = 0; yy < K; yy += 7) flocke(bx + r * tour_zf(yy) * 3, yy, 5 + tour_zf(yy + 5) * 3, .9);
+    // etwas Schneematsch am Fahrbahnrand
+    for (let yy = 0; yy < K; yy += 9) { flocke(79 + tour_zf(yy + 1) * 4, yy, 3 + tour_zf(yy + 2) * 3, .45); flocke(281 - tour_zf(yy + 3) * 4, yy, 3 + tour_zf(yy + 4) * 3, .45); }
+  });
+}
+function tour_baumSchneeBild(){
+  return tour_leinwand(64, 64, (g) => {
+    g.translate(32, 32);
+    for (const [a, b, r] of [[-6, -6, 10], [6, -9, 8], [-11, 2, 7], [3, 3, 9], [10, 6, 6], [-3, 12, 6]]) { g.fillStyle = tour_rad(g, a, b, 0, r, [[0, 'rgba(255,255,255,.95)'], [.75, 'rgba(240,246,255,.8)'], [1, 'rgba(240,246,255,0)']], a - 2, b - 2); g.beginPath(); g.arc(a, b, r, 0, 7); g.fill(); }
+  });
+}
+
 // ── Filiale am Straßenrand (rechts) ──
 function tour_filialeBild(){
   return tour_leinwand(110, 180, (g) => {
@@ -210,11 +235,11 @@ function tour_filialeBild(){
 }
 
 SPIELE.tour = {
-  key: 'tour', name: 'Lieferwagen-Tour', kurz: 'Fahren',
+  key: 'tour', name: 'Lieferwagen-Tour', kurz: 'Fahren', medaillen: [800, 2000, 4000],
   anleitung: 'Tippe links oder rechts neben den Wagen, um die Spur zu wechseln. Weich Autos und Baustellen aus, sammle Brot-Kisten und bring die Ware zur nächsten Filiale.',
   bilder(){
     if (this.bild) return this.bild;
-    this.bild = { strasse: tour_strasse(), wagen: tour_wagenBild(), bau: tour_bauBild(), baum: tour_baumBild(), filiale: tour_filialeBild(), autos: TOUR_AUTOFARBEN.map((f, i) => tour_autoBild(f, false)), laster: ['#ECE6DA', '#5F8FB8', '#8A9AA8'].map((f) => tour_autoBild(f, true)) };
+    this.bild = { schnee: tour_schneeKachel(), baumSchnee: tour_baumSchneeBild(), strasse: tour_strasse(), wagen: tour_wagenBild(), bau: tour_bauBild(), baum: tour_baumBild(), filiale: tour_filialeBild(), autos: TOUR_AUTOFARBEN.map((f, i) => tour_autoBild(f, false)), laster: ['#ECE6DA', '#5F8FB8', '#8A9AA8'].map((f) => tour_autoBild(f, true)) };
     if (document.fonts && !this.schriftDa) { this.schriftDa = true; document.fonts.ready.then(() => { this.bild = null; }); }
     return this.bild;
   },
@@ -223,8 +248,18 @@ SPIELE.tour = {
     this.leben = 3; this.kisten = 0; this.kombi = 0; this.filialen = 0; this.bonus = 0; this.schutz = 0; this.rutsch = 0; this.wellenUhr = 1.0;
     this.freiVorher = [0, 1, 2]; this.strecke = 3000; this.letzteFrage = 0; this.ziel = this.strecke; this.abschnittStart = 0;
     this.modus = 'fahrt'; this.szene = 0; this.aus = 0; this.zeit = 0; this.fliegen = []; this.wackelRot = 0; this.tipp = null; this.hinweis = 3.2;
+    this.gemuetlich = typeof GEMUETLICH !== 'undefined' && GEMUETLICH;
+    const mo = new Date().getMonth(); this.winter = mo >= 10 || mo <= 1;
+    this.himmel = this.stimmungZiel(0); this.niederY = 0;
   },
-  zielTempo(){ return Math.min(520, 235 + Math.min(this.fahrzeit, 50) * 3.6 + this.filialen * 18); },
+  aktuellePunkte(){ return this.punkte(); },
+  /** Tageszeit und Wetter je Abschnitt: Morgen, Tag, Tag mit Regen (Winter: Schnee), Abend, Abend mit Regen/Schnee */
+  stimmungZiel(n){
+    const i = n % 5, nass = i === 2 || i === 4;
+    return { morgen: i === 0 ? 1 : 0, dunkel: i >= 3 ? 1 : 0, regen: nass && !this.winter ? 1 : 0, schnee: nass && this.winter ? 1 : 0 };
+  },
+  stimmungName(){ const z = this.stimmungZiel(this.filialen); return z.schnee ? 'Schnee' : z.regen ? 'Regen' : z.dunkel ? 'Abend' : z.morgen ? 'Morgen' : 'Tag'; },
+  zielTempo(){ if (this.gemuetlich) return 200; return Math.min(520, 235 + Math.min(this.fahrzeit, 50) * 3.6 + this.filialen * 18); },
   wechsel(r){ if (this.modus !== 'fahrt') return; const n = klemm(this.spur + r, 0, 2); if (n !== this.spur) { this.spur = n; this.hinweis = 0; } },
   runter(p){
     const r = p.x < this.xs - 20 ? -1 : p.x > this.xs + 20 ? 1 : 0;
@@ -240,7 +275,7 @@ SPIELE.tour = {
   welle(){
     // Alle Dinge einer Welle kommen gleichzeitig am Wagen an, darum ist immer eine Spur frei und erreichbar.
     const schwer = this.fahrzeit > 7 ? Math.min(.62, .12 + (this.fahrzeit - 7) / 60 + this.filialen * .07) : 0;
-    let zu = Math.random() < schwer ? 2 : 1, frei;
+    let zu = !this.gemuetlich && Math.random() < schwer ? 2 : 1, frei;
     for (let v = 0; v < 20; v++) {
       const gesperrt = []; while (gesperrt.length < zu) { const s = ganz(0, 2); if (!gesperrt.includes(s)) gesperrt.push(s); }
       frei = [0, 1, 2].filter((s) => !gesperrt.includes(s));
@@ -255,11 +290,16 @@ SPIELE.tour = {
       if (this.fahrzeit > 5 && Math.random() < .36) neu('bau', s, 1);
       else { const lang = Math.random() < .25; neu('auto', s, lang ? 1.25 : 1.4, { lang, bild: ganz(0, lang ? 2 : TOUR_AUTOFARBEN.length - 1) }); }
     }
+    const nass = this.himmel.regen + this.himmel.schnee;
     if (Math.random() < .42) neu('kiste', frei[ganz(0, frei.length - 1)], 1);
-    else if (this.fahrzeit > 14 && Math.random() < .2) neu('pfuetze', frei[ganz(0, frei.length - 1)], 1);
+    else if ((this.fahrzeit > 14 || nass > .5) && Math.random() < .2 + nass * .28) neu('pfuetze', frei[ganz(0, frei.length - 1)], 1);
   },
   tick(dt){
-    this.zeit += dt; this.schutz -= dt; this.rutsch = Math.max(0, this.rutsch - dt); this.hinweis = Math.max(0, this.hinweis - dt);
+    this.zeit += dt; this.schutz -= dt; if (this.wetterHinweis) this.wetterHinweis.z -= dt;
+    // Tageszeit und Wetter gleiten weich zum Ziel des Abschnitts
+    const sz = this.stimmungZiel(this.modus === 'abladen' && this.szene < 1.2 ? this.filialen - 1 : this.filialen);
+    for (const k of ['morgen', 'dunkel', 'regen', 'schnee']) this.himmel[k] += klemm(sz[k] - this.himmel[k], -dt * .45, dt * .45);
+    this.niederY += (this.himmel.schnee > this.himmel.regen ? 70 : 760) * dt + this.tempo * dt * .35; this.rutsch = Math.max(0, this.rutsch - dt); this.hinweis = Math.max(0, this.hinweis - dt);
     // Tempo je nach Abschnitt
     if (this.modus === 'fahrt') {
       this.fahrzeit += dt;
@@ -267,10 +307,11 @@ SPIELE.tour = {
       if (this.rest() < 620) { this.modus = 'bremsen'; this.dinge = this.dinge.filter((d) => d.y > -30); this.spur = 2; }
     } else if (this.modus === 'bremsen') {
       this.tempo = Math.min(this.tempo, Math.sqrt(2 * 300 * Math.max(0, this.rest())) + 8);
-      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); }
+      if (this.rest() <= 0.5) { this.weg = this.ziel; this.tempo = 0; this.modus = 'abladen'; this.szene = 0; this.filialen++; this.abladen(); brumm(30); }
     } else if (this.modus === 'abladen') {
       this.szene += dt; this.tempo = 0;
       if (this.szene > 2.1) {
+        { const alt = this.stimmungName(); this.wetterHinweis = null; const neuN = (this.filialen % 5); const t = ['Guten Morgen!', 'Heller Tag', this.winter ? 'Es schneit! Vorsicht, glatt' : 'Es regnet! Vorsicht, Pfützen', 'Es wird Abend', this.winter ? 'Schnee am Abend' : 'Regen am Abend'][neuN]; if (t && neuN !== 0) this.wetterHinweis = { t, z: 2.6 }; void alt; }
         this.modus = 'fahrt'; this.strecke += 1600; this.abschnittStart = this.weg; this.ziel = this.weg + this.strecke; this.wellenUhr = 1.6; this.freiVorher = [0, 1, 2];
         if (this.zeit - this.letzteFrage > 22) { this.letzteFrage = this.zeit; frage((ok) => { if (ok) { this.bonus += 100; schwebText('+100 Bonus', 180, 250, F.gruen, 24); teilchen(180, 250, { n: 26, form: 'stern', oben: 120 }); } }); }
       }
@@ -282,7 +323,7 @@ SPIELE.tour = {
     // Wellen
     if (this.modus === 'fahrt' && this.tempo > this.zielTempo() * .5) {
       this.wellenUhr -= dt;
-      const abstand = Math.max(.5, 1.0 - this.fahrzeit * .009 - this.filialen * .04);
+      const abstand = this.gemuetlich ? 1.45 : Math.max(.5, 1.0 - this.fahrzeit * .009 - this.filialen * .04);
       if (this.wellenUhr <= 0 && this.rest() > 560 / Math.max(this.tempo, 200) * this.tempo + 700) { this.welle(); this.wellenUhr = abstand * zufall(.92, 1.12); }
     }
     // Wagen schwenkt weich in die Spur
@@ -303,13 +344,13 @@ SPIELE.tour = {
     }
     this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && d.art === 'kiste'));
     for (const f of this.fliegen) f.t += dt; this.fliegen = this.fliegen.filter((f) => f.t < 1);
-    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, { icon: 'flagge', text: String(this.filialen) }, herzen(Math.max(0, this.leben), 3)]);
+    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), 3)]);
   },
   treffer(d){
     const wx = this.xs, wy = TOUR_Y;
     if (d.art === 'kiste') {
       d.weg = true; this.kisten++; this.kombi = Math.min(5, this.kombi + 1);
-      const p = 15 * this.kombi; this.bonus += p;
+      const p = 15 * this.kombi; this.bonus += p; brumm(22);
       teilchen(wx, wy - 40, { n: 18, form: 'stern', oben: 80, tempo: 180 }); teilchen(wx, wy - 40, { n: 8, farben: ['#C27F36', '#E3AE68', '#8A5223'], form: 'krume', tempo: 140 });
       schwebText(`+${p}`, wx, wy - 70, F.goldDunkel, 22);
       if (this.kombi >= 2) schwebText(`Kombi x${this.kombi}`, wx, wy - 100, F.braun, 15);
@@ -322,7 +363,11 @@ SPIELE.tour = {
       return;
     }
     if (this.schutz > 0 || this.modus !== 'fahrt') return;
-    d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
+    if (this.gemuetlich) { // gemütlich: nur kurz wackeln, kein Leben weg
+      d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
+      this.schutz = .8; this.kombi = 0; wackeln(5); brumm(40); mehlWolke(wx, wy - 40, 5); schwebText('Hoppla', wx, wy - 80, F.braun, 18); return;
+    }
+    d.weg = true; brumm(70); d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 };
     this.leben--; this.schutz = 1.6; this.kombi = 0; this.tempo *= .55;
     wackeln(9); blitz(.35, '255,90,40');
     teilchen(wx, wy - 46, { n: 26, farben: ['#FFE27A', '#FFB02E', '#FF7A1A', '#FFFFFF'], tempo: 260, groesse: [1.5, 3.5], schwer: 300, leben: [.25, .6] });
@@ -345,12 +390,66 @@ SPIELE.tour = {
     if (ziel === this.spur) return { x: this.xs, y: TOUR_Y, warte: 140 };
     return { x: ziel < this.spur ? this.xs - 70 : this.xs + 70, y: 300, warte: 160 };
   },
+  /** Tageszeit (Tönung, Dunkelheit mit Lichtern) und Regen/Schnee über die ganze Szene */
+  lichtUndWetter(hm, deko, zeit){
+    if (hm.morgen > .01) { x.fillStyle = linear(0, 0, 0, H, [[0, `rgba(255,150,90,${.2 * hm.morgen})`], [1, `rgba(255,205,150,${.06 * hm.morgen})`]]); x.fillRect(0, 0, W, H); }
+    if (hm.dunkel > .01) {
+      const d = hm.dunkel;
+      x.fillStyle = `rgba(16,20,52,${.52 * d})`; x.fillRect(0, 0, W, H);
+      x.save(); x.globalCompositeOperation = 'lighter';
+      // Laternen: Lichtpunkt und Lichtfleck am Boden (bei Regen länger gezogen)
+      for (const L of deko) if (L.art === 'lampe') {
+        const [kx, ky] = tour_proj(L.px + (L.seite ? -22 : 22), L.py, .16), gx = L.px + (L.seite ? -22 : 22);
+        x.fillStyle = radial(gx, L.py, 0, 46, [[0, `rgba(255,200,110,${.42 * d})`], [1, 'rgba(255,200,110,0)']]); x.beginPath(); x.ellipse(gx, L.py, 46, 46 + hm.regen * 30, 0, 0, 7); x.fill();
+        x.fillStyle = radial(kx, ky, 0, 16, [[0, `rgba(255,240,190,${.95 * d})`], [1, 'rgba(255,220,140,0)']]); x.beginPath(); x.arc(kx, ky, 16, 0, 7); x.fill();
+      }
+      // Gegenverkehr: Scheinwerfer nach unten
+      for (const o of this.dinge || []) if (o.art === 'auto' && !o.raus && o.y > -60 && o.y < H + 60) {
+        const px = TOUR_SPUR[o.s], fy = o.y + (o.lang ? 44 : 36);
+        x.fillStyle = linear(0, fy, 0, fy + 70, [[0, `rgba(255,245,200,${.34 * d})`], [1, 'rgba(255,245,200,0)']]); x.beginPath(); x.moveTo(px - 16, fy); x.lineTo(px + 16, fy); x.lineTo(px + 26, fy + 70); x.lineTo(px - 26, fy + 70); x.closePath(); x.fill();
+      }
+      // eigener Wagen: kräftiger Scheinwerferkegel und Rücklichter
+      const rot = klemm(this.vx * .0016, -.22, .22);
+      x.save(); x.translate(this.xs, TOUR_Y); x.rotate(rot);
+      x.fillStyle = linear(0, -48, 0, -175, [[0, `rgba(255,236,170,${.5 * d})`], [1, 'rgba(255,236,170,0)']]);
+      x.beginPath(); x.moveTo(-18, -48); x.lineTo(18, -48); x.lineTo(46, -175); x.lineTo(-46, -175); x.closePath(); x.fill();
+      for (const sx of [-16, 16]) { x.fillStyle = radial(sx, 48, 0, 12, [[0, `rgba(255,60,40,${.55 * d})`], [1, 'rgba(255,60,40,0)']]); x.beginPath(); x.arc(sx, 48, 12, 0, 7); x.fill(); }
+      x.restore();
+      // Baustellen-Lampe
+      for (const o of this.dinge || []) if (o.art === 'bau' && o.y > -40 && o.y < H + 40 && Math.floor(zeit * 3) % 2) { x.fillStyle = radial(TOUR_SPUR[o.s], o.y - 10, 0, 30, [[0, `rgba(255,200,60,${.6 * d})`], [1, 'rgba(255,200,60,0)']]); x.beginPath(); x.arc(TOUR_SPUR[o.s], o.y - 10, 30, 0, 7); x.fill(); }
+      x.restore();
+    }
+    // Regen: schräge Striche in einem Pfad (spart Leistung)
+    if (hm.regen > .01) {
+      x.strokeStyle = `rgba(205,222,245,${.55 * hm.regen})`; x.lineWidth = 1.1; x.beginPath();
+      const n = Math.round(70 * hm.regen);
+      for (let i = 0; i < n; i++) { const px = (tour_zf(i) * (W + 40) + this.niederY * .12) % (W + 40) - 20, py = (tour_zf(i + 300) * (H + 40) + this.niederY * (.8 + tour_zf(i + 9) * .4)) % (H + 40) - 20; x.moveTo(px, py); x.lineTo(px - 3, py + 13); }
+      x.stroke();
+      // Tropfen springen auf der Straße
+      x.strokeStyle = `rgba(220,232,250,${.35 * hm.regen})`; x.beginPath();
+      for (let i = 0; i < 10; i++) { const t = (zeit * 2.2 + tour_zf(i + 40)) % 1, px = 80 + tour_zf(i + 41 + Math.floor(zeit * 2.2 + tour_zf(i + 40))) * 200, py = 40 + tour_zf(i + 60 + Math.floor(zeit * 2.2 + tour_zf(i + 40))) * 400; x.moveTo(px + 2 + t * 5, py); x.ellipse(px, py, 2 + t * 5, 1 + t * 2.5, 0, 0, 7); }
+      x.stroke();
+    }
+    // Schnee: runde Flocken, große vorne schneller
+    if (hm.schnee > .01) {
+      x.fillStyle = `rgba(255,255,255,${.85 * hm.schnee})`; x.beginPath();
+      const n = Math.round(70 * hm.schnee);
+      for (let i = 0; i < n; i++) { const r = 1 + tour_zf(i + 7) * 2.2, px = (tour_zf(i) * W + Math.sin(zeit * .9 + i) * 14 + W) % W, py = (tour_zf(i + 300) * (H + 20) + this.niederY * (.6 + r * .25)) % (H + 20) - 10; x.moveTo(px + r, py); x.arc(px, py, r, 0, 7); }
+      x.fill();
+    }
+  },
   malen(zeit){
     const b = this.bilder();
     const weg = this.weg || 0;
     // Straße (zweimal, nahtlos)
     const oy = weg % TOUR_KACHEL;
     x.drawImage(b.strasse, 0, oy - TOUR_KACHEL, W, TOUR_KACHEL); x.drawImage(b.strasse, 0, oy, W, TOUR_KACHEL);
+    const hm = this.himmel || { morgen: 0, dunkel: 0, regen: 0, schnee: 0 };
+    if (hm.regen > .01) { // nasser Asphalt: dunkler, leicht bläulich, mit Glanzstreifen
+      x.fillStyle = `rgba(22,34,58,${.24 * hm.regen})`; x.fillRect(72, 0, 216, H);
+      x.fillStyle = linear(0, 0, 0, H, [[0, `rgba(190,210,235,${.10 * hm.regen})`], [.5, 'rgba(190,210,235,0)'], [1, `rgba(190,210,235,${.08 * hm.regen})`]]); x.fillRect(72, 0, 216, H);
+    }
+    if (hm.schnee > .01) { x.globalAlpha = hm.schnee; x.drawImage(b.schnee, 0, oy - TOUR_KACHEL, W, TOUR_KACHEL); x.drawImage(b.schnee, 0, oy, W, TOUR_KACHEL); x.globalAlpha = 1; x.fillStyle = `rgba(235,242,252,${.1 * hm.schnee})`; x.fillRect(72, 0, 216, H); }
     const syW = (d) => TOUR_Y - (d - weg);
     // Filiale
     const fy = syW(this.ziel) - 6;
@@ -400,6 +499,8 @@ SPIELE.tour = {
     const blink = this.schutz > 0 && this.modus === 'fahrt' && Math.floor(this.schutz * 12) % 2 === 0;
     const rot = klemm(this.vx * .0016, -.22, .22) + this.wackelRot + (this.modus === 'aus' ? this.aus * 2.2 : 0);
     const ruckel = this.tempo > 0 ? Math.sin(zeit * 40) * .5 : 0;
+    // Spiegelung des gelben Wagens auf nasser Straße
+    if (hm.regen > .01) { x.fillStyle = linear(0, TOUR_Y + 40, 0, TOUR_Y + 110, [[0, `rgba(255,200,40,${.28 * hm.regen})`], [1, 'rgba(255,200,40,0)']]); x.fillRect(this.xs - 22, TOUR_Y + 40, 44, 70); }
     // Lichtkegel
     x.save(); x.translate(this.xs, TOUR_Y + ruckel); x.rotate(rot);
     x.fillStyle = linear(0, -50, 0, -130, [[0, 'rgba(255,240,180,.22)'], [1, 'rgba(255,240,180,0)']]);
@@ -414,7 +515,7 @@ SPIELE.tour = {
     }
     // Baumkronen und Laternen (höher, darum mit Parallax)
     for (const d of deko) {
-      if (d.art === 'baum') { const [px, py] = tour_proj(d.px, d.py, .1); x.drawImage(b.baum, px - 32, py - 32, 64, 64); }
+      if (d.art === 'baum') { const [px, py] = tour_proj(d.px, d.py, .1); x.drawImage(b.baum, px - 32, py - 32, 64, 64); if (hm.schnee > .01) { x.globalAlpha = hm.schnee; x.drawImage(b.baumSchnee, px - 32, py - 32, 64, 64); x.globalAlpha = 1; } }
       else {
         const [bx, by] = [d.px, d.py], [kx, ky] = tour_proj(d.px + (d.seite ? -22 : 22), d.py, .16);
         x.strokeStyle = '#3B3F45'; x.lineWidth = 3.4; x.lineCap = 'round'; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo(bx + (kx - bx) * .2, ky - 4, kx, ky); x.stroke();
@@ -423,6 +524,7 @@ SPIELE.tour = {
         x.fillStyle = '#4A4F57'; x.beginPath(); x.arc(bx, by, 4, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,.35)'; x.beginPath(); x.arc(bx - 1, by - 1, 1.6, 0, 7); x.fill();
       }
     }
+    this.lichtUndWetter(hm, deko, zeit);
     // Fahrtwind bei hohem Tempo
     if ((this.tempo || 0) > 330) { const a = Math.min(.35, (this.tempo - 330) / 500); x.strokeStyle = `rgba(255,255,255,${a})`; x.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const lx = 80 + tour_zf(i) * 200, ly = ((zeit * this.tempo * 1.6 + i * 97) % (H + 80)) - 40; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, ly + 26); x.stroke(); } }
     vignette(.2);
@@ -430,13 +532,19 @@ SPIELE.tour = {
     const anteil = klemm(((this.weg || 0) - (this.abschnittStart || 0)) / Math.max(1, (this.ziel || 1) - (this.abschnittStart || 0)), 0, 1);
     x.fillStyle = 'rgba(255,251,242,.94)'; rr(40, H - 36, 280, 26, 13); x.fill();
     x.strokeStyle = 'rgba(75,42,20,.15)'; x.lineWidth = 1; x.stroke();
-    text('Filiale', 72, H - 23, { gr: 12, farbe: F.braun, schat: false });
+    text(`Filiale ${(this.filialen || 0) + (this.modus === 'abladen' ? 0 : 1)}`, 70, H - 23, { gr: 12, farbe: F.braun, schat: false });
     x.fillStyle = '#E8DCC6'; rr(100, H - 26, 180, 6, 3); x.fill();
     x.fillStyle = linear(100, 0, 280, 0, [[0, '#FFD95A'], [1, '#F2A900']]); rr(100, H - 26, 180 * anteil + 1, 6, 3); x.fill();
     // kleiner Wagen auf dem Balken
     const wxp = 100 + 180 * anteil; x.fillStyle = F.gold; rr(wxp - 9, H - 30, 18, 12, 3); x.fill(); x.strokeStyle = F.braun; x.lineWidth = 1.4; x.stroke(); x.fillStyle = '#5C86A8'; rr(wxp + 3, H - 28, 4, 5, 1); x.fill();
     // Ziel: kleine Markise
     x.save(); x.translate(298, H - 23); x.fillStyle = '#4B2A14'; rr(-9, -2, 18, 10, 2); x.fill(); for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? '#FFFBF2' : F.gold; x.fillRect(-10 + i * 5, -8, 5, 6); } x.restore();
+    // Hinweis auf neues Wetter (unter dem Kollegen-Ziel)
+    if (this.wetterHinweis && this.wetterHinweis.z > 0) {
+      const a = Math.min(1, this.wetterHinweis.z / .5, (2.6 - this.wetterHinweis.z) / .3 + .01);
+      x.globalAlpha = klemm(a, 0, 1); x.font = '800 14px "Plus Jakarta Sans", system-ui, sans-serif'; const w = x.measureText(this.wetterHinweis.t).width + 30;
+      x.fillStyle = 'rgba(43,23,10,.72)'; rr(180 - w / 2, 76, w, 30, 15); x.fill(); text(this.wetterHinweis.t, 180, 91.5, { gr: 14, farbe: '#FFF1C2', schat: false }); x.globalAlpha = 1;
+    }
     // Kurzer Hinweis am Anfang
     if (this.hinweis > 0 && this.modus === 'fahrt') {
       const a = Math.min(1, this.hinweis / .5); x.globalAlpha = a;

@@ -257,6 +257,65 @@ function lauf_ofen(px, by, t){
   text('?', sx, sy - 21, { gr: 15, farbe: F.gold, art: '800', schat: false });
 }
 
+// ── Extras: Körner-Magnet und Schutzschild ──
+function lauf_blase(bx, by, r, t, gold){
+  x.fillStyle = radial(bx, by, r * .2, r, gold ? [[0, 'rgba(255,240,180,.15)'], [.75, 'rgba(255,205,70,.35)'], [1, 'rgba(230,160,20,.75)']] : [[0, 'rgba(255,255,255,.12)'], [.75, 'rgba(220,235,255,.35)'], [1, 'rgba(160,190,230,.75)']]);
+  x.beginPath(); x.arc(bx, by, r, 0, 7); x.fill();
+  x.strokeStyle = gold ? 'rgba(200,130,0,.8)' : 'rgba(120,150,200,.8)'; x.lineWidth = 1.4; x.stroke();
+  x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.ellipse(bx - r * .4, by - r * .45, r * .28, r * .14, -.6, 0, 7); x.fill();
+}
+function lauf_magnetBild(bx, by, s){
+  x.save(); x.translate(bx, by); x.scale(s, s); x.rotate(-.5);
+  x.lineCap = 'butt'; x.lineWidth = 7;
+  x.strokeStyle = '#7A1E10'; x.beginPath(); x.arc(0, -1, 8.5, Math.PI, 0); x.lineTo(8.5, 8); x.moveTo(-8.5, 8); x.lineTo(-8.5, -1); x.stroke();
+  x.strokeStyle = linear(-10, -10, 10, 10, [[0, '#FF8A6A'], [.5, '#D0402A'], [1, '#9E2414']]); x.lineWidth = 5.4; x.beginPath(); x.arc(0, -1, 8.5, Math.PI, 0); x.lineTo(8.5, 6); x.moveTo(-8.5, 6); x.lineTo(-8.5, -1); x.stroke();
+  x.fillStyle = linear(0, 5, 0, 11, [[0, '#FFFFFF'], [1, '#9AA6B2']]); x.fillRect(-11.2, 5, 5.4, 5.5); x.fillRect(5.8, 5, 5.4, 5.5);
+  x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 1.3; x.beginPath(); x.arc(0, -1, 8.5, Math.PI * 1.15, Math.PI * 1.55); x.stroke();
+  x.restore();
+}
+function lauf_schildBild(bx, by, s){
+  x.save(); x.translate(bx, by); x.scale(s, s);
+  x.beginPath(); x.moveTo(0, -11); x.quadraticCurveTo(7, -8, 10, -8); x.quadraticCurveTo(10, 4, 0, 11); x.quadraticCurveTo(-10, 4, -10, -8); x.quadraticCurveTo(-7, -8, 0, -11); x.closePath();
+  x.fillStyle = linear(-10, -11, 10, 11, [[0, '#FFF2B0'], [.45, '#FFC72C'], [1, '#B47A06']]); x.fill();
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.3; x.stroke();
+  // Ähre im Wappen
+  x.strokeStyle = '#8C5A00'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(0, 7); x.lineTo(0, -6); x.stroke();
+  x.fillStyle = '#8C5A00'; for (let i = 0; i < 3; i++) { x.beginPath(); x.ellipse(-2.2, -3 + i * 3.2, 1.6, 2.6, -.6, 0, 7); x.fill(); x.beginPath(); x.ellipse(2.2, -3 + i * 3.2, 1.6, 2.6, .6, 0, 7); x.fill(); }
+  x.restore();
+}
+function lauf_extra(e, t){
+  const by = e.y + Math.sin(t * 3 + e.x * .02) * 4;
+  x.fillStyle = radial(e.x, by, 0, 34, [[0, e.art === 'schild' ? 'rgba(255,220,100,.5)' : 'rgba(255,170,150,.45)'], [1, 'rgba(255,220,100,0)']]); x.fillRect(e.x - 34, by - 34, 68, 68);
+  lauf_blase(e.x, by, 19, t, e.art === 'schild');
+  if (e.art === 'schild') lauf_schildBild(e.x, by + 1, 1); else lauf_magnetBild(e.x, by + 1, .95);
+}
+/** Kleine Uhr über Teigi: wie lange das Extra noch hält */
+function lauf_restUhr(bx, by, anteil, art){
+  x.fillStyle = 'rgba(43,23,10,.7)'; x.beginPath(); x.arc(bx, by, 13, 0, 7); x.fill();
+  x.strokeStyle = art === 'schild' ? '#FFC72C' : '#FF8A6A'; x.lineWidth = 3; x.lineCap = 'round';
+  x.beginPath(); x.arc(bx, by, 13, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(anteil, 0, 1)); x.stroke();
+  if (art === 'schild') lauf_schildBild(bx, by, .62); else lauf_magnetBild(bx, by, .55);
+}
+/** Zielfahne für den nächsten Kollegen-Rekord */
+function lauf_zielFahne(fx, t, name){
+  const by = LAUF_BODEN - 6;
+  // Linie quer über den Boden (Karomuster)
+  for (let i = 0; i < 8; i++) { const yy = 394 + i * 11; x.fillStyle = i % 2 ? 'rgba(255,255,255,.55)' : 'rgba(43,23,10,.4)'; x.fillRect(fx - 3 + (yy - 394) * .12, yy, 6, 11); }
+  // Stange
+  x.fillStyle = linear(fx - 2, 0, fx + 2, 0, [[0, '#8A5A12'], [.5, '#FFE7A0'], [1, '#8A5A12']]); rr(fx - 2, by - 150, 4, 150, 2); x.fill();
+  x.fillStyle = '#FFC72C'; x.beginPath(); x.arc(fx, by - 152, 4, 0, 7); x.fill();
+  // Wehendes Band mit Namen
+  x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif';
+  const w = Math.max(60, x.measureText(name).width + 22), top = by - 146, h = 26;
+  x.beginPath(); x.moveTo(fx + 2, top);
+  for (let k = 0; k <= 10; k++) x.lineTo(fx + 2 + w * k / 10, top + Math.sin(t * 5 + k * .7) * 2.5 * k / 10);
+  x.lineTo(fx + 2 + w - 8, top + h / 2 + Math.sin(t * 5 + 7) * 2.5);
+  for (let k = 10; k >= 0; k--) x.lineTo(fx + 2 + w * k / 10, top + h + Math.sin(t * 5 + k * .7) * 2.5 * k / 10);
+  x.closePath(); x.fillStyle = linear(0, top, 0, top + h, [[0, '#3F8F4E'], [1, '#2A6A36']]); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 1; x.stroke();
+  text(name, fx + 2 + (w - 8) / 2, top + h / 2 + Math.sin(t * 5 + 3.5) * 1.2, { gr: 12, farbe: '#FFFFFF', schat: false });
+}
+
 // ── Teigi selbst (ohne mitwandernden Bodenschatten) ──
 function lauf_figur(px, fussY, g, { sx = 1, sy = 1, rot = 0, schritt = 0, amBoden = true, blink = false, fuss } = {}){
   const fy0 = fuss ?? fussY;
@@ -288,10 +347,14 @@ SPIELE.lauf = {
     this.hind = []; this.koerner = []; this.brezeln = []; this.ofen = null;
     this.naechstAb = 620; this.korbGruppe = 0; this.gruppen = {};
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
+    this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
+    this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
   },
   meter(){ return Math.floor(this.weg / 32); },
   punkte(){ return this.meter() + this.k * 5 + this.extra; },
+  aktuellePunkte(){ return this.punkte(); },
+  medaillen: [250, 900, 2500],
   springen(){
     if (this.tot >= 0) return;
     if (this.amBoden || this.kojote > 0) {
@@ -308,7 +371,7 @@ SPIELE.lauf = {
   // Neues Hindernis (Muster wird mit der Zeit schwieriger)
   erzeugen(){
     const t = this.zeit, sx = W + 40;
-    const arten = t < 9 ? ['korb', 'sack'] : t < 22 ? ['korb', 'sack', 'sack', 'wagen'] : ['korb', 'sack', 'wagen', 'wagen', 'stapel', 'doppel'];
+    const arten = this.gem && t < 60 ? ['korb', 'sack', 'sack', 'wagen'] : t < 9 ? ['korb', 'sack'] : t < 22 ? ['korb', 'sack', 'sack', 'wagen'] : ['korb', 'sack', 'wagen', 'wagen', 'stapel', 'doppel'];
     const art = arten[ganz(0, arten.length - 1)];
     const neu = (a, px) => {
       const m = { sack: [46, 52], korb: [58, 40], wagen: [74, 72], stapel: [48, 88] }[a];
@@ -321,7 +384,7 @@ SPIELE.lauf = {
       if (Math.random() < .55) this.koernerBogen(h.x - 46, h.x + h.w + 46, h.h + 70);
     }
     // Abstand: anfangs großzügig, später enger
-    const leicht = t < 10 ? 1.5 : t < 20 ? 1.2 : 1;
+    const leicht = this.gem ? 1.45 : t < 10 ? 1.5 : t < 20 ? 1.2 : 1;
     const abstand = (zufall(300, 470) * leicht + this.tempo * .35);
     this.naechstAb = this.weg + (ende - sx) + abstand;
     // Körnerreihe am Boden in der Lücke
@@ -344,11 +407,11 @@ SPIELE.lauf = {
       this.vy += 2000 * dt; this.y = Math.min(0, this.y + this.vy * dt); if (this.y === 0 && this.vy > 0) this.vy = -this.vy * .3;
       this.dreh -= dt * 4 * Math.max(0, 1 - this.tot);
       this.hud();
-      if (this.tot > .95 && !this.fertig) { this.fertig = true; ende(this.punkte(), `${this.meter()} m gelaufen und ${this.k} goldene Körner gesammelt.`); }
+      if (this.tot > .95 && !this.fertig) { this.fertig = true; ende(this.punkte(), `${this.meter()} m gelaufen und ${this.k === 1 ? 'ein goldenes Korn' : `${this.k} goldene Körner`} gesammelt.`); }
       return;
     }
     this.zeit += dt;
-    this.tempo = 215 + Math.min(230, this.zeit * 4.2);
+    this.tempo = this.gem ? 180 + Math.min(30, this.zeit * .5) : 215 + Math.min(230, this.zeit * 4.2);
     const v = this.tempo * dt; this.weg += v;
     this.schutz = Math.max(0, this.schutz - dt);
 
@@ -391,13 +454,38 @@ SPIELE.lauf = {
 
     // Einsammeln
     const ty = LAUF_BODEN + this.y, mitte = ty - 32;
+    this.magnet = Math.max(0, this.magnet - dt); this.schild = Math.max(0, this.schild - dt);
+    if (this.magnet > 0) for (const k of this.koerner) { const dx = k.x - LAUF_TX; if (dx < 230 && dx > -30) { const f = Math.min(1, dt * (dx < 120 ? 9 : 4)); k.x += (LAUF_TX - k.x) * f; k.y += (mitte - k.y) * f; } }
+    // Extras: auftauchen, mitlaufen, einsammeln
+    this.extraIn -= dt;
+    if (this.extraIn <= 0 && this.magnet <= 0 && this.schild <= 0 && !this.extras.length) {
+      const frei = this.hind.every((h) => h.x + h.w < W - 40 || h.x > W + 160);
+      if (frei) { this.extras.push({ art: this.extraArt, x: W + 40, y: LAUF_BODEN - 92 }); this.extraArt = this.extraArt === 'magnet' ? 'schild' : 'magnet'; this.extraIn = zufall(22, 32); }
+    }
+    for (const e of this.extras) {
+      e.x -= v;
+      if (!e.weg && Math.abs(e.x - LAUF_TX) < 36 && Math.abs(e.y - mitte) < 50) {
+        e.weg = true; brumm(25); blitz(.18, '255,230,160');
+        teilchen(e.x, e.y, { n: 20, form: 'stern', tempo: 170, groesse: [2.5, 5], leben: [.4, .8] });
+        if (e.art === 'magnet') { this.magnet = 8; schwebText('Körner-Magnet!', 190, 200, '#C0392B', 20); }
+        else { this.schild = 20; schwebText('Schutzschild!', 190, 200, '#B07A00', 20); }
+      }
+    }
+    this.extras = this.extras.filter((e) => !e.weg && e.x > -40);
+    // Zielfahne: Strecke grob aus Punkten je Meter geschätzt
+    const ziel = !this.gem && typeof naechstesZiel === 'function' ? naechstesZiel(this.punkte()) : null;
+    if (!ziel) this.flagge = null;
+    else if (!this.flagge || this.flagge.name !== ziel.name || this.flagge.weg < this.weg - 60) {
+      const m = this.meter(), rate = m > 20 ? Math.max(1.5, this.punkte() / m) : 2.6;
+      this.flagge = { name: ziel.name, weg: this.weg + Math.max(5, (ziel.punkte - this.punkte()) / rate) * 32 };
+    }
     for (const k of this.koerner) if (!k.weg && Math.abs(k.x - LAUF_TX) < 26 && Math.abs(k.y - mitte) < 38) {
       k.weg = true; this.k++;
       teilchen(k.x, k.y, { n: 6, tempo: 90, groesse: [1.5, 3], leben: [.25, .45], schwer: 0 });
-      if (--this.gruppen[k.g] === 0) { this.extra += 10; schwebText('Alle! +10', k.x + 10, k.y - 22, '#B07A00', 18); }
+      if (--this.gruppen[k.g] === 0) { this.extra += 10; brumm(25); schwebText('Alle! +10', k.x + 10, k.y - 22, '#B07A00', 18); }
     }
     for (const b of this.brezeln) if (!b.weg && Math.abs(b.x - LAUF_TX) < 34 && Math.abs(b.y - mitte) < 44) {
-      b.weg = true; this.extra += 50; blitz(.25, '255,220,120');
+      b.weg = true; this.extra += 50; blitz(.25, '255,220,120'); brumm(30);
       teilchen(b.x, b.y, { n: 26, tempo: 220, form: 'stern', groesse: [3, 6], leben: [.6, 1] });
       schwebText('Goldene Brezel +50', 190, b.y + 10, '#B07A00', 20);
     }
@@ -421,7 +509,22 @@ SPIELE.lauf = {
       for (const h of this.hind) {
         const ein = h.art === 'wagen' ? 9 : 7;
         if (r > h.x + ein && l < h.x + h.w - ein && unten > LAUF_BODEN - h.h + 7 && oben < LAUF_BODEN) {
-          this.tot = 0; this.vy = -420; this.dreh = 0; this.trefferArt = h.art; h.wackel = 1;
+          h.wackel = 1;
+          if (this.schild > 0) {
+            // Schild fängt den Zusammenstoß ab
+            this.schild = 0; this.schutz = 1.2; brumm(45); blitz(.3, '255,230,150');
+            teilchen(LAUF_TX, ty - 34, { n: 26, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'], tempo: 230, groesse: [2.5, 5], leben: [.4, .8] });
+            schwebText('Schild hat gehalten!', 190, 200, '#B07A00', 20);
+            break;
+          }
+          this.herz--; brumm(70);
+          if (this.herz > 0) {
+            this.schutz = 1.6; this.vy = -420; this.amBoden = false; this.spr = 2; wackeln(6); blitz(.25, '255,210,190');
+            schwebText(`Autsch! Noch ${this.herz}`, LAUF_TX + 30, LAUF_BODEN - 100, F.rot, 20);
+            mehlWolke(LAUF_TX + 14, LAUF_BODEN - 30, 14);
+            break;
+          }
+          this.tot = 0; this.vy = -420; this.dreh = 0; this.trefferArt = h.art;
           wackeln(9); blitz(.3, '255,210,190');
           if (h.art === 'sack' || h.art === 'stapel') { mehlWolke(h.x + h.w / 2, LAUF_BODEN - h.h * .6, 26); teilchen(h.x + h.w / 2, LAUF_BODEN - h.h * .6, { n: 18, farben: ['#FFFFFF', '#FFF6E4'], tempo: 200, groesse: [3, 7], schwer: 120 }); }
           else teilchen(h.x + 10, LAUF_BODEN - h.h * .6, { n: 14, form: 'krume', farben: ['#C27F36', '#E3AE68', '#8A5223'], tempo: 200, schwer: 600 });
@@ -432,7 +535,12 @@ SPIELE.lauf = {
     }
     this.hud();
   },
-  hud(){ setHud([{ icon: 'flagge', text: `${this.meter()} m` }, { icon: 'korn', text: String(this.k) }, { icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }]); },
+  hud(){
+    // nur zwei Pillen: in der Mitte sitzt der Pause-Knopf
+    const links = { icon: 'flagge', text: `${this.meter()} m<i style="margin-left:8px">${ICON.korn}</i>${this.k}` };
+    const p = this.punkte().toLocaleString('de-DE');
+    setHud([links, this.gem ? { text: `${herzen(this.herz, 3).text}<i style="margin-left:6px">${ICON.punkte}</i>${p}` } : { icon: 'punkte', text: p }]);
+  },
 
   malen(t){
     if (!LAUF_EBENEN.wandA || LAUF_EBENEN.breite !== c.width || LAUF_EBENEN.hoehe !== c.height) lauf_backen();
@@ -446,6 +554,8 @@ SPIELE.lauf = {
     lauf_band([LAUF_EBENEN.boden], weg, 392, H);
 
     if (this.ofen) lauf_ofen(this.ofen.x, LAUF_BODEN + 4, t);
+    if (this.flagge && laeuft) { const fx = LAUF_TX + (this.flagge.weg - (this.weg || 0)); if (fx > -20 && fx < W + 20) lauf_zielFahne(fx, t, this.flagge.name); }
+    for (const e of this.extras || []) if (e.x < W + 40) lauf_extra(e, t);
     for (const k of this.koerner || []) if (k.x < W + 20) lauf_korn(k.x, k.y, t, k.p);
     for (const b of this.brezeln || []) lauf_brezel(b.x, b.y, t);
     for (const h of this.hind || []) {
@@ -464,6 +574,26 @@ SPIELE.lauf = {
     const blink = this.schutz > 0 && Math.floor(t * 12) % 2 === 0;
     const atem = !laeuft && this.tot < 0 ? 1 + Math.sin(t * 2.4) * .025 : 1;
     lauf_figur(LAUF_TX, LAUF_BODEN + y - hops, LAUF_GR, { sx: (this.sx || 1) / atem, sy: (this.sy || 1) * atem, rot: neig, schritt: this.schritt || 0, amBoden: this.amBoden !== false && this.tot < 0, blink, fuss: LAUF_BODEN });
+
+    // Magnet-Schimmer und Schild-Blase um Teigi
+    const fy = LAUF_BODEN + y - hops - 34;
+    if (this.magnet > 0) {
+      x.save(); x.translate(LAUF_TX, fy); x.rotate(t * 2.5);
+      x.strokeStyle = `rgba(255,140,110,${.45 + Math.sin(t * 8) * .15})`; x.lineWidth = 2.5; x.setLineDash([6, 8]);
+      x.beginPath(); x.ellipse(0, 0, 46, 46, 0, 0, 7); x.stroke(); x.setLineDash([]);
+      for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; x.fillStyle = '#FFE7A0'; x.beginPath(); x.arc(Math.cos(a) * 46, Math.sin(a) * 46, 2.4, 0, 7); x.fill(); }
+      x.restore();
+    }
+    if (this.schild > 0 && !(this.schild < 3 && Math.floor(t * 8) % 2)) {
+      const p = 1 + Math.sin(t * 4) * .03;
+      x.fillStyle = radial(LAUF_TX, fy, 18, 46 * p, [[0, 'rgba(255,240,180,0)'], [.7, 'rgba(255,215,90,.18)'], [1, 'rgba(240,170,20,.55)']]);
+      x.beginPath(); x.ellipse(LAUF_TX, fy, 42 * p, 48 * p, 0, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(230,160,20,.85)'; x.lineWidth = 2; x.stroke();
+      x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.ellipse(LAUF_TX, fy, 34 * p, 40 * p, 0, Math.PI * 1.1, Math.PI * 1.45); x.stroke();
+    }
+    let uhrX = LAUF_TX - (this.magnet > 0 && this.schild > 0 ? 15 : 0);
+    if (this.magnet > 0) { lauf_restUhr(uhrX, fy - 66, this.magnet / 8, 'magnet'); uhrX += 30; }
+    if (this.schild > 0) lauf_restUhr(uhrX, fy - 66, this.schild / 20, 'schild');
 
     // Vordergrund: Licht und Vignette
     x.fillStyle = linear(0, 0, W, 0, [[0, 'rgba(255,240,200,.10)'], [.5, 'rgba(255,240,200,0)'], [1, 'rgba(60,30,10,.12)']]); x.fillRect(0, 0, W, H);
