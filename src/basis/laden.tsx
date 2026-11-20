@@ -8,7 +8,7 @@ import { useCountUp } from './serie';
 
 /** Einfaches Linien-Symbol (statt Emojis) */
 // ── Trinkgeld-Laden: Preise in Cent ──
-export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier' | 'teigihut' | 'teigiglas' | 'teigitanz'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean };
+export type ShopItem = { id: string; kind: 'avatar' | 'title' | 'joker' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'haustier' | 'teigihut' | 'teigiglas' | 'teigitanz'; label: string; icon: string; price: number; desc?: string; months?: number[]; woche?: boolean; advent?: boolean };
 export type AnlegeArt = 'avatar' | 'title' | 'theme' | 'effect' | 'schrift' | 'jubel' | 'teigihut' | 'teigiglas' | 'teigitanz';
 
 export const TIP_DAY_CAP = 600;
@@ -106,6 +106,21 @@ export const TIP_SHOP: ShopItem[] = [
   { id: 'tz_brille', kind: 'teigihut', icon: '🕶️', label: 'Sonnenbrille', price: 600, desc: 'Ganz schön lässig, der Teigi.' },
   { id: 'tz_weihnacht', kind: 'teigihut', icon: '🎅', label: 'Weihnachtsmütze', price: 600, months: [11, 12, 1], desc: 'Nur in der Weihnachtszeit zu haben.' },
   { id: 'tz_krone', kind: 'teigihut', icon: '👑', label: 'Krone', price: 1200, desc: 'Für den König unter den Sauerteigen.' },
+  // Version 265: nur im Adventskalender zu bekommen (nicht im Laden, nicht in der Tüte); price 0 = nicht käuflich
+  { id: 'ad_rentier', kind: 'avatar', icon: '🦌', label: 'Rentier', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_kerze', kind: 'avatar', icon: '🕯️', label: 'Adventskerze', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_glocke', kind: 'avatar', icon: '🔔', label: 'Glöckchen', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_geschenk', kind: 'avatar', icon: '🎁', label: 'Geschenk', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_flocke', kind: 'avatar', icon: '❄️', label: 'Schneeflocke', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_t_baecker', kind: 'title', icon: '🏷️', label: 'Adventsbäcker', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_t_plaetzchen', kind: 'title', icon: '🏷️', label: 'Plätzchen-Profi', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_t_wichtel', kind: 'title', icon: '🏷️', label: 'Theken-Wichtel', price: 0, advent: true, desc: 'Nur aus dem Adventskalender.' },
+  { id: 'ad_t_stern', kind: 'title', icon: '🏷️', label: 'Weihnachtsstern', price: 0, advent: true, desc: 'Nur für alle 24 Türchen im Adventskalender.' },
+  { id: 'tz_geweih', kind: 'teigihut', icon: '🦌', label: 'Rentiergeweih', price: 0, advent: true, desc: 'Geweih und rote Nase. Nur aus dem Adventskalender.' },
+  { id: 'tz_elf', kind: 'teigihut', icon: '🧝', label: 'Elfenmütze', price: 0, advent: true, desc: 'Grüne Mütze mit Glöckchen. Nur aus dem Adventskalender.' },
+  { id: 'tz_schal', kind: 'teigihut', icon: '🧣', label: 'Winterschal', price: 0, advent: true, desc: 'Damit Teigi nicht friert. Nur aus dem Adventskalender.' },
+  { id: 'tz_ohren', kind: 'teigihut', icon: '🎧', label: 'Ohrenschützer', price: 0, advent: true, desc: 'Flauschig warm. Nur aus dem Adventskalender.' },
+  { id: 'tz_stern', kind: 'teigihut', icon: '🌟', label: 'Goldener Stern', price: 0, advent: true, desc: 'Nur für alle 24 Türchen im Adventskalender.' },
   { id: 'tg_bernstein', kind: 'teigiglas', icon: '🫙', label: 'Glas Bernstein', price: 600, desc: 'Teigi wohnt in einem bernsteinfarbenen Glas.' },
   { id: 'tg_rose', kind: 'teigiglas', icon: '🫙', label: 'Glas Rosé', price: 600, desc: 'Teigi wohnt in einem rosa Glas.' },
   { id: 'tg_mint', kind: 'teigiglas', icon: '🫙', label: 'Glas Minze', price: 600, desc: 'Teigi wohnt in einem mintgrünen Glas.' },
@@ -141,7 +156,7 @@ export const wochenTeile = (d = new Date()): string[] => {
   const a = (w * 5) % pool.length;
   return [pool[a], pool[(a + 1 + (w % (pool.length - 1))) % pool.length]];
 };
-export const imLaden = (it: ShopItem, d = new Date()) => it.kind !== 'haustier' && (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
+export const imLaden = (it: ShopItem, d = new Date()) => it.kind !== 'haustier' && !it.advent && (!it.months || it.months.includes(d.getMonth() + 1)) && (!it.woche || wochenTeile(d).includes(it.id));
 
 export const dealOfDay = (d = new Date()): ShopItem => {
   const pool = TIP_SHOP.filter(i => imLaden(i, d) && i.id !== 'j_tuete' && i.kind !== 'haustier');
@@ -199,7 +214,7 @@ export const nameClassOf = (pr: any): string | undefined => {
 export type ShopTab = 'zeichen' | 'teigi' | 'bewegung' | 'titel' | 'farben' | 'joker' | 'schatz';
 
 /** Schatzkammer: nur mit Punkten zu kaufen, die Punkte fehlen dann in der Gesamtwertung */
-export type PtItem = { id: string; kind: 'gold' | 'namecolor' | 'frame' | 'avatar' | 'markise' | 'spruch'; icon: string; label: string; price: number; desc: string };
+export type PtItem = { id: string; kind: 'gold' | 'namecolor' | 'frame' | 'avatar' | 'markise' | 'spruch'; icon: string; label: string; price: number; desc: string; advent?: boolean };
 
 export const PT_SHOP: PtItem[] = [
   { id: 'pt_nc_gold', kind: 'namecolor', icon: '✨', label: 'Name in Gold', price: 8000, desc: 'Dein Name glänzt in Gold auf der Startseite und auf dem Bestenlisten-Bon.' },
@@ -245,6 +260,9 @@ export const PT_SHOP: PtItem[] = [
   { id: 'pt_mk_nacht', kind: 'markise', icon: '🌙', label: 'Markise Mitternachtsblau', price: 9000, desc: 'Deine Markise oben auf der Startseite: Mitternachtsblau.' },
   { id: 'pt_mk_kueken', kind: 'markise', icon: '🐥', label: 'Markise Küken', price: 9000, desc: 'Deine Markise oben auf der Startseite: Hinkel-Küken.' },
   { id: 'pt_mk_sonnenblume', kind: 'markise', icon: '🌻', label: 'Markise Sonnenblumen', price: 8000, desc: 'Deine Markise oben auf der Startseite: Sonnenblumen.' },
+  // Version 265: nur im Adventskalender
+  { id: 'pt_fr_tanne', kind: 'frame', icon: '🎄', label: 'Bon-Rahmen Tannen', price: 0, advent: true, desc: 'Tannenbäume um deinen Namen auf dem Bestenlisten-Bon. Nur aus dem Adventskalender.' },
+  { id: 'pt_mk_winter', kind: 'markise', icon: '❄️', label: 'Markise Winterzauber', price: 0, advent: true, desc: 'Blaue Markise mit Schneeflocken und Sternen. Nur aus dem Adventskalender.' },
   { id: 'pt_spruch', kind: 'spruch', icon: '💬', label: 'Spruch des Tages', price: 15000, desc: 'Dein Satz steht einen Tag lang bei allen auf der Startseite. Der Ausbilder gibt ihn vorher frei.' },
 ];
 
@@ -266,10 +284,10 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
   const tabs: { id: ShopTab; icon: string; label: string }[] = [
     { id: 'zeichen', icon: '🥐', label: 'Zeichen' }, { id: 'teigi', icon: '🫙', label: 'Teigi' }, { id: 'bewegung', icon: '✨', label: 'Bewegung' }, { id: 'titel', icon: '🏷️', label: 'Titel' }, { id: 'farben', icon: '🎨', label: 'Farben' }, { id: 'joker', icon: '🃏', label: 'Joker' }, { id: 'schatz', icon: '💎', label: 'Schatzkammer' },
   ];
-  const list = (t: ShopTab) => TIP_SHOP.filter(i =>
+  const list = (t: ShopTab) => TIP_SHOP.filter(i => (!i.advent || owned.includes(i.id)) && (
     t === 'zeichen' ? i.kind === 'avatar' && (imLaden(i) || owned.includes(i.id))
       : t === 'teigi' ? ['teigihut', 'teigiglas', 'teigitanz'].includes(i.kind) && (imLaden(i) || owned.includes(i.id))
-      : t === 'bewegung' ? i.kind === 'effect' || i.kind === 'jubel' : t === 'titel' ? i.kind === 'title' : t === 'farben' ? i.kind === 'theme' || i.kind === 'schrift' : i.kind === 'joker')
+      : t === 'bewegung' ? i.kind === 'effect' || i.kind === 'jubel' : t === 'titel' ? i.kind === 'title' : t === 'farben' ? i.kind === 'theme' || i.kind === 'schrift' : i.kind === 'joker'))
     .sort((a, b) => (t === 'zeichen' ? Number(!!b.woche && !owned.includes(b.id)) - Number(!!a.woche && !owned.includes(a.id)) || Number(b.kind === 'haustier') - Number(a.kind === 'haustier') : 0));
   const themeSwatch: Record<string, string> = { th_schoko: '#6B3E1F', th_pistazie: '#9BC27A', th_erdbeere: '#F2667A', th_blaubeere: '#5B7FD6', th_vanille: '#F7E3A1', th_karamell: '#E0A458', th_himbeere: '#E8577A', th_minze: '#9FE0C9', th_lavendel: '#C7B4EC', th_zitrone: '#FFF07A' };
   const item = (it: ShopItem, i: number) => {
@@ -400,7 +418,7 @@ export function TipShop({ prog, onBuy, onEquip, onClose, ptsBalance = 0, onBuyPt
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '999px', backgroundColor: 'rgba(255,216,107,.14)', color: '#FFD86B', fontWeight: 800, fontSize: '18px' }}><ShopIcon3D k="star" size={22} />{Math.max(0, ptsBalance).toLocaleString('de-DE')} Pkt</span>
                 </div>
-                {([[['namecolor'], 'Namensfarben', 'Dein Name glänzt in dieser Farbe'], [['avatar'], 'Seltene Zeichen', 'Gibt es nur hier'], [['markise'], 'Markisen', 'Deine eigene Markise oben in der App'], [['frame'], 'Bon-Rahmen', 'Verziert deinen Namen auf dem Bestenlisten-Bon'], [['spruch', 'gold'], 'Besonderes', 'Für alle sichtbar']] as [string[], string, string][]).map(([kinds, sec, sub]) => { const group = PT_SHOP.filter(x => kinds.includes(x.kind)); if (!group.length) return null; return (
+                {([[['namecolor'], 'Namensfarben', 'Dein Name glänzt in dieser Farbe'], [['avatar'], 'Seltene Zeichen', 'Gibt es nur hier'], [['markise'], 'Markisen', 'Deine eigene Markise oben in der App'], [['frame'], 'Bon-Rahmen', 'Verziert deinen Namen auf dem Bestenlisten-Bon'], [['spruch', 'gold'], 'Besonderes', 'Für alle sichtbar']] as [string[], string, string][]).map(([kinds, sec, sub]) => { const group = PT_SHOP.filter(x => kinds.includes(x.kind) && (!x.advent || ptsOwned.includes(x.id))); if (!group.length) return null; return (
                 <div key={sec} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div className="lt-schatz-sec"><b>{sec}</b><span>{sub}</span></div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: '12px' }}>
@@ -557,7 +575,7 @@ export const setStand = (owned: string[]) => SAMMEL_SETS.map((st) => {
 /** Überraschungstüte (Version 229): vorher auslosen, dann speichern. Teile, die man schon hat, kommen nicht in die Tüte. */
 export type TuetenInhalt = { art: 'teil'; it: ShopItem } | { art: 'joker'; it: ShopItem } | { art: 'geld'; cents: number };
 export function tueteAuslosen(owned: string[], zufall = Math.random): TuetenInhalt {
-  const teile = TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && i.price <= 1000 && !owned.includes(i.id));
+  const teile = TIP_SHOP.filter((i) => ['avatar', 'effect', 'title', 'theme', 'schrift', 'jubel'].includes(i.kind) && !i.months && !i.woche && !i.advent && i.price <= 1000 && !owned.includes(i.id));
   const joker = TIP_SHOP.filter((i) => i.kind === 'joker' && JOKER_FIELD[i.id] && i.id !== 'j_tuete');
   const r = zufall();
   if (r < 0.45 && teile.length) return { art: 'teil', it: teile[Math.floor(zufall() * teile.length)] };
@@ -654,6 +672,14 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas, spricht = false 
         <path d="M58 75q2-2 4 0M37 74l-8-4M83 74l8-4" stroke="#C9901A" strokeWidth="1.8" fill="none" strokeLinecap="round" />
         <path d="M41 75l5-2M67 75l5-2" stroke="#FFFFFF" strokeWidth="1.6" strokeLinecap="round" opacity=".7" />
       </g>}
+      {/* Version 265: Wintersachen aus dem Adventskalender, die am Glas sitzen (Nase, Schal) */}
+      {hut === 'tz_geweih' && <g><circle cx="60" cy="88" r="4.2" fill="#E0392B" /><circle cx="58.6" cy="86.6" r="1.3" fill="#FFFFFF" opacity=".8" /></g>}
+      {hut === 'tz_schal' && <g>
+        <path d="M27 34q33 7 66 0v9q-33 7-66 0z" fill="#C62828" />
+        <path d="M36 35.6v9M46 36.8v9M56 37.3v9M66 37.2v9M76 36.6v9M86 35.4v8" stroke="#FFFFFF" strokeWidth="3" opacity=".9" />
+        <path d="M78 40l6 26-10 2-4-25z" fill="#C62828" /><path d="M79.5 48l-7.6 1.4M81.2 56l-7.8 1.5" stroke="#FFFFFF" strokeWidth="3" opacity=".9" />
+        <path d="M72 66l2 5M76 65.5l1.6 5M80 65l1 5" stroke="#C62828" strokeWidth="2" strokeLinecap="round" />
+      </g>}
       {/* Stufe 2: Teig drückt unter dem schiefen Deckel heraus */}
       {st === 2 && <path d="M60 31q12 -9 29 -5q2 3 1 5z" fill={u('teig')} />}
       {/* Stufe 3: Teig quillt oben aus dem Glas und läuft über den Rand */}
@@ -699,6 +725,27 @@ export function TeigiGlas({ stufe, laune, size = 56, hut, glas, spricht = false 
         <circle cx="60" cy="6" r="3.2" fill="#D92D20" /><circle cx="59" cy="5" r="1" fill="#FFFFFF" opacity=".8" />
         <circle cx="45" cy="9" r="2" fill="#2E7DD7" /><circle cx="75" cy="9" r="2" fill="#2FA36B" />
         <circle cx="41" cy="-3" r="2" fill={u('goldTop')} /><circle cx="60" cy="-8" r="2.2" fill={u('goldTop')} /><circle cx="79" cy="-3" r="2" fill={u('goldTop')} />
+      </g>}
+      {hut === 'tz_geweih' && <g stroke="#7A4A1E" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M44 17q-6-10-4-24M41 2q-7-2-10-8M40 -6q4-6 9-8" /><path d="M76 17q6-10 4-24M79 2q7-2 10-8M80 -6q-4-6-9-8" />
+        <path d="M44 15q-5-9-3.5-20M76 15q5-9 3.5-20" stroke="#B07A3E" strokeWidth="1.4" />
+      </g>}
+      {hut === 'tz_elf' && <g>
+        <path d="M34 15q4-20 22-26q22-10 38 4q-10-2-18 2q-10 6-12 20z" fill="#2E8B3A" />
+        <path d="M44 -2q8-8 20-10" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity=".45" fill="none" />
+        <rect x="32" y="9" width="56" height="9" rx="4.5" fill="#C62828" /><path d="M36 13.5h48" stroke="#FFD86B" strokeWidth="1.6" strokeDasharray="3 4" />
+        <circle cx="94" cy="-6" r="5" fill={u('goldTop')} stroke="#8C5A0A" strokeWidth="1" /><circle cx="93" cy="-7.5" r="1.4" fill="#FFFFFF" opacity=".8" />
+      </g>}
+      {hut === 'tz_ohren' && <g>
+        <path d="M30 20q30-34 60 0" stroke="#6B4A9A" strokeWidth="4.5" fill="none" strokeLinecap="round" />
+        <circle cx="29" cy="24" r="9" fill="#F3EEFA" stroke="#6B4A9A" strokeWidth="2.4" /><circle cx="91" cy="24" r="9" fill="#F3EEFA" stroke="#6B4A9A" strokeWidth="2.4" />
+        <circle cx="26.5" cy="21.5" r="3" fill="#FFFFFF" /><circle cx="88.5" cy="21.5" r="3" fill="#FFFFFF" />
+      </g>}
+      {hut === 'tz_stern' && <g>
+        <polygon points={Array.from({ length: 10 }, (_, i) => { const a = (i * Math.PI) / 5 - Math.PI / 2, r = i % 2 ? 6.5 : 15; return `${60 + Math.cos(a) * r},${-1 + Math.sin(a) * r}`; }).join(' ')} fill={u('goldTop')} stroke="#8C5A0A" strokeWidth="1.3" strokeLinejoin="round" />
+        <path d="M60 15v2" stroke="#8C5A0A" strokeWidth="2" />
+        <ellipse cx="56" cy="-6" rx="3.4" ry="1.8" fill="#FFFFFF" opacity=".75" />
+        <path d="M40 -8l1.4 3 3 1.4-3 1.4-1.4 3-1.4-3-3-1.4 3-1.4zM81 2l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" fill="#FFE27A" />
       </g>}
       </g>
       </g>

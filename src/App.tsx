@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 264;
+const APP_VERSION: number = 265;
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
 const FlashcardView = lazy(() => import('./components/FlashcardView').then((m) => ({ default: m.FlashcardView })));
 const ScoreboardView = lazy(() => import('./components/ScoreboardView').then((m) => ({ default: m.ScoreboardView })));
@@ -56,7 +56,8 @@ const AusbildungView = lazy(() => import('./ui/ausbildung').then((m) => ({ defau
 const StatistikView = lazy(() => import('./ui/statistik').then((m) => ({ default: m.StatistikView })));
 const EinarbeitungSeite = lazy(() => import('./screens/EinarbeitungSeite').then((m) => ({ default: m.EinarbeitungSeite })));
 import { BilderQuizView, buildPhotoBattleQuestions, buildBilderPool } from './games/BilderQuiz';
-import { AdventView, adventPoints, AdventDone } from './games/Advent';
+import { AdventView, AdventDone } from './games/Advent';
+import { ADVENT_PUNKTE, ADVENT_FINALE, adventBelohnung, belohnungGutschreiben, finaleGutschreiben, type AdventBelohnung } from './hilfen/advent';
 import { LEARN_PATTERNS, LearnItem, LearnKind, KnownMap } from './games/spielBasis';
 import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, ProductImages, ConfettiOverlay } from './ui/basis';
 import { ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './ui/belohnungen';
@@ -83,7 +84,7 @@ import { kopfGespeichert, kopfSetzen, modusKlassen, NACHT, type Kopf } from './t
 import { Aussehen } from './screens/dialoge/Aussehen';
 import { OfflineLaden } from './screens/dialoge/OfflineLaden';
 import { DEFAULT_CLOUD_URL, emptyCloud, HINKEL_LOGO, HINKEL_KUEKEN, LT, BTN_YELLOW, LT_CSS, TAB_ORDER } from './basis/marke';
-import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, teigiStand, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
+import { TIP_DAY_CAP, TIP_SHOP, JOKER_FIELD, shopPrice, inSeason, tueteAuslosen, teigiStand, TeigiGlas, type AnlegeArt, type TuetenInhalt, GAME_EMOJI, tipEuro, ShopIcon3D, nameClassOf, PT_SHOP, TipShop } from './basis/laden';
 import { DuelSwords, DuelBadge, LtIcon, ICON } from './basis/symbole';
 import { wxKindOf, WxIcon } from './basis/fakten';
 import { idbGet, idbSet, shiftDayKey, TEAM_CAT, TEAM_REWARD, TEAM_REWARD_ALT, weekIdNow, dayKey, stampInit, markLearnDay, streakMultFor, computeStreak, LEVELS, levelFor, AdminGift, useCountUp, seasonFor, mondayOf, parseBonDate, cleanCat } from './basis/serie';
@@ -1267,18 +1268,38 @@ export default function App() {
     const year = String(new Date().getFullYear());
     const already = ((cloudDataRef.current.progress[k] || {})._advent || {})[year]?.[day];
     if (already) return;
+    // Version 265: jedes Türchen bringt eine Überraschungstüte und eine Advents-Belohnung, richtig beantwortet 100 Punkte
+    const prJetzt: any = cloudDataRef.current.progress[k] || {};
+    const shopOwned: string[] = Array.isArray(prJetzt._shopOwned) ? prJetzt._shopOwned : [];
+    const ptsOwned: string[] = Array.isArray(prJetzt._ptsOwned) ? prJetzt._ptsOwned : [];
+    const tuete = tueteAuslosen(shopOwned);
+    const belohnung = adventBelohnung([...shopOwned, ...(tuete.art === 'teil' ? [tuete.it.id] : [])], ptsOwned);
+    const tageVorher = Object.keys(((prJetzt._advent || {})[year]) || {}).filter((d) => Number(d) >= 1 && Number(d) <= 24).length;
+    const finale: ShopItem[] = tageVorher + 1 >= 24 ? ADVENT_FINALE.filter((id) => !shopOwned.includes(id)).map((id) => TIP_SHOP.find((i) => i.id === id)!).filter(Boolean) : [];
     mutateCloudData((curr) => {
       if (!curr.progress[k]) curr.progress[k] = { _displayName: username };
-      const adv = { ...(curr.progress[k]._advent || {}) };
+      const pr: any = curr.progress[k];
+      const adv = { ...(pr._advent || {}) };
       const y = { ...(adv[year] || {}) };
-      if (!y[day]) y[day] = { ok, d: dayKey(new Date()), qid: q?.id };
+      if (y[day]) return curr;
+      y[day] = { ok, d: dayKey(new Date()), qid: q?.id, b: belohnung.art === 'geld' ? 'geld' : belohnung.it.id };
       adv[year] = y;
-      curr.progress[k]._advent = adv;
+      pr._advent = adv;
       markLearnDay(curr, k, username);
+      if (ok) {
+        if (!Array.isArray(curr.scores)) curr.scores = [];
+        curr.scores.push({ id: `${k}_advent_${Date.now()}`, username, score: ADVENT_PUNKTE, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Adventskalender 🎄' });
+      }
+      const owned: string[] = Array.isArray(pr._shopOwned) ? pr._shopOwned : [];
+      if (tuete.art === 'geld') pr._tipCents = (Number(pr._tipCents) || 0) + tuete.cents;
+      else if (tuete.art === 'joker') { const f = JOKER_FIELD[tuete.it.id]; pr[f] = (Number(pr[f]) || 0) + 1; }
+      else if (!owned.includes(tuete.it.id)) pr._shopOwned = [...owned, tuete.it.id];
+      belohnungGutschreiben(pr, belohnung);
+      finaleGutschreiben(pr, year);
       return curr;
     });
     if (q && typeof q.id === 'number') recordAnsweredQuestion(q.category, q.level || 'easy', q.id, ok);
-    if (ok) saveScoreToLeaderboard(adventPoints(day), 'Adventskalender 🎄');
+    setAdventBeute({ day, ok, tuete, belohnung, finale });
   };
 
   // Frage melden: landet beim Ausbilder unter „Meldungen“
@@ -1815,7 +1836,8 @@ export default function App() {
   const reportSentRef = useRef<(() => void) | null>(null);
   const [toast, setToast] = useState<string>('');
   const [chanceOn, setChanceOn] = useState(false); // Zweite Chance für die aktuelle Frage eingeschaltet
-  const [tuetenInhalt, setTuetenInhalt] = useState<(TuetenInhalt & { team?: boolean }) | null>(null); // Überraschungstüte: was war drin?
+  const [tuetenInhalt, setTuetenInhalt] = useState<(TuetenInhalt & { team?: boolean }) | null>(null);
+  const [adventBeute, setAdventBeute] = useState<{ day: number; ok: boolean; tuete: TuetenInhalt; belohnung: AdventBelohnung; finale: ShopItem[] } | null>(null); // Überraschungstüte: was war drin?
   // Monatsmeister: einmalig Abzeichen und 2 € Trinkgeld
   useEffect(() => {
     if (!username || username.toLowerCase() === 'admin' || !cloudConnected || isSyncing) return;
@@ -2938,6 +2960,44 @@ export default function App() {
       {!isAdmin && !myProg._teigiAus && activeTab !== 'admin' && (
         <TeigiBegleiter stufe={teigiStand([...(Array.isArray(myProg._days) ? myProg._days : []), ...myUrlaubTage], Math.max(0, (Number(myProg._stamps) || 0) - (Number(myProg._teigiStart) || 0))).stufe} hut={myProg._teigiHut} glas={myProg._teigiGlas} tanz={myProg._teigiTanz} />
       )}
+      {/* Version 265: was hinter dem Türchen steckte (Punkte, Tüte, Advents-Belohnung, bei allen 24 das Finale) */}
+      {adventBeute && (() => {
+        const b = adventBeute.belohnung, t = adventBeute.tuete;
+        const bild = (_art: 'tuete' | 'advent', x: any) => {
+          if (x.art === 'geld') return <ShopIcon3D k="coin" size={54} />;
+          if (x.art === 'joker') return <ShopIcon3D k={x.it.id} size={54} />;
+          if (x.it.kind === 'teigihut') return <TeigiGlas stufe={2} laune="froh" size={58} hut={x.it.id} />;
+          if (x.it.kind === 'markise') return <span className={`lt-mk-sw-${x.it.id}`} style={{ display: 'inline-block', width: '56px', height: '40px', borderRadius: '10px' }} />;
+          if (x.it.kind === 'title') return <span style={{ padding: '4px 10px', borderRadius: '999px', backgroundColor: '#FFF4C7', color: '#4B2A14', fontWeight: 800, fontSize: '13px' }}>Titel</span>;
+          if (x.it.kind === 'schrift') return <span style={{ fontSize: '34px', fontWeight: 800 }}>Aa</span>;
+          return <span style={{ fontSize: '44px', lineHeight: 1 }}>{x.it.kind === 'effect' ? (myProg._avatar || '🥨') : x.it.icon}</span>;
+        };
+        const text = (x: any) => x.art === 'geld' ? `${tipEuro(x.cents)} Trinkgeld` : x.art === 'joker' ? `Ein ${x.it.label}` : x.it.kind === 'title' ? `Titel „${x.it.label}“` : x.it.label;
+        const zeile = (cls: string, ober: string, inhalt: React.ReactNode, titel: string, unter?: string) => (
+          <div className={cls} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 12px', borderRadius: '16px', backgroundColor: dc('#FFFFFF'), textAlign: 'left' }}>
+            <span style={{ flex: '0 0 62px', display: 'flex', justifyContent: 'center' }}>{inhalt}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: '12px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: LT.muted }}>{ober}</span>
+              <span style={{ display: 'block', fontSize: '18px', fontWeight: 800 }}>{titel}</span>
+              {unter && <span style={{ display: 'block', fontSize: '13px', color: LT.muted }}>{unter}</span>}
+            </span>
+          </div>
+        );
+        return (
+          <div className="lt-overlay" onClick={() => setAdventBeute(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div className="lt-dialog lt-pop-in lt-advent-beute" role="dialog" aria-modal="true" aria-label={`Türchen ${adventBeute.day}`} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '400px', maxHeight: '92vh', overflowY: 'auto', backgroundColor: LT.cream, borderRadius: '24px', padding: '22px 18px', display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center', boxShadow: '0 24px 60px rgba(0,0,0,.35)' }}>
+              <ConfettiOverlay active />
+              <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: LT.muted }}>Hinter Türchen {adventBeute.day}</div>
+              {adventBeute.finale.length > 0 && <div className="lt-advent-finale" style={{ padding: '12px', borderRadius: '16px', background: 'linear-gradient(135deg,#FFE27A,#E0A526)', color: '#3A2010', fontWeight: 800, fontSize: '17px' }}>Alle 24 Türchen geschafft! Dazu gibt es den Goldenen Stern für Teigi und den Titel „Weihnachtsstern“.</div>}
+              {zeile('lt-advent-punkte', 'Frage', <span style={{ fontFamily: LT.serif, fontSize: '26px', fontWeight: 800, color: adventBeute.ok ? '#2F7A3E' : LT.muted }}>{adventBeute.ok ? '+100' : '0'}</span>, adventBeute.ok ? `+${ADVENT_PUNKTE} Punkte` : 'Diesmal keine Punkte', adventBeute.ok ? 'Richtig beantwortet.' : 'Die Antwort war leider falsch. Tüte und Geschenk gibt es trotzdem.')}
+              {zeile('lt-advent-tuete', 'Überraschungstüte', bild('tuete', t), text(t), t.art === 'teil' ? 'Liegt jetzt in deinem Laden.' : undefined)}
+              {zeile('lt-advent-geschenk', b.art === 'teil' || b.art === 'pt' ? 'Nur im Adventskalender' : 'Advents-Geschenk', bild('advent', b), text(b), b.art === 'pt' ? 'Liegt in der Schatzkammer, antippen zum Anlegen.' : b.art === 'teil' ? (b.it.kind === 'teigihut' ? 'Im Laden unter „Teigi“ anlegen.' : 'Im Laden anlegen.') : undefined)}
+              {adventBeute.finale.map((f) => <div key={f.id}>{zeile('lt-advent-finale-teil', 'Für alle 24 Türchen', bild('advent', { art: 'teil', it: f }), f.kind === 'title' ? `Titel „${f.label}“` : f.label)}</div>)}
+              <button onClick={() => setAdventBeute(null)} autoFocus style={{ minHeight: '50px', marginTop: '4px', borderRadius: '14px', border: 'none', backgroundColor: LT.ink, color: dc('#FFFFFF'), fontSize: '17px', fontWeight: 700, cursor: 'pointer' }}>Super!</button>
+            </div>
+          </div>
+        );
+      })()}
       {tuetenInhalt && (
         <div className="lt-overlay" onClick={() => setTuetenInhalt(null)} style={{ position: 'fixed', inset: 0, zIndex: 125, backgroundColor: 'rgba(43,23,10,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div className="lt-dialog lt-pop-in lt-tuete-popup" role="dialog" aria-modal="true" aria-label="Überraschungstüte" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '380px', backgroundColor: LT.cream, borderRadius: '24px', padding: '26px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', textAlign: 'center' }}>

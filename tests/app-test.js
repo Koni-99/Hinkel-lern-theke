@@ -329,7 +329,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -908,6 +908,34 @@ async function offlineTests() {
     const breit = await d.page.evaluate(() => document.documentElement.scrollWidth);
     ok('Suche: nichts steht seitlich über', breit <= 392, String(breit));
     ok('Suche: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 265: Adventskalender mit Tüte, Geschenk (nur hier) und 100 Punkten, alle 24 = Goldener Stern
+  teile.push(['Version 265: Adventskalender-Belohnungen', async () => {
+    const C = kompiliere(['src/hilfen/advent.ts', 'src/basis/laden.tsx']);
+    const A = C.hilfen_advent, L = C.basis_laden;
+    const b1 = A.adventBelohnung([], []);
+    ok('Advent: Geschenk ist eine Sache nur aus dem Adventskalender (kein Finale)', (b1.art === 'teil' || b1.art === 'pt') && b1.it.advent && !A.ADVENT_FINALE.includes(b1.it.id), JSON.stringify(b1));
+    const alle = [...A.adventTeile().map((i) => i.id)], allePt = A.adventPt().map((i) => i.id);
+    const b2 = A.adventBelohnung(alle, allePt);
+    ok('Advent: hat man alles, gibt es Joker oder Trinkgeld', b2.art === 'joker' || b2.art === 'geld', b2.art);
+    ok('Advent: Sachen nicht im Laden und nicht in der Tüte', L.TIP_SHOP.filter((i) => i.advent).every((i) => !L.imLaden(i)) && Array.from({ length: 300 }, () => L.tueteAuslosen([])).every((t) => t.art !== 'teil' || !t.it.advent));
+    const pr = { _advent: { 2026: Object.fromEntries(Array.from({ length: 24 }, (_, i) => [i + 1, { ok: true }])) } };
+    const f1 = A.finaleGutschreiben(pr, '2026'), f2 = A.finaleGutschreiben(pr, '2026');
+    ok('Advent: alle 24 Türchen = Goldener Stern + Titel, genau einmal', f1.length === 2 && f2.length === 0 && pr._shopOwned.includes('tz_stern') && pr._shopOwned.includes('ad_t_stern'));
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => { await ctx.clock.install({ time: new Date(2026, 11, 3, 10, 0) }); await ctx.addInitScript(() => { try { if (!sessionStorage.getItem('__adv')) { sessionStorage.setItem('__adv', '1'); sessionStorage.setItem('lt_seite', 'advent'); } } catch {} }); } });
+    await clearPopups(d.page);
+    const tuer = d.page.locator('button[aria-label="Türchen 1, kann geöffnet werden"]');
+    for (let w = 0; w < 50 && !(await tuer.count()); w++) await sleep(100);
+    await click(tuer); await settle(d.page, 1000);
+    const opt = d.page.locator('button[data-advent-opt]');
+    for (let w = 0; w < 50 && !(await opt.count()); w++) await sleep(100);
+    await click(opt.first());
+    const pop = d.page.locator('.lt-advent-beute');
+    for (let w = 0; w < 50 && !(await pop.count()); w++) await sleep(100);
+    const txt = await pop.innerText().catch(() => '');
+    ok('Türchen: Pop-up mit Frage-Punkten, Überraschungstüte und Advents-Geschenk', (await pop.count()) === 1 && /Hinter Türchen 1/i.test(txt) && /Überraschungstüte/i.test(txt) && /(Nur im Adventskalender|Advents-Geschenk)/i.test(txt) && /(\+100 Punkte|keine Punkte)/.test(txt), txt.slice(0, 200));
+    ok('Adventskalender: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 263: Rubbellos mit drei Feldern

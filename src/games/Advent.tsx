@@ -18,7 +18,8 @@ export type AdventDone = Record<string, { ok: boolean; d?: string; qid?: number 
 
 export const XMAS_NAMES = new Set(SHOP_PRODUCTS.filter(p => p.group === 'Weihnachtsgebäck').flatMap(p => [p.name, ...(p.aliases || [])]));
 
-export const adventPoints = (day: number) => (day === 6 || day === 24 ? 60 : 30);
+/** Version 265: 100 Punkte für jede richtige Antwort (vorher 30, an Nikolaus und Heiligabend 60) */
+export const adventPoints = (_day: number) => 100;
 
 /** 24 Fragen, für alle Mitarbeiter gleich, rund ums Weihnachtsgebäck */
 export function adventQuestions(questions: any[], year: number): any[] {
@@ -118,7 +119,7 @@ export function AdventView({ questions, done, onAnswer, preview = false }: { que
           <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: TH.yellow }}>Hinkel-Adventskalender {year}</div>
           <h1 style={{ margin: 0, fontFamily: TH.serif, fontWeight: 400, fontSize: '42px', lineHeight: 1.05 }}>Jeden Tag ein Türchen</h1>
           <p style={{ margin: 0, fontSize: '18px', lineHeight: 1.5, color: dc('#F0D9AE') }}>
-            Hinter jedem Türchen wartet eine Frage rund ums Weihnachtsgebäck, einmal antworten, {adventPoints(1)} Punkte bei richtiger Antwort. Am Nikolaustag und an Heiligabend gibt es doppelte Punkte. Verpasste Türchen kannst du nachholen.
+            Hinter jedem Türchen wartet eine Frage rund ums Weihnachtsgebäck. Jedes Türchen bringt eine Überraschungstüte und ein Geschenk, das es nur im Adventskalender gibt, richtig beantwortet dazu {adventPoints(1)} Punkte. Wer alle 24 Türchen öffnet, bekommt den Goldenen Stern für Teigi. Verpasste Türchen kannst du nachholen.
           </p>
         </div>
       </div>
@@ -140,7 +141,7 @@ export function AdventView({ questions, done, onAnswer, preview = false }: { que
               <span style={{ width: '54px', height: '54px', borderRadius: '14px', backgroundColor: TH.brown, color: TH.yellow, fontFamily: TH.serif, fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{active}</span>
               <div>
                 <div style={{ fontSize: '15px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Türchen {active}{active === 6 ? ' · Nikolaus' : active === 24 ? ' · Heiligabend' : ''}</div>
-                <div style={{ fontSize: '16px', color: TH.brown }}>{review ? (rec.ok ? `Schon richtig beantwortet ⭐ (+${adventPoints(active)})` : 'Schon geöffnet, leider war die Antwort falsch') : `${adventPoints(active)} Punkte bei richtiger Antwort`}</div>
+                <div style={{ fontSize: '16px', color: TH.brown }}>{review ? (rec.ok ? `Schon richtig beantwortet ⭐ (+${adventPoints(active)})` : 'Schon geöffnet, leider war die Antwort falsch') : `Tüte + Geschenk, ${adventPoints(active)} Punkte bei richtiger Antwort`}</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', justifyContent: 'space-between' }}>
@@ -162,7 +163,7 @@ export function AdventView({ questions, done, onAnswer, preview = false }: { que
                     else bg = TH.white;
                   }
                   return (
-                    <button key={i} className={chosen !== null ? (o.right ? 'lt-correct' : i === chosen ? 'lt-wrong' : undefined) : undefined} onClick={() => choose(i)} disabled={chosen !== null} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '60px', padding: '10px 14px', borderRadius: '16px', border: `3px solid ${border}`, backgroundColor: bg, color: TH.ink, textAlign: 'left', fontSize: '18px', lineHeight: 1.35, cursor: chosen !== null ? 'default' : 'pointer' }}>
+                    <button key={i} data-advent-opt="1" className={chosen !== null ? (o.right ? 'lt-correct' : i === chosen ? 'lt-wrong' : undefined) : undefined} onClick={() => choose(i)} disabled={chosen !== null} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '60px', padding: '10px 14px', borderRadius: '16px', border: `3px solid ${border}`, backgroundColor: bg, color: TH.ink, textAlign: 'left', fontSize: '18px', lineHeight: 1.35, cursor: chosen !== null ? 'default' : 'pointer' }}>
                       <span style={{ flex: '0 0 36px', height: '36px', borderRadius: '50%', border: `2px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, boxSizing: 'border-box', backgroundColor: TH.white }}>{String.fromCharCode(65 + i)}</span>
                       <span style={{ flex: 1 }}>{o.text}</span>
                     </button>
