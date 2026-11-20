@@ -3,6 +3,7 @@
 import { useState, useEffect, CSSProperties, ReactNode } from 'react';
 import { dc } from '../daten/data';
 import { TH, cardStyle } from './basis';
+import { LtIcon, ICON } from '../basis/symbole';
 
 // ───────────────────────── Fehler melden (in allen Spielen) ─────────────────────────
 /** Was in einem Spiel gemeldet wird: Spielname, was angezeigt wurde, ggf. Produkt oder Quizfrage */
@@ -68,8 +69,10 @@ export function FloatingReportButton() {
       disabled={done}
       onClick={() => gameReporter && gameReporter(r, () => { reportedKeys[key] = true; setSentKey(key); })}
       aria-label={done ? 'Schon gemeldet' : 'Fehler bei dieser Frage melden'}
-      style={{ position: 'fixed', right: 0, top: '46%', zIndex: 950, writingMode: 'vertical-rl', transform: 'rotate(180deg)', padding: '14px 9px', borderRadius: '0 14px 14px 0', border: `2px solid ${TH.line}`, borderLeft: 'none', backgroundColor: done ? TH.tintSage : dc('#FFFFFF'), color: done ? TH.green : TH.brown, fontSize: '15px', fontWeight: 700, cursor: done ? 'default' : 'pointer', boxShadow: '0 6px 18px rgba(43,23,10,.18)', letterSpacing: '.5px' }}
-    >{done ? '✓ Gemeldet' : '⚑ Fehler melden'}</button>
+      title={done ? 'Schon gemeldet' : 'Fehler melden'}
+      // Version 270: kleiner runder Knopf mit Fähnchen statt Schild „Fehler melden“ (war im Weg)
+      style={{ position: 'fixed', right: '10px', bottom: 'calc(env(safe-area-inset-bottom, 0px) + 104px)', zIndex: 950, width: '44px', height: '44px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: `2px solid ${TH.line}`, backgroundColor: done ? TH.tintSage : dc('#FFFFFF'), color: done ? TH.green : TH.muted, cursor: done ? 'default' : 'pointer', boxShadow: '0 4px 12px rgba(43,23,10,.18)' }}
+    ><LtIcon paths={done ? ['M5 12l5 5L20 7'] : ICON.flag} size={20} /></button>
   );
 }
 
