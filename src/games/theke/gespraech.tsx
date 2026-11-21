@@ -1,5 +1,6 @@
 // ═══ Theken-Simulator: Gespräch zusammenbauen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
+import { korrigiereSchritt, themaAus } from '../../hilfen/spielKorrektur';
 import { shuffleArray } from '../../hilfen/allgemein';
 import { euro } from '../Kassenblitz';
 import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, Core, opts } from './basis';
@@ -50,7 +51,9 @@ export const SMALLTALK: ((p: Persona) => SimStep)[] = [
 ];
 
 export function pickScenario(focus?: string) {
-  const pool = focus && !GENERAL_TOPICS.includes(focus) ? SCENARIOS.filter(x => x.topics.includes(focus)) : SCENARIOS;
+  // Version 274: vom Ausbilder ausgeblendete Situationen kommen nicht mehr dran (gezielt geübt: trotzdem, sonst gäbe es nichts)
+  const an = SCENARIOS.filter(x => !x.topics.every(themaAus));
+  const pool = focus && !GENERAL_TOPICS.includes(focus) ? SCENARIOS.filter(x => x.topics.includes(focus)) : (an.length ? an : SCENARIOS);
   const list = (pool.length ? pool : SCENARIOS).flatMap(x => Array(x.weight).fill(x.fn) as (() => Core | null)[]);
   return pick(list);
 }
@@ -289,5 +292,6 @@ export function buildConversation(focus?: string, skip: string[] = [], lang = fa
   const endLines = [pick(isRegular
     ? ['Danke, bis morgen!', 'Ihnen auch, tschüss!', 'Bis Samstag!']
     : ['Danke, Ihnen auch!', 'Tschüss!', 'Gleichfalls!', 'Danke, tschüss!'])];
-  return { persona, steps, endLines, tipCents, coreKey: coreKeyOf(core), coreTopics: core.steps.map(st => st.topic) };
+  // Version 274: Korrekturen des Ausbilders (Text, ausgeblendete Antworten, richtige Antwort)
+  return { persona, steps: steps.map(korrigiereSchritt), endLines, tipCents, coreKey: coreKeyOf(core), coreTopics: core.steps.map(st => st.topic) };
 }

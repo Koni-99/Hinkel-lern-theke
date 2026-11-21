@@ -7,7 +7,7 @@ import { LtIcon, ICON } from '../basis/symbole';
 
 // ───────────────────────── Fehler melden (in allen Spielen) ─────────────────────────
 /** Was in einem Spiel gemeldet wird: Spielname, was angezeigt wurde, ggf. Produkt oder Quizfrage */
-export type GameReport = { game: string; text: string; detail?: string; product?: string; qid?: number };
+export type GameReport = { game: string; text: string; detail?: string; product?: string; qid?: number; /** Version 274: Daten zum Korrigieren (Theken-Simulator: Kundensatz und Antworten) */ daten?: any };
 
 export type Reporter = (r: GameReport, onSent: () => void) => void;
 

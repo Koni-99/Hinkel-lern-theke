@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 273;
+const APP_VERSION: number = 274;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -79,6 +79,7 @@ import { lehrjahrAus, fragenZuPunkt, geuebtInWoche, wochenKey } from './hilfen/a
 import { alleAzubiFragen, frageStellen, frageBeantworten, antwortenGelesen, frageLoeschen, zieleVon, zielSetzen, zielBewerten, istRueckblickZeit, rueckblick } from './hilfen/azubiExtras';
 import { FrageAnAusbilder, AzubiFragenAntworten, WochenzielKarte, RueckblickKarte } from './ui/azubiKarten';
 import { AUSBILDUNGSPLAN } from './daten/ausbildungsplan';
+import { setzeSpielKorrekturen } from './hilfen/spielKorrektur';
 import { pruefungsThema } from './hilfen/pruefungThemen';
 import { BerufsschulKarten, KartenBestaetigen } from './ui/berufsschulKarten';
 import { alleEigenenKarten, karteSchreiben, karteEntscheiden, karteLoeschen } from './hilfen/eigeneKarten';
@@ -1334,7 +1335,7 @@ export default function App() {
     mutateCloudData((curr) => {
       if (!curr.progress[k]) curr.progress[k] = { _displayName: username };
       const rep = { ...(curr.progress[k]._reports || {}) };
-      rep[key] = { r: reason, t: text.trim().slice(0, 300), d: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), ts: Date.now(), ...(g ? { g: g.game, c: (g.text + (g.detail ? '\n' + g.detail : '')).slice(0, 700), ...(g.product ? { p: g.product } : {}) } : {}) };
+      rep[key] = { r: reason, t: text.trim().slice(0, 300), d: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), ts: Date.now(), ...(g ? { g: g.game, c: (g.text + (g.detail ? '\n' + g.detail : '')).slice(0, 700), ...(g.product ? { p: g.product } : {}), ...(g.daten && JSON.stringify(g.daten).length < 4000 ? { x: g.daten } : {}) } : {}) };
       curr.progress[k]._reports = rep;
       return curr;
     });
@@ -2510,6 +2511,8 @@ export default function App() {
   // Adventskalender: sichtbar ab 20. November bis Ende Dezember (Kachel und Spielen-Karte)
   const showAdventCard = (nowMonth === 10 && new Date().getDate() >= 20) || nowMonth === 11;
   const myReports: Record<string, any> = myProg._reports || {};
+  // Version 274: Korrekturen des Ausbilders an Spieltexten (Theken-Simulator) für alle gültig
+  setzeSpielKorrekturen((cloudData.progress || {}).admin);
   // „⚑ Fehler melden“ in allen Spielen öffnet denselben Dialog wie im Quiz (nicht für den Ausbilder)
   setGameReporter(isAdmin || !username ? null : (r: GameReport, onSent: () => void) => {
     reportSentRef.current = onSent;

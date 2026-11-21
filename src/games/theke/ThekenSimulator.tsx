@@ -1,5 +1,6 @@
 // ═══ Spiel: Theken-Simulator ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
+import { grundText } from '../../hilfen/spielKorrektur';
 import { useState, useEffect, useRef } from 'react';
 import { dc } from '../../daten/data';
 import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
@@ -306,7 +307,7 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
       {phase !== 'menu' && conv && (
         <>
           <GameProgress label="Schritt" index={phase === 'done' ? total : stepIdx} answered={busy} total={total} right={phase === 'done' ? 'Gespräch fertig!' : undefined} />
-          {step && <ReportContext report={{ game: 'Theken-Simulator', product: step.learn?.product || conv.steps.find(x => x.learn)?.learn?.product, text: `${step.topic}: ${step.customer.join(' ')}`, detail: `Richtig laut App: „${(step.options.find(o => o.correct) || step.options[0]).text}“` }} />}
+          {step && <ReportContext report={{ game: 'Theken-Simulator', product: step.learn?.product || conv.steps.find(x => x.learn)?.learn?.product, text: `${step.topic}: ${step.customer.join(' ')}`, detail: `Richtig laut App: „${(step.options.find(o => o.correct) || step.options[0]).text}“`, daten: { k: 'theke', thema: step.topic, kunde: step.customer.join(' '), opts: step.options.map(o => ({ t: grundText(o.text), ok: o.correct })) } }} />}
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'stretch' }}>
             <div style={{ flex: '2 1 240px', display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 14px', borderRadius: '16px', backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>
               {(() => {

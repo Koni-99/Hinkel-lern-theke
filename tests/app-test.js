@@ -336,7 +336,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Zum Abschalten', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Aufbau des Ausbilder-Bereichs', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Zum Abschalten', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Aufbau des Ausbilder-Bereichs', 'Für den Ausbilder: Fehler korrigieren', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -1971,6 +1971,57 @@ async function offlineTests() {
     ok('Foto-Raster: kleine Vorschaubilder', vorschauOk, vorschau);
     if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
     ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
+    await d.ctx.close();
+  }]);
+  // Version 274: Spieltexte korrigieren/ausblenden (Theken-Simulator), Kassenblitz: jedes Produkt korrigierbar
+  teile.push(['Version 274: Fehler in Spielen korrigieren', async () => {
+    const M = kompiliere(['src/games/theke/gespraech.tsx', 'src/hilfen/spielKorrektur.ts']);
+    const G = M.games_theke_gespraech, K = M.hilfen_spielKorrektur;
+    const st = { topic: 'Test', customer: ['Haben Sie Kaffee?'], options: [{ text: 'Alt richtig', correct: true }, { text: 'Falsch eins', correct: false }, { text: 'Falsch zwei. Das ist sehr beliebt.', correct: false }] };
+    K.setzeSpielKorrekturen({
+      _spielTexte: { [K.textKey('Haben Sie Kaffee?')]: { a: 'Haben Sie Kaffee?', n: 'Gibt es Kaffee?' }, [K.textKey('Falsch eins')]: { a: 'Falsch eins', n: 'Jetzt richtig' } },
+      _spielAus: { [K.textKey('Falsch zwei.')]: { a: 'Falsch zwei.' } },
+      _spielRichtig: { [K.textKey('Haben Sie Kaffee?')]: { k: 'Haben Sie Kaffee?', r: 'Falsch eins' } },
+      _themenAus: { [K.textKey('Schwerhöriger Kunde')]: { t: 'Schwerhöriger Kunde' } },
+    });
+    const r = K.korrigiereSchritt(st);
+    ok('Spieltext: Kundensatz und Antwort geändert, richtige Antwort neu, Antwort (mit Zusatz) ausgeblendet',
+      r.customer[0] === 'Gibt es Kaffee?' && r.options.length === 2 && r.options.find((o) => o.correct)?.text === 'Jetzt richtig' && !r.options.some((o) => /Falsch zwei/.test(o.text)), JSON.stringify(r).slice(0, 200));
+    let schwer = 0; for (let i = 0; i < 300; i++) if (G.buildConversation().steps.some((x) => x.topic === 'Schwerhöriger Kunde')) schwer++;
+    ok('Spieltext: ausgeblendete Situation kommt nicht mehr dran', schwer === 0, `${schwer}×`);
+    K.setzeSpielKorrekturen({ _spielAus: { [K.textKey('Alt richtig')]: { a: 'Alt richtig' } } });
+    ok('Spieltext: richtige Antwort wird nie ausgeblendet', K.korrigiereSchritt(st).options.filter((o) => o.correct).length === 1);
+    K.setzeSpielKorrekturen({});
+    // Ausbilder-Bereich mit zwei Meldungen
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    const jetzt = Date.now();
+    probe.progress.anna._reports = {
+      g_t1: { r: 'Antwort stimmt nicht', t: '', d: '20.11.26', ts: jetzt, g: 'Theken-Simulator', c: 'Gibt es bei uns nicht: Einen Kaffee zum Mitnehmen, bitte.', x: { k: 'theke', thema: 'Gibt es bei uns nicht', kunde: 'Einen Kaffee zum Mitnehmen, bitte.', opts: [{ t: 'Antwort A', ok: true }, { t: 'Antwort B', ok: false }, { t: 'Antwort C', ok: false }] } },
+      g_k1: { r: 'Preis falsch', t: '', d: '20.11.26', ts: jetzt - 1000, g: 'Kassenblitz', c: '2 × Laugenbrezel (1,50 €), 1 × Laugenstange (1,35 €), zu zahlen 4,35 €, Kunde gibt 5,00 €\nRückgeld laut App: 0,65 €', p: 'Laugenbrezel' },
+    };
+    const d = await device({ admin: true, backup: probe });
+    d.page.on('dialog', (dlg) => dlg.accept());
+    await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
+    for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(d.page.getByRole('tab', { name: /Rückmeldungen/ }).first()); await settle(d.page, 500);
+    await unterReiter(d.page, 'Fehler-Meldungen');
+    ok('Kassenblitz-Meldung: Knopf für jedes Produkt im Einkauf', (await d.page.getByRole('button', { name: 'Laugenbrezel korrigieren' }).count()) === 1 && (await d.page.getByRole('button', { name: 'Laugenstange korrigieren' }).count()) === 1);
+    await click(d.page.locator('.lt-spieltext-knopf').first()); await settle(d.page, 300);
+    const ed = d.page.locator('.lt-spieltext-editor');
+    ok('Theken-Meldung: „Spieltext korrigieren“ zeigt Kundensatz und 3 Antworten', (await ed.count()) === 1 && (await ed.locator('.lt-spieltext-antwort').count()) === 3);
+    await ed.getByLabel('Antwort 2', { exact: true }).fill('Antwort B neu');
+    await ed.getByLabel('Antwort 2 ist richtig').check();
+    await ed.getByLabel('Antwort 3 ausblenden').check();
+    await click(ed.getByRole('button', { name: 'Speichern' })); await settle(d.page, 600);
+    const adm = await d.page.evaluate(() => (JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').progress || {}).admin || {});
+    const texte = Object.values(adm._spielTexte || {}), aus = Object.values(adm._spielAus || {}), ri = Object.values(adm._spielRichtig || {});
+    ok('Spieltext gespeichert (Text, richtige Antwort, ausgeblendet) im Fortschritt „admin“', texte.length === 1 && texte[0].n === 'Antwort B neu' && ri.length === 1 && ri[0].r === 'Antwort B' && aus.length === 1 && aus[0].a === 'Antwort C', JSON.stringify(adm).slice(0, 200));
+    ok('Spieltext: Meldung danach erledigt', (await d.page.locator('.lt-spieltext-knopf').count()) === 0);
+    const liste = d.page.locator('.lt-spiel-korrekturen button', { hasText: 'Zurücknehmen' });
+    const n0 = await liste.count();
+    if (n0) { await click(liste.first()); await settle(d.page, 400); }
+    ok('Korrekturen in Spielen: Liste mit „Zurücknehmen“', n0 === 3 && (await liste.count()) === 2, `${n0} → ${await liste.count()}`);
+    ok('Fehler in Spielen korrigieren: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 272: „Backstube bei Nacht“: Schrift auf wichtigen Seiten gut lesbar (Kontrast mindestens 3 : 1)

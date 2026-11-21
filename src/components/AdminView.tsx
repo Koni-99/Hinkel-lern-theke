@@ -524,7 +524,7 @@ export function AdminView({
     mutateCloudData((curr) => { const pa: any = curr.progress.admin || (curr.progress.admin = { _displayName: 'admin' }); pa._kstimmenGesehen = Date.now(); return curr; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [adminTab, unter.reports, ksNeuste]);
-  const reportMap: Record<string, { qid: string; q: any; items: ReportItem[]; game?: string; ctx?: string; product?: string }> = {};
+  const reportMap: Record<string, { qid: string; q: any; items: ReportItem[]; game?: string; ctx?: string; product?: string; daten?: any }> = {};
   Object.keys(cloudProgress).forEach(u => {
     const rp = (cloudProgress[u] || {})._reports || {};
     Object.keys(rp).forEach(qid => {
@@ -535,6 +535,7 @@ export function AdminView({
       if (e.g && !m.game) m.game = String(e.g);
       if (e.c && !m.ctx) m.ctx = String(e.c);
       if (e.p && !m.product) m.product = String(e.p);
+      if (e.x && !m.daten) m.daten = e.x;
       if (!m.product && m.q && m.q.product) m.product = m.q.product;
       m.items.push({ user: u, r: String(e.r || ''), t: String(e.t || ''), d: String(e.d || ''), ts: Number(e.ts) || 0, g: e.g ? String(e.g) : undefined });
     });
@@ -891,7 +892,7 @@ export function AdminView({
       {zeig('content', 'neu') && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
 
       {/* ═════════ MELDUNGEN ═════════ */}
-      {zeig('reports', 'fehler') && <MeldungenTab {...{ pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }} />}
+      {zeig('reports', 'fehler') && <MeldungenTab admin={cloudData.progress?.admin} mutateCloudData={mutateCloudData} {...{ pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }} />}
 
       {/* ═════════ AUSWERTUNG ═════════ */}
       {zeig('stats', 'blick') && <AuswertungUeberblick {...{ allKnownUserKeys, allQById, startFix, renderFixEditor, hiddenMap, hideQuestion, qStats, smallBtn, sectionTitle, weekInfo, nameOf }} />}

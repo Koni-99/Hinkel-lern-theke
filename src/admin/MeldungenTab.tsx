@@ -6,7 +6,18 @@ import { TH, cardStyle } from '../ui/basis';
 import type { ReportItem } from './adminHelfer';
 import { getRightAnswerText } from '../hilfen/allgemein';
 import { SHOP_PRODUCTS } from '../daten/shopProducts';
-import type { ProductFix } from '../types';
+import type { ProductFix, CloudPayload } from '../types';
+import { useState } from 'react';
+import { SpielTextEditor, SpielKorrekturenListe } from './SpielTextEditor';
+
+/** Version 274: alle Produkte aus dem Meldungstext (z. B. ganzer Einkauf im Kassenblitz), längere Namen zuerst */
+export function produkteImText(text: string, erstes?: string): string[] {
+  const t = text || '';
+  const treffer = SHOP_PRODUCTS.map((p) => p.name).filter((n) => t.includes(n));
+  const ohneTeile = treffer.filter((n) => !treffer.some((m) => m !== n && m.includes(n)));
+  const liste = erstes && SHOP_PRODUCTS.some((p) => p.name === erstes) ? [erstes, ...ohneTeile.filter((n) => n !== erstes)] : ohneTeile;
+  return liste.slice(0, 6);
+}
 
 export type MeldungenTabProps = {
   pfName: string | null;
@@ -14,7 +25,9 @@ export type MeldungenTabProps = {
   allQById: Map<number, any>;
   startFix: (id: number) => void;
   renderFixEditor: () => false | JSX.Element;
-  reports: { qid: string; q: any; items: ReportItem[]; game?: string | undefined; ctx?: string | undefined; product?: string | undefined; }[];
+  reports: { qid: string; q: any; items: ReportItem[]; game?: string | undefined; ctx?: string | undefined; product?: string | undefined; daten?: any }[];
+  admin?: any;
+  mutateCloudData: (fn: (curr: CloudPayload) => CloudPayload) => void;
   hiddenBuiltIn: number[];
   resolveReport: (qid: string) => void;
   hideQuestion: (qid: string) => void;
@@ -32,7 +45,8 @@ export type MeldungenTabProps = {
   nameOf: (userKey: string) => any;
 };
 
-export function MeldungenTab({ pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }: MeldungenTabProps) {
+export function MeldungenTab({ admin, mutateCloudData, pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }: MeldungenTabProps) {
+  const [textOffen, setTextOffen] = useState<string | null>(null);
   return (
     <>
       {renderFixEditor()}
@@ -69,19 +83,23 @@ export function MeldungenTab({ pfName, pfMsg, allQById, startFix, renderFixEdito
                     </div>
                   ))}
                 </div>
+                {textOffen === rep.qid && rep.daten && <SpielTextEditor daten={rep.daten} mutateCloudData={mutateCloudData} onFertig={() => { setTextOffen(null); resolveReport(rep.qid); }} onAbbrechen={() => setTextOffen(null)} smallBtn={smallBtn} inputStyle={inputStyle} />}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {rep.q && <button onClick={() => startFix(Number(rep.qid))} style={smallBtn('warn')}>Frage korrigieren</button>}
-                  {rep.product && SHOP_PRODUCTS.some(p => p.name === rep.product) && <button onClick={() => startProductFix(rep.product!, rep.qid)} style={smallBtn('warn')}>Produkt korrigieren</button>}
+                  {rep.q ? (rep.product && SHOP_PRODUCTS.some(p => p.name === rep.product) && <button onClick={() => startProductFix(rep.product!, rep.qid)} style={smallBtn('warn')}>Produkt korrigieren</button>)
+                    : (() => { const l = produkteImText(rep.ctx || '', rep.product); return l.map((n) => <button key={n} onClick={() => startProductFix(n, rep.qid)} style={smallBtn('warn')}>{l.length > 1 ? `${n} korrigieren` : 'Produkt korrigieren'}</button>); })()}
+                  {rep.daten && rep.daten.k === 'theke' && Array.isArray(rep.daten.opts) && <button className="lt-spieltext-knopf" onClick={() => setTextOffen(textOffen === rep.qid ? null : rep.qid)} style={smallBtn('warn')}>Spieltext korrigieren</button>}
                   {!rep.q && rep.game && <button onClick={() => copyReportText(rep)} style={smallBtn()}>Meldung kopieren</button>}
                   <button onClick={() => resolveReport(rep.qid)} style={smallBtn()}>Erledigt ✓</button>
                   {rep.q && <button onClick={() => hideQuestion(rep.qid)} style={smallBtn('danger')}>Frage ausblenden</button>}
                 </div>
               </div>
             ))}
-            <div style={{ fontSize: '15px', color: TH.muted }}>Tipp: Mit „Frage korrigieren“ änderst du Text, Antworten oder Erklärung einer Quizfrage. Mit „Produkt korrigieren“ änderst du Preis, Zutaten, Allergene oder Alternativen eines Produkts, das gilt dann in allen Spielen. Die Meldung wird dabei automatisch erledigt. Geht es um einen Spieltext (z. B. im Theken-Simulator), tippe auf „Meldung kopieren“ und schick sie mir.</div>
+            <div style={{ fontSize: '15px', color: TH.muted }}>Tipp: Mit „Frage korrigieren“ änderst du Text, Antworten oder Erklärung einer Quizfrage. Mit „Produkt korrigieren“ änderst du Preis, Zutaten, Allergene oder Alternativen eines Produkts, das gilt dann in allen Spielen. Die Meldung wird dabei automatisch erledigt. Im Theken-Simulator änderst du mit „Spieltext korrigieren“ den Satz des Kunden und die Antworten, legst die richtige Antwort fest oder blendest Antworten bzw. die ganze Situation aus. Bei Spielen, die aus den Produktdaten rechnen (z. B. Kassenblitz), steht für jedes Produkt der Meldung ein eigener Knopf da. Passt nichts davon, tippe auf „Meldung kopieren“ und schick sie mir.</div>
           </div>
         )}
       </div>
+      <SpielKorrekturenListe admin={admin} mutateCloudData={mutateCloudData} smallBtn={smallBtn} sectionTitle={sectionTitle} />
       <div style={cardStyle}>
         {sectionTitle('Produktdaten korrigieren', 'Auch ohne Meldung: Preis, Zutaten, Allergene oder Alternativen eines Produkts ändern. Gilt sofort in allen Spielen.')}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
