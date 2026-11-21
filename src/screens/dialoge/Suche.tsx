@@ -27,8 +27,16 @@ export function SucheDialog({ fragen, images, hilfe, onClose, onSteckbrief, onSe
   const feld = useRef<HTMLInputElement>(null);
   useEffect(() => { window.setTimeout(() => feld.current?.focus(), 50); }, []);
   useEffect(() => {
-    const el = versteckt.current; if (!el) return;
-    setHilfeIndex([...el.querySelectorAll('details')].map((d) => ({ titel: (d.querySelector('summary')?.textContent || '').replace('▾', '').trim(), text: (d.textContent || '') })).filter((x) => x.titel));
+    // Version 272: die Hilfe wird erst bei Bedarf geladen → warten, bis sie da ist
+    let n = 0;
+    const lies = () => {
+      const el = versteckt.current; if (!el) return;
+      const liste = [...el.querySelectorAll('details')].map((d) => ({ titel: (d.querySelector('summary')?.textContent || '').replace('▾', '').trim(), text: (d.textContent || '') })).filter((x) => x.titel);
+      if (liste.length || ++n > 100) { setHilfeIndex(liste); window.clearInterval(t); }
+    };
+    const t = window.setInterval(lies, 100);
+    lies();
+    return () => window.clearInterval(t);
   }, []);
   useEffect(() => { const t = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); }; window.addEventListener('keydown', t); return () => window.removeEventListener('keydown', t); }, [onClose]);
 

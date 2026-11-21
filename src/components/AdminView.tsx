@@ -155,7 +155,17 @@ export function AdminView({
     reader.readAsDataURL(file);
   };
   const [tempCloudUrl, setTempCloudUrl] = useState(cloudUrl);
-  const [adminTab, setAdminTab] = useState<'team' | 'reports' | 'kollegen' | 'message' | 'content' | 'stats' | 'settings'>('team');
+  // Version 272: 6 Reiter, die vollen Reiter haben Unterreiter (immer nur ein Bereich sichtbar)
+  type Reiter = 'team' | 'reports' | 'message' | 'content' | 'stats' | 'settings';
+  const [adminTab, setAdminTabRoh] = useState<Reiter>('team');
+  const [unter, setUnter] = useState<Record<string, string>>({});
+  const setAdminTab = (z: Reiter | 'kollegen', u?: string) => {
+    if (z === 'kollegen') { z = 'reports'; u = 'team'; }
+    if (z === 'message' && !u && neueAntworten(cloudData.progress, 'admin')) u = 'einzeln';
+    if (!u) u = unterVon(z) || undefined; // Unterreiter festhalten, damit er beim Abarbeiten nicht springt
+    setAdminTabRoh(z);
+    if (u) setUnter((x) => ({ ...x, [z]: u as string }));
+  };
   const [openUser, setOpenUser] = useState<string | null>(null);
   const [teamOpen, setTeamOpen] = useState(false);
   const [teamCat, setTeamCat] = useState<string>('');
@@ -509,11 +519,11 @@ export function AdminView({
   // Version 259: neue Kundenstimmen gelten als gesehen, sobald der Reiter Rückmeldungen offen ist
   const ksNeuste = Object.values(cloudData.progress || {}).reduce((m: number, p: any) => Math.max(m, ...Object.values((p && p._kundenstimmen) || {}).map((x: any) => Number(x && x.ts) || 0)), 0);
   useEffect(() => {
-    if (adminTab !== 'kollegen' || !ksNeuste) return;
+    if (adminTab !== 'reports' || (unter.reports || 'team') !== 'team' || !ksNeuste) return;
     if ((Number((cloudData.progress?.admin || {})._kstimmenGesehen) || 0) >= ksNeuste) return;
     mutateCloudData((curr) => { const pa: any = curr.progress.admin || (curr.progress.admin = { _displayName: 'admin' }); pa._kstimmenGesehen = Date.now(); return curr; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminTab, ksNeuste]);
+  }, [adminTab, unter.reports, ksNeuste]);
   const reportMap: Record<string, { qid: string; q: any; items: ReportItem[]; game?: string; ctx?: string; product?: string }> = {};
   Object.keys(cloudProgress).forEach(u => {
     const rp = (cloudProgress[u] || {})._reports || {};
@@ -743,15 +753,35 @@ export function AdminView({
   };
 
   const onlineCount = allKnownUserKeys.filter(k => cloudLastSeen[k]?.timestamp && Date.now() - cloudLastSeen[k].timestamp < 120000).length;
-  const tabs: { id: typeof adminTab; label: string }[] = [
+  const offenTeam = offeneKollegenSachen(cloudData.progress);
+  const offenAlle = reports.length + offenTeam;
+  const tabs: { id: Reiter; label: string }[] = [
     { id: 'team', label: `Mitarbeiter (${allKnownUserKeys.length})` },
-    { id: 'reports', label: reports.length ? `Meldungen (${reports.length})` : 'Meldungen' },
-    { id: 'kollegen', label: offeneKollegenSachen(cloudData.progress) ? `Rückmeldungen (${offeneKollegenSachen(cloudData.progress)})` : 'Rückmeldungen' },
+    { id: 'reports', label: offenAlle ? `Rückmeldungen (${offenAlle})` : 'Rückmeldungen' },
     { id: 'message', label: neueAntworten(cloudData.progress, 'admin') ? `Nachricht & Umfrage (${neueAntworten(cloudData.progress, 'admin')} neu)` : 'Nachricht & Umfrage' },
     { id: 'content', label: 'Inhalte' },
     { id: 'stats', label: 'Auswertung' },
     { id: 'settings', label: 'Einstellungen' },
   ];
+  // Unterreiter je Reiter (erster = Standard)
+  const UNTER: Partial<Record<Reiter, { id: string; label: string }[]>> = {
+    reports: [
+      { id: 'team', label: offenTeam ? `Vom Team (${offenTeam})` : 'Vom Team' },
+      { id: 'fehler', label: reports.length ? `Fehler-Meldungen (${reports.length})` : 'Fehler-Meldungen' },
+    ],
+    message: [{ id: 'alle', label: 'An alle' }, { id: 'einzeln', label: 'An einzelne' }, { id: 'umfrage', label: 'Umfrage' }],
+    content: [{ id: 'neu', label: 'Neu anlegen' }, { id: 'excel', label: 'Aus Excel' }, { id: 'sortiment', label: 'Sortiment' }],
+    stats: [{ id: 'blick', label: 'Auf einen Blick' }, { id: 'woche', label: 'Woche' }, { id: 'nutzung', label: 'Nutzung' }, { id: 'schwach', label: 'Schwachstellen' }],
+    settings: [{ id: 'daten', label: 'Sicherung & Cloud' }, { id: 'fotos', label: 'Fotos' }, { id: 'bestenliste', label: 'Bestenliste' }],
+  };
+  const unterVon = (t: Reiter) => {
+    const l = UNTER[t]; if (!l) return '';
+    const u = unter[t];
+    if (u && l.some((x) => x.id === u)) return u;
+    if (t === 'reports' && !offenTeam && reports.length) return 'fehler';
+    return l[0].id;
+  };
+  const zeig = (t: Reiter, u: string) => adminTab === t && unterVon(t) === u;
 
   return (
     <div className="lt-themed" style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', color: TH.ink, textAlign: 'left' }}>
@@ -768,7 +798,7 @@ export function AdminView({
         const geh = (z: AdminZiel) => {
           if (z === 'ausbildung') { onAusbildung?.(); return; }
           if (z === 'oben') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-          setAdminTab(z as any);
+          setAdminTab(z as Reiter | 'kollegen', z === 'reports' ? 'fehler' : undefined);
           window.setTimeout(() => document.querySelector('[role=tablist][aria-label="Ausbilder-Bereiche"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
         };
         return (
@@ -837,44 +867,53 @@ export function AdminView({
         })}
       </div>
 
+      {UNTER[adminTab] && (
+        <div className="lt-unterreiter" aria-label="Unterbereiche" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '-6px' }}>
+          {UNTER[adminTab]!.map((u) => {
+            const an = unterVon(adminTab) === u.id;
+            return <button key={u.id} type="button" aria-pressed={an} onClick={() => setUnter((x) => ({ ...x, [adminTab]: u.id }))} style={{ minHeight: '44px', padding: '0 16px', borderRadius: '999px', border: `2px solid ${an ? TH.brown : TH.line}`, backgroundColor: an ? TH.tintYellow : 'transparent', color: TH.brown, fontSize: '16px', fontWeight: 700, cursor: 'pointer' }}>{u.label}</button>;
+          })}
+        </div>
+      )}
+
       {/* ═════════ MITARBEITER ═════════ */}
       {adminTab === 'team' && <TeamTab {...{ cloudData, allKnownUserKeys, questions, examQuestions, allFlashcards, getUserMasteryPercent, mutateCloudData, learnInfo, openUser, setOpenUser, setTeamOpen, teamOpen, teamCat, setTeamCat, cloudProgress, cloudLastSeen, cloudScores, adminResetUserWrongStats, adminResetUserProgress, adminResetUserPin, adminDeleteUserCompletely, adminDeleteScoreEntry, adminDeleteAllUserPoints, allQById, hiddenMap, smallBtn, thisWeek, weekInfo, nameOf }} />}
 
       {/* ═════════ NACHRICHT ═════════ */}
-      {adminTab === 'message' && <NachrichtTab progress={cloudData.progress} alleMitarbeiter={allKnownUserKeys} {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
-      {adminTab === 'message' && <NachrichtSchreiben cloudData={cloudData} userKey="admin" name="Ausbilder" alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={(t: string) => alert(t)} isAdmin />}
-      {adminTab === 'message' && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
+      {zeig('message', 'alle') && <NachrichtTab progress={cloudData.progress} alleMitarbeiter={allKnownUserKeys} {...{ overwriteCloudDataDirectly, pinboardDraft, setPinboardDraft, pinImage, setPinImage, pinBanner, setPinBanner, pinUntil, setPinUntil, pinImgBusy, loadPinImage, activePinboard, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {zeig('message', 'einzeln') && <NachrichtSchreiben cloudData={cloudData} userKey="admin" name="Ausbilder" alleMitarbeiter={allKnownUserKeys} mutateCloudData={mutateCloudData} setToast={(t: string) => alert(t)} isAdmin />}
+      {zeig('message', 'umfrage') && <UmfragenVerwaltung cloudData={cloudData} mutateCloudData={mutateCloudData} />}
 
       {/* ═════════ INHALTE ═════════ */}
-      {adminTab === 'content' && <SortimentAus cloudData={cloudData} mutateCloudData={mutateCloudData} />}
-      {adminTab === 'content' && <ProduktImport mutateCloudData={mutateCloudData} />}
-      {adminTab === 'content' && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}
-      {adminTab === 'content' && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {zeig('content', 'sortiment') && <SortimentAus cloudData={cloudData} mutateCloudData={mutateCloudData} />}
+      {zeig('content', 'excel') && <ProduktImport mutateCloudData={mutateCloudData} />}
+      {zeig('content', 'excel') && <FragenImport bereiche={CATS} vorhandeneFragen={[...questions, ...customQuestions].map((q: any) => String(q.question || ''))} mutateCloudData={mutateCloudData} />}
+      {zeig('content', 'neu') && <InhalteTab {...{ newProdName, setNewProdName, newProdGroup, setNewProdGroup, newProdSlice, setNewProdSlice, newProdInfo, setNewProdInfo, targetArea, setTargetArea, selectedBakeDayForAdd, setSelectedBakeDayForAdd, selectedSeasonForAdd, setSelectedSeasonForAdd, editingQId, editingPId, emptyNp, np, setNp, npMsg, setNpMsg, quizQuestionText, setQuizQuestionText, quizCat, setQuizCat, quizLevel, setQuizLevel, optA, setOptA, optB, setOptB, optC, setOptC, optD, setOptD, correctOptIdx, setCorrectOptIdx, quizExplanation, setQuizExplanation, fixId, fixSearch, setFixSearch, fixMsg, customProducts, customQuestions, handleAddCustomProduct, NP_ALLERGENS, npGroups, sortimentProducts, saveNewProduct, editNewProduct, deleteNewProduct, toggleNpList, handleAddCustomQuizQuestion, startEditQuestion, cancelEditQuestion, startEditProduct, cancelEditProduct, handleDeleteCustomQuestion, handleDeleteCustomProduct, allQById, activeEdit, startFix, restoreOriginal, editedIds, fixResults, renderFixEditor, chip, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
 
       {/* ═════════ MELDUNGEN ═════════ */}
-      {adminTab === 'reports' && <MeldungenTab {...{ pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }} />}
+      {zeig('reports', 'fehler') && <MeldungenTab {...{ pfName, pfMsg, allQById, startFix, renderFixEditor, reports, hiddenBuiltIn, resolveReport, hideQuestion, restoreQuestion, pFixes, fixedProducts, shopNames, startProductFix, restoreProduct, renderProductFixEditor, copyReportText, inputStyle, smallBtn, sectionTitle, nameOf }} />}
 
       {/* ═════════ AUSWERTUNG ═════════ */}
-      {adminTab === 'stats' && <AuswertungUeberblick {...{ allKnownUserKeys, allQById, startFix, renderFixEditor, hiddenMap, hideQuestion, qStats, smallBtn, sectionTitle, weekInfo, nameOf }} />}
+      {zeig('stats', 'blick') && <AuswertungUeberblick {...{ allKnownUserKeys, allQById, startFix, renderFixEditor, hiddenMap, hideQuestion, qStats, smallBtn, sectionTitle, weekInfo, nameOf }} />}
 
-      {adminTab === 'stats' && <WochenRueckblick progress={cloudProgress} scores={cloudScores} keys={allKnownUserKeys} nameOf={nameOf} />}
-      {adminTab === 'stats' && <AuswertungWoche {...{ allKnownUserKeys, smallBtn, sectionTitle, wStart, weekInfo, nameOf, copyReport }} />}
+      {zeig('stats', 'blick') && <WochenRueckblick progress={cloudProgress} scores={cloudScores} keys={allKnownUserKeys} nameOf={nameOf} />}
+      {zeig('stats', 'woche') && <AuswertungWoche {...{ allKnownUserKeys, smallBtn, sectionTitle, wStart, weekInfo, nameOf, copyReport }} />}
 
-      {adminTab === 'stats' && <AuswertungNutzung progress={cloudData.progress} sectionTitle={sectionTitle} />}
+      {zeig('stats', 'nutzung') && <AuswertungNutzung progress={cloudData.progress} sectionTitle={sectionTitle} />}
 
-      {adminTab === 'stats' && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} falschTeam={(id: number) => falschImTeam(cloudProgress, allKnownUserKeys, id)} nameOf={nameOf} />}
+      {zeig('stats', 'schwach') && <AuswertungSchwachstellen {...{ overwriteCloudDataDirectly, allQById, qStats, catWeak, productWeak, thekeWeakTeam, hardestQs, rateBar, smallBtn, sectionTitle }} falschTeam={(id: number) => falschImTeam(cloudProgress, allKnownUserKeys, id)} nameOf={nameOf} />}
 
       {/* ═════════ EINSTELLUNGEN ═════════ */}
-      {adminTab === 'kollegen' && <KollegenTab cloudData={cloudData} mutateCloudData={mutateCloudData} onAlsQuizfrage={(frage, antwort) => {
+      {zeig('reports', 'team') && <KollegenTab cloudData={cloudData} mutateCloudData={mutateCloudData} onAlsQuizfrage={(frage, antwort) => {
         // Formular „Eigene Frage“ im Reiter Inhalte vorausfüllen: Frage, richtige Antwort, Erklärung
         setEditingQId(null); setQuizQuestionText(frage); setOptA(antwort.length > 90 ? antwort.slice(0, 90).replace(/\s+\S*$/, '') + ' …' : antwort); setQuizExplanation(antwort);
-        setAdminTab('content');
+        setAdminTab('content', 'neu');
         window.setTimeout(() => { const el = document.getElementById('lt-neue-quizfrage'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
         alert('Die Frage steht jetzt im Formular „Neue Quizfrage“. Bitte noch zwei oder drei falsche Antworten eintragen, Bereich wählen und speichern.');
       }} />}
-      {adminTab === 'settings' && <BestenlisteNeustart cloudData={cloudData} mutateCloudData={mutateCloudData} />}
-      {adminTab === 'settings' && <FehlendeFotos images={productImages} onUpload={onUploadPhoto} />}
-      {adminTab === 'settings' && <EinstellungenTab {...{ cloudData, setCloudUrl, cloudConnected, setCloudConnected, fetchCloudData, overwriteCloudDataDirectly, imageCount, onImportImages, setImageMsg, imageMsg, imageBusy, setImageBusy, backupMsg, downloadBackup, restoreBackup, tempCloudUrl, setTempCloudUrl, markDeleted, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
+      {zeig('settings', 'bestenliste') && <BestenlisteNeustart cloudData={cloudData} mutateCloudData={mutateCloudData} />}
+      {zeig('settings', 'fotos') && <FehlendeFotos images={productImages} onUpload={onUploadPhoto} />}
+      {zeig('settings', 'daten') && <EinstellungenTab {...{ cloudData, setCloudUrl, cloudConnected, setCloudConnected, fetchCloudData, overwriteCloudDataDirectly, imageCount, onImportImages, setImageMsg, imageMsg, imageBusy, setImageBusy, backupMsg, downloadBackup, restoreBackup, tempCloudUrl, setTempCloudUrl, markDeleted, inputStyle, labelStyle, smallBtn, sectionTitle }} />}
     </div>
   );
 }

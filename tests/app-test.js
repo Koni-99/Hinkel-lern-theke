@@ -128,6 +128,13 @@ const nav = (page) => page.locator('[aria-label="Hauptmenü"] button:visible');
 const mainText = async (page) => ((await page.locator('main').first().innerText().catch(() => '')) || '').trim().length;
 const click = (loc) => loc.evaluate((el) => el.click());
 /** Offene Pop-ups (Belohnung, Rückblick …) wegklicken, so wie ein Mensch es tun würde */
+// Version 272: Unterreiter im Ausbilder-Bereich anklicken (wartet, bis er da ist)
+async function unterReiter(page, name) {
+  const b = page.locator('.lt-unterreiter button', { hasText: name }).first();
+  for (let w = 0; w < 50 && !(await b.count()); w++) await sleep(100);
+  await click(b); await settle(page, 400);
+}
+
 async function clearPopups(page) {
   for (let k = 0; k < 8; k++) {
     const o = page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
@@ -329,7 +336,7 @@ async function offlineTests() {
     const d = await device({ user: 'Anna' });
     await click(d.page.getByRole('button', { name: 'Menü' }).first());
     await click(d.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(d.page);
-    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Zum Abschalten', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
+    const themen = ['Wo finde ich was?', 'Trinkgeld und Laden', 'Steckbriefe der Produkte', 'Lernpfad', 'Kundenfragen und Verkaufstipps', 'Lob, Umfragen und wichtige Nachrichten', 'Hör-Lernen und eigene Notizen', 'Ideen-Box, Kundenstimmen, Geburtstag', 'Persönliche Nachrichten', 'Englisch für die Theke', 'Mein Monat', 'Aussehen: hell oder dunkel', 'Extras im Quiz', 'Theken-Simulator', 'Ofen-Kette', 'Zum Abschalten', 'Adventskalender', 'Urlaub', 'Ausbildung (für Azubis)', 'Rechen-Trainer und Prüfung', 'Für den Ausbilder: Zu erledigen', 'Für den Ausbilder: Aufbau des Ausbilder-Bereichs', 'Für den Ausbilder: Start-Übersicht, Rückblick und Sortiment', 'Was die App speichert', 'Ohne Internet'];
     const fehlt = [];
     for (const t of themen) if (!(await d.page.getByText(t, { exact: true }).count())) fehlt.push(t);
     ok('Hilfe: neue Themen für Neue da', fehlt.length === 0, fehlt.join(', '));
@@ -1168,6 +1175,7 @@ async function offlineTests() {
     await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
     for (let w = 0; w < 50 && !(await a.page.locator('[role=tab]').count()); w++) await sleep(100);
     await click(a.page.getByRole('tab', { name: /Einstellungen/ }).first()); await settle(a.page, 500);
+    await unterReiter(a.page, 'Bestenliste');
     await click(a.page.locator('.lt-neustart-knopf')); await settle(a.page, 400);
     ok('Ausbilder: Neustart gespeichert („zählt seit …“)', /zählt seit/.test(await a.page.locator('.lt-neustart-stand').innerText().catch(() => '')));
     await click(a.page.locator('[aria-label="Hauptmenü"] button[title="Bestenliste"]:visible').first()); await settle(a.page, 800);
@@ -1175,6 +1183,7 @@ async function offlineTests() {
     ok('Bestenliste nach Neustart: alte Punkte zählen nicht mehr, „Wertung seit“', /Wertung seit/.test(bon) && !/BEN/.test(bon) && /Noch keine Einträge/.test(bon), bon.slice(0, 200));
     await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
     await click(a.page.getByRole('tab', { name: /Einstellungen/ }).first()); await settle(a.page, 500);
+    await unterReiter(a.page, 'Bestenliste');
     await click(a.page.locator('.lt-neustart-zurueck')); await settle(a.page, 400);
     ok('Ausbilder: Neustart zurückgenommen', (await a.page.locator('.lt-neustart-knopf').count()) === 1);
     ok('Neustart: keine Fehler beim Ausbilder', a.errors.length === 0, a.errors[0]);
@@ -1254,6 +1263,7 @@ async function offlineTests() {
     const zeilen = await a.page.locator('.lt-start-zeile').allInnerTexts();
     ok('Start-Übersicht: Ben (ohne Rolle) oben, Anna mit Rolle und Einführung', zeilen.length === 2 && /Ben/.test(zeilen[0]) && /✓ Rolle/.test(zeilen[1]) && /✓ Einführung/.test(zeilen[1]), zeilen.join(' | ').slice(0, 200));
     await click(a.page.getByRole('tab', { name: /Inhalte/ }).first()); await settle(a.page, 500);
+    await unterReiter(a.page, 'Sortiment');
     await a.page.getByLabel('Produkt suchen').fill('kappeskopp');
     for (let w = 0; w < 30 && !(await a.page.locator('.lt-sortiment-treffer').count()); w++) await sleep(100);
     await click(a.page.locator('.lt-sortiment-treffer button').first()); await settle(a.page, 400);
@@ -1603,7 +1613,7 @@ async function offlineTests() {
     const mo = new Date(2026, 10, 16);
     const g = A.geuebtInWoche([{ id: 'anna_' + new Date(2026, 10, 17, 9).getTime(), username: 'Anna', category: 'Kassenblitz ⚡' }, { id: 'anna_' + new Date(2026, 10, 18, 9).getTime(), username: 'Anna', category: 'Kassenblitz ⚡' }, { id: 'anna_' + new Date(2026, 10, 2).getTime(), username: 'Anna', category: 'Quiz' }], 'anna', mo);
     ok('Azubi: „diese Woche geübt“ aus der Bestenliste', g.length === 1 && /Kassenblitz/.test(g[0]) && /2×/.test(g[0]), JSON.stringify(g));
-    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/ui/ausbildung.tsx'), 'utf8');
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'src/daten/ausbildungsplan.ts'), 'utf8');
     ok('Ausbildungsplan ohne belegte Brötchen', !/Belegte Brötchen und Snacks zubereiten/.test(src) && /Ware vorbereiten und Theke auffüllen/.test(src));
     const probe = JSON.parse(JSON.stringify(SAMPLE));
     probe.progress.anna._azubiPlan = { j1_hygiene: true, j1_kasse: true };
@@ -1866,6 +1876,7 @@ async function offlineTests() {
       ok('Sicherung: „Jetzt sichern“ lädt Datei herunter, Erinnerung verschwindet', !!dl && /lern-theke-sicherung/.test(dl.suggestedFilename()) && (await erinnerung.count()) === 0, dl ? dl.suggestedFilename() : 'kein Download');
     }
     await click(d.page.getByRole('tab', { name: 'Auswertung' })); await settle(d.page, 500);
+    await unterReiter(d.page, 'Nutzung');
     const box = d.page.locator('.lt-nutzung');
     ok('Ausbilder: „Was wird genutzt?“ zeigt Theken-Simulator oben', (await box.count()) > 0 && (await box.locator('.lt-nutzung-zeile').first().innerText()).includes('Theken-Simulator'));
     ok('Nutzung und Sicherung: keine Fehler', d.errors.length === 0, d.errors[0]);
@@ -1899,14 +1910,21 @@ async function offlineTests() {
     for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
     const tabs = d.page.locator('[role=tab]');
     const n = await tabs.count();
-    let empty = 0;
+    let empty = 0, unterZahl = 0, unterFalsch = 0;
     for (let i = 0; i < n; i++) {
       await click(tabs.nth(i)); await settle(d.page, 400);
-      const opener = d.page.locator('button[aria-expanded="false"]:visible');
-      if (await opener.count()) { await click(opener.first()); await settle(d.page, 300); }
-      if ((await mainText(d.page)) < 20) empty++;
+      // Version 272: jeden Unterreiter einmal öffnen, immer nur einer ist gewählt
+      const unter = d.page.locator('.lt-unterreiter button');
+      const nu = Math.max(1, await unter.count());
+      for (let j = 0; j < nu; j++) {
+        if (await unter.count()) { await click(unter.nth(j)); await settle(d.page, 300); unterZahl++; if ((await d.page.locator('.lt-unterreiter button[aria-pressed="true"]').count()) !== 1) unterFalsch++; }
+        const opener = d.page.locator('button[aria-expanded="false"]:visible');
+        if (await opener.count()) { await click(opener.first()); await settle(d.page, 300); }
+        if ((await mainText(d.page)) < 20) empty++;
+      }
     }
     ok(`Ausbilder: alle ${n} Reiter mit Inhalt`, n >= 5 && empty === 0, `${empty} leer`);
+    ok(`Ausbilder: 6 Reiter, ${unterZahl} Unterreiter, immer genau einer gewählt`, n === 6 && unterZahl >= 14 && unterFalsch === 0, `${n} Reiter, ${unterFalsch} falsch`);
     ok('Ausbilder: keine Fehler', d.errors.length === 0, d.errors[0]);
     // Produktliste aus Excel: Datei hochladen, Felder wählen, Vorschau, übernehmen
     try {
@@ -1914,6 +1932,7 @@ async function offlineTests() {
       const tabelle = [['Produktname', 'Preis Filiale (Kasse)', 'Allergene', 'Vegan'], ['Mohnbrötchen', '0,75 €', 'Gluten (Weizen), Milch', 'Nein'], ['Gibt es nicht', '1,00 €', '', 'Ja']];
       const buf = await (writeXlsx.default || writeXlsx)(tabelle.map((r) => r.map((v) => ({ value: v })))).toBuffer();
       await click(d.page.getByRole('tab', { name: 'Inhalte' })); await settle(d.page, 500);
+      await unterReiter(d.page, 'Aus Excel');
       await d.page.locator('input[aria-label="Excel-Datei mit der Produktliste"]').setInputFiles({ name: 'produkte.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from(buf) });
       await d.page.getByText(/Produkte erkannt/).first().waitFor({ timeout: 8000 });
       const vorschau = await d.page.getByText('0,70 €').count() > 0 && await d.page.getByText('0,75 €').count() > 0;
@@ -1923,6 +1942,7 @@ async function offlineTests() {
     } catch (e) { ok('Ausbilder: Produktliste aus Excel (Vorschau und Übernehmen)', false, String(e.message || e).slice(0, 160)); }
     ok('Ausbilder: keine Fehler beim Einlesen', d.errors.length === 0, d.errors[0]);
     await click(d.page.getByRole('tab', { name: 'Einstellungen' })); await settle(d.page, 500);
+    await unterReiter(d.page, 'Fotos');
     // Seit Version 193 haben alle Produkte ein Shop-Foto: dann steht dort „Alle Produkte haben ein Foto.“
     ok('Ausbilder: Liste „Produkte ohne Foto“ (mit Foto-Knöpfen oder „alle haben ein Foto“)', (await d.page.getByRole('heading', { name: 'Produkte ohne Foto' }).count()) > 0 && ((await d.page.locator('input[aria-label^="Foto für "]').count()) > 0 || (await d.page.getByText('Alle Produkte haben ein Foto.').count()) > 0));
 
@@ -1939,6 +1959,34 @@ async function offlineTests() {
     if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
     ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
     await d.ctx.close();
+  }]);
+  // Version 272: „Backstube bei Nacht“: Schrift auf wichtigen Seiten gut lesbar (Kontrast mindestens 3 : 1)
+  teile.push(['Version 272: Nacht-Modus gut lesbar', async () => {
+    const schlecht = [];
+    for (const seite of ['home', 'pfad', 'spielen', 'nachschlagen', 'statistik', 'hilfe']) {
+      const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => { await ctx.addInitScript((sx) => { try { if (!sessionStorage.getItem('__t272')) { sessionStorage.setItem('__t272', '1'); localStorage.setItem('lt_design', 'nacht'); sessionStorage.setItem('lt_seite', sx); } } catch {} }, seite); } });
+      await clearPopups(d.page);
+      for (let w = 0; w < 50 && (await mainText(d.page)) < 40; w++) await sleep(100);
+      const r = await d.page.evaluate(() => {
+        const parse = (c) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+        const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b); };
+        const bgOf = (el) => { for (let e = el; e; e = e.parentElement) { const cs = getComputedStyle(e); const c = parse(cs.backgroundColor); if (c && c.a > 0.5) return c; if (/gradient/.test(cs.backgroundImage)) { const g = cs.backgroundImage.match(/rgba?\([^)]+\)/); const gc = g && parse(g[0]); if (gc && gc.a > 0.5) return gc; } } return parse(getComputedStyle(document.body).backgroundColor); };
+        const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n; const seen = new Set();
+        while ((n = w.nextNode())) {
+          const el = n.parentElement; if (!el || seen.has(el) || n.textContent.trim().length < 2) continue; seen.add(el);
+          if (el.closest('svg,[aria-hidden=true],.lt-h1')) continue; // Überschrift mit Farbverlauf in der Schrift
+          const rc = el.getBoundingClientRect(); const cs = getComputedStyle(el); if (rc.width < 2 || rc.height < 2 || cs.visibility === 'hidden' || Number(cs.opacity) < 0.3) continue;
+          const fg = parse(cs.color), bg = bgOf(el); if (!fg || !bg) continue;
+          const a = lum(fg), b = lum(bg); const k = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+          if (k < 3) out.push(`${n.textContent.trim().slice(0, 24)} (${k.toFixed(1)})`);
+        }
+        return out;
+      });
+      r.forEach((x) => schlecht.push(`${seite}: ${x}`));
+      if (d.errors.length) schlecht.push(`${seite}: Fehler ${d.errors[0]}`);
+      await d.ctx.close();
+    }
+    ok('Nacht-Modus: keine schlecht lesbare Schrift (Start, Lernpfad, Spiele, Nachschlagen, Statistik, Hilfe)', schlecht.length === 0, schlecht.slice(0, 4).join(' | '));
   }]);
   return teile;
 }
@@ -2022,6 +2070,29 @@ async function cloudTests() {
     for (let i = 0; i < 180 && !arrived; i++) { arrived = await A.page.evaluate(() => !!(JSON.parse(localStorage.getItem('hinkel_cloud_backup') || '{}').progress || {}).carla); if (!arrived) await sleep(50); }
     ok('Live: Änderung eines Kollegen kommt sofort an', arrived, `${Date.now() - t0} ms`);
     ok('Live: Annas Aktivität ist gespeichert', !!(await db('GET', '/lastSeen/anna')));
+    await A.ctx.close();
+  }]);
+  // Version 272: kurz in eine andere App wechseln trennt die Live-Verbindung nicht mehr (kein neues Laden des ganzen Stands)
+  teile.push(['Version 272: Live-Verbindung bleibt bei kurzem Wechsel', async () => {
+    const A = await device({ cloud: true, user: 'Anna', vorher: async (ctx) => { await ctx.addInitScript(() => {
+      try { localStorage.setItem('lt_hintergrund_ms', '1500'); } catch {}
+      window.__esZahl = 0; const ES = window.EventSource; window.EventSource = function (u, o) { window.__esZahl++; return new ES(u, o); }; window.EventSource.prototype = ES.prototype;
+      let versteckt = false; Object.defineProperty(document, 'hidden', { configurable: true, get: () => versteckt });
+      window.__versteckt = (v) => { versteckt = v; document.dispatchEvent(new Event('visibilitychange')); };
+    }); } });
+    const live = async () => A.page.evaluate(() => document.documentElement.dataset.cloudLive || '');
+    for (let i = 0; i < 150 && (await live()) !== '1'; i++) await sleep(100);
+    const n0 = await A.page.evaluate(() => window.__esZahl);
+    await A.page.evaluate(() => window.__versteckt(true)); await sleep(500);
+    await A.page.evaluate(() => window.__versteckt(false)); await sleep(800);
+    ok('Hintergrund kurz: Verbindung bleibt, nichts neu geladen', (await live()) === '1' && (await A.page.evaluate(() => window.__esZahl)) === n0, `${n0} → ${await A.page.evaluate(() => window.__esZahl)}`);
+    await A.page.evaluate(() => window.__versteckt(true));
+    for (let i = 0; i < 60 && (await live()) !== '0'; i++) await sleep(100);
+    ok('Hintergrund lange: Verbindung wird getrennt (Akku)', (await live()) === '0');
+    await A.page.evaluate(() => window.__versteckt(false));
+    for (let i = 0; i < 100 && (await live()) !== '1'; i++) await sleep(100);
+    ok('Zurück in der App: Verbindung wieder da', (await live()) === '1');
+    ok('Hintergrund: keine Fehler', A.errors.length === 0, A.errors[0]);
     await A.ctx.close();
   }]);
   // Kundenfragen: Mitarbeiter fragt, Ausbilder antwortet, Antwort kommt live an

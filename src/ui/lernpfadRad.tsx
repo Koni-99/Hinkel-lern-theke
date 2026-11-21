@@ -8,7 +8,7 @@ const PFAD_CSS = `
 .lt-pfad-reihe{position:relative;display:flex;align-items:center;justify-content:space-between;margin:0 2px}
 .lt-pfad-reihe::before{content:"";position:absolute;left:22px;right:22px;top:50%;height:4px;margin-top:-2px;background:#EADBC4;border-radius:4px}
 .lt-pfad-fuell{position:absolute;left:22px;top:50%;height:4px;margin-top:-2px;background:#C9971C;border-radius:4px}
-.lt-pfad-f{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;background:#F4EADB;border:2px solid #EADBC4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#A08A6E;box-sizing:border-box}
+.lt-pfad-f{position:relative;z-index:1;width:36px;height:36px;border-radius:50%;background:#F4EADB;border:2px solid #EADBC4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#7A6650;box-sizing:border-box}
 .lt-pfad-f.ok{background:#4B2A14;border-color:#4B2A14;color:#FFD86B}
 .lt-pfad-f.ms{border-radius:12px;background:#FFF4D6;border-color:#E8C547;color:#B7791F}
 .lt-pfad-f.ms.ok{background:#C9971C;border-color:#C9971C;color:#FFFFFF}

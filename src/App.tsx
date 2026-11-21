@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 271;
+const APP_VERSION: number = 272;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -69,14 +69,16 @@ import { LernpfadView, GluecksradCard, buildPfad, WHEEL } from './ui/lernpfadRad
 import { onboardingStatus, computeBadges, correctIdSet, appWeekStatus, StaffRole } from './ui/lernstand';
 import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
 import { comboTake, comboReset } from './ui/antwortFx';
-import { IntroTour, HilfeView } from './ui/hilfe';
+// Version 272: Hilfe und Einführung erst bei Bedarf laden (schnellerer Start)
+const HilfeView = lazy(() => import('./ui/hilfe').then((m) => ({ default: m.HilfeView })));
+const IntroTour = lazy(() => import('./ui/hilfe').then((m) => ({ default: m.IntroTour })));
 import { SucheDialog } from './screens/dialoge/Suche';
 import { UrlaubSeite } from './screens/UrlaubSeite';
 import { adminAufgaben } from './hilfen/adminAufgaben';
 import { lehrjahrAus, fragenZuPunkt, geuebtInWoche, wochenKey } from './hilfen/azubi';
 import { alleAzubiFragen, frageStellen, frageBeantworten, antwortenGelesen, frageLoeschen, zieleVon, zielSetzen, zielBewerten, istRueckblickZeit, rueckblick } from './hilfen/azubiExtras';
 import { FrageAnAusbilder, AzubiFragenAntworten, WochenzielKarte, RueckblickKarte } from './ui/azubiKarten';
-import { AUSBILDUNGSPLAN } from './ui/ausbildung';
+import { AUSBILDUNGSPLAN } from './daten/ausbildungsplan';
 import { pruefungsThema } from './hilfen/pruefungThemen';
 import { BerufsschulKarten, KartenBestaetigen } from './ui/berufsschulKarten';
 import { alleEigenenKarten, karteSchreiben, karteEntscheiden, karteLoeschen } from './hilfen/eigeneKarten';
@@ -1832,7 +1834,7 @@ export default function App() {
   useEffect(() => {
     const t = window.setTimeout(() => {
       [() => import('./components/FlashcardView'), () => import('./components/ScoreboardView'), () => import('./screens/HoerLernen'), () => import('./screens/MeinMonat'), () => import('./screens/KundenfragenSeite'),
-        () => import('./ui/statistik'), () => import('./ui/ausbildung'), () => import('./screens/EinarbeitungSeite'), () => import('./games/Kassenblitz'), () => import('./games/theke/ThekenSimulator'),
+        () => import('./ui/statistik'), () => import('./ui/ausbildung'), () => import('./ui/hilfe'), () => import('./screens/EinarbeitungSeite'), () => import('./games/Kassenblitz'), () => import('./games/theke/ThekenSimulator'),
         () => import('./games/AllergenTrainer'), () => import('./games/PreisDuell'), () => import('./games/TelefonBestellung'), () => import('./games/OfenKette'), () => import('./games/RechenTrainer'), () => import('./games/SchneideProfi'), () => import('./games/ThekenAnsturm'), () => import('./components/BattleView'),
         () => import('./components/TuetenBlitzView'), () => import('./components/AlternativenJaegerView')].forEach((f, i) => window.setTimeout(() => { f().catch(() => {}); }, i * 150));
     }, 4000);
@@ -1958,60 +1960,22 @@ export default function App() {
     return () => { document.removeEventListener('load', mark, true); document.removeEventListener('error', mark, true); };
   }, []);
 
-  // „Auf den Startbildschirm“: Hinkel-Symbol, Name und Vollbild, ohne extra Dateien
+  // „Auf den Startbildschirm“: Symbole und Manifest kommen seit Version 182 als Dateien (public/icon-*.png, manifest.json).
+  // Version 272: das Symbol wird nicht mehr bei jedem Start neu gemalt (kostete auf alten Handys Zeit), nur noch die Meta-Angaben.
   useEffect(() => {
     try {
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const make = (size: number) => {
-            const c = document.createElement('canvas');
-            c.width = c.height = size;
-            const x = c.getContext('2d');
-            if (!x) return '';
-            x.fillStyle = LT.yellow; x.fillRect(0, 0, size, size);
-            x.imageSmoothingEnabled = true; (x as any).imageSmoothingQuality = 'high';
-            const box = size * 0.7, r = img.width / img.height;
-            const w = r > 1 ? box : box * r, h = r > 1 ? box / r : box;
-            x.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-            return c.toDataURL('image/png');
-          };
-          const i180 = make(180), i192 = make(192), i512 = make(512);
-          if (!i180) return;
-          const setTag = (sel: string, create: () => HTMLElement, apply: (el: any) => void) => {
-            let el = document.head.querySelector(sel) as any;
-            if (!el) { el = create(); document.head.appendChild(el); }
-            apply(el);
-          };
-          const link = (rel: string) => () => { const l = document.createElement('link'); l.rel = rel; return l; };
-          const meta = (name: string) => () => { const m = document.createElement('meta'); m.name = name; return m; };
-          setTag('link[rel="apple-touch-icon"]', link('apple-touch-icon'), el => { el.href = i180; });
-          setTag('link[rel="icon"]', link('icon'), el => { el.href = i192; el.type = 'image/png'; });
-          setTag('meta[name="theme-color"]', meta('theme-color'), el => { el.content = LT.brown; });
-          setTag('meta[name="apple-mobile-web-app-capable"]', meta('apple-mobile-web-app-capable'), el => { el.content = 'yes'; });
-          setTag('meta[name="mobile-web-app-capable"]', meta('mobile-web-app-capable'), el => { el.content = 'yes'; });
-          setTag('meta[name="apple-mobile-web-app-title"]', meta('apple-mobile-web-app-title'), el => { el.content = 'Lern-Theke'; });
-          setTag('meta[name="apple-mobile-web-app-status-bar-style"]', meta('apple-mobile-web-app-status-bar-style'), el => { el.content = 'default'; });
-          // auf GitHub Pages liegt die App im Unterordner /Hinkel-lern-theke/
-          const origin = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
-          const manifest = {
-            name: 'Hinkel Lern-Theke', short_name: 'Lern-Theke', description: 'Lernen, spielen und Wissen auffrischen, für alle Brotfreunde.',
-            start_url: origin, scope: origin, display: 'standalone', orientation: 'any',
-            background_color: LT.cream, theme_color: LT.brown,
-            icons: [
-              { src: i192, sizes: '192x192', type: 'image/png' },
-              { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any' },
-              { src: i512, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-            ],
-          };
-          const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
-          document.head.querySelectorAll('link[rel="manifest"]').forEach(l => l.parentNode?.removeChild(l));
-          const ml = document.createElement('link'); ml.rel = 'manifest'; ml.href = url; document.head.appendChild(ml);
-          document.title = 'Hinkel Lern-Theke';
-        } catch {}
+      const setMeta = (name: string, content: string) => {
+        let el = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+        if (!el) { el = document.createElement('meta'); el.name = name; document.head.appendChild(el); }
+        el.content = content;
       };
-      img.src = HINKEL_LOGO;
-    } catch {}
+      setMeta('theme-color', LT.brown);
+      setMeta('apple-mobile-web-app-capable', 'yes');
+      setMeta('mobile-web-app-capable', 'yes');
+      setMeta('apple-mobile-web-app-title', 'Lern-Theke');
+      setMeta('apple-mobile-web-app-status-bar-style', 'default');
+      document.title = 'Hinkel Lern-Theke';
+    } catch { /* egal */ }
   }, []);
 
   // ── Abzeichen-Wertung: wann wurde welches Abzeichen erreicht? (für „wer war schneller“) ──
@@ -3053,7 +3017,7 @@ export default function App() {
       {activeTab !== 'quiz' && <FloatingReportButton />}
       {reportQ && <FrageMelden {...{ submitReport, setReportQ, reportQ, reportReason, setReportReason, reportText, setReportText, reportSentRef, setToast }} />}
 
-      {(introDue || showIntro) && !needRole && <IntroTour name={username} onDone={finishIntro} />}
+      {(introDue || showIntro) && !needRole && <Suspense fallback={null}><IntroTour name={username} onDone={finishIntro} /></Suspense>}
       {needPinSetup && <PinFestlegen {...{ username, cloudDataRef, savePin }} />}
       {loginDue && !needRole && !showFuehrerschein && !showAppWeekDone && !showPinPopup && !showWheel && <LoginRewardDialog day={loginDay} onClaim={() => { setLoginOpenDay(loginDay); claimLogin(); }} onClose={() => setLoginOpenDay(0)} />}
       {loginOpenDay > 0 && !loginDue && <LoginRewardDialog day={loginOpenDay} claimedAlready onClaim={() => {}} onClose={() => setLoginOpenDay(0)} />}
@@ -3068,7 +3032,7 @@ export default function App() {
         </div>
       )}
       {sucheAuf && username && <SucheDialog fragen={allFlashcards} images={productImages} onClose={() => setSucheAuf(false)}
-        hilfe={<HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} />}
+        hilfe={<Suspense fallback={null}><HilfeView onInstall={() => { try { localStorage.removeItem('lt_install_hidden'); } catch {} setInstallHidden(false); setShowInstallHelp(true); }} levels={LEVELS} jokers={TIP_SHOP.filter(i => i.kind === 'joker')} onTour={() => setShowIntro(true)} onBack={() => setActiveTab('home')} /></Suspense>}
         onSteckbrief={(n: string) => { setSucheAuf(false); zeigeSteckbrief(n); }}
         onSeite={(t: string) => { setSucheAuf(false); setActiveTab(t); }}
         onHilfe={(t: string) => { setSucheAuf(false); setHilfeThema(t); setActiveTab('hilfe'); }} />}

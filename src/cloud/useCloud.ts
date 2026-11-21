@@ -11,6 +11,8 @@ import { normalizePayload, cloneData, getRemote, patchRemote, buildPatch } from 
 import { openLive, LiveHandle, LiveFail } from './live';
 
 /** Notschalter (und für Tests): localStorage „hinkel_no_live“ = „1“ schaltet die Live-Verbindung ab */
+/** So lange darf die App im Hintergrund sein, bevor die Live-Verbindung getrennt wird (Test: localStorage lt_hintergrund_ms) */
+const HINTERGRUND_MS = (() => { try { return Number(localStorage.getItem('lt_hintergrund_ms')) || 90000; } catch { return 90000; } })();
 const liveDisabled = () => { try { return localStorage.getItem('hinkel_no_live') === '1'; } catch { return false; } };
 
 export function useCloud(cloudUrl: string, emptyCloud: CloudPayload, isFast: () => boolean) {
@@ -218,9 +220,15 @@ export function useCloud(cloudUrl: string, emptyCloud: CloudPayload, isFast: () 
       if (Date.now() - lastPoll < (fast ? 5000 : 20000)) return;
       lastPoll = Date.now(); fetchNow();
     }, 2500);
+    // Version 272: App im Hintergrund: Verbindung erst nach 90 Sekunden trennen (Akku). Wer nur kurz in eine
+    // andere App wechselt, behält die Verbindung, dann muss nicht der ganze Stand des Teams neu geladen werden.
+    let hiddenTimer = 0;
     const onVisible = () => {
-      // App im Hintergrund: Verbindung trennen (Akku). Beim Zurückkehren neu aufbauen, dabei kommt der ganze Stand.
-      if (document.hidden) { if (canLive) { closeLive(); window.clearTimeout(retryTimer); } return; }
+      if (document.hidden) {
+        if (canLive && !hiddenTimer) hiddenTimer = window.setTimeout(() => { hiddenTimer = 0; if (document.hidden) { closeLive(); window.clearTimeout(retryTimer); } }, HINTERGRUND_MS);
+        return;
+      }
+      window.clearTimeout(hiddenTimer); hiddenTimer = 0;
       if (canLive) { if (!live && !connecting) { failures = 0; connect(); } }
       else { lastPoll = Date.now(); fetchNow(); }
     };
@@ -234,6 +242,7 @@ export function useCloud(cloudUrl: string, emptyCloud: CloudPayload, isFast: () 
     window.addEventListener('online', onOnline);
     return () => {
       disposed = true;
+      window.clearTimeout(hiddenTimer);
       closeLive();
       window.clearTimeout(retryTimer);
       window.clearInterval(interval);
