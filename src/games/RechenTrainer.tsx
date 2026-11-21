@@ -1,6 +1,7 @@
 // ═══ Spiel: Rechen-Trainer (Version 253) ═══
 // 8 Aufgaben wie in der Prüfung mit echten Hinkel-Preisen: Summe, Rückgeld, Preis pro Kilo, Rabatt, Mehrwertsteuer, Dreisatz.
 // Ohne Zeitdruck. Nach jeder Antwort steht der Rechenweg da. Logik in rechenLogik.ts.
+import { ReportContext } from '../ui/melden';
 import { useState, useRef } from 'react';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
 import { AnswerFx, AnswerFxState } from '../ui/antwortFx';
@@ -51,6 +52,7 @@ export function RechenTrainerView({ onSaveScore }: { onSaveScore: (points: numbe
         <GameIntro title="Rechnen wie in der Prüfung" text={`${RUNDE} Aufgaben rund um die Kasse, ohne Zeitdruck. Tipp das Ergebnis in Euro ein, danach siehst du den Rechenweg.`}
           hint={`${PUNKTE_PRO_AUFGABE} Punkte pro richtiger Aufgabe. Ein Taschenrechner ist erlaubt, wie in der Prüfung.`} startLabel="Los geht's" onStart={start} />
       )}
+      {phase === 'spiel' && a && <ReportContext report={{ game: 'Rechen-Trainer', text: `${a.titel}: ${a.text}`, detail: `Lösung laut App: ${a.weg.join(' | ')}` }} />}
       {phase === 'spiel' && a && (
         <div className="lt-rechnen" style={{ ...cardStyle, position: 'relative', display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <AnswerFx fx={fx} />

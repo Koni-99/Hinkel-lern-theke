@@ -1973,6 +1973,46 @@ async function offlineTests() {
     ok('Ausbilder: Foto-Knopf im Steckbrief', (await d.page.locator('.fc-sheet input[aria-label^="Foto für "]').count()) === 1);
     await d.ctx.close();
   }]);
+  // Version 275: „Fehler melden“ auch in Telefon-Bestellung, Rechen-Trainer, Theken-Ansturm, Ofen-Kette und Hör-Lernen
+  teile.push(['Version 275: Melde-Knopf in weiteren Spielen', async () => {
+    const fehlt = [];
+    for (const [seite, knopf] of [['telefon', 'Anruf annehmen'], ['rechnen', "Los geht's"], ['ansturm', 'Theke öffnen'], ['ofen', 'Ofen an'], ['hoeren', 'Vorlesen starten']]) {
+      const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => { await ctx.addInitScript((sx) => { try { if (!sessionStorage.getItem('__t275')) { sessionStorage.setItem('__t275', '1'); sessionStorage.setItem('lt_seite', sx); } } catch {} }, seite); } });
+      await clearPopups(d.page);
+      if (knopf) { const b = d.page.getByRole('button', { name: knopf }).first(); for (let w = 0; w < 50 && !(await b.count()); w++) await sleep(100); await click(b); }
+      let da = false; for (let w = 0; w < 60 && !da; w++) { da = (await d.page.locator('.lt-float-report:visible').count()) > 0; if (!da) await sleep(100); }
+      if (!da) fehlt.push(seite);
+      if (d.errors.length) fehlt.push(`${seite}: ${d.errors[0]}`);
+      await d.ctx.close();
+    }
+    ok('Melde-Knopf in Telefon-Bestellung, Rechen-Trainer, Theken-Ansturm, Ofen-Kette, Hör-Lernen', fehlt.length === 0, fehlt.join(', '));
+  }]);
+  // Version 275: Produktdaten-Prüfung
+  teile.push(['Version 275: Produktdaten-Prüfung', async () => {
+    const M = kompiliere(['src/hilfen/produktPruefung.ts', 'src/daten/shopProducts.ts']);
+    const PP = M.hilfen_produktPruefung, P = M.daten_shopProducts.SHOP_PRODUCTS;
+    const probe = [
+      { name: 'A', group: 'Brot', price: '1,00 €', fullIngredients: 'WEIZENMEHL, BUTTER, Wasser', allergens: ['Gluten (Weizen)'] },
+      { name: 'B', group: 'Brot', price: '1,00 €', fullIngredients: 'WEIZENMEHL, Kuvertüre (Kakaobutter, MILCH (SPUR))', allergens: ['Gluten (Weizen)'] },
+      { name: 'C', group: 'Brot', price: '1,00 €', fullIngredients: 'WEIZENMEHL, VOLLEI', allergens: ['Gluten (Weizen)', 'Eier'], vegan: true },
+      { name: 'D', group: 'Brot', fullIngredients: 'ROGGENMEHL', allergens: ['Gluten (Roggen)', 'Sesam'] },
+    ];
+    const b = PP.pruefeProdukte(probe);
+    const hat = (n, re) => b.some((x) => x.name === n && re.test(x.text));
+    ok('Produktprüfung: fehlendes Allergen (Butter → Milch), Spur zählt nicht, vegan mit Ei, Allergen ohne Zutat, kein Preis',
+      hat('A', /fehlt „Milch“/) && !b.some((x) => x.name === 'B') && hat('C', /vegan/) && hat('D', /Sesam/) && hat('D', /Kein Preis/), JSON.stringify(b).slice(0, 300));
+    const echt = PP.pruefeProdukte(P).filter((x) => x.stufe === 'wichtig');
+    ok('Produktdaten: kein fehlendes Allergen und kein falsches „vegan“', echt.length === 0, echt.slice(0, 3).map((x) => `${x.name}: ${x.text}`).join(' | '));
+    const d = await device({ admin: true, backup: SAMPLE });
+    await click(d.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(d.page);
+    for (let w = 0; w < 50 && !(await d.page.locator('[role=tab]').count()); w++) await sleep(100);
+    await click(d.page.getByRole('tab', { name: /Rückmeldungen/ }).first()); await settle(d.page, 500);
+    await unterReiter(d.page, 'Fehler-Meldungen');
+    const box = d.page.locator('.lt-produktpruefung');
+    ok('Ausbilder: Produktdaten-Prüfung mit Hinweisen und „Korrigieren“', (await box.count()) === 1 && (await box.locator('.lt-befund').count()) > 0 && (await box.getByRole('button', { name: 'Korrigieren' }).count()) > 0);
+    ok('Produktdaten-Prüfung: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 274: Spieltexte korrigieren/ausblenden (Theken-Simulator), Kassenblitz: jedes Produkt korrigierbar
   teile.push(['Version 274: Fehler in Spielen korrigieren', async () => {
     const M = kompiliere(['src/games/theke/gespraech.tsx', 'src/hilfen/spielKorrektur.ts']);

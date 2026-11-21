@@ -1,6 +1,7 @@
 // ═══ Hör-Lernen: Fragen und Antworten werden nacheinander vorgelesen, wie ein Hörbuch ═══
 // Ablauf je Frage: Frage vorlesen → Denkpause → richtige Antwort (+ Erklärung) vorlesen → kurze Pause → nächste.
 // Solange vorgelesen wird, bleibt der Bildschirm an (wenn das Handy das erlaubt).
+import { ReportContext } from '../ui/melden';
 import { merkeAudio } from '../hilfen/sprechen';
 import { useState, useEffect, useRef } from 'react';
 import { dc } from '../daten/data';
@@ -135,6 +136,7 @@ export function HoerLernen({ fragen, bereiche, fehlerIds, onZurueck }: { fragen:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', color: LT.ink }}>
+      {q && typeof q.id === 'number' && <ReportContext report={{ game: 'Hör-Lernen', qid: q.id, product: q.product, text: q.question }} />}
       <div>
         <button type="button" onClick={() => { halt(); onZurueck(); }} style={{ ...chip(false), marginBottom: '12px' }}>‹ Zurück zu Lernen</button>
         <h1 style={{ margin: 0, fontFamily: LT.serif, fontWeight: 400, fontSize: '44px' }}>Hör-Lernen</h1>

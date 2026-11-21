@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 274;
+const APP_VERSION: number = 275;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -67,7 +67,7 @@ import { productImageKey, TH, cardStyle, btnPrimary, btnSecondary, PageHead, Pro
 import { ScratchCard, drawLosPrize, LosPrize, ProfileView, ProfileData, YearReviewView, YearData } from './ui/belohnungen';
 import { LernpfadView, GluecksradCard, buildPfad, WHEEL } from './ui/lernpfadRad';
 import { onboardingStatus, computeBadges, correctIdSet, appWeekStatus, StaffRole } from './ui/lernstand';
-import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport } from './ui/melden';
+import { FloatingReportButton, setGameReporter, reportKeyOf, GameReport, setMeldeDialogOffen } from './ui/melden';
 import { comboTake, comboReset } from './ui/antwortFx';
 // Version 272: Hilfe und Einführung erst bei Bedarf laden (schnellerer Start)
 const HilfeView = lazy(() => import('./ui/hilfe').then((m) => ({ default: m.HilfeView })));
@@ -1853,6 +1853,7 @@ export default function App() {
     prevTabRef.current = activeTab;
   }
   const [reportQ, setReportQ] = useState<any>(null);
+  useEffect(() => { setMeldeDialogOffen(!!reportQ); }, [reportQ]);
   const [reportReason, setReportReason] = useState<string>('');
   const [reportText, setReportText] = useState<string>('');
   const reportSentRef = useRef<(() => void) | null>(null);

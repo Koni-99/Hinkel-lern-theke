@@ -9,6 +9,7 @@ import { SHOP_PRODUCTS } from '../daten/shopProducts';
 import type { ProductFix, CloudPayload } from '../types';
 import { useState } from 'react';
 import { SpielTextEditor, SpielKorrekturenListe } from './SpielTextEditor';
+import { pruefeProdukte } from '../hilfen/produktPruefung';
 
 /** Version 274: alle Produkte aus dem Meldungstext (z. B. ganzer Einkauf im Kassenblitz), längere Namen zuerst */
 export function produkteImText(text: string, erstes?: string): string[] {
@@ -99,6 +100,25 @@ export function MeldungenTab({ admin, mutateCloudData, pfName, pfMsg, allQById, 
           </div>
         )}
       </div>
+      {(() => {
+        // Version 275: Produktdaten-Prüfung (Widersprüche zwischen Zutaten und Allergenen, vegan, fehlender Preis)
+        const befunde = pruefeProdukte(SHOP_PRODUCTS);
+        return (
+          <div className="lt-produktpruefung" style={cardStyle}>
+            {sectionTitle('Produktdaten-Prüfung', 'Die App vergleicht Zutaten, Allergene, „vegan“ und Preis jedes Produkts. Rot = bitte dringend prüfen (z. B. Allergen fehlt), gelb = bitte kurz ansehen. Vergleiche mit dem Produkt-PDF, bevor du etwas änderst.')}
+            {befunde.length === 0 ? <p style={{ margin: 0, fontSize: '17px', color: TH.green, fontWeight: 700 }}>Keine Widersprüche gefunden.</p> : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {befunde.map((b, i) => (
+                  <div key={i} className="lt-befund" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', padding: '10px 12px', borderRadius: '12px', backgroundColor: b.stufe === 'wichtig' ? '#FDECEA' : TH.tintYellow, borderLeft: `5px solid ${b.stufe === 'wichtig' ? TH.red : TH.yellow}` }}>
+                    <span style={{ flex: '1 1 260px', fontSize: '16px' }}><strong>{b.name}:</strong> {b.text}</span>
+                    {SHOP_PRODUCTS.some((p) => p.name === b.name) && <button type="button" onClick={() => startProductFix(b.name)} style={smallBtn('warn')}>Korrigieren</button>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })()}
       <SpielKorrekturenListe admin={admin} mutateCloudData={mutateCloudData} smallBtn={smallBtn} sectionTitle={sectionTitle} />
       <div style={cardStyle}>
         {sectionTitle('Produktdaten korrigieren', 'Auch ohne Meldung: Preis, Zutaten, Allergene oder Alternativen eines Produkts ändern. Gilt sofort in allen Spielen.')}

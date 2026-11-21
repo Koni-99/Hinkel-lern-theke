@@ -4,6 +4,7 @@
 // Bestellung nach Namen (60 s), Allergen-Frage, goldenes Brötchen, verbrannte Bilder, Ablage,
 // Name nachsehen (Finger halten), Tagesauswahl, Gruppen-Tag (Mi/Sa), ruhiger Modus, Ergebnis als Kassenbon.
 // Regeln/Zahlen stehen in ofenLogik.ts (im Test geprüft). Spielfeld = Canvas, damit es auch auf alten Handys flüssig läuft.
+import { ReportContext, meldeDialogOffen } from '../ui/melden';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { PointerEvent as ZeigerEreignis, KeyboardEvent as TastenEreignis } from 'react';
 import { kleinesFoto } from '../daten/fotos';
@@ -374,7 +375,7 @@ export function OfenKetteView({ images, scores, userKey, onSaveScore }: { images
     let raf = 0, letzte = performance.now(), uiZeit = 0;
     const schleife = (t: number) => {
       const s = g.current, dt = Math.min(100, t - letzte); letzte = t;
-      if (s && s.laeuft && !s.pause) {
+      if (s && s.laeuft && !s.pause && !meldeDialogOffen) {
         if (!s.ruhig && !s.frage) {
           s.rest -= dt;
           if (s.rest <= 0 && !s.beschaeftigt) { toast('Bestellung verpasst'); neueBestellung(); sync(); }
@@ -455,6 +456,9 @@ export function OfenKetteView({ images, scores, userKey, onSaveScore }: { images
 
   return (
     <div className="lt-ofen-kette" style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
+      {phase === 'spiel' && (frage
+        ? <ReportContext report={{ game: 'Ofen-Kette', product: frage.name, text: `Allergen-Frage zu ${frage.name} (${frage.optionen.join(', ')})`, detail: `Richtig laut App: ${frage.richtig}, enthält: ${frage.drin.join(', ')}` }} />
+        : ui.bestellung ? <ReportContext report={{ game: 'Ofen-Kette', product: ui.bestellung, text: `Bestellung: ${ui.bestellung}` }} /> : null)}
       <style>{`
         .lt-papier.lt-ok-ofen{position:relative;align-self:center;border-radius:16px;padding:6px;background:linear-gradient(#5A3820,#2B1A10);box-shadow:0 10px 24px rgba(60,30,10,.35),inset 0 0 0 2px #7A4E2A;touch-action:none}
         .lt-papier.lt-ok-ofen canvas{display:block;border-radius:10px;background:#2B1A10;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}

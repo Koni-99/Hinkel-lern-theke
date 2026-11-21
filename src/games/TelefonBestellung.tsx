@@ -2,6 +2,7 @@
 // Ein Kunde ruft an (Handy-Stimme) und bestellt für einen Abholtag. Du füllst den Bestellzettel aus:
 // Name, Abholtag, Uhrzeit, Mengen und ob das Brot geschnitten wird. 5 Anrufe pro Runde, von einfach bis kompliziert.
 // Nach und nach kommt jeder Artikel aus dem Sortiment dran (im Gerät gemerkt).
+import { ReportContext } from '../ui/melden';
 import { useState, useEffect } from 'react';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, GameResult } from '../ui/basis';
 import { scrollToPlay } from '../ui/belohnungen';
@@ -77,6 +78,7 @@ export function TelefonBestellungView({ onSaveScore }: { onSaveScore: (points: n
         </div>
       )}
 
+      {(phase === 'anruf' || phase === 'ergebnis') && b && <ReportContext report={{ game: 'Telefon-Bestellung', product: b.positionen[0]?.name, text: b.text.join(' '), detail: `Richtig laut App: ${b.name}, ${TAGE[b.tag] || b.tag}, ${zeitText(b.zeit)}, ${b.positionen.map((x) => `${x.menge} × ${x.name}${x.geschnitten ? ' (geschnitten)' : ''}`).join(', ')}` }} />}
       {(phase === 'anruf' || phase === 'ergebnis') && b && (
         <>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>

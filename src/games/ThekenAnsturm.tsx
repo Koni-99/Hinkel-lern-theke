@@ -1,5 +1,6 @@
 // ═══ Spiel: Theken-Ansturm ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
+import { ReportContext, meldeDialogOffen } from '../ui/melden';
 import { useState, useEffect, useRef } from 'react';
 import { kleinesFoto } from '../daten/fotos';
 import { shuffleArray } from '../hilfen/allgemein';
@@ -62,6 +63,7 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
     if (state !== 'play') return;
     const t = window.setInterval(() => {
       if (busyRef.current) return;
+      if (meldeDialogOffen) { startRef.current += 100; return; } // beim Melden läuft die Geduld nicht ab
       const f = 1 - (Date.now() - startRef.current + penaltyRef.current) / limitFor(served);
       if (f > 0) { setPatience(f); return; }
       busyRef.current = true;
@@ -75,6 +77,7 @@ export function ThekenAnsturmView({ images, onSaveScore, onBest }: { images: Pro
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
       <ConfettiOverlay active={state === 'result' && served >= 8} />
+      {state === 'play' && order.length > 0 && <ReportContext report={{ game: 'Theken-Ansturm', product: order[0], text: `Bestellung: ${order.join(', ')}` }} />}
       <PageHead title="Theken-Ansturm" subtitle="Die Schlange wird länger. Pack jede Bestellung, bevor der Kunde ungeduldig wird." />
       {state === 'menu' && <GameIntro title="So geht's" text="Erkenne die bestellte Ware am Foto und pack sie in die Tüte. Drei verärgerte Kunden und das Spiel ist vorbei." hint="Je schneller du bist, desto mehr Bonuspunkte." startLabel="Theke öffnen" onStart={start} />}
       {state === 'play' && (

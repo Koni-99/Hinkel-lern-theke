@@ -34,6 +34,10 @@ export const reportKeyOf = (r: GameReport) => (typeof r.qid === 'number' ? Strin
 // Aktuelle Frage/Aufgabe, die gerade auf dem Bildschirm ist → schwebender Knopf „⚑ Fehler melden“ (überall gleich)
 export let currentReport: GameReport | null = null;
 
+/** Version 275: Melde-Fenster offen → schnelle Spiele (Ofen-Kette) halten an */
+export let meldeDialogOffen = false;
+export function setMeldeDialogOffen(v: boolean) { meldeDialogOffen = v; }
+
 export const reportListeners: Array<() => void> = [];
 
 export const notifyReport = () => reportListeners.slice().forEach(f => f());
