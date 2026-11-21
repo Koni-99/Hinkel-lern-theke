@@ -464,6 +464,13 @@ async function offlineTests() {
     const neu = ['Vorbestellung abholen', 'Falsche Ware bekommen', 'Allergene bei Saisonware'];
     const fehlt = neu.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
     ok('Theken-Simulator: neue Situationen (Abholung, falsche Ware, Saison-Allergene)', fehlt.length === 0, fehlt.join(', '));
+    // Version 241: Berliner oder Krapfen, Vollkorn (ganzes Jahr), Berliner-Saison (Silvester bis Aschermittwoch)
+    const neu241 = ['Berliner oder Krapfen', 'Vollkorn'];
+    const fehlt241 = neu241.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
+    ok('Theken-Simulator: neue Situationen (Berliner oder Krapfen, Vollkorn)', fehlt241.length === 0, fehlt241.join(', '));
+    const A = kompiliere(['src/games/theke/szenarienAlltag.tsx']).games_theke_szenarienAlltag;
+    const saison = [[2026, 11, 26], [2026, 11, 28], [2027, 0, 15], [2027, 1, 10], [2027, 1, 11], [2027, 5, 1]].map(([j, m, t]) => A.berlinerSaison(new Date(j, m, t, 12)));
+    ok('Theken-Simulator: Berliner-Saison nur von Silvester bis Aschermittwoch', JSON.stringify(saison) === JSON.stringify([null, 'silvester', 'karneval', 'karneval', null, null]), JSON.stringify(saison));
     const d = await device({ user: 'Anna' });
     await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
     let bausteinAbrufe = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) bausteinAbrufe++; });
@@ -716,9 +723,20 @@ async function offlineTests() {
     ok('Teigi für alle: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
-  // Version 241: dunkles Design: Startseite hellbraun, Fortschrittsbalken und Schalter gut sichtbar
-  teile.push(['Version 241: dunkles Design', async () => {
-    const css = kompiliere(['src/thema/artisan.ts']).thema_artisan.ARTISAN_CSS;
+  // Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun
+  teile.push(['Version 241: Wissenslücken gefüllt (Preis, Zutaten, Allergene, vegan) und Karten im dunklen Design hellbraun', async () => {
+    const K = kompiliere(['src/daten/questions.ts', 'src/thema/artisan.ts']);
+    const qs = K.daten_questions.questions;
+    const hat = (t) => qs.some((q) => q.question === t);
+    const neu = ['Was kostet „Weinstock“ (250 g)?', 'Ein Kunde fragt, was in „Zeusstange“ steckt. Was sagst du?', 'Welche Allergene sind bei „Kappeskopp“ angegeben?'];
+    const vegan = qs.filter((q) => /vegan/.test(q.question) && q.id >= 3727).length;
+    ok('Quiz: neue Fragen zu Preis, Zutaten, Allergenen und vegan', neu.every(hat) && vegan === 4, `fehlt: ${neu.filter((t) => !hat(t)).join(', ')}, vegan ${vegan}`);
+    const ids = qs.map((q) => q.id);
+    ok('Quiz: Fragen-Nummern eindeutig', new Set(ids).size === ids.length);
+    const texte = qs.map((q) => q.question.trim());
+    const doppelt = texte.filter((t, i) => texte.indexOf(t) !== i);
+    ok('Quiz: neue Fragen haben keinen doppelten Fragetext', !qs.some((q) => q.id >= 3727 && doppelt.includes(q.question.trim())), doppelt.slice(0, 2).join(' | '));
+    const css = K.thema_artisan.ARTISAN_CSS;
     const regeln = ['.lt-home .lt-basket', '.lt-home .lt-fact-bubble', '.lt-fortschritt-balken', '.lt-knopf-hellbraun', '.lt-hoer-anzeige', '.lt-schalter.lt-schalter-an', '.lt-schalter-knopf'];
     ok('Dunkles Design: Startseite und Hör-Lernen-Anzeige hellbraun, Fortschrittsbalken und Schalter gut sichtbar', regeln.every((r) => css.includes(r)), regeln.filter((r) => !css.includes(r)).join(', '));
   }]);
