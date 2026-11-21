@@ -471,6 +471,19 @@ async function offlineTests() {
     const neu = ['Vorbestellung abholen', 'Falsche Ware bekommen', 'Allergene bei Saisonware'];
     const fehlt = neu.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
     ok('Theken-Simulator: neue Situationen (Abholung, falsche Ware, Saison-Allergene)', fehlt.length === 0, fehlt.join(', '));
+    // Version 273: „Gibt es bei uns nicht“ und „Schwerhöriger Kunde“
+    const neu273 = ['Gibt es bei uns nicht', 'Schwerhöriger Kunde'];
+    const fehlt273 = neu273.filter((t) => { for (let i = 0; i < 20; i++) { if (G.buildConversation(t).steps.some((s) => s.topic === t)) return false; } return true; });
+    ok('Theken-Simulator: neue Situationen „Gibt es bei uns nicht“ und „Schwerhöriger Kunde“', fehlt273.length === 0, fehlt273.join(', '));
+    // richtige Antwort bei „Gibt es bei uns nicht“ nennt immer ein echtes Produkt aus dem Sortiment, nie Getränk/Torte/Belegtes als Angebot
+    const SP = kompiliere(['src/daten/shopProducts.ts']).daten_shopProducts.SHOP_PRODUCTS;
+    let gut273 = 0, alle273 = 0;
+    for (let i = 0; i < 60; i++) {
+      const c = G.buildConversation('Gibt es bei uns nicht'); const st = c.steps.find((s) => s.topic === 'Gibt es bei uns nicht'); if (!st) continue;
+      alle273++; const r = st.options.find((o) => o.correct);
+      if (r && SP.some((p) => r.text.includes(p.name)) && /leider nicht/.test(r.text) && st.options.filter((o) => !o.correct).every((o) => o.why)) gut273++;
+    }
+    ok('Gibt es bei uns nicht: richtige Antwort sagt „leider nicht“ und bietet ein eigenes Produkt an', alle273 > 0 && gut273 === alle273, `${gut273} von ${alle273}`);
     const d = await device({ user: 'Anna' });
     await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
     let bausteinAbrufe = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) bausteinAbrufe++; });

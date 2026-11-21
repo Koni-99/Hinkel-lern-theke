@@ -1,6 +1,6 @@
 // ═══ Theken-Simulator: Alltags-Situationen und Liste aller Situationen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
-import { pick, sample, closeByName, parseCents, BREADS, ROLLS, Core, opts, evenOpts, ALLERGY_TARGETS, hasAllergen, allergenText } from './basis';
+import { pick, sample, closeByName, parseCents, BREADS, ROLLS, SWEETS, PERSONAS, Core, opts, evenOpts, ALLERGY_TARGETS, hasAllergen, allergenText } from './basis';
 import { SHOP_PRODUCTS } from '../../daten/shopProducts';
 import { scAllergyBread, scVeganBread, scTaste, scSoldOut, scIngredients, scFlour, scPrice, scAllergenCheck, scSweets, scComplaint, scPreorder, scBrunch, scGrill, scPriceObjection, scKids, scOfficeOrder, scPocketMoney, scEnglish } from './szenarienVerkauf';
 
@@ -185,6 +185,87 @@ export function scCompliment(): Core | null {
         { text: 'Danke. Was darf’s sein? Hinter Ihnen ist es schon voll.', correct: false, why: 'Kurz innehalten und sich ehrlich bedanken, das gehört zum guten Service.' },
       ]),
       afterWrong: 'Na, ich fand es jedenfalls super …',
+    }],
+  };
+}
+
+// ── Version 273: Dinge, die es bei Hinkel nicht gibt (keine Getränke, keine Torten, nichts Belegtes) ──
+export function scGibtEsNicht(): Core | null {
+  const kuchen = SHOP_PRODUCTS.filter((p) => p.group === 'Kuchen' && parseCents(p.price) > 0);
+  const art = pick(['kaffee', 'torte', 'belegt'] as const);
+  const x = art === 'kaffee' ? pick(SWEETS) : art === 'torte' ? pick(kuchen.length ? kuchen : SWEETS) : pick(ROLLS);
+  if (!x) return null;
+  const fall = {
+    kaffee: {
+      kunde: pick(['Einen Kaffee zum Mitnehmen, bitte.', 'Machen Sie mir noch einen Cappuccino dazu?']),
+      richtig: `Getränke haben wir leider nicht, wir sind eine reine Bäckerei. Aber zum Kaffee zu Hause passt ${x.name} super.`,
+      falsch: [
+        { text: 'Klar, kommt sofort. Mit Milch und Zucker?', why: 'Hinkel verkauft keine Getränke. Nichts versprechen, was es nicht gibt, sondern freundlich etwas Eigenes anbieten.' },
+        { text: 'Nein, haben wir nicht.', why: 'Zu knapp. Freundlich erklären und gleich etwas aus unserem Sortiment anbieten.' },
+      ],
+    },
+    torte: {
+      kunde: pick(['Ich bräuchte eine Torte für den Geburtstag meiner Frau.', 'Haben Sie auch Sahnetorte? Wir feiern heute Nachmittag.']),
+      richtig: `Torten haben wir leider nicht. Für die Feier kann ich Ihnen aber ${x.name} empfehlen, der kommt immer gut an.`,
+      falsch: [
+        { text: 'Gern, welche Torte darf es sein? Schwarzwälder Kirsch?', why: 'Hinkel verkauft keine Torten. Ehrlich sagen und dafür etwas aus unserem Sortiment anbieten.' },
+        { text: 'Torte? Da sind Sie hier falsch.', why: 'Unfreundlich. Höflich erklären und eine Alternative aus unserem Sortiment nennen.' },
+      ],
+    },
+    belegt: {
+      kunde: pick(['Ein belegtes Brötchen mit Käse, bitte.', 'Haben Sie auch was Belegtes für die Mittagspause?']),
+      richtig: `Belegte Brötchen haben wir leider nicht. Aber nehmen Sie doch ${x.name}, ganz frisch und prima zum selbst Belegen.`,
+      falsch: [
+        { text: 'Moment, ich schmier Ihnen schnell eins mit Käse.', why: 'Hinkel verkauft keine belegten Sachen. Freundlich sagen und ein frisches Brötchen zum selbst Belegen anbieten.' },
+        { text: 'Belegt? Nein. Sonst noch was?', why: 'Zu knapp und abweisend. Erklären und ein passendes Brötchen anbieten.' },
+      ],
+    },
+  }[art];
+  return {
+    persona: pick(PERSONAS),
+    basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
+    steps: [{
+      topic: 'Gibt es bei uns nicht',
+      customer: [fall.kunde],
+      options: opts([
+        { text: fall.richtig, correct: true },
+        ...fall.falsch.map((f) => ({ ...f, correct: false })),
+        { text: 'Fragen Sie mal im Café nebenan, die haben so was.', correct: false, why: 'Kunden nicht wegschicken. Lieber freundlich erklären und etwas aus unserem eigenen Sortiment anbieten.' },
+      ]),
+      afterWrong: 'Hm. Und was haben Sie dann für mich?',
+    }],
+  };
+}
+
+// ── Version 273: Kunde hört schlecht ──
+export function scSchwerhoerig(): Core | null {
+  const x = pick(BREADS);
+  if (!x) return null;
+  return {
+    bread: x,
+    persona: pick([{ name: 'Herr Albers', title: 'Herr Albers', who: 'hört nicht mehr so gut' }, { name: 'Frau Kühn', title: 'Frau Kühn', who: 'Seniorin mit Hörgerät' }]),
+    basket: [{ name: x.name, qty: 1, cents: parseCents(x.price) }],
+    sliceIntro: [pick(['Ah, jetzt hab ich es verstanden. Danke!', 'So ist es gut, danke schön.'])],
+    steps: [{
+      topic: 'Schwerhöriger Kunde',
+      customer: [pick([`Wie bitte? Ich höre nicht mehr so gut. Was kostet ${x.name}?`, `Entschuldigung, was haben Sie gesagt? Ich verstehe Sie so schlecht.`])],
+      options: opts([
+        { text: `(Anschauen, langsam und deutlich:) ${x.name} kostet ${x.price}.`, correct: true },
+        { text: `(Ganz laut über die Theke rufen:) ${x.name.toUpperCase()}! ${x.price}!`, correct: false, why: 'Nicht schreien. Den Kunden anschauen und langsam und deutlich sprechen, dann kann er auch vom Mund ablesen.' },
+        { text: '(Seufzen und es genauso schnell nochmal sagen.)', correct: false, why: 'Geduldig bleiben. Langsamer und deutlicher sprechen, nicht nur wiederholen.' },
+        { text: 'Das steht doch vorne auf dem Schild.', correct: false, why: 'Unhöflich. Ruhig, langsam und deutlich antworten, beim Sprechen den Kunden anschauen.' },
+      ]),
+      afterWrong: 'Wie bitte? Ich habe Sie wieder nicht verstanden …',
+    }, {
+      topic: 'Schwerhöriger Kunde',
+      customer: ['Und welches ist das genau? Das da hinten im Regal?'],
+      options: opts([
+        { text: `(Auf das Brot zeigen und es hochhalten:) Genau, dieses hier.`, correct: true },
+        { text: 'Das sieht man doch, das da hinten!', correct: false, why: 'Zeigen hilft mehr als Worte: das Brot hochhalten, dann weiß der Kunde sofort Bescheid.' },
+        { text: '(Wegdrehen und beim Einpacken weiterreden.)', correct: false, why: 'Beim Sprechen den Kunden anschauen, sonst versteht er nichts. Am besten die Ware zeigen.' },
+        { text: '(Nichts sagen und einfach irgendeins einpacken.)', correct: false, why: 'Nachfragen und die Ware zeigen, damit der Kunde bekommt, was er möchte.' },
+      ]),
+      afterWrong: 'Hm? Welches meinen Sie jetzt?',
     }],
   };
 }
@@ -404,4 +485,6 @@ export const SCENARIOS: { fn: () => Core | null; topics: string[]; weight: numbe
   { fn: scAbholung, topics: ['Vorbestellung abholen'], weight: 1 },
   { fn: scFalscheWare, topics: ['Falsche Ware bekommen'], weight: 1 },
   { fn: scSaisonAllergen, topics: ['Allergene bei Saisonware'], weight: 1 },
+  { fn: scGibtEsNicht, topics: ['Gibt es bei uns nicht'], weight: 1 },
+  { fn: scSchwerhoerig, topics: ['Schwerhöriger Kunde'], weight: 1 },
 ];
