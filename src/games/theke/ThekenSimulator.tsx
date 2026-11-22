@@ -7,7 +7,7 @@ import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, ConfettiOverlay } from '../../ui/basis';
 import { ReportLink, ReportContext } from '../../ui/melden';
 import { scrollToPlay } from '../../ui/belohnungen';
-import { OnLearn, LearnHint, canSpeak, sprichKunde, stopSpeaking, speakText, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
+import { OnLearn, LearnHint, canSpeak, sprichKunde, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
 import { SimOpt, Conversation, ChatMsg, pick } from './basis';
 import { LtIcon, ICON } from '../../basis/symbole';
@@ -17,19 +17,17 @@ import { LtIcon, ICON } from '../../basis/symbole';
 const kundenStimme = (p: { name: string; title: string }) => (/^(Frau|Kundin|Die )/.test(p.name) || /^Die /.test(p.title) ? 'frau' as const : 'mann' as const);
 const gesprochen = (t: string) => t.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
 
-/** Version 277: „Vorlesen“ ohne Zuhör-Modus: erst der Kunde mit natürlicher Stimme, dann die Antworten mit der Handy-Stimme
- *  (für die Antworten gibt es keine Tondateien, sie werden jedes Mal neu zusammengesetzt) */
-function VorlesenKnopf({ kunde, stimme, antworten }: { kunde: string; stimme: 'frau' | 'mann'; antworten: string }) {
+/** Version 277: „Vorlesen“ ohne Zuhör-Modus: nur der Kunde, mit natürlicher Stimme (Wunsch des Nutzers: keine Handy-Stimme).
+ *  Die Antworten werden nicht vorgelesen (dafür gibt es keine Tondateien). */
+function VorlesenKnopf({ kunde, stimme }: { kunde: string; stimme: 'frau' | 'mann' }) {
   const [an, setAn] = useState(false);
-  useEffect(() => { setAn(false); stopSpeaking(); }, [kunde, antworten]);
+  useEffect(() => { setAn(false); stopSpeaking(); }, [kunde]);
   useEffect(() => () => { stopSpeaking(); }, []);
-  if (!canSpeak()) return null;
+  if (!kunde) return null;
   const los = () => {
     if (an) { stopSpeaking(); setAn(false); return; }
     setAn(true);
-    const fertig = () => setAn(false);
-    const danach = () => speakText(antworten, fertig);
-    if (kunde) sprichKunde(kunde, stimme, 1.0, danach); else danach();
+    sprichKunde(kunde, stimme, 1.0, () => setAn(false));
   };
   return (
     <button type="button" className="lt-theke-vorlesen" onClick={los} aria-pressed={an} title={an ? 'Vorlesen stoppen' : 'Vorlesen'}
@@ -402,7 +400,7 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
                 <div style={{ fontSize: '16px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Deine Antwort · {step.topic}</div>
                 {hoeren && canSpeak() ? (
                   <button type="button" onClick={() => sprichKunde(step.customer.map(gesprochen).filter(Boolean).join(' '), kundenStimme(conv.persona))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={ICON.repeat} size={18} />Nochmal hören</button>
-                ) : <VorlesenKnopf kunde={step.customer.map(gesprochen).filter(Boolean).join(' ')} stimme={kundenStimme(conv.persona)} antworten={`Deine Antworten: ${step.options.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />}
+                ) : <VorlesenKnopf kunde={step.customer.map(gesprochen).filter(Boolean).join(' ')} stimme={kundenStimme(conv.persona)} />}
               </div>
               {step.options.map((o, i) => (
                 <button key={i} onClick={() => choose(o)} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '60px', padding: '12px 16px', borderRadius: '16px', border: `3px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '18px', lineHeight: 1.4, textAlign: 'left', cursor: 'pointer' }}>

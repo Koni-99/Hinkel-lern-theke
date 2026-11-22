@@ -2004,9 +2004,10 @@ async function offlineTests() {
     const knopf = d.page.locator('.lt-theke-vorlesen');
     for (let w = 0; w < 50 && !(await knopf.count()); w++) await sleep(100);
     await click(knopf.first());
-    let antworten = false; for (let w = 0; w < 80 && !antworten; w++) { antworten = await d.page.evaluate(() => window.__gesagt.some((t) => /Deine Antworten/.test(t))); if (!antworten) await sleep(100); }
-    const handyKunde = await d.page.evaluate(() => window.__gesagt.filter((t) => !/Deine Antworten/.test(t)).length);
-    ok('Theken-Simulator Vorlesen: Kunde mit Tondatei, Antworten danach mit der Handy-Stimme', mp3 > 0 && antworten && handyKunde === 0, `${mp3} Tondateien, Antworten ${antworten}, Handy-Kunde ${handyKunde}`);
+    for (let w = 0; w < 50 && !mp3; w++) await sleep(100);
+    await sleep(800);
+    const handy = await d.page.evaluate(() => window.__gesagt.length);
+    ok('Theken-Simulator Vorlesen: Kunde mit Tondatei, keine Handy-Stimme', mp3 > 0 && handy === 0, `${mp3} Tondateien, Handy-Stimme ${handy}×`);
     ok('Theken-Simulator Vorlesen: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
