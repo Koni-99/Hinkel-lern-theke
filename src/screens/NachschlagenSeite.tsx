@@ -57,12 +57,13 @@ export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, s
   const alleSteckbriefe = () => { setSpickArea('produkt'); setSpickView(undefined); setActiveTab('flashcards'); };
   const oeffne = (name: string) => (zeigeSteckbrief ? zeigeSteckbrief(name) : alleSteckbriefe());
 
-  const bereich = (opt: { titel: string; text: string; icon: string[]; farbe: string; onClick: () => void; neu?: string }) => (
-    <button key={opt.titel} onClick={opt.onClick} className="lt-card lt-theke-bereich" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '10px', minHeight: '124px', padding: '16px', borderRadius: '22px', border: 'none', backgroundColor: dc(opt.farbe), color: LT.ink, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
-      {opt.neu && <span style={{ position: 'absolute', top: '12px', right: '12px', padding: '3px 10px', borderRadius: '999px', backgroundColor: LT.yellow, color: '#2B170A', fontSize: '13px', fontWeight: 800 }} className="lt-papier">{opt.neu}</span>}
-      <span aria-hidden="true" style={{ color: LT.ink }}><LtIcon paths={opt.icon} size={26} width={2} /></span>
-      <span lang="de" style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: '19px', lineHeight: 1.1, hyphens: 'auto', overflowWrap: 'anywhere' }}>{opt.titel}</span>
-      <span style={{ fontSize: '15px', lineHeight: 1.35, color: LT.brown }}>{opt.text}</span>
+  // Version 287: Karten wie auf der Lernen-Seite (weiß, dunkles Symbol-Kästchen, Serif-Überschrift), Wunsch des Nutzers
+  const bereich = (opt: { titel: string; text: string; icon: string[]; onClick: () => void; neu?: string }) => (
+    <button key={opt.titel} onClick={opt.onClick} className="lt-card lt-theke-bereich" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px', padding: '22px', borderRadius: '22px', border: 'none', backgroundColor: dc('#FFFFFF'), boxShadow: '0 1px 2px rgba(31,20,12,.05), 0 10px 24px -16px rgba(31,20,12,.4)', color: LT.ink, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}>
+      {opt.neu && <span style={{ position: 'absolute', top: '18px', right: '18px', padding: '4px 12px', borderRadius: '999px', backgroundColor: LT.yellow, color: '#2B170A', fontSize: '14px', fontWeight: 800 }} className="lt-papier">{opt.neu}</span>}
+      <span aria-hidden="true" style={{ display: 'flex', width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#1F140C', color: '#FFD86B', alignItems: 'center', justifyContent: 'center', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)' }}><LtIcon paths={opt.icon} size={24} /></span>
+      <span style={{ fontFamily: LT.serif, fontSize: '24px', lineHeight: 1.1 }}>{opt.titel}</span>
+      <span style={{ fontSize: '17px', lineHeight: 1.4 }}>{opt.text}</span>
     </button>
   );
 
@@ -116,12 +117,12 @@ export function NachschlagenSeite({ openSeasons, setOpenSeasons, setActiveTab, s
       )}
 
       <h2 style={{ margin: '10px 0 -4px', fontFamily: DISPLAY, fontWeight: 700, fontSize: '24px' }}>Mehr nachschlagen</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' }}>
-        {bereich({ titel: 'Spickzettel Fachwissen', text: 'Sauerteig, Mehl, Frische, Schnittgrößen', icon: ICON.book, farbe: '#FFF5DC', onClick: () => { setSpickArea('fach'); setSpickView(undefined); setActiveTab('flashcards'); } })}
-        {bereich({ titel: 'Das hat ein Kunde gefragt', text: 'Fragen von der Theke mit Antwort', icon: ICON.chat, farbe: '#E3EEDC', onClick: () => setActiveTab('kundenfragen'), neu: kundenfragenNeu > 0 ? (kundenfragenNeu === 1 ? 'Neue Antwort' : `${kundenfragenNeu} neu`) : undefined })}
-        {bereich({ titel: 'Englisch-Wörterbuch', text: 'Sätze für Gäste, mit Vorlesen', icon: ICON.globe, farbe: '#E8EBF1', onClick: () => { setSpickArea('fach'); setSpickView('dictionary'); setActiveTab('flashcards'); } })}
-        {bereich({ titel: 'Gute Sätze für die Theke', text: 'Begrüßen, Beraten, Kassieren', icon: ICON.speaker, farbe: '#FBE6DA', onClick: () => setActiveTab('saetze') })}
-        {bereich({ titel: 'Kundenstimmen', text: 'Lob oder Kritik kurz notieren', icon: ICON.heart, farbe: '#F3E3D3', onClick: () => setActiveTab('kundenstimmen') })}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+        {bereich({ titel: 'Spickzettel Fachwissen', text: 'Sauerteig, Mehl, Frische, Schnittgrößen', icon: ICON.book, onClick: () => { setSpickArea('fach'); setSpickView(undefined); setActiveTab('flashcards'); } })}
+        {bereich({ titel: 'Das hat ein Kunde gefragt', text: 'Fragen von der Theke mit Antwort', icon: ICON.chat, onClick: () => setActiveTab('kundenfragen'), neu: kundenfragenNeu > 0 ? (kundenfragenNeu === 1 ? 'Neue Antwort' : `${kundenfragenNeu} neu`) : undefined })}
+        {bereich({ titel: 'Englisch-Wörterbuch', text: 'Sätze für Gäste, mit Vorlesen', icon: ICON.globe, onClick: () => { setSpickArea('fach'); setSpickView('dictionary'); setActiveTab('flashcards'); } })}
+        {bereich({ titel: 'Gute Sätze für die Theke', text: 'Begrüßen, Beraten, Kassieren', icon: ICON.speaker, onClick: () => setActiveTab('saetze') })}
+        {bereich({ titel: 'Kundenstimmen', text: 'Lob oder Kritik kurz notieren', icon: ICON.heart, onClick: () => setActiveTab('kundenstimmen') })}
       </div>
 
       <section style={{ padding: '18px', borderRadius: '22px', backgroundColor: dc('#FFFFFF'), border: `1px solid ${LT.line}`, display: 'flex', flexDirection: 'column', gap: '10px' }}>

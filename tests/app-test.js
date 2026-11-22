@@ -1266,6 +1266,18 @@ async function offlineTests() {
     ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
+  // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
+  teile.push(['Version 287: Mehr nachschlagen im Lernen-Stil', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(3)); await settle(d.page);
+    const k = d.page.locator('.lt-theke-bereich');
+    for (let w = 0; w < 40 && !(await k.count()); w++) await sleep(100);
+    const st = await k.evaluateAll((el) => el.map((b) => { const ic = b.querySelector('span[aria-hidden]'); return [getComputedStyle(b).backgroundColor, ic ? getComputedStyle(ic).backgroundColor : '', b.getBoundingClientRect().width]; }));
+    ok('Mehr nachschlagen: 5 weiße Karten mit dunklem Symbol-Kästchen, volle Breite', st.length === 5 && st.every(([bg, ic, w]) => bg === 'rgb(255, 255, 255)' && ic === 'rgb(31, 20, 12)' && w > 330), JSON.stringify(st[0]));
+    ok('Version 287: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
   teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {
     const C = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts', 'src/basis/laden.tsx']);
