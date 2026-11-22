@@ -592,8 +592,8 @@ async function offlineTests() {
       }
       return aus;
     }, stichprobe);
-    const zuLang = r.filter(([, vorne, hinten]) => vorne > 0.15 || hinten > 0.15);
-    ok('Stimmen: Stichprobe von 12 Tondateien, vorne und hinten höchstens 0,15 s Stille', zuLang.length === 0, zuLang.slice(0, 2).map(([u, v, h]) => `${u.split('/').pop()} ${v.toFixed(2)}/${h.toFixed(2)} s`).join(' | ') || `max vorne ${Math.max(...r.map((x) => x[1])).toFixed(2)} s`);
+    const zuLang = r.filter(([, vorne, hinten]) => vorne > 0.25 || hinten > 0.3); // Version 280: vorne 0,15 s, hinten 0,2 s Luft
+    ok('Stimmen: Stichprobe von 12 Tondateien, vorne höchstens 0,25 s und hinten höchstens 0,3 s Stille', zuLang.length === 0, zuLang.slice(0, 2).map(([u, v, h]) => `${u.split('/').pop()} ${v.toFixed(2)}/${h.toFixed(2)} s`).join(' | ') || `max vorne ${Math.max(...r.map((x) => x[1])).toFixed(2)} s`);
     ok('Stimmen flüssig: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
