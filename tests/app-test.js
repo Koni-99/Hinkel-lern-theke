@@ -515,13 +515,21 @@ async function offlineTests() {
       await d.page.evaluate(() => { window.__play = []; const p = HTMLMediaElement.prototype.play; HTMLMediaElement.prototype.play = function () { window.__play.push(Date.now()); return p.call(this); }; window.__gesagt = []; });
       let ersteAnfrage = null; const merke = (rq) => { if (ersteAnfrage === null && /\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) ersteAnfrage = Date.now(); };
       d.page.on('request', merke);
-      // eine Antwort tippen: der nächste Kundensatz ist noch nicht vorgeladen
-      await d.page.locator('main button', { has: d.page.locator('span', { hasText: /^A$/ }) }).first().click().catch(() => {});
-      let erst = null; for (let k = 0; k < 100 && erst === null; k++) { erst = await d.page.evaluate(() => (window.__play.length ? window.__play[0] : null)); if (erst === null) await sleep(50); }
+      // eine Antwort tippen: der nächste Kundensatz ist noch nicht vorgeladen (spricht der Kunde danach nicht, z. B. weil das Gespräch endet, nochmal)
+      let erst = null;
+      for (let versuch = 0; versuch < 5 && erst === null; versuch++) {
+        ersteAnfrage = null;
+        const antwort = d.page.locator('main button', { has: d.page.locator('span', { hasText: /^A$/ }) }).first();
+        if (await antwort.count()) await antwort.click().catch(() => {});
+        else { const weiterK = d.page.getByRole('button', { name: /Nächster Kunde|Nächsten Kunden|Weiter/ }).first(); if (await weiterK.count()) await weiterK.click().catch(() => {}); }
+        for (let k = 0; k < 60 && erst === null; k++) { erst = await d.page.evaluate(() => (window.__play.length ? window.__play[0] : null)); if (erst === null) await sleep(50); }
+      }
       d.page.off('request', merke);
+      const knoepfe = erst === null ? await d.page.evaluate(() => [...document.querySelectorAll('main button')].filter((x) => x.offsetParent).map((x) => x.innerText.replace(/\s+/g, ' ').slice(0, 25)).join(' / ').slice(0, 400)) : '';
       const handy = await d.page.evaluate(() => window.__gesagt.length);
-      const warten = erst !== null && ersteAnfrage !== null ? erst - ersteAnfrage : null;
-      ok('Zuhören: natürliche Stimme spielt sofort, wartet nicht auf den Download (keine Handy-Stimme)', warten !== null && warten < 700 && handy === 0, `${warten === null ? 'kein Abspielen/keine Anfrage' : warten + ' ms nach der ersten Anfrage'}, Handy-Stimme ${handy}×`);
+      // ohne Anfrage kam das Stück aus dem Speicher (schon geladen): sofort, also 0
+      const warten = erst === null ? null : ersteAnfrage === null ? 0 : erst - ersteAnfrage;
+      ok('Zuhören: natürliche Stimme spielt sofort, wartet nicht auf den Download (keine Handy-Stimme)', warten !== null && warten < 700 && handy === 0, `${warten === null ? 'kein Abspielen/keine Anfrage' : warten + ' ms nach der ersten Anfrage'}, Handy-Stimme ${handy}× ${knoepfe}`);
       await d.page.unroute(/\/stimme\/teile\/[0-9a-f]+\.mp3/).catch(() => {});
     }
     ok('Theken-Simulator mit Zuhören: keine Fehler', d.errors.length === 0, d.errors[0]);
@@ -682,12 +690,13 @@ async function offlineTests() {
     await click(nav(d.page).nth(2)); await settle(d.page);
     await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Simulator' }).first()); await settle(d.page, 1200);
     await click(d.page.getByRole('button', { name: 'Ersten Kunden bedienen' })); await settle(d.page, 1200);
-    const knopf = d.page.locator('main button[title="Vorlesen"]:visible').first();
+    const knopf = d.page.locator('button[title="Vorlesen"]:visible').first();
     const vorher = await d.page.evaluate(() => window.__gesagt.length); abrufe = 0;
-    if (await knopf.count()) await click(knopf);
+    const knopfDa = await knopf.count();
+    if (knopfDa) await click(knopf);
     for (let k = 0; k < 60 && !abrufe; k++) await sleep(100);
     const handy = (await d.page.evaluate(() => window.__gesagt.length)) - vorher;
-    ok('Theken-Simulator: „Vorlesen“ spricht mit natürlichen Stimmen (keine Handy-Stimme)', (await knopf.count()) > 0 && abrufe > 0 && handy === 0, `Knopf ${await knopf.count()}, Tondateien ${abrufe}, Handy ${handy}`);
+    ok('Theken-Simulator: „Vorlesen“ spricht mit natürlichen Stimmen (keine Handy-Stimme)', knopfDa > 0 && abrufe > 0 && handy === 0, `Knopf ${knopfDa}, Tondateien ${abrufe}, Handy ${handy}`);
     ok('Vorlesen überall: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
