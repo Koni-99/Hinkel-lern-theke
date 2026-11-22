@@ -31,6 +31,10 @@ export interface ShopProduct {
 }
 
 
+/** Version 276: Allergen-Angabe nachweislich unvollständig (Hinweis beginnt mit „Achtung“, z. B. Tigertatze, Prasselkuchen).
+ *  Solche Produkte nie als „ohne Allergen X“ beibringen: Allergen-Spiele und -Szenen lassen sie weg. */
+export const allergeneUnsicher = (p: { allergenNote?: string }) => /^\s*Achtung/i.test(p.allergenNote || '');
+
 export const SHOP_PRODUCTS: ShopProduct[] = [
   {
     name: 'Abendschnitte',

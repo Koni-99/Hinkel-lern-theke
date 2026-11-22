@@ -1,5 +1,5 @@
 // Daten fürs Allergene-Training (ohne Bildschirm, damit auch Werkzeuge wie tools/stimme/saetze.mjs sie nutzen können)
-import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { SHOP_PRODUCTS, allergeneUnsicher } from '../daten/shopProducts';
 
 type ShopProduct = (typeof SHOP_PRODUCTS)[number];
 
@@ -18,6 +18,7 @@ export function splitByAllergen(t: AllergenTest) {
   const withIt: ShopProduct[] = [], without: ShopProduct[] = [];
   SHOP_PRODUCTS.forEach(p => {
     if (p.allergens.length === 0) return; // ohne Angabe im Shop: lieber nicht verwenden
+    if (allergeneUnsicher(p)) return; // Version 276: Angabe unvollständig (z. B. Nougat fehlt) → nicht verwenden
     const tagged = p.allergens.some(a => t.tag.test(a));
     const inIngredients = t.ing.test(p.fullIngredients || '');
     if (tagged) withIt.push(p);

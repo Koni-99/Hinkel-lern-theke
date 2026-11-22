@@ -484,6 +484,14 @@ export const ALT_MAP: Record<string, string[]> = {
   'Walnuss-Brot': ['Elsässer', 'Vinschgauer', 'Sternchen'],
   'Weinstock': ['Olivenstange', 'Landbaguette'],
   'Zeusstange': ['Olivenstange', 'Feuriges'],
+  // Version 276: fehlten, passend zu den Alternativen-Fragen im Quiz
+  'Münsterländer': ['Schweizer'],
+  'Kleines Schwarzwälder': ['Sternchen'],
+  'Oberländer': ['Feinbrot'],
+  'Kartäuser': ['Innsbrucker Roggenlaib'],
+  'Mohnbrötchen': ['Sesambrötchen', 'Brötchen (Piepken)'],
+  'Sesambrötchen': ['Mohnbrötchen', 'Brötchen (Piepken)'],
+  'Quarkschnecke mit Himbeeren': ['Rosinenschnecke'],
 };
 
 // Farben: früher gab es einen dunklen Modus, der ist entfernt. dc() gibt die Farbe unverändert zurück

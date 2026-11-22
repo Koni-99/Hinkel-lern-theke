@@ -1,7 +1,7 @@
 // ═══ Ofen-Kette: Logik (ohne Bildschirm, darum im Test prüfbar) ═══
 // Teile aus 4 Produktfotos fallen in den Ofen. Volle Reihe = fertig gebacken, 4 gleiche nebeneinander = goldbraun.
 // Dazu: Bestellung nach Namen, Allergen-Frage, goldenes Brötchen, verbrannte Bilder, Gruppen-Tag, ruhiger Modus.
-import { SHOP_PRODUCTS } from '../daten/shopProducts';
+import { SHOP_PRODUCTS, allergeneUnsicher } from '../daten/shopProducts';
 import { sortiment } from './telefonLogik';
 
 export const COLS = 7;
@@ -125,7 +125,7 @@ const ALLE_ALLERGENE = Array.from(new Set(SHOP_PRODUCTS.flatMap((p) => p.allerge
 /** Allergen-Frage zu einem Produkt: 1 richtige + 2 falsche Antworten. Soja wird (wie im Quiz) ausgelassen. */
 export function allergenFrage(name: string, zufall = Math.random): { richtig: string; optionen: string[]; drin: string[] } | null {
   const p = SHOP_PRODUCTS.find((x) => x.name === name);
-  if (!p) return null;
+  if (!p || allergeneUnsicher(p)) return null; // Version 276: unvollständige Angabe → keine Allergen-Frage
   const drin = Array.from(new Set(p.allergens.map(allergenKopf))).filter((a) => a && a !== 'Soja');
   if (!drin.length || p.allergens.some((a) => allergenKopf(a) === 'Soja')) return null;
   const richtig = drin[Math.floor(zufall() * drin.length)];

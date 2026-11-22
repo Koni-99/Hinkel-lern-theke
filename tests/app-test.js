@@ -1987,6 +1987,34 @@ async function offlineTests() {
     }
     ok('Melde-Knopf in Telefon-Bestellung, Rechen-Trainer, Theken-Ansturm, Ofen-Kette, Hör-Lernen', fehlt.length === 0, fehlt.join(', '));
   }]);
+  // Version 276: Quizfragen passen zu den Produktdaten (Preis, Allergene, Warengruppe, Mehl, Schnitt, Alternativen) und
+  // Produkte mit unvollständiger Allergen-Angabe werden nie als „ohne Allergen“ beigebracht
+  teile.push(['Version 276: Quizfragen und Produktdaten', async () => {
+    const M = kompiliere(['src/daten/questions.ts', 'src/daten/shopProducts.ts', 'src/daten/data.ts', 'src/games/allergenDaten.ts', 'src/games/ofenLogik.ts']);
+    const Q = M.daten_questions, P = M.daten_shopProducts.SHOP_PRODUCTS, D = M.daten_data, A = M.games_allergenDaten, O = M.games_ofenLogik;
+    const byName = new Map(P.map((p) => [p.name, p])); P.forEach((p) => (p.aliases || []).forEach((x) => byName.set(x, p)));
+    const n = (x) => String(x || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const preis = (x) => n(x).replace(/^ab /, '').replace(/\s*\(100 g\)$/, '');
+    const menge = (x) => String(x).split(/,\s*(?![^()]*\))/).map(n).filter(Boolean).sort().join('|');
+    const SLICE = { schwarzbrot: '5,5 mm', roggen: '9 mm', roggenmisch: '9 mm', weizenmisch: '9 mm', dinkel: '9 mm', spezial: '9 mm', weizen: '12 mm', stuten: '12 mm' };
+    const falsch = [];
+    for (const q of [...Q.questions, ...Q.examQuestions]) {
+      const p = q.product && byName.get(q.product); if (!p) continue;
+      const k = q.question.split(q.product).join('X'), r = q.options[q.correct];
+      const f = (w) => falsch.push(`${q.id} ${q.product}: ${w}`);
+      if (/^Was kostet „X“\?/.test(k) && preis(r) !== preis(p.price)) f(`Preis ${r} statt ${p.price}`);
+      if (/^Welche Allergene sind bei „Xn?“ angegeben\?/.test(k) && menge(r) !== menge(p.allergens.join(', ') || 'keine')) f(`Allergene ${r}`);
+      if (/^Zu welcher Warengruppe gehört „X“\?/.test(k) && n(r) !== n(p.group)) f(`Gruppe ${r} statt ${p.group}`);
+      if (/^Wie setzt sich das Mehl bei „X“ zusammen\?/.test(k) && n(r) !== n(p.flour)) f(`Mehl ${r}`);
+      if (/^Mit welcher Schnittstärke/.test(k) && n(r) !== n(SLICE[p.breadType])) f(`Schnitt ${r}`);
+      if (/ausverkauft. Welche Alternative/.test(k) && !((D.ALT_MAP || {})[p.name] || []).includes(r)) f(`Alternative ${r} fehlt in ALT_MAP`);
+    }
+    ok('Quizfragen passen zu den Produktdaten (Preis, Allergene, Warengruppe, Mehl, Schnitt, Alternativen)', falsch.length === 0, `${falsch.length}: ${falsch.slice(0, 3).join(' | ')}`);
+    const unsicher = P.filter((p) => M.daten_shopProducts.allergeneUnsicher(p)).map((p) => p.name);
+    const ohne = A.ALLERGEN_TESTS ? A.ALLERGEN_TESTS.flatMap((t) => A.splitByAllergen(t).without.map((p) => p.name)) : [];
+    ok('Unvollständige Allergen-Angabe (z. B. Prasselkuchen, Tigertatze) nie als „ohne Allergen“ im Allergene-Training und keine Allergen-Frage in der Ofen-Kette',
+      unsicher.includes('Prasselkuchen') && unsicher.includes('Tigertatze') && !ohne.some((x) => unsicher.includes(x)) && unsicher.every((x) => O.allergenFrage(x) === null), `${unsicher.join(', ')} · ohne: ${ohne.filter((x) => unsicher.includes(x)).join(', ')}`);
+  }]);
   // Version 275: Produktdaten-Prüfung
   teile.push(['Version 275: Produktdaten-Prüfung', async () => {
     const M = kompiliere(['src/hilfen/produktPruefung.ts', 'src/daten/shopProducts.ts']);

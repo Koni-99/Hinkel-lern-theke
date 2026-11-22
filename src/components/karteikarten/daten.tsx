@@ -1,7 +1,7 @@
 // ═══ Karteikarten: Daten (Englisch-Wörterbuch, Schlagworte, Brotgruppen, Fachwissen-Abschnitte) ═══
 // Vorher in components/FlashcardView.tsx. Inhalt unverändert übernommen.
 import { BAKERY_DICTIONARY, DICTIONARY_EXTRA } from '../../daten/data';
-import { SHOP_PRODUCTS, ShopProduct } from '../../daten/shopProducts';
+import { SHOP_PRODUCTS, ShopProduct, allergeneUnsicher } from '../../daten/shopProducts';
 
 // ───────── Englisch-Wörterbuch: Produkte automatisch aus dem Sortiment ─────────
 export const EN_BREAD: Record<string, string> = { schwarzbrot: "dark wholegrain rye bread", roggen: "rye bread", roggenmisch: "rye and wheat bread", weizenmisch: "wheat and rye bread", weizen: "light wheat bread", stuten: "sweet milk loaf", dinkel: "spelt bread", spezial: "special bread" };
@@ -98,7 +98,7 @@ export const QUICK_TAGS: {
     label: "Nüsse & Mandeln",
     test: (p) =>
       !!p.shop &&
-      p.shop.allergens.some((a) => /^schalenfrüchte|mandel|pistazie|haselnu|walnu/i.test(a)),
+      (p.shop.allergens.some((a) => /^schalenfrüchte|mandel|pistazie|haselnu|walnu/i.test(a)) || allergeneUnsicher(p.shop)), // Version 276: unvollständige Angabe sicherheitshalber mit anzeigen
   },
   {
     id: "stuten",

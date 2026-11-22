@@ -1,7 +1,7 @@
 // ═══ Theken-Simulator: Verkaufs-Situationen ═══
 // Vorher in components/KassenblitzView.tsx. Inhalt unverändert übernommen.
 import { shuffleArray } from '../../hilfen/allgemein';
-import { SHOP_PRODUCTS } from '../../daten/shopProducts';
+import { SHOP_PRODUCTS, allergeneUnsicher } from '../../daten/shopProducts';
 import { ALT_MAP } from '../../daten/data';
 import { ShopItem, SimStep, pick, sample, rnd, closeByName, parseCents, BREADS, SWEETS, ROLLS, TYPE_LABEL, ALLERGY_TARGETS, hasAllergen, allergenText, Core, opts, evenOpts } from './basis';
 
@@ -9,8 +9,8 @@ import { ShopItem, SimStep, pick, sample, rnd, closeByName, parseCents, BREADS, 
 
 export function scAllergyBread(): Core | null {
   const t = pick(ALLERGY_TARGETS);
-  const good = BREADS.filter(p => !hasAllergen(p, t.key));
-  const bad = BREADS.filter(p => hasAllergen(p, t.key));
+  const good = BREADS.filter(p => !allergeneUnsicher(p) && !hasAllergen(p, t.key));
+  const bad = BREADS.filter(p => !allergeneUnsicher(p) && hasAllergen(p, t.key));
   if (good.length < 1 || bad.length < 3) return null;
   const right = pick(good);
   const wrong = closeByName(bad, right, 3);
@@ -184,7 +184,7 @@ export function scPrice(): Core | null {
 
 export function scAllergenCheck(): Core | null {
   const t = pick(ALLERGY_TARGETS);
-  const p = pick(BREADS);
+  const p = pick(BREADS.filter(b => !allergeneUnsicher(b)));
   const contains = hasAllergen(p, t.key);
   const steps: SimStep[] = [{
     topic: 'Allergene prüfen',
@@ -204,8 +204,8 @@ export function scAllergenCheck(): Core | null {
   if (!contains) {
     return { bread: p, basket: [{ name: p.name, qty: 1, cents: parseCents(p.price) }], steps: [{ ...steps[0], afterWrong: `Gut, dass ich gefragt habe … dann nehme ich ${p.name}.` }] };
   }
-  const good = BREADS.filter(b => !hasAllergen(b, t.key) && b.name !== p.name);
-  const bad = BREADS.filter(b => hasAllergen(b, t.key) && b.name !== p.name);
+  const good = BREADS.filter(b => !allergeneUnsicher(b) && !hasAllergen(b, t.key) && b.name !== p.name);
+  const bad = BREADS.filter(b => !allergeneUnsicher(b) && hasAllergen(b, t.key) && b.name !== p.name);
   if (!good.length || bad.length < 3) return null;
   const right = pick(good);
   steps.push({
@@ -221,8 +221,8 @@ export function scAllergenCheck(): Core | null {
 }
 
 export function scSweets(): Core | null {
-  const good = SWEETS.filter(p => !hasAllergen(p, 'Nüsse'));
-  const bad = SWEETS.filter(p => hasAllergen(p, 'Nüsse'));
+  const good = SWEETS.filter(p => !allergeneUnsicher(p) && !hasAllergen(p, 'Nüsse'));
+  const bad = SWEETS.filter(p => !allergeneUnsicher(p) && hasAllergen(p, 'Nüsse'));
   if (!good.length || bad.length < 3) return null;
   const right = pick(good);
   const qty = rnd(3, 8);
