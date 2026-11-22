@@ -34,6 +34,8 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
   useEffect(() => { if (wunsch && abschaltenSpiel(wunsch.key)) setKey(wunsch.key); }, [wunsch?.n]);
   // Version 269: Bestenliste „Diese Woche“ oder „Für immer“, Kollegen haben meine Herausforderung geschlagen
   const [woche, setWoche] = useState(true);
+  const [gross, setGross] = useState(false);
+  useEffect(() => { setGross(false); }, [key]);
   const okKey = `lt_abgeschlagen_ok_${userKey}`;
   const [okIds, setOkIds] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem(okKey) || '[]'); } catch { return []; } });
   const geschlagen = meineGeschlagenen(progress, userKey).filter((g) => !okIds.includes(g.id)).slice(0, 3);
@@ -51,6 +53,9 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
       if (d.typ === 'lt-abschalten-ende' && abschaltenSpiel(d.key)) onRekordRef.current(d.key, Number(d.punkte) || 0);
       if (d.typ === 'lt-abschalten-gold' && abschaltenSpiel(d.key)) aktionenRef.current?.onGold(d.key);
       if (d.typ === 'lt-abschalten-aufgabe' && typeof d.tag === 'string' && typeof d.id === 'string') aktionenRef.current?.onAufgabe(d.tag, d.id);
+      // Version 281: während der Runde liegt das Spielfeld groß und mittig über allem (im Spiel kann man die Seite nicht schieben)
+      if (d.typ === 'lt-abschalten-start') setGross(true);
+      if (d.typ === 'lt-abschalten-stopp') { setGross(false); window.setTimeout(() => rahmen.current?.scrollIntoView({ block: 'center' }), 30); }
       if (d.typ === 'lt-abschalten-wechsel' && abschaltenSpiel(d.key)) setKey(d.key);
       if (d.typ === 'lt-abschalten-herausfordern' && abschaltenSpiel(d.key) && Number(d.punkte) > 0) { setGewaehlt({}); setFordern({ key: d.key, punkte: Math.floor(Number(d.punkte)) }); }
     };
@@ -67,6 +72,8 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
 @media (min-width:700px){.lt-abschalten-wahl{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .lt-abschalten-rahmen{display:block;width:min(100%, 420px, calc((100dvh - 150px) * .75));min-width:min(100%, 300px);aspect-ratio:3/4;margin:0 auto;border:none;border-radius:24px;background:#2A1A10;box-shadow:0 24px 50px -24px rgba(31,20,12,.75),0 0 0 4px #3A2010,0 0 0 6px #C98A00}
 @media (min-width:700px){.lt-abschalten-rahmen{width:min(100%, 660px, calc((100dvh - 120px) * .75))}}
+.lt-abschalten-rahmen.gross{position:fixed;z-index:1201;left:50%;top:50%;transform:translate(-50%,-50%);width:min(100vw, calc(100dvh * .75), 760px);min-width:0;margin:0;border-radius:16px;box-shadow:0 0 0 3px #3A2010}
+.lt-abschalten-dunkel{position:fixed;inset:0;z-index:1200;background:#1A0F08}
 .lt-abschalten-umschalter{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:rgba(75,42,20,.08);align-self:flex-start}
 .lt-abschalten-umschalter button{min-height:36px;padding:0 14px;border-radius:999px;border:none;background:transparent;font-weight:700;font-size:14px;cursor:pointer;color:inherit}
 .lt-abschalten-umschalter button[aria-pressed="true"]{background:#4B2A14;color:#FFE9B0}
@@ -94,7 +101,8 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
           </div>
         </div>
       ))}
-      <iframe ref={rahmen} className="lt-abschalten-rahmen" title={spiel.titel} src={`${BASIS}abschalten/index.html#${key}`} />
+      {gross && <div className="lt-abschalten-dunkel" aria-hidden="true" />}
+      <iframe ref={rahmen} className={`lt-abschalten-rahmen${gross ? ' gross' : ''}`} title={spiel.titel} src={`${BASIS}abschalten/index.html#${key}`} />
       {fordern && (
         <div className="lt-overlay" onClick={() => setFordern(null)} style={{ position: 'fixed', inset: 0, zIndex: 120, backgroundColor: 'rgba(43,23,10,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
           <div className="lt-dialog lt-pop-in lt-fordern" role="dialog" aria-modal="true" aria-label="Kollegen herausfordern" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '420px', maxHeight: '88vh', overflowY: 'auto', backgroundColor: dc('#FFFBF2'), borderRadius: '24px', padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: '12px', color: TH.ink }}>

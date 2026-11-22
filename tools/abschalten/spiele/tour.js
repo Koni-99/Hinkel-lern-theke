@@ -255,7 +255,6 @@ SPIELE.tour = {
   },
   aktuellePunkte(){ return this.punkte(); },
   /** eigener Regen oder Schnee: dann malt core keinen Saison-Schnee dazu */
-  eigenesWetter(){ const h = this.himmel; return !!h && h.regen + h.schnee > .3; },
   /** Tageszeit und Wetter je Abschnitt: Morgen, Tag, Tag mit Regen (Winter: Schnee), Abend, Abend mit Regen/Schnee */
   stimmungZiel(n){
     const i = n % 5, nass = i === 2 || i === 4;
