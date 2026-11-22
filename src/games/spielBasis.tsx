@@ -7,7 +7,7 @@ import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
 import { LtIcon, ICON } from '../basis/symbole';
 import type { ShopProduct } from './BilderQuiz';
 import { zerlege, teilKey, KUNDEN_STIMMEN, KundenStimme } from '../hilfen/bausteine';
-import { saetze, satzKey } from '../hilfen/vorlesen';
+import { saetze, satzKey, englischKey } from '../hilfen/vorlesen';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */
 export const scrollToCard = () => window.setTimeout(() => {
@@ -100,8 +100,8 @@ let teilAudio: HTMLAudioElement | null = null;
 let teilLauf = 0;
 export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause(); } catch {} } }
 /** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei). */
-function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void) {
-  const handy = (rest: string) => { if (lauf === teilLauf) speakText(rest, onEnd, handyTempo); };
+function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void, ersatz?: (rest: string) => void) {
+  const handy = (rest: string) => { if (lauf === teilLauf) { if (ersatz) ersatz(rest); else speakText(rest, onEnd, handyTempo); } };
   const a = teilAudio || (teilAudio = merkeAudio(new Audio()));
   let i = 0;
   const weiter = () => {
@@ -137,6 +137,16 @@ export async function sprichSaetze(text: string, onEnd?: () => void, stimme?: st
   const keys = s.map((x) => satzKey(x, stimme));
   if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd); return; }
   spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd);
+}
+/** Wörterbuch Englisch: natürliche britische Stimme, sonst die englische Handy-Stimme (ersatz) */
+export async function sprichEnglisch(text: string, ersatz: (text: string) => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await mitZeitlimit(ladeIndex('stimme/saetze/index.json'));
+  if (lauf !== teilLauf) return;
+  const key = englischKey(text);
+  if (typeof Audio === 'undefined' || !index.has(key)) { ersatz(text); return; }
+  spieleFolge(lauf, [`stimme/saetze/${key}.mp3`], [text], 1.0, 1.0, undefined, ersatz);
 }
 /** Spielt eine Datei aus dem Hör-Lernen (z. B. die Antwort einer Lernkarte), sonst liest die Handy-Stimme den Text */
 export async function sprichHoerDatei(key: string, text: string, onEnd?: () => void) {

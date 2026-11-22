@@ -12,6 +12,9 @@ type Prod = { name: string; description?: string; shortIngredients?: string; all
 export function saetze(text: string): string[] {
   return sauber(text).split(/(?<=[.!?])\s+/).map((s) => s.replace(/[.!?]+$/, '').trim()).filter((s) => /[A-Za-zÄÖÜäöüß0-9]/.test(s));
 }
+/** Wörterbuch Englisch (Version 278): ganzer Eintrag als eine Tondatei, britische Stimme */
+export const ENGLISCH_STIMME = 'en-GB-Chirp3-HD-Achernar';
+export const englischKey = (text: string) => satzKey(text, ENGLISCH_STIMME);
 export const satzKey = (satz: string, stimme: string = VORLESE_STIMME) => stimmeKey(`satz|${stimme}|${satz}`);
 /** Lernkarten (Version 239): die Produkt-Lernkarten sprechen abwechselnd mit 3 Stimmen (Frau 4, Mann 10, Frau 10), fest pro Produkt */
 export const KARTEN_STIMMEN = ['de-DE-Chirp3-HD-Achernar', 'de-DE-Chirp3-HD-Iapetus', 'de-DE-Chirp3-HD-Laomedeia'];

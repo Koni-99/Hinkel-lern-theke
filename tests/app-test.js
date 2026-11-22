@@ -550,6 +550,21 @@ async function offlineTests() {
     const fehlt = [];
     for (const b of bereiche) if (!(await d.page.getByRole('button', { name: new RegExp('^' + b.replace('&', '\\&')) }).count())) fehlt.push(b);
     ok('Wörterbuch: Bereiche „Das sagen Kunden“, „Bezahlen“, „Zahlen & Mengen“', gefunden && fehlt.length === 0, gefunden ? fehlt.join(', ') : 'Wörterbuch nicht gefunden');
+    // Version 278: Englisch mit natürlicher Stimme (Tondatei statt Handy-Stimme)
+    const mp3 = [];
+    d.page.on('request', (r) => { if (/stimme\/saetze\/[^/]+\.mp3/.test(r.url())) mp3.push(r.url()); });
+    const laut = d.page.locator('button.lt-speak[aria-label^="Auf Englisch vorlesen"]:visible').first();
+    if (await laut.count()) await click(laut);
+    for (let i = 0; i < 40 && !mp3.length; i++) await d.page.waitForTimeout(150);
+    ok('Wörterbuch: Lautsprecher spielt natürliche englische Stimme (Tondatei)', mp3.length > 0, `${mp3.length} Dateien`);
+    {
+      const fs = require('fs'), path = require('path');
+      const M = kompiliere(['src/hilfen/vorlesen.ts', 'src/components/karteikarten/daten.tsx']);
+      const V = M.hilfen_vorlesen, K = M.components_karteikarten_daten;
+      const idx = new Set(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/stimme/saetze/index.json'), 'utf8')));
+      const fehltE = K.DICT_ALL.map((e) => e.say || e.en).filter((t) => !idx.has(V.englischKey(t)));
+      ok('Natürliche Stimme: Wörterbuch Englisch, alle Einträge vorhanden', fehltE.length === 0 && K.DICT_ALL.length > 100, `${fehltE.length} fehlen (Werkzeug: node tools/stimme/saetze.mjs): ${fehltE.slice(0, 2).join(' | ')}`);
+    }
     ok('Wörterbuch: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);

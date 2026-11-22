@@ -4,6 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { dc } from '../../daten/data';
 import { DICT_ALL, DICT_CATS, speakEnglish } from './daten';
 import { LtIcon, ICON } from '../../basis/symbole';
+import { sprichEnglisch } from '../../games/spielBasis';
 
 export type WoerterbuchProps = {
   dictCat: string;
@@ -63,7 +64,7 @@ export function Woerterbuch({ dictCat, setDictCat, filteredDictionary, dictLette
                 <div style={{ fontSize: "17px", color: dc('#2F4F8A'), fontWeight: 700, marginTop: "3px" }}>{item.en}</div>
                 <span style={{ display: "inline-block", marginTop: "6px", fontSize: "13px", backgroundColor: dc('#FFF0C2'), color: dc('#8A5A00'), padding: "2px 8px", borderRadius: "999px", fontWeight: 700 }}>{item.cat}</span>
               </div>
-              <button onClick={() => speakEnglish(item.say || item.en)} aria-label={`Auf Englisch vorlesen: ${item.en}`} className="lt-speak" style={{ flex: "0 0 auto", width: "48px", height: "48px", borderRadius: "50%", border: `2px solid ${dc('#F1E3C8')}`, backgroundColor: dc('#FFFFFF'), fontSize: "20px", cursor: "pointer" }}><LtIcon paths={ICON.speaker} size={22} /></button>
+              <button onClick={() => sprichEnglisch(item.say || item.en, speakEnglish)} aria-label={`Auf Englisch vorlesen: ${item.en}`} className="lt-speak" style={{ flex: "0 0 auto", width: "48px", height: "48px", borderRadius: "50%", border: `2px solid ${dc('#F1E3C8')}`, backgroundColor: dc('#FFFFFF'), fontSize: "20px", cursor: "pointer" }}><LtIcon paths={ICON.speaker} size={22} /></button>
             </div>
           );
         })}

@@ -57,6 +57,8 @@ for (const t of A.ALLERGEN_TESTS) {
 }
 // Quiz und Adventskalender vor der Antwort: Frage, Buchstaben, Antwort-Möglichkeiten
 for (const q of [...(Q.questions || []), ...(Q.examQuestions || [])]) dazu(V.quizVorherText(q.question, q.options));
+// Wörterbuch Englisch: ganzer Eintrag als eine Datei, britische Stimme
+for (const d of K.DICT_ALL) { const t = d.say || d.en; saetze.set(V.englischKey(t), [t, V.ENGLISCH_STIMME]); }
 // Alternativen-Jäger (mehrmals, weil die falschen Antworten zufällig gewählt werden)
 for (let i = 0; i < 20; i++) ALT.alternativenTexte().forEach((t) => dazu(t));
 const zeichen = [...saetze.values()].reduce((a, [s]) => a + s.length, 0);
@@ -68,7 +70,7 @@ async function sprechen(text, stimme) {
     let res;
     try {
       res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: { text: `${text}.` }, voice: { languageCode: 'de-DE', name: stimme }, audioConfig: { audioEncoding: 'MP3' } }) });
+        body: JSON.stringify({ input: { text: `${text}.` }, voice: { languageCode: stimme.slice(0, 5), name: stimme }, audioConfig: { audioEncoding: 'MP3' } }) });
     } catch { await new Promise((r) => setTimeout(r, 5000 * versuch)); continue; }
     if (res.ok) return Buffer.from((await res.json()).audioContent, 'base64');
     if (res.status === 429 || res.status >= 500) { await new Promise((r) => setTimeout(r, 8000 * versuch)); continue; }
