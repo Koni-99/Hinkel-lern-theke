@@ -73,7 +73,6 @@ function ch_statisch(){
   // Markise über dem Fenster
   for (let i = 0; i < 12; i++) { const mx = fx - 6 + i * (fw + 12) / 12, mw = (fw + 12) / 12; x.fillStyle = i % 2 ? '#FFFFFF' : '#FFC72C'; x.beginPath(); x.moveTo(mx, 30); x.lineTo(mx + mw, 30); x.lineTo(mx + mw, 40); x.arc(mx + mw / 2, 40, mw / 2, 0, Math.PI); x.closePath(); x.fill(); }
   x.fillStyle = 'rgba(80,40,10,.18)'; x.fillRect(fx - 6, 30, fw + 12, 3);
-  ch_saisonDeko();
   // Lampen
   for (const lx of [122, 238]) { x.strokeStyle = '#4B2A14'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(lx, 0); x.lineTo(lx, 12); x.stroke(); x.fillStyle = linear(lx - 12, 0, lx + 12, 0, [[0, '#7A4418'], [.4, '#C98A3E'], [1, '#5E3418']]); x.beginPath(); x.moveTo(lx - 5, 12); x.lineTo(lx + 5, 12); x.lineTo(lx + 13, 22); x.lineTo(lx - 13, 22); x.closePath(); x.fill(); x.fillStyle = radial(lx, 24, 0, 40, [[0, 'rgba(255,226,140,.55)'], [1, 'rgba(255,226,140,0)']]); x.beginPath(); x.arc(lx, 24, 40, 0, 7); x.fill(); x.fillStyle = '#FFF4C8'; x.beginPath(); x.ellipse(lx, 22, 9, 2.5, 0, 0, 7); x.fill(); }
   // ── Backstube: Ziegelwand ──
@@ -222,14 +221,6 @@ function ch_goldBrezel(s){
   x.fillStyle = '#FFFFFF'; [[-22, -8], [-13, -17], [16, -15], [23, -3], [-4, 13], [6, 11]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 1.3, 0, 7); x.fill(); });
   x.restore();
 }
-function ch_saisonDeko(){
-  let art = null; try { art = SAISON_TEST || saisonHeute(); } catch { return; }
-  if (art !== 'advent' && art !== 'weihnacht') return;
-  // Tannengirlande unter der Markise mit Kugeln
-  for (let px = 18; px < 344; px += 5) { const py = 42 + Math.sin(px / 54) * 2.5; x.fillStyle = zufallFest(px) > .5 ? '#2E6B3A' : '#3F8A4A'; x.save(); x.translate(px, py); x.rotate(zufallFest(px + 9) * 2 - 1); x.beginPath(); x.ellipse(0, 0, 5, 2.4, 0, 0, 7); x.fill(); x.restore(); }
-  [[60, '#D0402A'], [128, '#FFC72C'], [196, '#D0402A'], [264, '#FFC72C'], [318, '#D0402A']].forEach(([px, f]) => { const py = 47 + Math.sin(px / 54) * 2.5; x.fillStyle = radial(px, py, 0, 5, [[0, '#FFFFFF'], [.3, f], [1, f]], px - 1.5, py - 1.5); x.beginPath(); x.arc(px, py, 4, 0, 7); x.fill(); });
-}
-
 SPIELE.chaos = {
   medaillen: [600, 1800, 4000],
   key: 'chaos', name: 'Backstuben-Chaos', kurz: 'Backen',

@@ -1170,6 +1170,62 @@ async function offlineTests() {
     ok('Version 269: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 282: Deko und Teigi-Lauf-Geist weg, Spielfeld groß und mittig, Schädlinge abwehren neu (Stufe 5, neue Fallen, 3 Lager)
+  teile.push(['Version 282: Zum Abschalten groß, Schädlinge neu', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Spielen"]:visible').first()); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    await click(bereich.locator('button', { hasText: 'Schädlinge' }).first()); await settle(d.page, 800);
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let los = 0;
+    for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
+    ok('Schädlinge: Startkarte da', los === 1 && /Stufe 5/.test(await rahmen.locator('.ueber').innerText().catch(() => '')));
+    ok('Vor dem Start: Spielfeld normal in der Seite', !(await d.page.locator('iframe.lt-abschalten-rahmen.gross').count()));
+    await rahmen.locator('.ueber .los').click();
+    const gross = d.page.locator('iframe.lt-abschalten-rahmen.gross');
+    for (let w = 0; w < 40 && !(await gross.count()); w++) await sleep(100);
+    const box = await gross.boundingBox().catch(() => null);
+    ok('Beim Start: Spielfeld groß, mittig und ganz im Bild', !!box && box.width >= 380 && box.y >= 0 && box.y + box.height <= 844 && Math.abs(box.y + box.height / 2 - 422) < 4, JSON.stringify(box));
+    const oben = await d.page.evaluate(() => [[195, 170], [195, 670], [20, 422], [370, 422]].every(([px, py]) => document.elementFromPoint(px, py)?.classList.contains('gross')));
+    ok('Großes Spielfeld liegt über allem (auch über der Leiste unten)', oben);
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    const r = await fr.evaluate(() => {
+      const s = spiel, aus = {};
+      aus.ohneDeko = typeof saisonMalen === 'undefined' && typeof SAISON === 'undefined' && typeof SPIELE.lauf.geistJetzt === 'undefined';
+      // Platz ganz rechts im ersten Lager: Knöpfe liegen ganz im Bild und überlappen nicht
+      s.geld = 5000; s.welle = 6; s.pause = 1; s.menu = { platz: 3, t: 1 };
+      const k = s.menuKnoepfe();
+      aus.fuenf = k.length === 5 && k.every((b) => b.rx >= 0 && b.rx + b.w <= W && b.ry >= 0 && b.ry + b.h <= H) && k.every((b, i) => i === 0 || b.rx >= k[i - 1].rx + k[i - 1].w);
+      s.knopf(k.find((b) => b.art === 'katze'));
+      const f = s.falleAuf(3);
+      for (let i = 0; i < 6; i++) { s.menu = { platz: 3, t: 1 }; const up = s.menuKnoepfe().find((b) => b.typ === 'up'); if (up) s.knopf(up); }
+      aus.stufe5 = f.art === 'katze' && f.st === 5;
+      aus.karten = [1, 5, 6, 10, 11, 15].map((w) => sz_karteFuer(w).name + sz_karteFuer(w).wege.length).join(',');
+      s.welle = 5; s.pause = .001; s.tick(.01);
+      aus.umzug = SZ_K.name === 'Kellerlager' && f.x === SZ_K.plaetze[3][0] && s.warteschlange.includes('ratte');
+      return aus;
+    });
+    ok('Saison-Deko und Teigi-Lauf-Geist sind weg', r.ohneDeko);
+    ok('Schädlinge: 5 Fallen-Knöpfe in einer Leiste, ganz im Bild, ohne Überlappen', r.fuenf);
+    ok('Schädlinge: Katze bis Stufe 5', r.stufe5);
+    ok('Schädlinge: 3 Lager (ab Welle 6 Keller, ab 11 zwei Mauselöcher)', r.karten === 'Mehllager1,Mehllager1,Kellerlager1,Kellerlager1,Großes Lager2,Großes Lager2', r.karten);
+    ok('Schädlinge: neues Lager ab Welle 6, Fallen ziehen mit, Ratten kommen', r.umzug);
+    const bot = await fr.evaluate(() => { starten(); const s = spiel; let warte = 0; for (let i = 0; i < 30 * 120 && laeuft && !s.vorbei; i++) { s.tick(1 / 30); warte -= 33; if (warte <= 0) { const z = s.testZug(); s.runter({ x: z.x, y: z.y }); warte = z.warte; } } return { welle: s.welle, fallen: s.fallen.length }; });
+    ok('Schädlinge: 2 Minuten automatisch gespielt, Fallen gebaut', bot.welle >= 3 && bot.fallen >= 4, JSON.stringify(bot));
+    await fr.evaluate(() => { document.querySelectorAll('.frage').forEach((q) => q.remove()); frageOffen = false; pausieren(); });
+    for (let w = 0; w < 40 && (await gross.count()); w++) await sleep(100);
+    ok('Pause: Spielfeld wieder normal in der Seite', !(await gross.count()));
+    ok('Version 282: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+    const h = await device({ user: 'Anna' });
+    await click(h.page.getByRole('button', { name: 'Menü' }).first());
+    await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
+    const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    await h.ctx.close();
+  }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
   teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {
     const C = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts', 'src/basis/laden.tsx']);
@@ -1193,7 +1249,7 @@ async function offlineTests() {
     for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
     ok('Startkarte zeigt die Tagesaufgabe', /Tagesaufgabe/i.test(await rahmen.locator('.ueber .aufgabe').innerText().catch(() => '')));
     const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
-    await fr.evaluate(() => { SAISON_TEST = 'advent'; SAISON.art = null; AUFGABE_TEST = 'stapler-brote'; zeigeStart(); });
+    await fr.evaluate(() => { AUFGABE_TEST = 'stapler-brote'; zeigeStart(); });
     await rahmen.locator('.ueber .los').click(); await sleep(500);
     await fr.evaluate(() => statPlus('brote', 15));
     let txt = '';

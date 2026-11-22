@@ -217,7 +217,7 @@ function schleife(t){
   if (laeuft && !frageOffen && !pausiert) { spielZeit += dt; spiel.tick(dt * sanftFaktor()); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
   if (!frageOffen && !pausiert) fxTick(dt);
   x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
-  spiel.malen(t / 1000); saisonMalen(t / 1000, frageOffen || pausiert ? 0 : dt); fxMalen(); zielMalen(); x.restore();
+  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore();
   pauseKnopf.hidden = !laeuft || frageOffen || pausiert;
   requestAnimationFrame(schleife);
 }
@@ -246,9 +246,9 @@ pauseStil.textContent = '.pause-knopf{position:absolute;left:50%;top:10px;transf
 document.head.appendChild(pauseStil);
 function pausieren(){
   if (!laeuft || pausiert || frageOffen) return;
-  pausiert = true; ueber.hidden = false; ueber.className = 'ueber start';
+  pausiert = true; ueber.hidden = false; ueber.className = 'ueber start'; nachAussen({ typ: 'lt-abschalten-stopp' });
   ueber.innerHTML = `<div class="karte"><span class="marke">Pause</span><h2>${spiel.name}</h2><p>Kurz durchatmen. Es geht genau da weiter, wo du aufgehört hast.</p><button class="los">Weiter</button><button class="neu" style="border:none;background:transparent;color:#8A6A3A;font:700 14px var(--text);text-decoration:underline;min-height:40px;cursor:pointer">Runde neu starten</button></div>`;
-  ueber.querySelector('.los').addEventListener('click', () => { ueber.hidden = true; pausiert = false; last = performance.now(); });
+  ueber.querySelector('.los').addEventListener('click', () => { ueber.hidden = true; pausiert = false; last = performance.now(); nachAussen({ typ: 'lt-abschalten-start' }); });
   ueber.querySelector('.neu').addEventListener('click', () => { pausiert = false; starten(); });
 }
 pauseKnopf.addEventListener('click', pausieren);
@@ -268,9 +268,9 @@ function zeigeStart(){
   ueber.querySelector('.los').addEventListener('click', starten);
   aufgabeKnopf();
 }
-function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; startZeit = performance.now(); spielZeit = 0; if (rundeSanft) setTimeout(() => { if (laeuft) schwebText('Sanfter Start', W / 2, 150, '#2F7A3A', 20); }, 300); }
+function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; nachAussen({ typ: 'lt-abschalten-start' }); startZeit = performance.now(); spielZeit = 0; if (rundeSanft) setTimeout(() => { if (laeuft) schwebText('Sanfter Start', W / 2, 150, '#2F7A3A', 20); }, 300); }
 function ende(punkte, zeile){
-  laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80);
+  laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80); nachAussen({ typ: 'lt-abschalten-stopp' });
   sanftMerken(spielZeit);
   const alt = rekordLesen(spiel.key);
   if (!rundeGemuetlich) rekordSetzen(spiel.key, punkte);
@@ -305,96 +305,7 @@ addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && s
 const imRahmen = (() => { try { return parent !== window; } catch { return true; } })();
 function nachAussen(d){ try { if (imRahmen) parent.postMessage(d, location.origin); } catch {} }
 
-// Saison-Deko: kommt von selbst nach Datum. Liegt über dem Spiel, aber nur leicht (stört nicht beim Spielen).
-// Ein Spiel kann sie ausschalten (spiel.saisonAus = true) oder eigenes Wetter melden (spiel.eigenesWetter() → kein Schnee).
-let SAISON_TEST = null;
-function osterSonntag(j){ const a = j % 19, b = Math.floor(j / 100), cc = j % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(cc / 4), k = cc % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), ta = ((h + l - 7 * m + 114) % 31) + 1; return new Date(j, mo - 1, ta); }
-function saisonHeute(d = new Date()){
-  const mo = d.getMonth() + 1, ta = d.getDate(), tag = new Date(d.getFullYear(), d.getMonth(), ta);
-  const os = osterSonntag(d.getFullYear()), weiber = new Date(os); weiber.setDate(os.getDate() - 52); const veilchen = new Date(os); veilchen.setDate(os.getDate() - 47);
-  if ((mo === 11 && ta === 11) || (tag >= weiber && tag <= veilchen)) return 'karneval';
-  if (mo === 12 && ta <= 24) return 'advent';
-  if ((mo === 12 && ta > 24) || (mo === 1 && ta <= 6)) return 'weihnacht';
-  if (mo <= 2) return 'winter';
-  if (mo <= 5) return 'fruehling';
-  if (mo <= 8) return 'sommer';
-  return 'herbst';
-}
-const SAISON_NAME = { advent: 'Adventszeit', weihnacht: 'Weihnachtszeit', winter: 'Winter', karneval: 'Karneval', fruehling: 'Frühling', sommer: 'Sommer', herbst: 'Herbst' };
-const SAISON = { art: null, teile: [], fuer: null };
-const LICHT_FARBEN = ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#FF9AD0'];
-const lichtSprite = {};
-function lichtGlanz(f){
-  if (lichtSprite[f]) return lichtSprite[f];
-  const k = document.createElement('canvas'); k.width = k.height = 64; const g = k.getContext('2d');
-  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, f + 'CC'); r.addColorStop(.35, f + '55'); r.addColorStop(1, f + '00');
-  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return (lichtSprite[f] = k);
-}
-function saisonTeil(art, oben){
-  const t = { x: zufall(0, W), y: oben ? zufall(-H, 0) : zufall(0, H), ph: zufall(0, 7), rot: zufall(0, 6), vr: zufall(-2, 2) };
-  if (art === 'schnee') Object.assign(t, { r: zufall(1.2, 3.4), vy: zufall(18, 42), a: zufall(.5, .9) });
-  if (art === 'konfetti') Object.assign(t, { r: zufall(3, 5.5), vy: zufall(40, 75), f: ['#FF5A4E', '#FFC72C', '#5BD46A', '#58B4FF', '#C77DFF', '#FF9AD0'][ganz(0, 5)], vr: zufall(-6, 6) });
-  if (art === 'bluete') Object.assign(t, { r: zufall(3.5, 6), vy: zufall(22, 40), f: ['#FFD3E2', '#FFFFFF', '#FFB8D0'][ganz(0, 2)] });
-  if (art === 'blatt') Object.assign(t, { r: zufall(5, 8), vy: zufall(26, 46), f: ['#E07B22', '#C9461E', '#D9A126', '#9A5A1E'][ganz(0, 3)] });
-  if (art === 'funkel') Object.assign(t, { r: zufall(1, 2.4), vy: zufall(-6, 6), y: zufall(20, H * .55) });
-  t.art = art; return t;
-}
-function saisonVorbereiten(){
-  const art = SAISON_TEST || saisonHeute(); SAISON.art = art; SAISON.fuer = spiel && spiel.key; SAISON.teile = [];
-  const mach = (a, n) => { for (let i = 0; i < (ohneBewegung ? Math.ceil(n / 3) : n); i++) SAISON.teile.push(saisonTeil(a, false)); };
-  if (art === 'advent' || art === 'weihnacht') mach('schnee', 26);
-  if (art === 'winter') mach('schnee', 18);
-  if (art === 'karneval') mach('konfetti', 26);
-  if (art === 'fruehling') mach('bluete', 12);
-  if (art === 'herbst') mach('blatt', 10);
-  if (art === 'sommer') mach('funkel', 10);
-}
-function saisonMalen(t, dt){
-  if (!spiel || spiel.saisonAus) return;
-  if (SAISON.fuer !== spiel.key || !SAISON.art) saisonVorbereiten();
-  const art = SAISON.art, ohneSchnee = !!(spiel.eigenesWetter && spiel.eigenesWetter());
-  x.save();
-  if (art === 'sommer') {
-    // Sonne oben links: weicher Schein und langsam drehende Strahlen
-    const g = x.createRadialGradient(10, 10, 0, 10, 10, 170); g.addColorStop(0, 'rgba(255,236,150,.6)'); g.addColorStop(.45, 'rgba(255,214,90,.2)'); g.addColorStop(1, 'rgba(255,214,90,0)');
-    x.fillStyle = g; x.fillRect(0, 0, 200, 200);
-    x.translate(10, 10); x.rotate(t * .05); x.fillStyle = 'rgba(255,236,160,.16)';
-    for (let i = 0; i < 9; i++) { x.rotate(Math.PI * 2 / 9); x.beginPath(); x.moveTo(0, 0); x.lineTo(230, -16); x.lineTo(230, 16); x.closePath(); x.fill(); }
-    x.setTransform(SKAL, 0, 0, c.height / H, 0, 0);
-  }
-  for (const p of SAISON.teile) {
-    if (p.art === 'schnee' && ohneSchnee) continue;
-    p.y += p.vy * dt; p.ph += dt; p.rot += p.vr * dt;
-    const wx = p.x + Math.sin(p.ph * (p.art === 'blatt' ? 1.3 : .9)) * (p.art === 'blatt' ? 16 : 8);
-    if (p.art !== 'funkel' && p.y > H + 10) { Object.assign(p, saisonTeil(p.art, true)); p.y = -10; }
-    if (p.art === 'schnee') { x.globalAlpha = p.a * .5; x.fillStyle = '#8FA3BE'; x.beginPath(); x.arc(wx + .5, p.y + .8, p.r + .7, 0, 7); x.fill(); x.globalAlpha = p.a; x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(wx, p.y, p.r, 0, 7); x.fill(); }
-    else if (p.art === 'konfetti') { x.globalAlpha = .85; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.scale(1, Math.abs(Math.cos(p.ph * 3)) * .8 + .2); x.fillStyle = p.f; x.fillRect(-p.r, -p.r * .55, p.r * 2, p.r * 1.1); x.restore(); }
-    else if (p.art === 'bluete' || p.art === 'blatt') {
-      x.globalAlpha = p.art === 'blatt' ? .82 : .75; x.save(); x.translate(wx, p.y); x.rotate(p.rot); x.fillStyle = p.f; x.beginPath();
-      if (p.art === 'bluete') x.ellipse(0, 0, p.r, p.r * .6, 0, 0, 7); else { x.moveTo(-p.r, 0); x.quadraticCurveTo(0, -p.r * .9, p.r, 0); x.quadraticCurveTo(0, p.r * .9, -p.r, 0); }
-      x.fill(); if (p.art === 'blatt') { x.strokeStyle = 'rgba(80,40,10,.45)'; x.lineWidth = .8; x.beginPath(); x.moveTo(-p.r, 0); x.lineTo(p.r, 0); x.stroke(); } x.restore();
-    } else if (p.art === 'funkel') { const a = (Math.sin(p.ph * 2.2) + 1) / 2; x.globalAlpha = a * .7; x.fillStyle = '#FFF6C8'; x.save(); x.translate(wx, p.y); x.rotate(Math.PI / 4); x.fillRect(-p.r * 2.4, -p.r * .35, p.r * 4.8, p.r * .7); x.fillRect(-p.r * .35, -p.r * 2.4, p.r * .7, p.r * 4.8); x.restore(); }
-  }
-  x.globalAlpha = 1;
-  if (art === 'advent' || art === 'weihnacht') {
-    // Lichterkette oben: Kabel hängt in zwei Bögen durch, Birnen leuchten abwechselnd
-    const y0 = 3, durch = 14, pkt = (px) => y0 + Math.abs(Math.sin(px / W * Math.PI * 2)) * durch;
-    x.strokeStyle = 'rgba(40,60,30,.85)'; x.lineWidth = 1.6; x.beginPath(); for (let px = 0; px <= W; px += 6) x.lineTo(px, pkt(px)); x.stroke();
-    for (let i = 0, px = 12; px < W; px += 24, i++) {
-      const f = LICHT_FARBEN[i % LICHT_FARBEN.length], py = pkt(px) + 5, an = .55 + .45 * Math.sin(t * 2.2 + i * 1.7);
-      x.globalAlpha = an; x.drawImage(lichtGlanz(f), px - 13, py - 11, 26, 26); x.globalAlpha = 1;
-      x.fillStyle = '#3B4A2E'; x.fillRect(px - 2, py - 6, 4, 3.5);
-      x.fillStyle = f; x.beginPath(); x.ellipse(px, py, 3.2, 4.6, 0, 0, 7); x.fill();
-      x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.arc(px - 1, py - 1.5, 1.1, 0, 7); x.fill();
-    }
-  }
-  if (art === 'karneval') {
-    // Luftschlangen in den oberen Ecken
-    const schlange = (sx, f, dir) => { x.strokeStyle = f; x.lineWidth = 2.4; x.lineCap = 'round'; x.beginPath(); for (let i = 0; i <= 40; i++) { const u = i / 40; x.lineTo(sx + dir * (u * 60 + Math.sin(u * 14 + t * 1.5) * 7), u * 95 + Math.cos(u * 14) * 6); } x.stroke(); };
-    schlange(4, '#FF5A4E', 1); schlange(18, '#FFC72C', 1); schlange(W - 4, '#58B4FF', -1); schlange(W - 18, '#5BD46A', -1);
-  }
-  x.restore();
-}
+// Saison-Deko (fallender Schnee, Konfetti, Lichterkette) in Version 282 entfernt (Wunsch des Nutzers).
 
 // Goldstücke: ganz selten taucht in einer Runde ein goldenes Ding auf. Wer es fängt, schaltet eine Teigi-Sache frei
 // (gibt es nicht im Laden). Das Spiel fragt goldKommt() und ruft goldErschienen() und goldGefangen(px, py).
@@ -490,8 +401,8 @@ function rundeVorbereiten(){
   const schon = !!GOLD_SCHON[spiel.key];
   Object.assign(GOLD_RUNDE, { kommt: GOLD_TEST || Math.random() < (schon ? .1 : .2), da: false, gefangen: false });
 }
-// Für Prüfungen: ?saison=advent&gold=1&aufgabe=stapler-brote
-try { const q = new URLSearchParams(location.search); if (q.get('saison')) SAISON_TEST = q.get('saison'); if (q.get('gold')) GOLD_TEST = true; if (q.get('aufgabe')) AUFGABE_TEST = q.get('aufgabe'); } catch {}
+// Für Prüfungen: ?gold=1&aufgabe=stapler-brote
+try { const q = new URLSearchParams(location.search); if (q.get('gold')) GOLD_TEST = true; if (q.get('aufgabe')) AUFGABE_TEST = q.get('aufgabe'); } catch {}
 
 // ── Version 269: sanfter Einstieg ──
 // Wer dreimal hintereinander sehr früh verliert (unter 20 s Spielzeit), bekommt einen leichteren Start:
