@@ -83,8 +83,5 @@ Mehr zum Aufbau: `README.md`.
 - Quiz-Tests: gleiche Fragetexte gibt es mehrfach mit anderen Antworten → passende Frage über die sichtbaren Antworten finden.
 - Sparsam arbeiten (Nutzer achtet aufs Nutzungslimit): keine Helfer-Agenten ohne Rückfrage, nicht nach jeder Version selbst den Online-Stand abfragen, Tests gezielt (`NUR=`), voller Lauf einmal vor dem Push.
 
-## Wartet
-- Wartet (bekommt die nächste freie Nummer, braucht erst Stimmen): **Wissenslücken im Quiz gefüllt** (39 Fragen am Ende von `S` in `questions.ts`, aus den Produktdaten): Preisfragen für 25 Produkte (Christstollen bewusst nicht, Preis hängt am Marzipan), Zutaten für 6, Allergene für 4, 4 Vegan-Fragen („Ein Kunde lebt vegan …“). Produkte mit Soja bekommen keine Allergen-Frage (Soja-Fragen werden absichtlich ausgeblendet, `ohneSoja`). **Theken-Simulator**: „Berliner oder Krapfen“ (ganzes Jahr), „Vollkorn“ (im Januar als Neujahrsvorsatz), „Berliner-Saison“ (nur 27.12. bis Aschermittwoch, `berlinerSaison()` in `szenarienAlltag.tsx`, Füllungen aus der Berliner-Beschreibung). **Stimmen fehlen noch** (75 Hör-Lernen, 54 Quiz-Sätze, neue Simulator-Bausteine): Stimmen-Schlüssel war in dieser Sitzung nicht da (Umgebung „Default“ ohne Network secret) → darum noch NICHT online, Tests zu den Tondateien schlagen fehl
-
 ## Offene Ideen (vom Nutzer noch nicht entschieden)
 - PIN-Schutz verbessern (braucht Firebase-Regeln + bezahlten Tarif)
