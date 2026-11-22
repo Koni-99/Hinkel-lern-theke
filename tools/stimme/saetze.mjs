@@ -6,6 +6,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, existsSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { stilleWeg } from './stille.mjs';
 import path from 'node:path';
 
 if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY && !process.env.GOOGLE_TTS_KEY) {
@@ -86,7 +87,7 @@ await Promise.all(Array.from({ length: 3 }, async () => {
   while (auftrag.length) {
     const [k, [s, st]] = auftrag.shift();
     await new Promise((r) => setTimeout(r, 600));
-    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(s, st)); } catch (e) { console.log('Übersprungen:', s.slice(0, 60), String(e.message).slice(0, 100)); continue; }
+    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), stilleWeg(await sprechen(s, st))); } catch (e) { console.log('Übersprungen:', s.slice(0, 60), String(e.message).slice(0, 100)); continue; }
     if (++fertig % 200 === 0) console.log(`  ${fertig} fertig …`);
   }
 }));

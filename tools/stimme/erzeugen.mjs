@@ -19,6 +19,7 @@ if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_US
 }
 import { mkdirSync, existsSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { stilleWeg } from './stille.mjs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -96,7 +97,7 @@ let fertig = 0, zeichen = 0;
 const arbeiter = Array.from({ length: 4 }, async () => {
   while (auftrag.length) {
     const [k, [t, stimme]] = auftrag.shift();
-    writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, stimme));
+    writeFileSync(path.join(ZIEL, `${k}.mp3`), stilleWeg(await sprechen(t, stimme)));
     fertig++; zeichen += t.length;
     if (fertig % 50 === 0) console.log(`  ${fertig} fertig …`);
   }

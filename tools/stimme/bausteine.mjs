@@ -9,6 +9,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, existsSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { stilleWeg } from './stille.mjs';
 import path from 'node:path';
 
 if ((process.env.HTTPS_PROXY || process.env.https_proxy) && !process.env.NODE_USE_ENV_PROXY && !process.env.GOOGLE_TTS_KEY) {
@@ -91,7 +92,7 @@ await Promise.all(Array.from({ length: 3 }, async () => {
   while (auftrag.length) {
     const [k, t, st] = auftrag.shift();
     await new Promise((r) => setTimeout(r, 600)); // höchstens etwa 250 Anfragen pro Minute
-    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), await sprechen(t, st)); }
+    try { writeFileSync(path.join(ZIEL, `${k}.mp3`), stilleWeg(await sprechen(t, st))); }
     catch (e) { console.log('Übersprungen:', t, String(e.message).slice(0, 120)); continue; }
     if (++fertig % 200 === 0) console.log(`  ${fertig} fertig …`);
   }

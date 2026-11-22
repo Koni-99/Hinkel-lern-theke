@@ -568,6 +568,35 @@ async function offlineTests() {
     ok('Wörterbuch: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 279: Stimmen flüssig: Stille vorne/hinten aus den Tondateien geschnitten (tools/stimme/stille.mjs)
+  teile.push(['Version 279: Stimmen ohne lange Stille vorne und hinten', async () => {
+    const fs = require('fs'), path = require('path');
+    const d = await device({ user: 'Anna' });
+    const stichprobe = [];
+    for (const ordner of ['teile', 'saetze', '']) {
+      const idx = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../public/stimme/${ordner ? ordner + '/' : ''}index.json`), 'utf8'));
+      for (let i = 0; i < 4; i++) stichprobe.push(`stimme/${ordner ? ordner + '/' : ''}${idx[Math.floor((i + 0.5) * idx.length / 4)]}.mp3`);
+    }
+    const r = await d.page.evaluate(async (urls) => {
+      const aus = [];
+      for (const u of urls) {
+        try {
+          const buf = await (await fetch(u)).arrayBuffer();
+          const ctx = new OfflineAudioContext(1, 24000, 24000);
+          const ab = await ctx.decodeAudioData(buf);
+          const x = ab.getChannelData(0), grenze = 0.0056; // etwa -45 dB
+          let a = 0; while (a < x.length && Math.abs(x[a]) < grenze) a++;
+          let e = x.length - 1; while (e > 0 && Math.abs(x[e]) < grenze) e--;
+          aus.push([u, a / ab.sampleRate, (x.length - 1 - e) / ab.sampleRate]);
+        } catch (err) { aus.push([u, 9, 9]); }
+      }
+      return aus;
+    }, stichprobe);
+    const zuLang = r.filter(([, vorne, hinten]) => vorne > 0.15 || hinten > 0.15);
+    ok('Stimmen: Stichprobe von 12 Tondateien, vorne und hinten höchstens 0,15 s Stille', zuLang.length === 0, zuLang.slice(0, 2).map(([u, v, h]) => `${u.split('/').pop()} ${v.toFixed(2)}/${h.toFixed(2)} s`).join(' | ') || `max vorne ${Math.max(...r.map((x) => x[1])).toFixed(2)} s`);
+    ok('Stimmen flüssig: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)
   teile.push(['Ohne Internet: App geht auf (Service Worker hat die Dateien gespeichert)', async () => {
     const d = await device({ user: 'Anna' });

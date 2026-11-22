@@ -99,18 +99,37 @@ const mitZeitlimit = (p: Promise<Set<string>>) => Promise.race([p, new Promise<S
 let teilAudio: HTMLAudioElement | null = null;
 let teilLauf = 0;
 export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause(); } catch {} } }
-/** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei). */
-function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void, ersatz?: (rest: string) => void) {
+/** Lädt eine Tondatei vorab (Version 279), damit zwischen zwei Stücken nicht aufs Internet gewartet wird.
+ *  Klappt das nicht, wird die Datei beim Abspielen ganz normal geladen. */
+const vorgeladen = new Map<string, Promise<string>>();
+function vorladen(url: string): Promise<string> {
+  let p = vorgeladen.get(url);
+  if (!p) {
+    p = (typeof fetch === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL)
+      ? Promise.resolve(url)
+      : fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject(new Error('fehlt')))).then((b) => URL.createObjectURL(b)).catch(() => { vorgeladen.delete(url); return url; });
+    vorgeladen.set(url, p);
+    if (vorgeladen.size > 120) { const [alt, altP] = vorgeladen.entries().next().value as [string, Promise<string>]; vorgeladen.delete(alt); altP.then((u) => { if (u.startsWith('blob:')) window.setTimeout(() => { try { URL.revokeObjectURL(u); } catch {} }, 60000); }); }
+  }
+  return p;
+}
+/** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei).
+ *  luecke: Pause in ms zwischen zwei Dateien (Sätze 220, Bausteine eines Kundensatzes 0). */
+function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void, ersatz?: (rest: string) => void, luecke = 0) {
   const handy = (rest: string) => { if (lauf === teilLauf) { if (ersatz) ersatz(rest); else speakText(rest, onEnd, handyTempo); } };
   const a = teilAudio || (teilAudio = merkeAudio(new Audio()));
+  const quellen = urls.map((u, i) => (i < 3 ? vorladen(u) : null));
   let i = 0;
-  const weiter = () => {
+  const weiter = async () => {
     if (lauf !== teilLauf) return;
     if (i >= urls.length) { onEnd?.(); return; }
     const nr = i++;
-    a.onended = () => { window.setTimeout(weiter, 90); };
+    if (nr + 3 < urls.length) quellen[nr + 3] = vorladen(urls[nr + 3]);
+    const src = await (quellen[nr] || vorladen(urls[nr]));
+    if (lauf !== teilLauf) return;
+    a.onended = () => { if (luecke > 0) window.setTimeout(weiter, luecke); else weiter(); };
     a.onerror = () => handy(stuecke.slice(nr).join(' '));
-    a.src = urls[nr];
+    a.src = src;
     a.playbackRate = tempo;
     a.play().catch(() => handy(stuecke.slice(nr).join(' ')));
   };
@@ -136,7 +155,7 @@ export async function sprichSaetze(text: string, onEnd?: () => void, stimme?: st
   const s = saetze(text);
   const keys = s.map((x) => satzKey(x, stimme));
   if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd); return; }
-  spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd);
+  spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd, undefined, 220);
 }
 /** Wörterbuch Englisch: natürliche britische Stimme, sonst die englische Handy-Stimme (ersatz) */
 export async function sprichEnglisch(text: string, ersatz: (text: string) => void) {
