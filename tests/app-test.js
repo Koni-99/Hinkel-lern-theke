@@ -667,6 +667,11 @@ async function offlineTests() {
     ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
   }]);
   // Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien
+  // Version 284: Koni bekommt immer doppelte Punkte (ohne Hinweis)
+  teile.push(['Version 284: Koni doppelte Punkte', async () => {
+    const W = kompiliere(['src/hilfen/wertungen.ts']).hilfen_wertungen;
+    ok('Koni: doppelte Punkte (auch „Koni“ groß), andere normal, Minus bleibt', W.sonderPunkte('koni', 40) === 80 && W.sonderPunkte('Koni', 15) === 30 && W.sonderPunkte('anna', 40) === 40 && W.sonderPunkte('koni', -25) === -25 && W.sonderPunkte('koni', 0) === 0);
+  }]);
   // Version 282: Vorlesen überall mit natürlicher Stimme (Gute Sätze, Theken-Simulator mit Erzählerin)
   teile.push(['Version 282: Vorlesen überall natürlich (Gute Sätze, Theken-Simulator)', async () => {
     const fs = require('fs'), path = require('path');

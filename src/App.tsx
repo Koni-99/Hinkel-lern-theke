@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 283;
+const APP_VERSION: number = 284;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -27,7 +27,7 @@ import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSei
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
 import { geschenkeSchicken, anzahlVon, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
-import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon } from './hilfen/wertungen';
+import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon, sonderPunkte } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
@@ -460,7 +460,7 @@ export default function App() {
       if (!Array.isArray(curr.scores)) curr.scores = [];
       fresh.forEach((w, i) => {
         const p = won.includes(w) ? TEAM_REWARD - TEAM_REWARD_ALT : TEAM_REWARD;
-        curr.scores.push({ id: `${k}_team_${Date.now() + i}`, username, score: p, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: TEAM_CAT });
+        curr.scores.push({ id: `${k}_team_${Date.now() + i}`, username, score: sonderPunkte(k, p), date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: TEAM_CAT });
         pr._jokersLos = (Number(pr._jokersLos) || 0) + 1;
         const t = tueten[i]; const owned: string[] = Array.isArray(pr._shopOwned) ? pr._shopOwned : [];
         if (t.art === 'geld') pr._tipCents = (Number(pr._tipCents) || 0) + t.cents;
@@ -885,6 +885,7 @@ export default function App() {
     const magnetDa = finalScore > 0 && (Number(((cloudData.progress || {})[userKey] || {})._jokersMagnet) || 0) > 0
       && !['Rubbellos', 'Glücksrad', 'Bonus vom Ausbilder', 'Lob von Kollegen', 'Quiz Battle', TEAM_CAT].includes(catName);
     if (magnetDa) { const vorher = finalScore; finalScore = Math.round(finalScore * 1.25); window.setTimeout(() => setToast(`Punkte-Magnet: ${finalScore} statt ${vorher} Punkte!`), activeTab === 'quiz' ? 0 : 3200); }
+    finalScore = sonderPunkte(userKey, finalScore); // Koni: doppelt (ohne Hinweis)
     mutateCloudData((curr) => {
       if (magnetDa) { const p0 = curr.progress[userKey]; if (p0) p0._jokersMagnet = Math.max(0, (Number(p0._jokersMagnet) || 0) - 1); }
       curr.scores.push({ id: `${userKey}_${Date.now()}`, username, score: finalScore, date: nowStr, category: catName });
@@ -926,7 +927,7 @@ export default function App() {
     if (!isAdmin || !key) return;
     const name = ((cloudData.progress || {})[key] || {})._displayName || key;
     mutateCloudData((curr) => {
-      if (pts) { curr.scores.push({ id: `${key}_bonus_${Date.now()}`, username: name, score: pts, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Bonus vom Ausbilder' }); curr.scores.sort((a, b) => b.score - a.score); }
+      if (pts) { curr.scores.push({ id: `${key}_bonus_${Date.now()}`, username: name, score: sonderPunkte(key, pts), date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Bonus vom Ausbilder' }); curr.scores.sort((a, b) => b.score - a.score); }
       if (cents) { const pr = curr.progress[key] || (curr.progress[key] = { _displayName: name }); pr._tipCents = Math.max(0, (Number(pr._tipCents) || 0) + cents); }
       return curr;
     });
@@ -1310,7 +1311,7 @@ export default function App() {
       markLearnDay(curr, k, username);
       if (ok) {
         if (!Array.isArray(curr.scores)) curr.scores = [];
-        curr.scores.push({ id: `${k}_advent_${Date.now()}`, username, score: ADVENT_PUNKTE, date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Adventskalender 🎄' });
+        curr.scores.push({ id: `${k}_advent_${Date.now()}`, username, score: sonderPunkte(k, ADVENT_PUNKTE), date: new Date().toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' }), category: 'Adventskalender 🎄' });
       }
       const owned: string[] = Array.isArray(pr._shopOwned) ? pr._shopOwned : [];
       if (tuete.art === 'geld') pr._tipCents = (Number(pr._tipCents) || 0) + tuete.cents;
