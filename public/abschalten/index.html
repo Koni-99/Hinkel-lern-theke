@@ -1149,7 +1149,7 @@ SPIELE.lauf = {
   key: 'lauf', name: 'Teigi-Lauf', kurz: 'Springen',
   anleitung: 'Tippen zum Springen, in der Luft nochmal tippen für einen Doppelsprung. Spring über Mehlsäcke, Blechwagen und Brotkörbe und sammle goldene Körner. Am Ofen wartet eine Bonus-Frage.',
   start(){
-    this.zeit = 0; this.weg = 0; this.rollen = 0; this.fertig = false; this.tempo = 215; this.y = 0; this.vy = 0; this.spr = 0; this.amBoden = true; this.kojote = 0; this.puffer = 0;
+    this.zeit = 0; this.schnellerBei = 60; this.weg = 0; this.rollen = 0; this.fertig = false; this.tempo = 215; this.y = 0; this.vy = 0; this.spr = 0; this.amBoden = true; this.kojote = 0; this.puffer = 0;
     this.sx = 1; this.sy = 1; this.dreh = 0; this.schritt = 0; this.staubIn = 0;
     this.hind = []; this.koerner = []; this.brezeln = []; this.ofen = null;
     this.naechstAb = 620; this.korbGruppe = 0; this.gruppen = {};
@@ -1185,7 +1185,7 @@ SPIELE.lauf = {
     if (oi > 0 && p - bVor < 170) { this.naechstAb = this.weg + (bVor + 170 - p); return; }
     if (bNach - p < 280) { this.naechstAb = this.weg + (bNach + 170 - p); return; }
     const ort = LAUF_ORTE[oi % 3];
-    const groessen = this.gem && t < 60 ? ['klein', 'mittel', 'mittel', 'gross'] : t < 9 ? ['klein', 'mittel'] : t < 22 ? ['klein', 'mittel', 'mittel', 'gross'] : ['klein', 'mittel', 'gross', 'gross', 'hoch', 'doppel'];
+    const groessen = this.gem && t < 60 ? ['klein', 'mittel', 'mittel', 'gross'] : t < 9 ? ['klein', 'mittel'] : t < 22 ? ['klein', 'mittel', 'mittel', 'gross'] : t < 60 ? ['klein', 'mittel', 'gross', 'gross', 'hoch', 'doppel'] : t < 100 ? ['mittel', 'gross', 'hoch', 'hoch', 'doppel', 'dreifach'] : ['gross', 'hoch', 'hoch', 'doppel', 'dreifach', 'dreifach'];
     const gr = groessen[ganz(0, groessen.length - 1)];
     const neu = (g, px) => {
       const a = LAUF_ARTEN[ort][g], m = LAUF_MASSE[a];
@@ -1193,13 +1193,14 @@ SPIELE.lauf = {
     };
     const art = gr;
     let ende = sx;
-    if (art === 'doppel') { const a = neu('klein', sx); const b = neu('mittel', sx + a.w + 120); ende = b.x + b.w; this.koernerBogen(a.x - 30, b.x + b.w + 30, 150); }
+    if (art === 'dreifach') { const a = neu('klein', sx); const b = neu('klein', sx + a.w + 110); const c = neu('mittel', b.x + b.w + 280); ende = c.x + c.w; this.koernerBogen(a.x - 20, c.x + c.w + 20, 140); }
+    else if (art === 'doppel') { const a = neu('klein', sx); const b = neu('mittel', sx + a.w + 120); ende = b.x + b.w; this.koernerBogen(a.x - 30, b.x + b.w + 30, 150); }
     else {
       const h = neu(gr, sx); ende = h.x + h.w;
       if (Math.random() < .55) this.koernerBogen(h.x - 46, h.x + h.w + 46, h.h + 70);
     }
     // Abstand: anfangs großzügig, später enger
-    const leicht = this.gem ? 1.45 : t < 10 ? 1.5 : t < 20 ? 1.2 : 1;
+    const leicht = this.gem ? 1.45 : t < 10 ? 1.5 : t < 20 ? 1.2 : t < 60 ? 1 : t < 100 ? .86 : .74;
     const abstand = (zufall(300, 470) * leicht + this.tempo * .35);
     this.naechstAb = this.weg + (ende - sx) + abstand;
     // Körnerreihe am Boden in der Lücke
@@ -1226,7 +1227,9 @@ SPIELE.lauf = {
       return;
     }
     this.zeit += dt;
-    this.tempo = this.gem ? 180 + Math.min(30, this.zeit * .5) : 215 + Math.min(230, this.zeit * 4.2);
+    // Version 283: wird immer schneller (vorher ab 55 s gleich schnell), höchstens 760
+    this.tempo = this.gem ? 180 + Math.min(30, this.zeit * .5) : Math.min(760, 215 + Math.min(230, this.zeit * 4.2) + Math.max(0, this.zeit - 55) * 2.4);
+    if (!this.gem && this.zeit >= (this.schnellerBei || 60)) { this.schnellerBei = (this.schnellerBei || 60) + 30; if (this.tempo < 760) { schwebText('Schneller!', 200, 150, '#C0392B', 24); brumm(25); } }
     const v = this.tempo * dt; this.weg += v;
     this.schutz = Math.max(0, this.schutz - dt);
 
