@@ -1315,9 +1315,9 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       'Unser Prasselkuchen, vielerorts auch als „Bobbes“ bekannt, ist ein buttrig-knuspriges Gebäck mit einfacher, aber überzeugender Kombination. Eine Schicht Blätterteig bildet die Basis und sorgt für eine zarte, leicht splitternde Struktur. Darauf liegt eine feine Marzipanschicht, die für Saftigkeit und eine dezente Süße sorgt, bevor goldene Butterstreusel dem Ganzen den typischen, mürben Biss verleihen.',
     shortIngredients: 'Blätterteig, Marzipanschicht, Butterstreusel',
-    fullIngredients: 'WEIZENMEHL, BUTTER, Zucker, Wasser, VOLLMILCHPULVER, Salz',
-    allergens: ['Gluten (Weizen)', 'Milch'],
-    allergenNote: 'Achtung: Laut Beschreibung mit Marzipanschicht (Mandeln), in der Zutatenliste fehlt das noch. Bei Mandel-Allergie bis zur Klärung nicht empfehlen.'
+    fullIngredients: 'WEIZENMEHL, BUTTER, Zucker, Wasser, VOLLMILCHPULVER, Salz, Marzipan (MANDELN, Zucker, Wasser, Invertzucker)',
+    allergens: ['Gluten (Weizen)', 'Milch', 'Schalenfrüchte (Mandeln)'],
+    allergenNote: 'Marzipanschicht (Mandeln) ergänzt (vom Ausbilder bestätigt, fehlte in der Shop-Zutatenliste).'
   },
   {
     name: 'Printenbruch',
