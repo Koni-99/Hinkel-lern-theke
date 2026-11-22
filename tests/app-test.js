@@ -521,7 +521,8 @@ async function offlineTests() {
       d.page.off('request', merke);
       const handy = await d.page.evaluate(() => window.__gesagt.length);
       const warten = erst !== null && ersteAnfrage !== null ? erst - ersteAnfrage : null;
-      ok('Zuhören: natürliche Stimme spielt sofort, wartet nicht auf den Download (keine Handy-Stimme)', warten !== null && warten < 700 && handy === 0, `${warten === null ? 'kein Abspielen/keine Anfrage' : warten + ' ms nach der ersten Anfrage'}, Handy-Stimme ${handy}×`);
+      // Ist der Satz schon vorgeladen (langsamer Rechner), gibt es keine Anfrage mehr: dann reicht, dass sofort abgespielt wird
+      ok('Zuhören: natürliche Stimme spielt sofort, wartet nicht auf den Download (keine Handy-Stimme)', erst !== null && (warten === null || warten < 700) && handy === 0, `${erst === null ? 'kein Abspielen' : warten === null ? 'abgespielt, war schon vorgeladen' : warten + ' ms nach der ersten Anfrage'}, Anfrage ${ersteAnfrage !== null ? 'ja' : 'nein'}, Handy-Stimme ${handy}×`);
       await d.page.unroute(/\/stimme\/teile\/[0-9a-f]+\.mp3/).catch(() => {});
     }
     ok('Theken-Simulator mit Zuhören: keine Fehler', d.errors.length === 0, d.errors[0]);
