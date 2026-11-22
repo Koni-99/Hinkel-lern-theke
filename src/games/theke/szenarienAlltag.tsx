@@ -450,6 +450,99 @@ export function scSaisonAllergen(): Core | null {
   };
 }
 
+// ── Version 241: Situationen für Januar bis März (Berliner-Saison, gute Vorsätze) ──
+
+/** Ostersonntag (Gauß), daraus Aschermittwoch = Ostern − 46 Tage */
+const ostern = (j: number) => {
+  const a = j % 19, b = Math.floor(j / 100), c = j % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mon = Math.floor((h + l - 7 * m + 114) / 31), tag = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(j, mon - 1, tag);
+};
+
+/** Berliner-Saison: ab 27. Dezember (Silvester) bis Aschermittwoch (Karneval). Dann gibt es auch andere Füllungen. */
+export function berlinerSaison(jetzt: Date = new Date()): 'silvester' | 'karneval' | null {
+  if (jetzt.getMonth() === 11) return jetzt.getDate() >= 27 ? 'silvester' : null;
+  const asch = ostern(jetzt.getFullYear()); asch.setDate(asch.getDate() - 46);
+  return jetzt.getTime() < asch.getTime() + 86400000 ? 'karneval' : null;
+}
+
+const prod = (n: string) => SHOP_PRODUCTS.find((p) => p.name === n);
+
+/** Kunde fragt nach dem Unterschied zwischen Berliner und Krapfen (gibt es das ganze Jahr) */
+export function scBerlinerKrapfen(): Core | null {
+  const berliner = prod('Berliner'), krapfen = prod('Krapfen');
+  if (!berliner || !krapfen || !parseCents(berliner.price) || !parseCents(krapfen.price)) return null;
+  const nimmt = pick([berliner, krapfen]);
+  const n = pick([2, 3, 4]);
+  return {
+    basket: [{ name: nimmt.name, qty: n, cents: parseCents(nimmt.price) }],
+    steps: [{
+      topic: 'Berliner oder Krapfen',
+      learn: { product: 'Krapfen', kind: 'inhalt' },
+      customer: [pick(['Sagen Sie mal, was ist eigentlich der Unterschied zwischen Berliner und Krapfen?', 'Berliner, Krapfen … ist das nicht dasselbe?'])],
+      options: opts([
+        { text: 'Der Berliner ist aus Hefeteig und mit Erdbeerkonfitüre gefüllt. Unser Krapfen ist aus Brandteig mit Rosinen und in Zimt-Zucker gewälzt.', correct: true },
+        { text: 'Das ist dasselbe, das sagt man nur in jeder Gegend anders.', correct: false, why: 'Bei uns sind das zwei verschiedene Sachen: Berliner aus Hefeteig mit Erdbeerkonfitüre, Krapfen aus Brandteig mit Rosinen und Zimt-Zucker.' },
+        { text: 'Der Krapfen ist mit Erdbeerkonfitüre gefüllt, der Berliner hat Rosinen im Teig.', correct: false, why: 'Genau andersrum: Der Berliner hat die Erdbeerkonfitüre, der Krapfen die Rosinen.' },
+        { text: 'Beide sind aus Brandteig, der Krapfen ist nur ein bisschen größer.', correct: false, why: 'Nur der Krapfen ist aus Brandteig. Der Berliner ist aus Hefeteig.' },
+      ]),
+      afterWrong: 'Ach so? Ich dachte, das ist was anderes … Na egal.',
+    }],
+    sliceIntro: [pick([`Ah, gut zu wissen! Dann nehme ich ${n} ${nimmt.name === 'Berliner' ? 'Berliner' : 'Krapfen'}.`, `Danke! Dann probiere ich mal ${n} ${nimmt.name === 'Berliner' ? 'Berliner' : 'Krapfen'}.`])],
+  };
+}
+
+/** Silvester oder Karneval: viele Berliner fürs Büro, mit anderen Füllungen. Nur in der Berliner-Saison. */
+export function scBerlinerSaison(): Core | null {
+  const saison = berlinerSaison();
+  const berliner = prod('Berliner');
+  if (!saison || !berliner || !parseCents(berliner.price)) return null;
+  const n = pick([20, 24, 30, 40]);
+  const anlass = saison === 'silvester' ? pick(['für unsere Silvesterfeier', 'für Silvester']) : pick(['für Weiberfastnacht im Büro', 'für unsere Karnevalsfeier im Büro']);
+  const jetzt = pick([2, 3]);
+  return {
+    basket: [{ name: 'Berliner', qty: jetzt, cents: parseCents(berliner.price) }],
+    steps: [{
+      topic: 'Berliner-Saison',
+      customer: [pick([`Ich brauche ${n} Berliner ${anlass}. Gibt es die auch mit was anderem als Erdbeere?`, `Wir wollen ${anlass} ${n} Berliner haben. Haben Sie auch andere Füllungen?`])],
+      options: opts([
+        { text: 'Ja, jetzt in der Berliner-Saison gibt es auch Vanillepudding, Schokopudding und Eierlikör. Für so viele schreibe ich Ihnen eine Bestellung: Auf welchen Namen, wann holen Sie ab und welche Sorten?', correct: true },
+        { text: 'Nein, Berliner gibt es bei uns nur mit Erdbeere.', correct: false, why: 'In der Berliner-Saison (Silvester, Karneval) gibt es auch Vanillepudding, Schokopudding und Eierlikör. Große Mengen als Bestellung aufschreiben.' },
+        { text: 'So viele? Kommen Sie am besten am Tag selbst ganz früh, dann schauen wir, was noch da ist.', correct: false, why: 'Gerade in der Saison sind Berliner schnell weg. Große Mengen immer als Bestellung aufschreiben: Name, Abholzeit, Sorten.' },
+        { text: 'Klar, das merke ich mir. Sagen Sie einfach am Tag Ihren Namen.', correct: false, why: 'Bestellungen nie nur merken: Name, Abholzeit, Menge und Sorten aufschreiben.' },
+      ]),
+      afterWrong: 'Hm, ich hätte das schon gern richtig bestellt. Schreiben Sie bitte auf: halb Vanille, halb Erdbeere.',
+    }],
+    sliceIntro: [pick([`Super, danke! Und für jetzt nehme ich schon mal ${jetzt} Berliner mit.`, `Prima. Und heute hätte ich gern ${jetzt} Berliner zum Probieren.`])],
+  };
+}
+
+/** Gute Vorsätze: Kunde möchte mehr Vollkorn essen */
+export function scVollkorn(): Core | null {
+  const gut = BREADS.filter((p) => /vollkorn/i.test(p.name));
+  const falsch = BREADS.filter((p) => p.breadType === 'weizen' && !/vollkorn|dinkel/i.test(p.name + ' ' + p.shortIngredients));
+  if (!gut.length || falsch.length < 3) return null;
+  const right = pick(gut);
+  const januar = new Date().getMonth() === 0;
+  return {
+    bread: right,
+    basket: [{ name: right.name, qty: 1, cents: parseCents(right.price) }],
+    steps: [{
+      topic: 'Vollkorn',
+      learn: { product: right.name, kind: 'mehl' },
+      customer: [januar
+        ? pick(['Ich hab mir fürs neue Jahr vorgenommen, mehr Vollkorn zu essen. Was nehme ich da?', 'Guter Vorsatz fürs neue Jahr: mehr Vollkorn. Was haben Sie da?'])
+        : pick(['Ich möchte mehr Vollkorn essen. Was empfehlen Sie mir?', 'Haben Sie ein richtiges Vollkornbrot?'])],
+      options: evenOpts([
+        { text: `Da nehmen Sie am besten ${right.name}. Das ist aus Roggenschrot, also mit dem ganzen Korn.`, correct: true },
+        ...closeByName(falsch, right, 3).map((w) => ({ text: `Da nehmen Sie am besten ${w.name}. Das ist ein richtiges Vollkornbrot.`, correct: false, why: `${w.name} ist ein Weizenbrot, kein Vollkorn. Mit dem ganzen Korn ist zum Beispiel ${right.name}.` })),
+      ]),
+      afterWrong: `Hm, das sieht mir aber ganz hell aus … Ich nehme lieber ${right.name}.`,
+    }],
+  };
+}
+
 export const SCENARIOS: { fn: () => Core | null; topics: string[]; weight: number }[] = [
   { fn: scAllergyBread, topics: ['Allergie'], weight: 3 },
   { fn: scAllergenCheck, topics: ['Allergene prüfen', 'Alternative ohne Allergen'], weight: 3 },
@@ -487,4 +580,7 @@ export const SCENARIOS: { fn: () => Core | null; topics: string[]; weight: numbe
   { fn: scSaisonAllergen, topics: ['Allergene bei Saisonware'], weight: 1 },
   { fn: scGibtEsNicht, topics: ['Gibt es bei uns nicht'], weight: 1 },
   { fn: scSchwerhoerig, topics: ['Schwerhöriger Kunde'], weight: 1 },
+  { fn: scBerlinerKrapfen, topics: ['Berliner oder Krapfen'], weight: 1 },
+  { fn: scBerlinerSaison, topics: ['Berliner-Saison'], weight: 3 },
+  { fn: scVollkorn, topics: ['Vollkorn'], weight: 1 },
 ];
