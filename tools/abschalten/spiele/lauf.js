@@ -656,7 +656,7 @@ SPIELE.lauf = {
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
-    // Goldkorn (Version 281: Geister-Lauf entfernt, Wunsch des Nutzers)
+    // Goldkorn (Version 282: Geister-Lauf entfernt, Wunsch des Nutzers)
     this.goldZeit = zufall(15, 40); this.gold = null; this.ortIdx = 0; this.ortBanner = null;
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
   },

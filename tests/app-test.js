@@ -510,6 +510,19 @@ async function offlineTests() {
       ok('Zuhören: Kunde spricht, Satz verdeckt', (await zu.count()) > 0 && gesagt > 0, `verdeckt ${await zu.count()}, gesprochen ${gesagt}`);
       if (await zu.count()) { await click(zu.first()); await settle(d.page, 300); }
       ok('Zuhören: Antippen zeigt den Satz', (await zu.count()) === 0 && (await d.page.getByRole('button', { name: 'Nochmal hören' }).count()) > 0);
+      // Version 281: Abspielen startet sofort, ohne auf den Download zu warten (iPhone erlaubt Ton nur direkt nach dem Tippen)
+      await d.page.route(/\/stimme\/teile\/[0-9a-f]+\.mp3/, async (r) => { await new Promise((ok2) => setTimeout(ok2, 1500)); await r.continue().catch(() => {}); });
+      await d.page.evaluate(() => { window.__play = []; const p = HTMLMediaElement.prototype.play; HTMLMediaElement.prototype.play = function () { window.__play.push(Date.now()); return p.call(this); }; window.__gesagt = []; });
+      let ersteAnfrage = null; const merke = (rq) => { if (ersteAnfrage === null && /\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) ersteAnfrage = Date.now(); };
+      d.page.on('request', merke);
+      // eine Antwort tippen: der nächste Kundensatz ist noch nicht vorgeladen
+      await d.page.locator('main button', { has: d.page.locator('span', { hasText: /^A$/ }) }).first().click().catch(() => {});
+      let erst = null; for (let k = 0; k < 100 && erst === null; k++) { erst = await d.page.evaluate(() => (window.__play.length ? window.__play[0] : null)); if (erst === null) await sleep(50); }
+      d.page.off('request', merke);
+      const handy = await d.page.evaluate(() => window.__gesagt.length);
+      const warten = erst !== null && ersteAnfrage !== null ? erst - ersteAnfrage : null;
+      ok('Zuhören: natürliche Stimme spielt sofort, wartet nicht auf den Download (keine Handy-Stimme)', warten !== null && warten < 700 && handy === 0, `${warten === null ? 'kein Abspielen/keine Anfrage' : warten + ' ms nach der ersten Anfrage'}, Handy-Stimme ${handy}×`);
+      await d.page.unroute(/\/stimme\/teile\/[0-9a-f]+\.mp3/).catch(() => {});
     }
     ok('Theken-Simulator mit Zuhören: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
@@ -1116,8 +1129,8 @@ async function offlineTests() {
     ok('Version 269: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
-  // Version 281: Deko und Teigi-Lauf-Geist weg, Spielfeld groß und mittig, Schädlinge abwehren neu (Stufe 5, neue Fallen, 3 Lager)
-  teile.push(['Version 281: Zum Abschalten groß, Schädlinge neu', async () => {
+  // Version 282: Deko und Teigi-Lauf-Geist weg, Spielfeld groß und mittig, Schädlinge abwehren neu (Stufe 5, neue Fallen, 3 Lager)
+  teile.push(['Version 282: Zum Abschalten groß, Schädlinge neu', async () => {
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
     await clearPopups(d.page);
     await click(d.page.locator('[aria-label="Hauptmenü"] button[title="Spielen"]:visible').first()); await settle(d.page, 600);
@@ -1163,7 +1176,7 @@ async function offlineTests() {
     await fr.evaluate(() => { document.querySelectorAll('.frage').forEach((q) => q.remove()); frageOffen = false; pausieren(); });
     for (let w = 0; w < 40 && (await gross.count()); w++) await sleep(100);
     ok('Pause: Spielfeld wieder normal in der Seite', !(await gross.count()));
-    ok('Version 281: keine Fehler', d.errors.length === 0, d.errors[0]);
+    ok('Version 282: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
     const h = await device({ user: 'Anna' });
     await click(h.page.getByRole('button', { name: 'Menü' }).first());

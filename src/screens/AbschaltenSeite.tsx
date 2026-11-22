@@ -53,7 +53,7 @@ export function AbschaltenSeite({ progress, userKey, fragen, onRekord, onBack, a
       if (d.typ === 'lt-abschalten-ende' && abschaltenSpiel(d.key)) onRekordRef.current(d.key, Number(d.punkte) || 0);
       if (d.typ === 'lt-abschalten-gold' && abschaltenSpiel(d.key)) aktionenRef.current?.onGold(d.key);
       if (d.typ === 'lt-abschalten-aufgabe' && typeof d.tag === 'string' && typeof d.id === 'string') aktionenRef.current?.onAufgabe(d.tag, d.id);
-      // Version 281: während der Runde liegt das Spielfeld groß und mittig über allem (im Spiel kann man die Seite nicht schieben)
+      // Version 282: während der Runde liegt das Spielfeld groß und mittig über allem (im Spiel kann man die Seite nicht schieben)
       if (d.typ === 'lt-abschalten-start') setGross(true);
       if (d.typ === 'lt-abschalten-stopp') { setGross(false); window.setTimeout(() => rahmen.current?.scrollIntoView({ block: 'center' }), 30); }
       if (d.typ === 'lt-abschalten-wechsel' && abschaltenSpiel(d.key)) setKey(d.key);

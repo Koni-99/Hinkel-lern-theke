@@ -381,7 +381,7 @@ addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && s
 const imRahmen = (() => { try { return parent !== window; } catch { return true; } })();
 function nachAussen(d){ try { if (imRahmen) parent.postMessage(d, location.origin); } catch {} }
 
-// Saison-Deko (fallender Schnee, Konfetti, Lichterkette) in Version 281 entfernt (Wunsch des Nutzers).
+// Saison-Deko (fallender Schnee, Konfetti, Lichterkette) in Version 282 entfernt (Wunsch des Nutzers).
 
 // Goldstücke: ganz selten taucht in einer Runde ein goldenes Ding auf. Wer es fängt, schaltet eine Teigi-Sache frei
 // (gibt es nicht im Laden). Das Spiel fragt goldKommt() und ruft goldErschienen() und goldGefangen(px, py).
@@ -1156,7 +1156,7 @@ SPIELE.lauf = {
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
     this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
-    // Goldkorn (Version 281: Geister-Lauf entfernt, Wunsch des Nutzers)
+    // Goldkorn (Version 282: Geister-Lauf entfernt, Wunsch des Nutzers)
     this.goldZeit = zufall(15, 40); this.gold = null; this.ortIdx = 0; this.ortBanner = null;
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
   },
@@ -2594,7 +2594,7 @@ SPIELE.tour = {
 
 // ───────── Schädlinge abwehren ─────────
 // Draufsicht auf ein Mehllager. Mäuse, Motten, Käfer und Ratten folgen der Mehlspur zum Tor unten.
-// Version 281: drei Lager (alle 5 Wellen ein neues, ab Welle 11 mit zwei Mauselöchern), Fallen bis Stufe 5,
+// Version 282: drei Lager (alle 5 Wellen ein neues, ab Welle 11 mit zwei Mauselöchern), Fallen bis Stufe 5,
 // Klebefalle (ab Welle 3) und Bäckerei-Katze (ab Welle 6), neue Schädlinge (Käfer, Ratte, Motten-Schwarm, Riesenratte).
 // Die Knöpfe zum Bauen gehen immer zur Mitte hin auf (vorher am rechten Rand zusammengequetscht).
 const SZ_KARTEN = [

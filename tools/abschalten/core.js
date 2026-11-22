@@ -305,7 +305,7 @@ addEventListener('keydown', (e) => { if (laeuft && !frageOffen && !pausiert && s
 const imRahmen = (() => { try { return parent !== window; } catch { return true; } })();
 function nachAussen(d){ try { if (imRahmen) parent.postMessage(d, location.origin); } catch {} }
 
-// Saison-Deko (fallender Schnee, Konfetti, Lichterkette) in Version 281 entfernt (Wunsch des Nutzers).
+// Saison-Deko (fallender Schnee, Konfetti, Lichterkette) in Version 282 entfernt (Wunsch des Nutzers).
 
 // Goldstücke: ganz selten taucht in einer Runde ein goldenes Ding auf. Wer es fängt, schaltet eine Teigi-Sache frei
 // (gibt es nicht im Laden). Das Spiel fragt goldKommt() und ruft goldErschienen() und goldGefangen(px, py).

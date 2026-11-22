@@ -1,6 +1,6 @@
 // ───────── Schädlinge abwehren ─────────
 // Draufsicht auf ein Mehllager. Mäuse, Motten, Käfer und Ratten folgen der Mehlspur zum Tor unten.
-// Version 281: drei Lager (alle 5 Wellen ein neues, ab Welle 11 mit zwei Mauselöchern), Fallen bis Stufe 5,
+// Version 282: drei Lager (alle 5 Wellen ein neues, ab Welle 11 mit zwei Mauselöchern), Fallen bis Stufe 5,
 // Klebefalle (ab Welle 3) und Bäckerei-Katze (ab Welle 6), neue Schädlinge (Käfer, Ratte, Motten-Schwarm, Riesenratte).
 // Die Knöpfe zum Bauen gehen immer zur Mitte hin auf (vorher am rechten Rand zusammengequetscht).
 const SZ_KARTEN = [
