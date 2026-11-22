@@ -63,9 +63,9 @@ export function RechenTrainerView({ onSaveScore }: { onSaveScore: (points: numbe
           <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: TH.muted }}>{a.titel}</div>
           <div className="lt-rechen-aufgabe" style={{ fontFamily: TH.serif, fontSize: '23px', lineHeight: 1.3 }}>{a.text}</div>
           <form onSubmit={(e) => { e.preventDefault(); if (geprueft === null) pruefen(); else weiter(); }} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 200px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 200px', minWidth: 0 }}>
               <input ref={feld} value={eingabe} onChange={(e) => setEingabe(e.target.value)} disabled={geprueft !== null} inputMode="decimal" enterKeyHint="done" aria-label="Ergebnis in Euro" placeholder="0,00"
-                style={{ flex: 1, minWidth: 0, minHeight: '58px', padding: '0 16px', borderRadius: '16px', border: `3px solid ${geprueft === null ? TH.line : geprueft ? TH.green : TH.red}`, fontSize: '26px', fontWeight: 800, textAlign: 'right', backgroundColor: TH.white, color: TH.ink, fontVariantNumeric: 'tabular-nums' }} />
+                style={{ flex: 1, width: 0, minWidth: 0, minHeight: '58px', padding: '0 16px', borderRadius: '16px', border: `3px solid ${geprueft === null ? TH.line : geprueft ? TH.green : TH.red}`, fontSize: '26px', fontWeight: 800, textAlign: 'right', backgroundColor: TH.white, color: TH.ink, fontVariantNumeric: 'tabular-nums' }} />
               <span style={{ fontSize: '24px', fontWeight: 800 }}>€</span>
             </label>
             {geprueft === null

@@ -1,6 +1,12 @@
 /* Basis-Styles der Hinkel-Lern-App (alles Weitere steckt als Inline-Style in den Komponenten) */
 html {
   scroll-behavior: smooth;
+  /* Version 288: lange Wörter (z. B. „Sonnenblumenkern-Schwarzbrot“) laufen nie über den Kartenrand.
+     Erst richtig trennen (nur lange Wörter), notfalls irgendwo umbrechen. Gilt für die ganze App. */
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  hyphenate-limit-chars: 10 4 4;
+  overflow-wrap: anywhere;
 }
 
 body {

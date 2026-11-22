@@ -48,7 +48,7 @@ const LOS_CSS = `
 .lt-papier.lt-los3 .lt-los3-kopf{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;justify-content:center;gap:8px;background:#FFC72C;font-weight:800;font-size:13px;letter-spacing:2.5px;color:#4B2A14}
 .lt-papier.lt-los3 .lt-los3-kopf i{font-style:normal;font-weight:600;letter-spacing:0}
 .lt-papier.lt-los3.lt-los3-rare .lt-los3-kopf{background:linear-gradient(90deg,#6A1FD1,#C21E8E);color:#FFFFFF}
-.lt-papier.lt-los3 .lt-los3-felder{position:absolute;left:12px;right:12px;top:44px;bottom:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;align-items:center}
+.lt-papier.lt-los3 .lt-los3-felder{position:absolute;left:12px;right:12px;top:44px;bottom:10px;display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:8px;align-items:center}
 .lt-papier.lt-los3 .lt-los3-feld{position:relative;border-radius:50%;background:#FFF4D8;aspect-ratio:1}
 .lt-papier.lt-los3 .lt-los3-bild{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .lt-papier.lt-los3 .lt-los3-bild svg{width:58px;height:58px}

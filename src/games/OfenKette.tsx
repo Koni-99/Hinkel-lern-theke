@@ -466,7 +466,7 @@ export function OfenKetteView({ images, scores, userKey, onSaveScore }: { images
         .lt-papier.lt-ok-toast.lt-ok-zeig{animation:ltOkHoch 1.3s ease-out}
         @keyframes ltOkHoch{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%)}}
         body.lt-ok-spielt .lt-teigi-begleiter.lt-papier{display:none}
-        .lt-ok-leiste{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+        .lt-ok-leiste{display:grid;grid-template-columns:repeat(4, minmax(0, 1fr));gap:6px}
         .lt-ok-kasten{background:#FFFDF7;border:2px solid #E6D6B6;border-radius:12px;padding:4px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;color:#2A1A0E}
         .lt-ok-kasten span{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#7A6550;white-space:nowrap}
         .lt-ok-kasten b{font-size:19px;font-variant-numeric:tabular-nums}
@@ -475,11 +475,11 @@ export function OfenKetteView({ images, scores, userKey, onSaveScore }: { images
         .lt-ok-uhr{position:absolute;left:0;bottom:0;height:5px;background:#E8741C;transition:width .25s linear}
         .lt-ok-uhr.lt-ok-knapp{background:#D93A1C}
         .lt-ok-punkte{display:flex;gap:3px}.lt-ok-punkte i{width:9px;height:9px;border-radius:50%;background:#E6D6B6}.lt-ok-punkte i.lt-ok-an{background:#E8741C}
-        .lt-ok-antworten{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+        .lt-ok-antworten{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:6px}
         .lt-ok-antworten button{min-height:40px;border-radius:12px;border:2px solid #E6D6B6;background:#fff;color:#2A1A0E;font-weight:800;font-size:15px;cursor:pointer;padding:0 4px;overflow-wrap:anywhere}
         .lt-ok-antworten button.lt-ok-richtig{background:#DDF2E3;border-color:#2F7D4F}
         .lt-ok-antworten button.lt-ok-falsch{background:#FCE1DC;border-color:#E5301C}
-        .lt-ok-knoepfe{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+        .lt-ok-knoepfe{display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px}
         .lt-ok-knoepfe button{height:58px;border-radius:16px;border:none;background:#F4E3C3;color:#2A1A0E;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #D9C39A;cursor:pointer;touch-action:manipulation}
         .lt-ok-knoepfe button:active{transform:translateY(2px);box-shadow:0 1px 0 #D9C39A}
         .lt-ok-knoepfe button.lt-ok-gold{background:#F2B705;box-shadow:0 3px 0 #B98900}

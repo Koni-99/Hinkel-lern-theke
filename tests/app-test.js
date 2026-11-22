@@ -1278,6 +1278,38 @@ async function offlineTests() {
     ok('Version 287: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
+  // Version 288: kein Text läuft über den Rand seiner Karte (schmales Handy, 320 Punkte breit = 390 mit großer Schrift)
+  teile.push(['Version 288: kein Text über den Kartenrand', async () => {
+    const SCAN = () => {
+      const out = [], vw = innerWidth;
+      const istRahmen = (e) => { const s = getComputedStyle(e); return e.tagName === 'BUTTON' || e.tagName === 'SECTION' || e.classList.contains('lt-card') || (parseFloat(s.borderTopLeftRadius) >= 8 && (s.backgroundColor !== 'rgba(0, 0, 0, 0)' || s.borderTopWidth !== '0px')); };
+      for (const e of document.querySelectorAll('main *, [role=dialog] *')) {
+        if (![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+        const s = getComputedStyle(e); if (s.visibility === 'hidden' || s.display === 'none' || e.closest('[aria-hidden="true"]')) continue;
+        let sc = e.parentElement, imScroll = false; while (sc && sc !== document.body) { const o = getComputedStyle(sc).overflowX; if (o === 'auto' || o === 'scroll') { imScroll = true; break; } sc = sc.parentElement; } if (imScroll) continue;
+        const r = document.createRange(); r.selectNodeContents(e); const tr = r.getBoundingClientRect(); if (!tr.width) continue;
+        let a = e.parentElement; while (a && a !== document.body && (!istRahmen(a) || a.getBoundingClientRect().width < 2)) a = a.parentElement;
+        const ar = a && a !== document.body ? a.getBoundingClientRect() : { left: 0, right: vw };
+        if (tr.right > Math.min(ar.right, vw) + 1.5 || tr.left < Math.max(ar.left, 0) - 1.5) out.push(`„${e.textContent.trim().slice(0, 40)}“`);
+      }
+      if (document.documentElement.scrollWidth > vw + 1) out.push('Seite breiter als der Bildschirm');
+      return [...new Set(out)];
+    };
+    const fehler = [];
+    const d = await device({ user: 'Anna', viewport: { width: 320, height: 700 } });
+    await clearPopups(d.page);
+    for (let i = 0; i < 5; i++) { await click(nav(d.page).nth(i)); await settle(d.page, 900); (await d.page.evaluate(SCAN)).forEach((t) => fehler.push(`Seite ${i + 1}: ${t}`)); }
+    for (const tab of ['preisduell', 'rechnen', 'alternativen', 'kassenblitz', 'tueten', 'allergene', 'bilderquiz', 'schneiden', 'theke', 'telefon', 'ansturm']) {
+      await d.page.evaluate((t) => sessionStorage.setItem('lt_seite', t), tab); await d.page.reload(); await settle(d.page, 1500); await clearPopups(d.page);
+      const st = d.page.locator('main button:visible', { hasText: /starten|los geht|beginnen|bedienen|anfangen/i }).first();
+      if (await st.count()) { await click(st); await settle(d.page, 1200); }
+      if (tab === 'preisduell') await d.page.evaluate(() => { const n = [...document.querySelectorAll('main div')].find((e) => e.children.length === 0 && /\S/.test(e.textContent) && getComputedStyle(e).fontWeight === '700' && getComputedStyle(e).fontSize === '19px'); if (!n) throw new Error('Preis-Duell: Produktname nicht gefunden'); if (n) { n.textContent = 'Sonnenblumenkern-Schwarzbrot (Kasten)'; n.style.fontSize = '23px'; } });
+      (await d.page.evaluate(SCAN)).forEach((t) => fehler.push(`${tab}: ${t}`));
+    }
+    ok('Kein Text läuft über den Rand (5 Seiten und 11 Spiele, 320 Punkte breit)', fehler.length === 0, fehler.slice(0, 6).join(' | '));
+    ok('Version 288: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
   teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {
     const C = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts', 'src/basis/laden.tsx']);

@@ -107,7 +107,7 @@ export function LoginRewardDialog({ day, onClaim, onClose, claimedAlready = fals
         <div className="lt-emo-bob" style={{ display: 'flex', justifyContent: 'center' }} aria-hidden="true"><ShopIcon3D k="coin" size={64} /></div>
         <div style={{ fontFamily: TH.serif, fontSize: '32px', lineHeight: 1.1 }}>Schön, dass du da bist!</div>
         <div style={{ fontSize: '17px', color: TH.brown }}>Jeden Tag gibt es eine Belohnung. Komm an 7 Arbeitstagen hintereinander (sonntags ist zu, das zählt nicht), dann wartet am 7. Tag ein Joker.</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '6px' }}>
           {LOGIN_REWARDS.map((c, i) => {
             const n = i + 1, past = n < day, today = n === day;
             return (

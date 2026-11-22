@@ -397,7 +397,7 @@ export function HomeScreen({ username, fetchCloudData, todayDayNum, selectedBake
               <strong style={{ fontSize: '17px', display: 'flex', alignItems: 'center', gap: '10px' }}><span aria-hidden="true" style={{ width: '34px', height: '34px', borderRadius: '10px', backgroundColor: '#1F140C', color: '#FFD86B', boxShadow: 'inset 0 1px 0 rgba(255,216,107,.18), 0 4px 10px -6px rgba(31,20,12,.6)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><LtIcon paths={ICON.ticket} size={18} width={1.9} /></span>Stempelkarte</strong>
               <span style={{ fontSize: '14px', color: LT.muted }}>{n >= 10 ? 'Voll! Belohnung wartet.' : `Noch ${10 - n} Lerntage bis +500 Punkte und 3 €`}</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '5px', maxWidth: '420px' }} aria-label={`${n} von 10 Stempeln`}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', gap: '5px', maxWidth: '420px' }} aria-label={`${n} von 10 Stempeln`}>
               {[...Array(10)].map((_, i) => i < n ? (
                 <span key={i} className={`lt-stamp lt-stamp-on${i === n - 1 && myDays.includes(dayKey(new Date())) ? ' lt-stamp-new' : ''}`} style={{ ['--sr' as any]: `${((i * 37) % 40) - 20}deg`, transform: `rotate(${((i * 37) % 40) - 20}deg)` }}><LtIcon paths={ICON.bread} size={18} /></span>
               ) : i === 9 ? (

@@ -428,7 +428,7 @@ body.lt-hot::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 .lt-kk-kasten{width:100%;max-width:540px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.6);border:2px solid rgba(139,90,43,.18)}
 .lt-kk-kasten-titel{font-weight:800;font-size:15px}
 .lt-kk-kasten-hilfe{font-size:13px;opacity:.75}
-.lt-kk-faecher{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;height:74px}
+.lt-kk-faecher{display:grid;grid-template-columns:repeat(5, minmax(0, 1fr));gap:6px;height:74px}
 .lt-kk-fach{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;border-radius:8px;background:rgba(139,90,43,.1);overflow:hidden;padding-bottom:2px}
 .lt-kk-fach-stapel{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#FFE58A,#E0B44A);opacity:.85}
 .lt-kk-fach b,.lt-kk-fach small{position:relative;line-height:1.1}

@@ -34,7 +34,7 @@ export function ProduktVergleich({ a, images, onClose }: { a: SP; images: Produc
   const zeile = (label: string, wert: (p: SP) => ReactNode, gleich?: boolean) => (
     <div className="lt-vergleich-zeile" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <div style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '1px', textTransform: 'uppercase', color: TH.muted }}>{label}{gleich ? ' · gleich' : ''}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
         {[a, b].map((p, i) => <div key={i} className={gleich ? undefined : 'lt-vergleich-anders'} style={{ padding: '10px 12px', borderRadius: '14px', backgroundColor: gleich ? TH.white : TH.tintYellow, border: `2px solid ${TH.line}`, fontSize: '16px', lineHeight: 1.4, minWidth: 0, overflowWrap: 'anywhere' }}>{p ? wert(p) : ''}</div>)}
       </div>
     </div>
@@ -66,7 +66,7 @@ export function ProduktVergleich({ a, images, onClose }: { a: SP; images: Produc
             </select>
           </label>
           {b && <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
               {[a, b].map((p) => (
                 <div key={p.name} style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
                   {foto(p) ? <img src={foto(p)} alt={p.name} style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: '16px', border: `2px solid ${TH.line}` }} /> : null}

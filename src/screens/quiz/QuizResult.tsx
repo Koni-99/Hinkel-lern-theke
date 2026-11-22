@@ -118,7 +118,7 @@ export function QuizResult({ onThemaUeben, jubel, fetchCloudData, questions, isA
           const plus = Math.max(0, now.ids.size - masteryStart.ids);
           const prodPlus = Math.max(0, now.products.size - masteryStart.products);
           return (
-            <div className="lt-levelup" style={{ marginTop: '6px', width: '100%', maxWidth: '520px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div className="lt-levelup" style={{ marginTop: '6px', width: '100%', maxWidth: '520px', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
               <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: TH.tintBlue }}>
                 <div aria-hidden="true" style={{ color: LT.brown }}><LtIcon paths={ICON.sparkle} size={26} /></div>
                 <div style={{ fontFamily: LT.serif, fontSize: '30px', lineHeight: 1 }}>{plus > 0 ? `+${plus}` : '±0'}</div>
