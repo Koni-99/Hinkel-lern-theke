@@ -659,6 +659,38 @@ async function offlineTests() {
     ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
   }]);
   // Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien
+  // Version 282: Vorlesen überall mit natürlicher Stimme (Gute Sätze, Theken-Simulator mit Erzählerin)
+  teile.push(['Version 282: Vorlesen überall natürlich (Gute Sätze, Theken-Simulator)', async () => {
+    const fs = require('fs'), path = require('path');
+    const M = kompiliere(['src/hilfen/vorlesen.ts', 'src/daten/thekenSaetze.ts', 'src/hilfen/bausteine.ts', 'src/games/theke/gespraech.tsx']);
+    const V = M.hilfen_vorlesen, TS = M.daten_thekenSaetze.THEKEN_SAETZE, B = M.hilfen_bausteine, G = M.games_theke_gespraech;
+    const sIdx = new Set(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/stimme/saetze/index.json'), 'utf8')));
+    const fehltS = TS.flatMap((g) => g.saetze).flatMap((t) => V.saetze(t)).filter((x) => !sIdx.has(V.satzKey(x)));
+    ok('Natürliche Stimme: Gute Sätze für die Theke, alle vorhanden', fehltS.length === 0, `${fehltS.length} fehlen: ${fehltS.slice(0, 2).join(' | ')}`);
+    const tIdx = new Set(JSON.parse(fs.readFileSync(path.resolve(__dirname, '../public/stimme/teile/index.json'), 'utf8')));
+    let alle = 0, da = 0; const fehltT = [];
+    for (let i = 0; i < 400; i++) {
+      const c = G.buildConversation();
+      for (const st of ['frau', 'mann']) c.steps.forEach((s) => B.simulatorVorlesenTeile(c.persona.title, s.customer, s.options.map((o) => o.text), B.KUNDEN_STIMMEN[st]).forEach(([t, v]) => { alle++; if (tIdx.has(B.teilKey(v, t))) da++; else if (fehltT.length < 3) fehltT.push(t); }));
+    }
+    ok('Natürliche Stimme: Theken-Simulator „Vorlesen“ (Erzählerin + Kunde + Antworten), mind. 98 % aus Bausteinen', da / alle >= 0.98, `${da} von ${alle}; fehlt z. B.: ${fehltT.join(' | ')}`);
+    // im Browser: Knopf „Vorlesen“ im Simulator spielt Tondateien, keine Handy-Stimme
+    const d = await device({ user: 'Anna' });
+    await d.page.addInitScript(() => { window.__gesagt = []; const S = window.speechSynthesis; if (S) { S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); }; } });
+    let abrufe = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) abrufe++; });
+    await d.page.reload(); await settle(d.page); await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page);
+    await click(d.page.locator('button.lt-card:visible', { hasText: 'Theken-Simulator' }).first()); await settle(d.page, 1200);
+    await click(d.page.getByRole('button', { name: 'Ersten Kunden bedienen' })); await settle(d.page, 1200);
+    const knopf = d.page.locator('main button[title="Vorlesen"]:visible').first();
+    const vorher = await d.page.evaluate(() => window.__gesagt.length); abrufe = 0;
+    if (await knopf.count()) await click(knopf);
+    for (let k = 0; k < 60 && !abrufe; k++) await sleep(100);
+    const handy = (await d.page.evaluate(() => window.__gesagt.length)) - vorher;
+    ok('Theken-Simulator: „Vorlesen“ spricht mit natürlichen Stimmen (keine Handy-Stimme)', (await knopf.count()) > 0 && abrufe > 0 && handy === 0, `Knopf ${await knopf.count()}, Tondateien ${abrufe}, Handy ${handy}`);
+    ok('Vorlesen überall: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   teile.push(['Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien', async () => {
     const fs = require('fs'), path = require('path');
     const M = kompiliere(['src/hilfen/vorlesen.ts', 'src/daten/shopProducts.ts']);

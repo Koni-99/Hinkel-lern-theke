@@ -7,7 +7,7 @@ import { GameProgress, AnswerFx, AnswerFxState } from '../../ui/antwortFx';
 import { TH, cardStyle, btnPrimary, PageHead, StatChip, GameIntro, ConfettiOverlay } from '../../ui/basis';
 import { ReportLink, ReportContext } from '../../ui/melden';
 import { scrollToPlay } from '../../ui/belohnungen';
-import { OnLearn, LearnHint, SpeakButton, canSpeak, sprichKunde, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
+import { OnLearn, LearnHint, SpeakButton, canSpeak, sprichKunde, sprichSimulator, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
 import { SimOpt, Conversation, ChatMsg, pick } from './basis';
 import { LtIcon, ICON } from '../../basis/symbole';
@@ -380,7 +380,7 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
                 <div style={{ fontSize: '16px', fontWeight: 700, color: TH.muted, textTransform: 'uppercase', letterSpacing: '1px' }}>Deine Antwort · {step.topic}</div>
                 {hoeren && canSpeak() ? (
                   <button type="button" onClick={() => sprichKunde(step.customer.map(gesprochen).filter(Boolean).join(' '), kundenStimme(conv.persona))} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: '38px', padding: '0 10px', borderRadius: '12px', border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}><LtIcon paths={ICON.repeat} size={18} />Nochmal hören</button>
-                ) : <SpeakButton small text={`${conv.persona.title} sagt: ${step.customer.map(t => t.replace(/^\(|\)$/g, '')).join(' ')}. Deine Antworten: ${step.options.map((o, i) => `${String.fromCharCode(65 + i)}: ${o.text}`).join('. ')}`} />}
+                ) : <SpeakButton small text={`${conv.persona.title}|${step.customer.join(' ')}|${step.options.map((o) => o.text).join('|')}`} sprich={(fertig) => sprichSimulator(conv.persona.title, step.customer, step.options.map((o) => o.text), kundenStimme(conv.persona), fertig)} />}
               </div>
               {step.options.map((o, i) => (
                 <button key={i} onClick={() => choose(o)} style={{ display: 'flex', alignItems: 'center', gap: '12px', minHeight: '60px', padding: '12px 16px', borderRadius: '16px', border: `3px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: '18px', lineHeight: 1.4, textAlign: 'left', cursor: 'pointer' }}>

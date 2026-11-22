@@ -6,7 +6,7 @@ import { dc } from '../daten/data';
 import { TH, btnPrimary, productImageKey, ProductImages } from '../ui/basis';
 import { LtIcon, ICON } from '../basis/symbole';
 import type { ShopProduct } from './BilderQuiz';
-import { zerlege, teilKey, KUNDEN_STIMMEN, KundenStimme } from '../hilfen/bausteine';
+import { zerlege, teilKey, KUNDEN_STIMMEN, KundenStimme, simulatorVorlesenTeile } from '../hilfen/bausteine';
 import { saetze, satzKey, englischKey } from '../hilfen/vorlesen';
 
 /** Nach „Weiter“: zur Spielkarte (Foto) scrollen statt ganz nach oben */
@@ -72,7 +72,11 @@ if (canSpeak()) {
 
 export function speakText(text: string, onEnd?: () => void, tempo = 1.15) {
   stopTeile();
-  if (!canSpeak()) return;
+  handyStimme(text, onEnd, tempo);
+}
+/** Handy-Stimme ohne die laufende Tondatei-Folge zu beenden (für einzelne fehlende Sätze mitten in einer Folge) */
+function handyStimme(text: string, onEnd?: () => void, tempo = 1.15) {
+  if (!canSpeak()) { onEnd?.(); return; }
   const synth = window.speechSynthesis;
   synth.cancel();
   if (!cachedVoice) cachedVoice = bestGermanVoice();
@@ -118,13 +122,16 @@ function vorladen(url: string) {
 function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void, ersatz?: (rest: string) => void, luecke = 0) {
   const handy = (rest: string) => { if (lauf === teilLauf) { if (ersatz) ersatz(rest); else speakText(rest, onEnd, handyTempo); } };
   const a = teilAudio || (teilAudio = merkeAudio(new Audio()));
-  urls.slice(1, 4).forEach(vorladen);
+  urls.slice(1, 4).filter(Boolean).forEach(vorladen);
   let i = 0;
   const weiter = () => {
     if (lauf !== teilLauf) return;
     if (i >= urls.length) { onEnd?.(); return; }
     const nr = i++;
-    urls.slice(nr + 1, nr + 4).forEach(vorladen);
+    urls.slice(nr + 1, nr + 4).filter(Boolean).forEach(vorladen);
+    const naechster = () => { if (lauf !== teilLauf) return; if (luecke > 0) window.setTimeout(weiter, luecke); else weiter(); };
+    // Version 282: fehlt nur dieser eine Satz, liest ihn die Handy-Stimme, danach geht es natürlich weiter
+    if (!urls[nr]) { handyStimme(stuecke[nr], naechster, handyTempo); return; }
     a.onended = () => { if (luecke > 0) window.setTimeout(weiter, luecke); else weiter(); };
     a.onerror = () => handy(stuecke.slice(nr).join(' '));
     a.src = vorgeladen.get(urls[nr]) || urls[nr];
@@ -141,8 +148,20 @@ export async function sprichKunde(text: string, stimme: KundenStimme, tempo = 1.
   if (lauf !== teilLauf) return;
   const teile = zerlege(text);
   const keys = teile.map((t) => teilKey(KUNDEN_STIMMEN[stimme], t));
-  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd, tempo * 1.15); return; }
-  spieleFolge(lauf, keys.map((k) => `stimme/teile/${k}.mp3`), teile, tempo, tempo * 1.15, onEnd);
+  if (!keys.length || typeof Audio === 'undefined' || !keys.some((k) => index.has(k))) { speakText(text, onEnd, tempo * 1.15); return; }
+  spieleFolge(lauf, keys.map((k) => (index.has(k) ? `stimme/teile/${k}.mp3` : '')), teile, tempo, tempo * 1.15, onEnd);
+}
+/** Theken-Simulator, Knopf „Vorlesen“ (Version 282): Kunde in seiner Stimme, wer spricht und die Antworten in der Erzählstimme */
+export async function sprichSimulator(wer: string, kunde: string[], antworten: string[], stimme: KundenStimme, onEnd?: () => void) {
+  stopSpeaking();
+  const lauf = ++teilLauf;
+  const index = await mitZeitlimit(ladeIndex('stimme/teile/index.json'));
+  if (lauf !== teilLauf) return;
+  const teile = simulatorVorlesenTeile(wer, kunde, antworten, KUNDEN_STIMMEN[stimme]);
+  const keys = teile.map(([t, st]) => teilKey(st, t));
+  const text = teile.map(([t]) => t).join('. ');
+  if (!keys.length || typeof Audio === 'undefined' || !keys.some((k) => index.has(k))) { speakText(text, onEnd); return; }
+  spieleFolge(lauf, keys.map((k) => (index.has(k) ? `stimme/teile/${k}.mp3` : '')), teile.map(([t]) => t), 1.0, 1.15, onEnd, undefined, 0);
 }
 /** Liest einen festen Text Satz für Satz mit natürlicher Stimme (Frau 4) vor, sonst mit der Handy-Stimme */
 export async function sprichSaetze(text: string, onEnd?: () => void, stimme?: string) {
@@ -152,8 +171,8 @@ export async function sprichSaetze(text: string, onEnd?: () => void, stimme?: st
   if (lauf !== teilLauf) return;
   const s = saetze(text);
   const keys = s.map((x) => satzKey(x, stimme));
-  if (!keys.length || typeof Audio === 'undefined' || !keys.every((k) => index.has(k))) { speakText(text, onEnd); return; }
-  spieleFolge(lauf, keys.map((k) => `stimme/saetze/${k}.mp3`), s, 1.0, 1.15, onEnd, undefined, 220);
+  if (!keys.length || typeof Audio === 'undefined' || !keys.some((k) => index.has(k))) { speakText(text, onEnd); return; }
+  spieleFolge(lauf, keys.map((k) => (index.has(k) ? `stimme/saetze/${k}.mp3` : '')), s, 1.0, 1.15, onEnd, undefined, 220);
 }
 /** Wörterbuch Englisch: natürliche britische Stimme, sonst die englische Handy-Stimme (ersatz) */
 export async function sprichEnglisch(text: string, ersatz: (text: string) => void) {
@@ -177,7 +196,8 @@ export async function sprichHoerDatei(key: string, text: string, onEnd?: () => v
 
 /** Knopf „Vorlesen“ – liest den Text vor, zweiter Tipp stoppt */
 /** natuerlich: Satz für Satz mit natürlicher Stimme. hoerKey: fertige Hör-Lernen-Datei abspielen. */
-export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerKey, stimme }: { text: string; label?: string; small?: boolean; natuerlich?: boolean; hoerKey?: string; stimme?: string }) {
+/** Version 282: jeder Knopf liest mit natürlicher Stimme (Satz für Satz, fehlende Sätze einzeln mit der Handy-Stimme). sprich: eigener Ablauf (Theken-Simulator). */
+export function SpeakButton({ text, label = 'Vorlesen', small, hoerKey, stimme, sprich }: { text: string; label?: string; small?: boolean; natuerlich?: boolean; hoerKey?: string; stimme?: string; sprich?: (fertig: () => void) => void }) {
   const [on, setOn] = useState(false);
   useEffect(() => () => { stopSpeaking(); }, []);
   useEffect(() => { setOn(false); stopSpeaking(); }, [text]);
@@ -185,7 +205,7 @@ export function SpeakButton({ text, label = 'Vorlesen', small, natuerlich, hoerK
   return (
     <button
       type="button"
-      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); const fertig = () => setOn(false); if (hoerKey) sprichHoerDatei(hoerKey, text, fertig); else if (natuerlich) sprichSaetze(text, fertig, stimme); else speakText(text, fertig); } }}
+      onClick={() => { if (on) { stopSpeaking(); setOn(false); } else { setOn(true); const fertig = () => setOn(false); if (sprich) sprich(fertig); else if (hoerKey) sprichHoerDatei(hoerKey, text, fertig); else sprichSaetze(text, fertig, stimme); } }}
       aria-pressed={on}
       title={on ? 'Vorlesen stoppen' : 'Vorlesen'}
       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', minHeight: small ? '38px' : '44px', padding: small ? '0 10px' : '0 14px', borderRadius: '12px', border: `2px solid ${on ? TH.brown : TH.line}`, backgroundColor: on ? TH.tintYellow : TH.white, color: TH.ink, fontSize: small ? '14px' : '16px', fontWeight: 700, cursor: 'pointer', flex: '0 0 auto' }}

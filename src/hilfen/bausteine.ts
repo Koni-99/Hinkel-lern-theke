@@ -34,5 +34,17 @@ export function zerlege(text: string): string[] {
   return teile;
 }
 
+/** Theken-Simulator, Knopf „Vorlesen“ (Version 282): wer spricht und die Antworten in der Erzählstimme (Frau 10),
+ *  der Kunde in seiner eigenen Stimme. Alles als Bausteine, die tools/stimme/bausteine.mjs vorab erzeugt. */
+export const ERZAEHL_STIMME = 'de-DE-Chirp3-HD-Laomedeia'; // Frau 10, anders als die Kundenstimmen
+export function simulatorVorlesenTeile(wer: string, kunde: string[], antworten: string[], kundenStimme: string): [string, string][] {
+  const out: [string, string][] = [];
+  const k = zerlege(kunde.join(' '));
+  if (k.length) { out.push([`${wer} sagt`, ERZAEHL_STIMME]); k.forEach((t) => out.push([t, kundenStimme])); }
+  if (antworten.length) out.push(['Deine Antworten', ERZAEHL_STIMME]);
+  antworten.forEach((a, i) => { out.push([String.fromCharCode(65 + i), ERZAEHL_STIMME]); zerlege(a).forEach((t) => out.push([t, ERZAEHL_STIMME])); });
+  return out;
+}
+
 /** Dateiname eines Bausteins in einer Stimme */
 export const teilKey = (stimme: string, teil: string) => stimmeKey(`${stimme}|${teil}`);

@@ -19,7 +19,7 @@ const args = process.argv.slice(2);
 
 const tmp = path.join(ROOT, 'node_modules', `.lt-saetze-${process.pid}`);
 execFileSync(path.join(ROOT, 'node_modules/.bin/tsc'), [
-  'src/hilfen/vorlesen.ts', 'src/games/allergenDaten.ts', 'src/components/karteikarten/daten.tsx', 'src/daten/questions.ts', 'src/components/AlternativenJaegerView.tsx',
+  'src/hilfen/vorlesen.ts', 'src/games/allergenDaten.ts', 'src/components/karteikarten/daten.tsx', 'src/daten/questions.ts', 'src/components/AlternativenJaegerView.tsx', 'src/daten/thekenSaetze.ts',
   '--ignoreConfig', '--outDir', tmp, '--module', 'commonjs', '--target', 'es2020', '--skipLibCheck', '--esModuleInterop', '--jsx', 'react-jsx', '--rootDir', 'src',
 ], { cwd: ROOT, stdio: 'inherit' });
 const req = createRequire(import.meta.url);
@@ -29,6 +29,7 @@ const K = req(path.join(tmp, 'components/karteikarten/daten.js'));
 const { SHOP_PRODUCTS } = req(path.join(tmp, 'daten/shopProducts.js'));
 const Q = req(path.join(tmp, 'daten/questions.js'));
 const ALT = req(path.join(tmp, 'components/AlternativenJaegerView.js'));
+const TS = req(path.join(tmp, 'daten/thekenSaetze.js'));
 rmSync(tmp, { recursive: true, force: true });
 
 const saetze = new Map(); // code → Satz
@@ -58,6 +59,8 @@ for (const t of A.ALLERGEN_TESTS) {
 }
 // Quiz und Adventskalender vor der Antwort: Frage, Buchstaben, Antwort-Möglichkeiten
 for (const q of [...(Q.questions || []), ...(Q.examQuestions || [])]) dazu(V.quizVorherText(q.question, q.options));
+// Gute Sätze für die Theke (Version 282)
+for (const g of TS.THEKEN_SAETZE) g.saetze.forEach((t) => dazu(t));
 // Wörterbuch Englisch: ganzer Eintrag als eine Datei, britische Stimme
 for (const d of K.DICT_ALL) { const t = d.say || d.en; saetze.set(V.englischKey(t), [t, V.ENGLISCH_STIMME]); }
 // Alternativen-Jäger (mehrmals, weil die falschen Antworten zufällig gewählt werden)
