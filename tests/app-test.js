@@ -1153,6 +1153,7 @@ async function offlineTests() {
     const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
     const r = await fr.evaluate(() => {
       const s = spiel, aus = {};
+      const L = SPIELE.lauf; L.start(); L.zeit = 30; L.tick(.001); const v30 = L.tempo; L.zeit = 90; L.tick(.001); const v90 = L.tempo; L.zeit = 150; L.tick(.001); aus.laufSchneller = v90 > v30 + 50 && L.tempo > v90 + 100;
       aus.ohneDeko = typeof saisonMalen === 'undefined' && typeof SAISON === 'undefined' && typeof SPIELE.lauf.geistJetzt === 'undefined';
       // Platz ganz rechts im ersten Lager: Knöpfe liegen ganz im Bild und überlappen nicht
       s.geld = 5000; s.welle = 6; s.pause = 1; s.menu = { platz: 3, t: 1 };
@@ -1168,6 +1169,7 @@ async function offlineTests() {
       return aus;
     });
     ok('Saison-Deko und Teigi-Lauf-Geist sind weg', r.ohneDeko);
+    ok('Teigi-Lauf wird immer schneller (auch nach einer Minute)', r.laufSchneller);
     ok('Schädlinge: 5 Fallen-Knöpfe in einer Leiste, ganz im Bild, ohne Überlappen', r.fuenf);
     ok('Schädlinge: Katze bis Stufe 5', r.stufe5);
     ok('Schädlinge: 3 Lager (ab Welle 6 Keller, ab 11 zwei Mauselöcher)', r.karten === 'Mehllager1,Mehllager1,Kellerlager1,Kellerlager1,Großes Lager2,Großes Lager2', r.karten);
@@ -1183,7 +1185,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
