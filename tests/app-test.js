@@ -1987,6 +1987,29 @@ async function offlineTests() {
     }
     ok('Melde-Knopf in Telefon-Bestellung, Rechen-Trainer, Theken-Ansturm, Ofen-Kette, Hör-Lernen', fehlt.length === 0, fehlt.join(', '));
   }]);
+  // Version 277: Theken-Simulator „Vorlesen“ (ohne Zuhören): Kunde mit natürlicher Stimme, danach die Antworten mit der Handy-Stimme
+  teile.push(['Version 277: Theken-Simulator Vorlesen mit natürlicher Kundenstimme', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => {
+      await ctx.route(/\/stimme\/teile\/[0-9a-f]+\.mp3/, (r) => r.fulfill({ contentType: 'audio/wav', body: stilleWav() }));
+      await ctx.addInitScript(() => {
+        try { if (!sessionStorage.getItem('__t277')) { sessionStorage.setItem('__t277', '1'); sessionStorage.setItem('lt_seite', 'theke'); localStorage.setItem('lt_theke_hoeren', '0'); } } catch {}
+        window.__gesagt = []; const S = window.speechSynthesis; if (S) S.speak = (u) => { window.__gesagt.push(u.text); setTimeout(() => u.onend && u.onend(), 10); };
+      });
+    } });
+    let mp3 = 0; d.page.on('request', (rq) => { if (/\/stimme\/teile\/[0-9a-f]+\.mp3/.test(rq.url())) mp3++; });
+    await clearPopups(d.page);
+    const start = d.page.getByRole('button', { name: 'Ersten Kunden bedienen' });
+    for (let w = 0; w < 50 && !(await start.count()); w++) await sleep(100);
+    await click(start); await settle(d.page, 800);
+    const knopf = d.page.locator('.lt-theke-vorlesen');
+    for (let w = 0; w < 50 && !(await knopf.count()); w++) await sleep(100);
+    await click(knopf.first());
+    let antworten = false; for (let w = 0; w < 80 && !antworten; w++) { antworten = await d.page.evaluate(() => window.__gesagt.some((t) => /Deine Antworten/.test(t))); if (!antworten) await sleep(100); }
+    const handyKunde = await d.page.evaluate(() => window.__gesagt.filter((t) => !/Deine Antworten/.test(t)).length);
+    ok('Theken-Simulator Vorlesen: Kunde mit Tondatei, Antworten danach mit der Handy-Stimme', mp3 > 0 && antworten && handyKunde === 0, `${mp3} Tondateien, Antworten ${antworten}, Handy-Kunde ${handyKunde}`);
+    ok('Theken-Simulator Vorlesen: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 276: Quizfragen passen zu den Produktdaten (Preis, Allergene, Warengruppe, Mehl, Schnitt, Alternativen) und
   // Produkte mit unvollständiger Allergen-Angabe werden nie als „ohne Allergen“ beigebracht
   teile.push(['Version 276: Quizfragen und Produktdaten', async () => {
