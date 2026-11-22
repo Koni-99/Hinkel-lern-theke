@@ -2012,8 +2012,8 @@ async function offlineTests() {
     ok('Quizfragen passen zu den Produktdaten (Preis, Allergene, Warengruppe, Mehl, Schnitt, Alternativen)', falsch.length === 0, `${falsch.length}: ${falsch.slice(0, 3).join(' | ')}`);
     const unsicher = P.filter((p) => M.daten_shopProducts.allergeneUnsicher(p)).map((p) => p.name);
     const ohne = A.ALLERGEN_TESTS ? A.ALLERGEN_TESTS.flatMap((t) => A.splitByAllergen(t).without.map((p) => p.name)) : [];
-    ok('Unvollständige Allergen-Angabe (z. B. Tigertatze) nie als „ohne Allergen“ im Allergene-Training und keine Allergen-Frage in der Ofen-Kette',
-      unsicher.includes('Tigertatze') && !ohne.some((x) => unsicher.includes(x)) && unsicher.every((x) => O.allergenFrage(x) === null), `${unsicher.join(', ')} · ohne: ${ohne.filter((x) => unsicher.includes(x)).join(', ')}`);
+    ok('Unvollständige Allergen-Angabe („Achtung …“) nie als „ohne Allergen“ im Allergene-Training und keine Allergen-Frage in der Ofen-Kette',
+      M.daten_shopProducts.allergeneUnsicher({ allergenNote: 'Achtung: Nougat fehlt' }) && !M.daten_shopProducts.allergeneUnsicher({ allergenNote: 'Kann Spuren enthalten: Soja.' }) && !ohne.some((x) => unsicher.includes(x)) && unsicher.every((x) => O.allergenFrage(x) === null), `${unsicher.join(', ')} · ohne: ${ohne.filter((x) => unsicher.includes(x)).join(', ')}`);
   }]);
   // Version 275: Produktdaten-Prüfung
   teile.push(['Version 275: Produktdaten-Prüfung', async () => {

@@ -2080,8 +2080,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
       'Unsere Tigertatze ist der kleine Bruder der Bärentatze, mit einem entscheidenden Unterschied. Zwischen dem buttrigen Spritzgebäck und der Zartbitterschokolade versteckt sich eine feine Schicht zartschmelzender Nougatcreme. Beim Reinbeißen zeigt sich das volle Aroma: oben knuspriges Spritzgebäck, darunter sanftes Nougat und abschließend eine knackige Schokoladenschicht.',
     shortIngredients: 'Buttriges Spritzgebäck mit Nougatcreme und Zartbitterschokolade',
     fullIngredients:
-      'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, NATÜRLICHES BOURBON VANILLEAROMA',
-    allergens: ['Gluten (Weizen)', 'Milch', 'Eier'],
-    allergenNote: 'Achtung: In der Zutatenliste aus dem Shop fehlen die Nougatcreme und die Zartbitterschokolade. Nougat enthält meist Haselnüsse, Schokolade oft Soja. Bei Allergien bitte in der Backstube nachfragen.'
+      'WEIZENMEHL, BUTTER, Zucker, Kondensmilch (MILCH, Natriumphosphate, Carrageen), VOLLEI, Vanillearoma (Dextrose, Vanillin, Propylenglycol, Aromaextrakte, natürliche Aromastoffe), Salz, NATÜRLICHES BOURBON VANILLEAROMA, Nougatcreme (mit HASELNÜSSEN), Zartbitterschokolade (mit SOJA)',
+    allergens: ['Gluten (Weizen)', 'Milch', 'Eier', 'Schalenfrüchte (Haselnüsse)', 'Soja'],
+    allergenNote: 'Nougatcreme (Haselnüsse) und Zartbitterschokolade (Soja) ergänzt (vom Ausbilder bestätigt, fehlten in der Shop-Zutatenliste).'
   },
 ];
