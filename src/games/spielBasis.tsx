@@ -101,35 +101,33 @@ let teilLauf = 0;
 export function stopTeile() { teilLauf++; if (teilAudio) { try { teilAudio.pause(); } catch {} } }
 /** Lädt eine Tondatei vorab (Version 279), damit zwischen zwei Stücken nicht aufs Internet gewartet wird.
  *  Klappt das nicht, wird die Datei beim Abspielen ganz normal geladen. */
-const vorgeladen = new Map<string, Promise<string>>();
-function vorladen(url: string): Promise<string> {
-  let p = vorgeladen.get(url);
-  if (!p) {
-    p = (typeof fetch === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL)
-      ? Promise.resolve(url)
-      : fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject(new Error('fehlt')))).then((b) => URL.createObjectURL(b)).catch(() => { vorgeladen.delete(url); return url; });
-    vorgeladen.set(url, p);
-    if (vorgeladen.size > 120) { const [alt, altP] = vorgeladen.entries().next().value as [string, Promise<string>]; vorgeladen.delete(alt); altP.then((u) => { if (u.startsWith('blob:')) window.setTimeout(() => { try { URL.revokeObjectURL(u); } catch {} }, 60000); }); }
-  }
-  return p;
+// Nie darauf warten (Version 281): auf dem iPhone verfällt sonst die Erlaubnis zum Abspielen und die Handy-Stimme
+// springt ein. Ist das Stück schon geladen, wird die geladene Kopie gespielt, sonst ganz normal die Adresse.
+const vorgeladen = new Map<string, string>();
+const laedt = new Set<string>();
+function vorladen(url: string) {
+  if (vorgeladen.has(url) || laedt.has(url) || typeof fetch === 'undefined' || typeof URL === 'undefined' || !URL.createObjectURL) return;
+  laedt.add(url);
+  fetch(url).then((r) => (r.ok ? r.blob() : Promise.reject(new Error('fehlt')))).then((b) => {
+    vorgeladen.set(url, URL.createObjectURL(b));
+    if (vorgeladen.size > 120) { const [alt, altU] = vorgeladen.entries().next().value as [string, string]; vorgeladen.delete(alt); window.setTimeout(() => { try { URL.revokeObjectURL(altU); } catch {} }, 60000); }
+  }).catch(() => {}).finally(() => laedt.delete(url));
 }
 /** Spielt Tondateien nacheinander. Klappt eine nicht, liest die Handy-Stimme den Rest (stuecke = Text je Datei).
  *  luecke: Pause in ms zwischen zwei Dateien (Sätze 220, Bausteine eines Kundensatzes 0). */
 function spieleFolge(lauf: number, urls: string[], stuecke: string[], tempo: number, handyTempo: number, onEnd?: () => void, ersatz?: (rest: string) => void, luecke = 0) {
   const handy = (rest: string) => { if (lauf === teilLauf) { if (ersatz) ersatz(rest); else speakText(rest, onEnd, handyTempo); } };
   const a = teilAudio || (teilAudio = merkeAudio(new Audio()));
-  const quellen = urls.map((u, i) => (i < 3 ? vorladen(u) : null));
+  urls.slice(1, 4).forEach(vorladen);
   let i = 0;
-  const weiter = async () => {
+  const weiter = () => {
     if (lauf !== teilLauf) return;
     if (i >= urls.length) { onEnd?.(); return; }
     const nr = i++;
-    if (nr + 3 < urls.length) quellen[nr + 3] = vorladen(urls[nr + 3]);
-    const src = await (quellen[nr] || vorladen(urls[nr]));
-    if (lauf !== teilLauf) return;
+    urls.slice(nr + 1, nr + 4).forEach(vorladen);
     a.onended = () => { if (luecke > 0) window.setTimeout(weiter, luecke); else weiter(); };
     a.onerror = () => handy(stuecke.slice(nr).join(' '));
-    a.src = src;
+    a.src = vorgeladen.get(urls[nr]) || urls[nr];
     a.playbackRate = tempo;
     a.play().catch(() => handy(stuecke.slice(nr).join(' ')));
   };
