@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 284;
+const APP_VERSION: number = 285;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -2767,7 +2767,7 @@ export default function App() {
         {activeTab === 'spielen' && <SpielenSeite {...{ fetchCloudData, cloudData, isAdmin, setActiveTab, setBattleState, setAdventPreview, duelInvites, userKeyLower, myStats, nowMonth, adventOpenNow, showAdventCard }} />}
 
         {/* ═════════ NACHSCHLAGEN ═════════ */}
-        {activeTab === 'nachschlagen' && <NachschlagenSeite kundenfragenNeu={kfNeu.length} {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
+        {activeTab === 'nachschlagen' && <NachschlagenSeite kundenfragenNeu={kfNeu.length} images={productImages} zeigeSteckbrief={zeigeSteckbrief} {...{ openSeasons, setOpenSeasons, setActiveTab, setSpickArea, setSpickView, fullSeasonalMap }} />}
 
         {/* ═════════ LERNEN-ÜBERSICHT ═════════ */}
         {activeTab === 'quiz' && currentQuizCategory === null && <QuizCategories {...{ username, fetchCloudData, questions, isAdmin, setActiveTab, setPfadMsg, setCurrentQuizCategory, setSelectedSubfilter, setSelectedLevel, setBattleState, EXPERT_MIN, launchMeisterRunde, launchExpertQuiz, launchDailyChallenge, launchPersonalWeaknessQuiz, launchSonderverkaufTrainer, getCategoryProgress, overallPercent, myWrongCount, fehlerDue, isDailyDone, isMeister, meisterLeft, myProg, onboarding, showErsteWoche, appWeek, showAppWeek, nowMonth, learnableCount, examSection }}  lieblingsZahl={isAdmin ? 0 : lieblingsFragen().length} onLieblings={launchLieblingsQuiz} />}

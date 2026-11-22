@@ -125,6 +125,10 @@ async function settle(page, ms = 800) {
   }
 }
 const nav = (page) => page.locator('[aria-label="Hauptmenü"] button:visible');
+/** Version 285: Nachschlagen heißt „Unsere Theke“; dort geht es mit „Alle … Produkte“ zur Steckbrief-Liste mit Filter */
+const zuDenSteckbriefen = async (page) => { await click(nav(page).nth(3)); await settle(page, 500); const b = page.locator('.lt-alle-produkte').first(); for (let i = 0; i < 30 && !(await b.count()); i++) await sleep(100); await click(b); await settle(page, 800); };
+/** Bereich auf „Unsere Theke“ öffnen (Kachel unter „Mehr nachschlagen“) */
+const theke = async (page, titel) => { await click(nav(page).nth(3)); await settle(page, 500); await click(page.locator('button.lt-card', { hasText: titel }).first()); await settle(page, 800); };
 const mainText = async (page) => ((await page.locator('main').first().innerText().catch(() => '')) || '').trim().length;
 const click = (loc) => loc.evaluate((el) => el.click());
 /** Offene Pop-ups (Belohnung, Rückblick …) wegklicken, so wie ein Mensch es tun würde */
@@ -374,8 +378,7 @@ async function offlineTests() {
     await click(nav(d.page).nth(3)); await settle(d.page, 500);
     await d.page.goBack(); await settle(d.page, 600);
     const zurueck1 = (await titel()) === lernen;
-    await click(nav(d.page).nth(3)); await settle(d.page, 500);
-    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    await zuDenSteckbriefen(d.page);
     const karte = d.page.locator('.lt-foto-raster button').first();
     let sheetZu = false;
     if (await karte.count()) {
@@ -540,10 +543,8 @@ async function offlineTests() {
     const failed = [];
     for (let e = 0; e < 3; e++) {
       const d = await device({ user: 'Anna' });
-      await click(nav(d.page).nth(3)); await settle(d.page);
-      const entries = d.page.locator('main button:visible');
-      if ((await entries.count()) <= e) { await d.ctx.close(); break; }
-      await click(entries.nth(e)); await settle(d.page);
+      if (e === 0) await zuDenSteckbriefen(d.page);
+      else await theke(d.page, e === 1 ? 'Spickzettel Fachwissen' : 'Englisch-Wörterbuch');
       const n = Math.min(await d.page.locator('.fc-root button:visible').count(), 20);
       for (let i = 0; i < n; i++) {
         const b = d.page.locator('.fc-root button:visible');
@@ -558,15 +559,10 @@ async function offlineTests() {
   // Englisch-Wörterbuch: neue Bereiche für den Verkauf
   teile.push(['Englisch-Wörterbuch: neue Bereiche für den Verkauf', async () => {
     const d = await device({ user: 'Anna' });
-    await click(nav(d.page).nth(3)); await settle(d.page);
-    let gefunden = false;
-    const n = await d.page.locator('main button:visible').count();
-    for (let e = 0; e < n && !gefunden; e++) {
-      await click(nav(d.page).nth(3)); await settle(d.page, 400);
-      await click(d.page.locator('main button:visible').nth(e)); await settle(d.page, 400);
-      const tab = d.page.getByRole('button', { name: 'Wörterbuch Englisch' });
-      if (await tab.count()) { await click(tab.first()); await settle(d.page, 400); gefunden = true; }
-    }
+    await theke(d.page, 'Englisch-Wörterbuch');
+    const tab = d.page.getByRole('button', { name: 'Wörterbuch Englisch' });
+    if (await tab.count()) { await click(tab.first()); await settle(d.page, 400); }
+    const gefunden = (await d.page.locator('button.lt-speak[aria-label^="Auf Englisch vorlesen"]').count()) > 0;
     const bereiche = ['Das sagen Kunden', 'Bezahlen', 'Zahlen & Mengen'];
     const fehlt = [];
     for (const b of bereiche) if (!(await d.page.getByRole('button', { name: new RegExp('^' + b.replace('&', '\\&')) }).count())) fehlt.push(b);
@@ -667,6 +663,44 @@ async function offlineTests() {
     ok('Bausteine: Menge und Produkt bleiben zusammen', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|') === 'Und zwar|12 Laugenstangen|einmal Münsterländer|geschnitten, und|3 Berliner', B.zerlege('Und zwar 12 Laugenstangen, einmal Münsterländer, geschnitten, und 3 Berliner.').join('|'));
   }]);
   // Version 217: Vorlesen mit natürlicher Stimme (Steckbrief, Produktkarte, Bilderquiz, Schneide-Profi), Lernkarten mit Hör-Lernen-Dateien
+  // Version 285: Nachschlagen als „Unsere Theke“ (Fotos mit Preisschild, Suche, Warengruppen) und neuer Steckbrief
+  teile.push(['Version 285: Unsere Theke und neuer Steckbrief', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(3)); await settle(d.page, 600);
+    const titel = (await d.page.locator('main h1').first().innerText().catch(() => '')).trim();
+    const waren = d.page.locator('.lt-theke-ware');
+    for (let i = 0; i < 30 && !(await waren.count()); i++) await sleep(100);
+    const n0 = await waren.count(), schilder = await d.page.locator('.lt-theke-ware .lt-preisschild').count();
+    ok('Unsere Theke: Überschrift, 9 Produkte als Fotos mit Preisschild', titel === 'Unsere Theke' && n0 === 9 && schilder >= 8, `${titel}, ${n0} Produkte, ${schilder} Schilder`);
+    await d.page.fill('.lt-theke-suche input', 'brezel'); await settle(d.page, 300);
+    const namen = await d.page.locator('.lt-theke-ware').allInnerTexts();
+    ok('Unsere Theke: Suche „brezel“ findet die Laugenbrezel', namen.some((t) => /Laugenbrezel/.test(t)) && namen.length < 9, namen.join(' | ').slice(0, 80));
+    await d.page.fill('.lt-theke-suche input', 'xyzquatsch'); await settle(d.page, 300);
+    ok('Unsere Theke: nichts gefunden zeigt einen Hinweis', (await d.page.getByText('Dazu gibt es kein Produkt').count()) > 0);
+    await d.page.fill('.lt-theke-suche input', ''); await settle(d.page, 200);
+    await click(d.page.locator('.lt-theke-reiter button', { hasText: 'Kuchen' }).first()); await settle(d.page, 300);
+    const kuchen = await d.page.locator('.lt-theke-ware').count();
+    ok('Unsere Theke: Reiter „Kuchen“ zeigt nur Kuchen', kuchen > 0 && kuchen < 9 && (await d.page.locator('.lt-theke-reiter [aria-selected="true"]').innerText()) === 'Kuchen', `${kuchen}`);
+    await click(d.page.locator('.lt-theke-ware').first()); await settle(d.page, 800);
+    const sheet = d.page.locator('.fc-sheet');
+    for (let i = 0; i < 30 && !(await sheet.count()); i++) await sleep(100);
+    const sb = await d.page.evaluate(() => ({ foto: !!document.querySelector('.fc-sheet .lt-sb-foto img'), schild: (document.querySelector('.fc-sheet .lt-preisschild') || {}).textContent || '', name: (document.querySelector('.fc-sheet .lt-sb-kopf') || {}).textContent || '', sagen: !!document.querySelector('.fc-sheet .lt-verkauf-sagen'), zu: !!document.querySelector('.fc-sheet button[aria-label="Schließen"]') }));
+    ok('Steckbrief: großes Foto, Preisschild, Name, „Im Verkauf sagen“, Schließen', sb.foto && /€/.test(sb.schild) && sb.name.length > 2 && sb.sagen && sb.zu, JSON.stringify(sb).slice(0, 160));
+    await click(d.page.locator('.fc-sheet button[aria-label="Schließen"]').first()); await settle(d.page, 400);
+    ok('Steckbrief: Schließen-Knopf schließt', (await d.page.locator('.fc-sheet').count()) === 0);
+    await click(nav(d.page).nth(3)); await settle(d.page, 500);
+    await click(d.page.locator('.lt-alle-produkte').first()); await settle(d.page, 800);
+    ok('Unsere Theke: „Alle Produkte“ öffnet die ganze Liste mit Filter', (await d.page.locator('.lt-foto-raster button').count()) > 50);
+    ok('Unsere Theke: nichts steht seitlich über', (await d.page.evaluate(() => document.documentElement.scrollWidth)) <= 390);
+    // Teigis Sprechblase verdeckt beim Start des Quiz keine Antwort mehr (keine Begrüßungs-Blase)
+    await click(nav(d.page).nth(0)); await settle(d.page, 600); await clearPopups(d.page);
+    const los = d.page.getByText('Los geht’s').first();
+    if (await los.count()) { await click(los); await settle(d.page, 1200); }
+    ok('Quiz-Start: keine Teigi-Sprechblase über den Antworten', (await d.page.locator('.lt-teigi-begleiter').count()) === 1 && (await d.page.locator('.lt-teigi-sprech').count()) === 0);
+    ok('Unsere Theke und Steckbrief: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
   // Version 284: Koni bekommt immer doppelte Punkte (ohne Hinweis)
   teile.push(['Version 284: Koni doppelte Punkte', async () => {
     const W = kompiliere(['src/hilfen/wertungen.ts']).hilfen_wertungen;
@@ -808,7 +842,7 @@ async function offlineTests() {
       const ueber = [...document.querySelectorAll('.lt-allergen')].filter((e) => e.scrollWidth > e.clientWidth + 1).length;
       return { hell: (rgb[0] + rgb[1] + rgb[2]) / 3, ueber, n: document.querySelectorAll('.lt-allergen').length };
     });
-    ok('Steckbrief nachts: Name auf dem gelben Kopf in dunkler Schrift', info.hell < 90, `Helligkeit ${Math.round(info.hell)}`);
+    ok('Steckbrief nachts: Name unter dem Foto in heller Schrift (gut lesbar)', info.hell > 170, `Helligkeit ${Math.round(info.hell)}`);
     ok('Steckbrief: Allergen-Kästchen ohne überstehenden Text', info.n > 0 && info.ueber === 0, `${info.ueber} von ${info.n} stehen über`);
     ok('Steckbrief nachts: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
@@ -886,8 +920,7 @@ async function offlineTests() {
     let name = false;
     for (let i = 0; i < 30 && !name; i++) { name = (await d.page.locator('.lt-teigi-zeile', { hasText: 'Bruno (Baby-Teigi)' }).count()) > 0; if (!name) await d.page.waitForTimeout(100); }
     ok('Teigi: eigener Name steht im Brotkorb', name);
-    await click(nav(d.page).nth(3)); await settle(d.page, 500);
-    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    await zuDenSteckbriefen(d.page);
     const kachel = d.page.locator('.lt-foto-raster button').first();
     for (let i = 0; i < 30 && !(await kachel.count()); i++) await d.page.waitForTimeout(100);
     if (await kachel.count()) { await click(kachel); await settle(d.page, 500); }
@@ -936,7 +969,7 @@ async function offlineTests() {
     ok('Lernkasten: „Wusste ich“ schiebt ein Fach weiter, „Nochmal“ zurück in Fach 1', zwei === 3 && K.fachVon(K.lernkastenVon(c.progress, 'anna'), 'Abendschnitte') === 1);
     const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 }, vorher: async (ctx) => ctx.addInitScript(() => { if (sessionStorage.getItem('__v238')) return; sessionStorage.setItem('__v238', '1'); sessionStorage.setItem('lt_seite', 'nachschlagen'); }) });
     await clearPopups(d.page);
-    const kp = d.page.locator('button, .lt-card', { hasText: /Produktkenntnis|Steckbriefe/ }).first(); if (await kp.count()) { await click(kp); await settle(d.page, 500); }
+    const kp = d.page.locator('.lt-alle-produkte').first(); for (let w = 0; w < 30 && !(await kp.count()); w++) await sleep(100); if (await kp.count()) { await click(kp); await settle(d.page, 500); }
     await click(d.page.getByRole('button', { name: /^Lernkarten/ }).first()); await settle(d.page, 700);
     const karte = d.page.locator('.lt-kk-stapel').first();
     ok('Lernkarten: echte Karteikarte, vorne nur der Name (kein Emoji)', (await karte.count()) === 1 && (await d.page.locator('.lt-kk-vorne .lt-kk-name').count()) === 1 && !/\p{Extended_Pictographic}/u.test(await d.page.locator('.lt-kk-vorne').innerText()));
@@ -2139,8 +2172,7 @@ async function offlineTests() {
     const mf = await d.page.evaluate(async () => { const m = await (await fetch('manifest.json')).json(); const r = await Promise.all(m.icons.map((i) => fetch(i.src).then((x) => x.ok && (x.headers.get('content-type') || '').includes('png')))); return m.icons.length >= 3 && r.every(Boolean); });
     ok('App-Symbol: Manifest mit Symbolen, alle abrufbar', mf);
     // Ausbilder: Foto-Knopf direkt im Steckbrief
-    await click(d.page.locator('[aria-label="Hauptmenü"] button:visible', { hasText: /Nachschlagen/ }).first().or(nav(d.page).nth(3))); await settle(d.page, 600);
-    await click(d.page.locator('main button:visible').first()); await settle(d.page, 800);
+    await zuDenSteckbriefen(d.page);
     const kachel = d.page.locator('.lt-foto-raster button').first();
     // Version 212: Raster zeigt kleine Vorschaubilder (schnell auf alten Handys), die Datei gibt es wirklich
     const vorschau = await d.page.locator('.lt-foto-raster img').first().getAttribute('src').catch(() => '');

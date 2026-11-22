@@ -47,10 +47,6 @@ const ANGETIPPT = [
   'Hast du heute schon gelernt?', 'Ich mag am liebsten Roggenmehl!', 'Im Laden gibt es Hüte für mich!', 'Hey, das bin ja ich!',
   'Zusammen sind wir ein starkes Team!', 'Ich bin älter, als du denkst!', 'Gib mir eine Bäckermütze, bitte!',
 ];
-const START = [
-  'Ich bin dabei! Viel Erfolg!', 'Los geht’s, ich drück dir die Daumen!', 'Zusammen schaffen wir das!', 'Auf geht’s, Brotfreund!',
-  'Ich hab schon Hunger aufs Lernen!', 'Konzentration, ich schau zu!', 'Lass uns loslegen!', 'Heute knacken wir die Fragen!',
-];
 
 export const teigiSpruch = (m: TeigiMeldung, zahl = Math.random()): string | null => {
   if (m.ok && SERIE[m.lauf]) return zufall(SERIE[m.lauf]);
@@ -72,7 +68,7 @@ export function TeigiBegleiter({ stufe, hut, glas, tanz }: { stufe: number; hut?
   const sag = (t: string | null) => { if (!t) return; plapperBis.current = Date.now() + Math.min(2600, 500 + t.length * 45); setSpruch({ t, k: Date.now() }); window.clearTimeout(timer.current); timer.current = window.setTimeout(() => setSpruch(null), 2800); };
   useEffect(() => {
     document.body.classList.add('lt-mit-teigi');
-    sag(zufall(START));
+    // Version 285: keine Begrüßungs-Blase mehr beim Öffnen, sie lag im Quiz über einer Antwort (Teigi spricht nach Antworten und beim Antippen)
     const auf = (e: Event) => {
       const m = (e as CustomEvent<TeigiMeldung>).detail; if (!m) return;
       setLaune(m.ok ? 'froh' : 'schlapp');
