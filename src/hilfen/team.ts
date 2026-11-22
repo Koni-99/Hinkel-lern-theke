@@ -2,6 +2,7 @@
 // Wie bei Kundenfragen: Mitarbeiter speichern nur im eigenen Fortschritt
 // (progress/<name>/_gelesen, /_stimmen). Umfragen legt der Ausbilder unter progress/admin/_umfragen an
 // ("admin" taucht in keiner Mitarbeiter-Liste auf). Keine Änderung an den Firebase-Regeln nötig.
+import { sonderPunkte } from './wertungen';
 import { CloudPayload, PinboardMessage } from '../types';
 
 type Upd = (curr: CloudPayload) => CloudPayload;
@@ -136,7 +137,7 @@ export const lobPunkteGutschreiben = (userKey: string, name: string, lobs: KLobE
     const k = `${l.von}_${l.id}`;
     if (done[k]) return;
     done[k] = now;
-    curr.scores.push({ id: `${userKey}_lob_${now + i}`, username: name, score: LOB_PUNKTE, date: datum, category: 'Lob von Kollegen' });
+    curr.scores.push({ id: `${userKey}_lob_${now + i}`, username: name, score: sonderPunkte(userKey, LOB_PUNKTE), date: datum, category: 'Lob von Kollegen' });
   });
   pr._lobGutgeschrieben = done;
   return curr;

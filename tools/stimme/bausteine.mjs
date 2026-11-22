@@ -47,11 +47,14 @@ globalThis.Date = class extends EchtesDatum {
 const stelleUhr = (i) => { const d = new EchtesDatum(2026, i % 12, 1 + (i % 28), 5 + (i % 17), (i * 7) % 60); probeZeit = d.getTime(); };
 const teile = new Set();
 const sammle = (text) => B.zerlege(text).forEach((t) => teile.add(t));
+const extra = new Map(); // Version 282: Simulator-Vorlesen (Erzählstimme + Antworten), Schlüssel → [Text, Stimme]
 for (let i = 0; i < N_GESPR; i++) {
   stelleUhr(i);
   const c = G.buildConversation();
   c.steps.forEach((s) => { s.customer.forEach(sammle); if (s.afterWrong) sammle(s.afterWrong); });
   c.endLines.forEach(sammle);
+  c.steps.forEach((s) => B.simulatorVorlesenTeile(c.persona.title, s.customer, s.options.map((o) => o.text), B.KUNDEN_STIMMEN.frau)
+    .forEach(([t, st]) => { if (st === B.ERZAEHL_STIMME) extra.set(B.teilKey(st, t), [t, st]); }));
   // Trinkgeld-Satz (steht im Simulator selbst)
   if (i % 50 === 0) [20, 30, 50, 100].forEach((ct) => ['Danke, war nett!', 'Sehr nett, danke!', 'Für Sie.'].forEach((s) => sammle(`${(ct / 100).toFixed(2).replace('.', ',')} € ${s}`)));
 }
@@ -86,6 +89,7 @@ async function sprechen(text, stimme) {
 mkdirSync(ZIEL, { recursive: true });
 const auftrag = [];
 for (const st of stimmen) for (const t of teile) { const k = B.teilKey(st, t); if (!existsSync(path.join(ZIEL, `${k}.mp3`))) auftrag.push([k, t, st]); }
+for (const [k, [t, st]] of extra) if (!existsSync(path.join(ZIEL, `${k}.mp3`)) && !auftrag.some((x) => x[0] === k)) auftrag.push([k, t, st]);
 console.log(`Erzeuge ${auftrag.length} neue Dateien …`);
 let fertig = 0;
 await Promise.all(Array.from({ length: 3 }, async () => {

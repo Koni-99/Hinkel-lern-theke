@@ -18,7 +18,7 @@ import { backtageVon, preisGeaendert } from '../../hilfen/steckbriefExtras';
 
 
 // Mehrere Fotos pro Produkt (Version 193): zum Wischen, Punkte zeigen, welches Foto gerade da ist
-function FotoGalerie({ fotos, name }: { fotos: string[]; name: string }) {
+function FotoGalerie({ fotos, name, randlos }: { fotos: string[]; name: string; randlos?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [nr, setNr] = useState(0);
   const [gross, setGross] = useState(false);
@@ -30,13 +30,13 @@ function FotoGalerie({ fotos, name }: { fotos: string[]; name: string }) {
   return (
     <div style={{ position: 'relative' }}>
       <div ref={ref} className="lt-galerie" onScroll={(e) => { const el = e.currentTarget; setNr(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}
-        style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', borderRadius: '22px', border: `2px solid ${TH.line}`, scrollbarWidth: 'none' }}>
+        style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', borderRadius: randlos ? 0 : '22px', border: randlos ? 'none' : `2px solid ${TH.line}`, scrollbarWidth: 'none' }}>
         {fotos.map((f, i) => <img key={f} src={f} alt={`${name}, Foto ${i + 1} von ${fotos.length}`} loading={i ? 'lazy' : 'eager'} className="lt-loaded lt-foto-gross" onClick={() => setGross(true)} style={{ flex: '0 0 100%', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', scrollSnapAlign: 'center', display: 'block', cursor: 'zoom-in' }} />)}
       </div>
       {gross && <FotoVollbild fotos={fotos} start={nr} name={name} onClose={() => setGross(false)} />}
       {pfeil(true)}{pfeil(false)}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '10px', height: '12px' }}>
-        {fotos.map((_, i) => <button key={i} aria-label={`Foto ${i + 1}`} onClick={() => geh(i)} style={{ width: i === nr ? '22px' : '9px', height: '9px', minHeight: 0, minWidth: 0, borderRadius: '999px', border: 'none', padding: 0, flex: '0 0 auto', backgroundColor: i === nr ? TH.yellow : TH.line, cursor: 'pointer', transition: 'width .2s' }} />)}
+      <div style={randlos ? { position: 'absolute', left: 0, right: 0, bottom: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', height: '12px' } : { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '10px', height: '12px' }}>
+        {fotos.map((_, i) => <button key={i} aria-label={`Foto ${i + 1}`} onClick={() => geh(i)} style={{ width: i === nr ? '22px' : '9px', height: '9px', minHeight: 0, minWidth: 0, borderRadius: '999px', border: 'none', padding: 0, flex: '0 0 auto', backgroundColor: i === nr ? (randlos ? '#FFFFFF' : TH.yellow) : (randlos ? 'rgba(255,255,255,.55)' : TH.line), boxShadow: randlos ? '0 1px 3px rgba(0,0,0,.4)' : 'none', cursor: 'pointer', transition: 'width .2s' }} />)}
       </div>
     </div>
   );
@@ -85,7 +85,7 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
   const fav = favorites.includes(prod.ids[0]);
   const sp = prod.shop;
   const facts: { label: string; value: string }[] = [
-    ...(sp?.price ? [{ label: "Preis", value: sp.price + (sp.pricePerKg ? ` (${sp.pricePerKg})` : "") }] : []),
+    ...(sp?.pricePerKg ? [{ label: "Kilopreis", value: sp.pricePerKg }] : []),
     ...(sp?.weight ? [{ label: "Gewicht", value: sp.weight }] : []),
     ...(prod.slice ? [{ label: "Schnitt", value: prod.slice }] : []),
   ];
@@ -97,21 +97,35 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
   return (
     <div className="fc-overlay" onClick={() => setOpenProfileKey(null)} style={{ position: "fixed", inset: 0, zIndex: 120, backgroundColor: "rgba(43,23,10,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
       <div className="fc-sheet" role="dialog" aria-modal="true" aria-label={`Steckbrief ${prod.name}`} onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", backgroundColor: TH.cream, borderRadius: "28px", boxShadow: "0 24px 60px rgba(0,0,0,0.35)", textAlign: "left", color: TH.ink }}>
-        <div className="lt-papier lt-sb-kopf" style={{ position: "sticky", top: 0, zIndex: 1, backgroundColor: TH.yellow, color: TH.ink, padding: "20px 22px", display: "flex", alignItems: "center", gap: "14px" }}>
-          <span aria-hidden="true" style={{ flex: "0 0 64px", height: "64px", borderRadius: "18px", backgroundColor: TH.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px" }}>{getProductEmoji(prod.name, prod.group)}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: TH.serif, fontSize: "32px", lineHeight: 1.1 }}>{prod.name}</div>
-            <div style={{ fontSize: "17px", marginTop: "2px" }}>{prod.group}</div>
+        {/* Version 285: Foto über die ganze Breite, Preisschild darauf, Schließen bleibt beim Scrollen sichtbar */}
+        <div style={{ position: "sticky", top: 0, height: 0, zIndex: 5 }}>
+          <button onClick={() => setOpenProfileKey(null)} aria-label="Schließen" style={{ position: "absolute", top: "12px", right: "12px", width: "46px", height: "46px", borderRadius: "50%", border: "none", backgroundColor: "rgba(30,14,4,.62)", color: "#FFF3D6", fontSize: "26px", lineHeight: 1, cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,.25)" }}>×</button>
+        </div>
+        <div className="lt-sb-foto" style={{ position: "relative" }}>
+          {alleFotos(productImageKey(prod.name)).length > 1
+            ? <FotoGalerie key={prod.name} fotos={alleFotos(productImageKey(prod.name))} name={prod.name} randlos />
+            : images[productImageKey(prod.name)]
+              ? <img src={images[productImageKey(prod.name)]} alt={prod.name} className="lt-foto-gross" onClick={() => setEinzelGross(true)} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", display: "block", cursor: "zoom-in" }} />
+              : <div className="lt-papier" aria-hidden="true" style={{ height: "150px", backgroundColor: TH.yellow, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "64px" }}>{getProductEmoji(prod.name, prod.group)}</div>}
+          {sp?.price && (
+            <span className="lt-preisschild lt-papier" style={{ position: "absolute", right: "16px", bottom: "-18px", zIndex: 2, padding: "9px 14px 8px 26px", backgroundColor: "#FFFCF5", color: "#2B170A", fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, fontSize: "26px", lineHeight: 1, clipPath: "polygon(16px 0,100% 0,100% 100%,16px 100%,0 50%)", borderRadius: "0 10px 10px 0", boxShadow: "0 6px 14px rgba(0,0,0,.3)", transform: "rotate(-4deg)" }}>
+              {sp.price}{sp.weight && <span style={{ display: "block", fontFamily: "'Atkinson Hyperlegible', sans-serif", fontSize: "12px", fontWeight: 700, color: "#7A5A3E", marginTop: "3px" }}>{sp.weight}</span>}
+            </span>
+          )}
+        </div>
+        <div className="lt-sb-kopf" style={{ padding: "22px 22px 0" }}>
+          <div>
+            <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 800, fontSize: "34px", lineHeight: 1.02, letterSpacing: "-.8px", paddingRight: sp?.price ? "96px" : 0 }}>{prod.name}</div>
           </div>
-          <button onClick={() => setOpenProfileKey(null)} aria-label="Schließen" style={{ flex: "0 0 48px", height: "48px", borderRadius: "50%", border: "none", backgroundColor: TH.white, color: TH.ink, fontSize: "24px", cursor: "pointer" }}>×</button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "12px" }}>
+            {[prod.group, sp?.flour].filter(Boolean).map((t) => <span key={t} style={{ fontSize: "14px", fontWeight: 700, padding: "6px 11px", borderRadius: "999px", backgroundColor: dc('#F3EADA'), color: TH.ink }}>{t}</span>)}
+            {sp?.vegan && <span style={{ fontSize: "14px", fontWeight: 700, padding: "6px 11px", borderRadius: "999px", backgroundColor: TH.tintSage, color: TH.green }}>vegan</span>}
+            {sp && sp.allergens.map((a) => teileAllergen(a).kopf).filter((x, n, arr) => arr.indexOf(x) === n).map((a) => <span key={a} style={{ fontSize: "14px", fontWeight: 700, padding: "6px 11px", borderRadius: "999px", backgroundColor: dc('#FCE3D5'), color: TH.red }}>{a}</span>)}
+          </div>
+          {preisNeu && <div className="lt-preis-neu" style={{ marginTop: "10px", fontSize: "15px", fontWeight: 700, color: TH.red }}>Preis geändert am {datumKurz(preisNeu.am)}{preisNeu.vorher ? `, vorher ${preisNeu.vorher}` : ''}</div>}
         </div>
 
         <div style={{ padding: "20px 22px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-          {alleFotos(productImageKey(prod.name)).length > 1
-            ? <FotoGalerie key={prod.name} fotos={alleFotos(productImageKey(prod.name))} name={prod.name} />
-            : images[productImageKey(prod.name)] && (
-            <img src={images[productImageKey(prod.name)]} alt={prod.name} className="lt-foto-gross" onClick={() => setEinzelGross(true)} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", borderRadius: "22px", border: `2px solid ${TH.line}`, cursor: "zoom-in" }} />
-          )}
           {einzelGross && images[productImageKey(prod.name)] && <FotoVollbild fotos={[images[productImageKey(prod.name)]]} start={0} name={prod.name} onClose={() => setEinzelGross(false)} />}
           {onFoto && (
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", padding: "10px 12px", borderRadius: "14px", backgroundColor: TH.tintYellow }}>
@@ -123,10 +137,10 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
             </div>
           )}
           {backtage && (
-            <div className="lt-backtage" style={{ padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.tintBlue, display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div className="lt-backtage" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "14px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Backtage</span>
-                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map((t) => <span key={t} style={{ minWidth: '34px', textAlign: 'center', padding: '3px 6px', borderRadius: '8px', fontWeight: 800, fontSize: '15px', backgroundColor: backtage.tage.includes(t) ? TH.brown : TH.white, color: backtage.tage.includes(t) ? dc('#FFF6E0') : TH.muted }}>{t}</span>)}
+                <span style={{ width: "100%", fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 700, fontSize: "20px" }}>Backtage</span>
+                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'].map((t) => <span key={t} className={backtage.tage.includes(t) ? "lt-papier" : undefined} style={{ flex: '1 1 0', textAlign: 'center', padding: '8px 0', borderRadius: '10px', fontWeight: 800, fontSize: '15px', backgroundColor: backtage.tage.includes(t) ? '#FFC72C' : dc('#F3EADA'), color: backtage.tage.includes(t) ? '#2B170A' : TH.muted }}>{t}</span>)}
               </div>
               {backtage.info && <div style={{ fontSize: "15px", lineHeight: 1.4, color: TH.brown }}>{backtage.info}</div>}
             </div>
@@ -137,7 +151,6 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
                 <div key={f.label} style={{ flex: "1 1 120px", padding: "10px 14px", borderRadius: "16px", backgroundColor: TH.white, border: `2px solid ${TH.line}` }}>
                   <div style={{ fontSize: "14px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>{f.label}</div>
                   <div style={{ fontSize: "19px", fontWeight: 700 }}>{f.value}</div>
-                  {f.label === 'Preis' && preisNeu && <div className="lt-preis-neu" style={{ marginTop: '4px', fontSize: '14px', fontWeight: 700, color: TH.red }}>Preis geändert am {datumKurz(preisNeu.am)}{preisNeu.vorher ? `, vorher ${preisNeu.vorher}` : ''}</div>}
                 </div>
               ))}
               {sp?.vegan && (
@@ -153,9 +166,9 @@ export function SteckbriefDetail({ favorites, toggleFavorite, images, setOpenPro
                 <button type="button" className="lt-vergleich-knopf" onClick={() => setVergleich(true)} style={{ display: "inline-flex", alignItems: "center", gap: "8px", minHeight: "46px", padding: "0 16px", borderRadius: "999px", border: `2px solid ${TH.line}`, backgroundColor: TH.white, color: TH.ink, fontSize: "16px", fontWeight: 700, cursor: "pointer" }}><LtIcon paths={ICON.swap} size={20} />Vergleichen</button>
               </div>
               {vergleich && <ProduktVergleich a={sp} images={images} onClose={() => setVergleich(false)} />}
-              <div style={{ padding: "16px 18px", borderRadius: "18px", backgroundColor: TH.tintYellow }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: TH.muted, textTransform: "uppercase", letterSpacing: "1px" }}>Im Verkauf sagen</div>
-                <div style={{ fontSize: "20px", fontWeight: 700, lineHeight: 1.45, marginTop: "4px" }}>{sp.shortIngredients}</div>
+              <div className="lt-verkauf-sagen lt-papier" style={{ padding: "16px 18px", borderRadius: "20px", backgroundColor: '#3A1F0E', color: '#FFF1D2' }}>
+                <div style={{ fontFamily: "'Bricolage Grotesque', sans-serif", fontSize: "16px", fontWeight: 700, color: '#FFC72C' }}>Im Verkauf sagen</div>
+                <div style={{ fontSize: "19px", fontWeight: 700, lineHeight: 1.45, marginTop: "6px" }}>{sp.shortIngredients}</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ fontSize: "15px", fontWeight: 700, color: TH.red, textTransform: "uppercase", letterSpacing: "1px" }}>Allergene</div>

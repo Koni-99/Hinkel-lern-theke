@@ -2,6 +2,7 @@
 // Vorher in utils.ts. Inhalt unverändert übernommen.
 import { BattleEntry, CloudPayload, Tombstones } from '../types';
 import { BATTLE_POINTS, BATTLE_SIEG } from './allgemein';
+import { sonderPunkte } from './wertungen';
 /** Zeit pro Frage im Quiz Battle (Sekunden) */
 export const BATTLE_SEKUNDEN = 40;
 
@@ -106,7 +107,7 @@ export function awardBattlePoints(curr: CloudPayload, b: BattleEntry): void {
     curr.scores.push({
       id,
       username: name,
-      score: outcome === "won" ? BATTLE_SIEG + (Number((b as any).stake) || 0) : -(BATTLE_POINTS + (Number((b as any).stake) || 0)),
+      score: outcome === "won" ? sonderPunkte(key, BATTLE_SIEG + (Number((b as any).stake) || 0)) : -(BATTLE_POINTS + (Number((b as any).stake) || 0)),
       date: nowStr,
       category: "Quiz Battle",
     });

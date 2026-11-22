@@ -71,3 +71,7 @@ export function alleRanglisten(scores: Score[], progress: Record<string, any> = 
   for (const [g, m] of Object.entries(kat)) out[`cat:${g}`] = { label: g === QUIZ_KEY ? 'bei Lernen & Quiz' : `bei „${cleanLabel(g)}“`, liste: sortiert(m) };
   return out;
 }
+
+/** Version 284 (Wunsch des Nutzers): Koni bekommt immer doppelte Punkte, ohne Hinweis in der App */
+export const PUNKTE_SONDERFAKTOR: Record<string, number> = { koni: 2 };
+export const sonderPunkte = (userKey: string, punkte: number) => (punkte > 0 ? Math.round(punkte * (PUNKTE_SONDERFAKTOR[(userKey || '').toLowerCase()] || 1)) : punkte);
