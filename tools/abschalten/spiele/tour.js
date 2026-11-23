@@ -234,6 +234,17 @@ function tour_filialeBild(){
   });
 }
 
+// ── Version 290: Powerups (Karten nach jeder 2. Filiale, Blasen zum Einsammeln auf der Straße) ──
+const TOUR_VERB = {
+  herz: { n: 'Ersatzreifen', z: ['+1 Herz,', 'gleich voll'], max: 2, sym: () => SYM.herz() },
+  kombi: { n: 'Große Kombi', z: ['Kombi bis x8', 'statt x5'], max: 1, sym: () => SYM.stern() },
+  reifen: { n: 'Winterreifen', z: ['Pfützen machen', 'nicht rutschig'], max: 1, sym: () => SYM.welle() },
+  kisten: { n: 'Volle Kisten', z: ['+10 Punkte', 'pro Brot-Kiste'], max: 2, sym: () => SYM.kiste() },
+  glueck: { n: 'Glücksfahrt', z: ['Powerups kommen', 'öfter'], max: 2, sym: () => SYM.blitz() },
+  magnet: { n: 'Starker Magnet', z: ['Magnet hält', 'doppelt so lange'], max: 1, sym: () => SYM.magnet() },
+};
+const TOUR_POWER = { magnet: { k: 'Magnet', sym: () => SYM.magnet() }, schild: { k: 'Schutzschild', sym: () => SYM.schild() }, zeitlupe: { k: 'Zeitlupe', sym: () => SYM.uhr() } };
+
 SPIELE.tour = {
   key: 'tour', name: 'Lieferwagen-Tour', kurz: 'Fahren', medaillen: [800, 2000, 4000],
   anleitung: 'Tippe links oder rechts neben den Wagen, um die Spur zu wechseln. Weich Autos und Baustellen aus, sammle Brot-Kisten und bring die Ware zur nächsten Filiale.',
@@ -252,6 +263,7 @@ SPIELE.tour = {
     const mo = new Date().getMonth(); this.winter = mo >= 10 || mo <= 1;
     this.himmel = this.stimmungZiel(0); this.niederY = 0;
     this.goldPaket = null; this.goldZeit = zufall(15, 42); this.folge = 0; this.abschnittUnfall = false;
+    this.verb = {}; this.maxLeben = 3; this.magnet = 0; this.schild = 0; this.zeitlupe = 0;
   },
   aktuellePunkte(){ return this.punkte(); },
   /** eigener Regen oder Schnee: dann malt core keinen Saison-Schnee dazu */
@@ -293,11 +305,13 @@ SPIELE.tour = {
       else { const lang = Math.random() < .25; neu('auto', s, lang ? 1.25 : 1.4, { lang, bild: ganz(0, lang ? 2 : TOUR_AUTOFARBEN.length - 1) }); }
     }
     const nass = this.himmel.regen + this.himmel.schnee;
-    if (Math.random() < .42) neu('kiste', frei[ganz(0, frei.length - 1)], 1);
+    if (this.fahrzeit > 6 && Math.random() < .07 * (1 + .6 * (this.verb.glueck || 0))) { const arten = Object.keys(TOUR_POWER); neu('power', frei[ganz(0, frei.length - 1)], 1, { pw: arten[ganz(0, arten.length - 1)] }); }
+    else if (Math.random() < .42) neu('kiste', frei[ganz(0, frei.length - 1)], 1);
     else if ((this.fahrzeit > 14 || nass > .5) && Math.random() < .2 + nass * .28) neu('pfuetze', frei[ganz(0, frei.length - 1)], 1);
   },
   tick(dt){
-    this.zeit += dt; this.schutz -= dt; if (this.wetterHinweis) this.wetterHinweis.z -= dt;
+    this.zeit += dt; this.schutz -= dt; this.magnet = Math.max(0, this.magnet - dt); this.schild = Math.max(0, this.schild - dt); this.zeitlupe = Math.max(0, this.zeitlupe - dt);
+    const tz = this.zeitlupe > 0 && this.modus === 'fahrt' ? .62 : 1; if (this.wetterHinweis) this.wetterHinweis.z -= dt;
     // Tageszeit und Wetter gleiten weich zum Ziel des Abschnitts
     const sz = this.stimmungZiel(this.modus === 'abladen' && this.szene < 1.2 ? this.filialen - 1 : this.filialen);
     for (const k of ['morgen', 'dunkel', 'regen', 'schnee']) this.himmel[k] += klemm(sz[k] - this.himmel[k], -dt * .45, dt * .45);
@@ -315,16 +329,17 @@ SPIELE.tour = {
       if (this.szene > 2.1) {
         { const alt = this.stimmungName(); this.wetterHinweis = null; const neuN = (this.filialen % 5); const t = ['Guten Morgen!', 'Heller Tag', this.winter ? 'Es schneit! Vorsicht, glatt' : 'Es regnet! Vorsicht, Pfützen', 'Es wird Abend', this.winter ? 'Schnee am Abend' : 'Regen am Abend'][neuN]; if (t && neuN !== 0) this.wetterHinweis = { t, z: 2.6 }; void alt; }
         this.modus = 'fahrt'; this.strecke += 1600; this.abschnittStart = this.weg; this.ziel = this.weg + this.strecke; this.wellenUhr = 1.6; this.freiVorher = [0, 1, 2];
-        if (this.zeit - this.letzteFrage > 22) { this.letzteFrage = this.zeit; frage((ok) => { if (ok) { this.bonus += 100; schwebText('+100 Bonus', 180, 250, F.gruen, 24); teilchen(180, 250, { n: 26, form: 'stern', oben: 120 }); } }); }
+        if (this.filialen % 2 === 0 && !this.gemuetlich && karten(kartenAuswahl(TOUR_VERB, this.verb, (k) => k !== 'herz' || this.maxLeben < 5), 'Feierabend-Bonus', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'herz') { this.maxLeben++; this.leben = this.maxLeben; } })) { /* Karten statt Frage */ }
+        else if (this.zeit - this.letzteFrage > 22) { this.letzteFrage = this.zeit; frage((ok) => { if (ok) { this.bonus += 100; schwebText('+100 Bonus', 180, 250, F.gruen, 24); teilchen(180, 250, { n: 26, form: 'stern', oben: 120 }); } }); }
       }
     } else if (this.modus === 'aus') {
       this.aus += dt; this.tempo = Math.max(0, this.tempo - 500 * dt);
       if (this.aus > 1 && !this.endeGerufen) { this.endeGerufen = true; ende(this.punkte(), `${this.filialen} ${this.filialen === 1 ? 'Filiale' : 'Filialen'} beliefert und ${this.kisten} Brot-${this.kisten === 1 ? 'Kiste' : 'Kisten'} gesammelt.`); }
     }
-    this.weg += this.tempo * dt;
+    this.weg += this.tempo * dt * tz;
     // Wellen
     if (this.modus === 'fahrt' && this.tempo > this.zielTempo() * .5) {
-      this.wellenUhr -= dt;
+      this.wellenUhr -= dt * tz;
       const abstand = this.gemuetlich ? 1.45 : Math.max(.5, 1.0 - this.fahrzeit * .009 - this.filialen * .04);
       if (this.wellenUhr <= 0 && this.rest() > 560 / Math.max(this.tempo, 200) * this.tempo + 700) { this.welle(); this.wellenUhr = abstand * zufall(.92, 1.12); }
     }
@@ -334,9 +349,10 @@ SPIELE.tour = {
     this.wackelRot = this.rutsch > 0 ? Math.sin(this.zeit * 22) * .14 * (this.rutsch / 1) : 0;
     // Dinge bewegen, zusammenstoßen
     for (const d of this.dinge) {
-      d.y += this.tempo * dt * d.f + (d.art === 'auto' && this.modus === 'abladen' ? 0 : 0);
+      d.y += this.tempo * dt * tz * d.f;
       if (d.raus) { d.raus.t += dt; d.dx = (d.dx || 0) + d.raus.vx * dt; d.y += d.raus.vy * dt; d.rot = (d.rot || 0) + d.raus.vr * dt; continue; }
       if (d.weg) continue;
+      if (this.magnet > 0 && d.art === 'kiste' && d.y > TOUR_Y - 160 && d.y < TOUR_Y + 40) { d.mx = (d.mx || 0) + (this.xs - TOUR_SPUR[d.s] - (d.mx || 0)) * Math.min(1, dt * 6); if (Math.abs(TOUR_SPUR[d.s] + d.mx - this.xs) < 30 && Math.abs(d.y - TOUR_Y) < 60) { this.treffer(d); continue; } }
       const dx = Math.abs(TOUR_SPUR[d.s] - this.xs), dy = Math.abs(d.y - TOUR_Y);
       // Trefferflächen: Hindernisse etwas kleiner als gezeichnet (fair), Kisten etwas größer
       const grenzeX = d.art === 'auto' ? 32 : d.art === 'bau' ? 40 : d.art === 'pfuetze' ? 30 : 42;
@@ -344,7 +360,7 @@ SPIELE.tour = {
       if (dx < grenzeX && dy < grenzeY) this.treffer(d);
       else if (d.art === 'kiste' && d.y > TOUR_Y + 70 && !d.vorbei) { d.vorbei = true; this.kombi = 0; }
     }
-    this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && d.art === 'kiste'));
+    this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && (d.art === 'kiste' || d.art === 'power')));
     // Goldpaket: schwebt an einem Ballon langsam heran und wechselt ab und zu die Spur
     if (goldKommt() && this.modus === 'fahrt' && this.fahrzeit > this.goldZeit && this.tempo > 150) { this.goldPaket = { s: ganz(0, 2), x: 0, y: -40, wechsel: 1.4, weg: 0 }; this.goldPaket.x = TOUR_SPUR[this.goldPaket.s]; goldErschienen(); }
     const gp = this.goldPaket;
@@ -359,25 +375,33 @@ SPIELE.tour = {
       }
     }
     for (const f of this.fliegen) f.t += dt; this.fliegen = this.fliegen.filter((f) => f.t < 1);
-    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), 3)]);
+    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), this.maxLeben || 3)]);
+    if (this.magnet > 0 || this.schild > 0 || this.zeitlupe > 0) this.powerZeile = [this.magnet > 0 ? `Magnet ${Math.ceil(this.magnet)}` : '', this.schild > 0 ? 'Schild' : '', this.zeitlupe > 0 ? `Zeitlupe ${Math.ceil(this.zeitlupe)}` : ''].filter(Boolean).join(' · '); else this.powerZeile = '';
   },
   treffer(d){
     const wx = this.xs, wy = TOUR_Y;
+    if (d.art === 'power') {
+      d.weg = true; brumm(30); blitz(.15, '255,240,200'); teilchen(wx, wy - 40, { n: 24, form: 'stern', tempo: 200, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'] });
+      if (d.pw === 'magnet') this.magnet = 8 * (this.verb.magnet ? 2 : 1); else if (d.pw === 'schild') this.schild = 6; else this.zeitlupe = 5;
+      schwebText(TOUR_POWER[d.pw].k + '!', wx, wy - 80, F.braun, 20); return;
+    }
     if (d.art === 'kiste') {
-      d.weg = true; this.kisten++; this.kombi = Math.min(5, this.kombi + 1);
-      const p = 15 * this.kombi; this.bonus += p; brumm(22);
+      d.weg = true; this.kisten++; this.kombi = Math.min(this.verb.kombi ? 8 : 5, this.kombi + 1);
+      const p = 15 * this.kombi + 10 * (this.verb.kisten || 0); this.bonus += p; brumm(22);
       teilchen(wx, wy - 40, { n: 18, form: 'stern', oben: 80, tempo: 180 }); teilchen(wx, wy - 40, { n: 8, farben: ['#C27F36', '#E3AE68', '#8A5223'], form: 'krume', tempo: 140 });
       schwebText(`+${p}`, wx, wy - 70, F.goldDunkel, 22);
       if (this.kombi >= 2) schwebText(`Kombi x${this.kombi}`, wx, wy - 100, F.braun, 15);
       return;
     }
     if (d.art === 'pfuetze') {
+      if (this.verb.reifen) { d.weg = true; return; }
       d.weg = true; this.rutsch = 1; this.vx += (Math.random() < .5 ? -1 : 1) * 90;
       teilchen(wx, wy - 10, { n: 22, farben: ['rgba(190,215,240,.95)', 'rgba(140,175,210,.9)', '#FFFFFF'], tempo: 200, schwer: 400, oben: 60 });
       schwebText('Rutschig!', wx, wy - 70, '#3E6FB5', 18);
       return;
     }
     if (this.schutz > 0 || this.modus !== 'fahrt') return;
+    if (this.schild > 0) { d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 220, vy: -120, vr: 6 }; this.schild = 0; this.schutz = .8; brumm(40); schwebText('Schild hält!', wx, wy - 80, '#3E6FB5', 18); teilchen(wx, wy - 40, { n: 20, farben: ['#58B4FF', '#BFE0F2', '#FFFFFF'], tempo: 200 }); return; }
     if (this.gemuetlich) { // gemütlich: nur kurz wackeln, kein Leben weg
       d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 }; this.abschnittUnfall = true;
       this.schutz = .8; this.kombi = 0; wackeln(5); brumm(40); mehlWolke(wx, wy - 40, 5); schwebText('Hoppla', wx, wy - 80, F.braun, 18); return;
@@ -389,6 +413,14 @@ SPIELE.tour = {
     mehlWolke(wx, wy - 40, 8);
     schwebText(d.art === 'bau' ? 'Baustelle!' : 'Rums!', wx, wy - 80, F.rot, 20);
     if (this.leben <= 0) { this.modus = 'aus'; this.aus = 0; this.endeGerufen = false; }
+  },
+  powerBlase(px, py, pw, zeit){
+    const pu = 1 + Math.sin(zeit * 5) * .06;
+    x.save(); x.translate(px, py); x.scale(pu, pu);
+    x.fillStyle = radial(0, 0, 6, 40, [[0, 'rgba(255,240,190,.45)'], [1, 'rgba(255,240,190,0)']]); x.beginPath(); x.arc(0, 0, 40, 0, 7); x.fill();
+    x.fillStyle = radial(0, 0, 2, 24, [[0, 'rgba(90,56,32,.95)'], [1, 'rgba(43,23,10,.95)']], -5, -6); x.beginPath(); x.arc(0, 0, 23, 0, 7); x.fill();
+    x.strokeStyle = '#FFC72C'; x.lineWidth = 2.5; x.stroke(); x.save(); x.scale(.8, .8); x.lineCap = 'round'; x.lineJoin = 'round'; TOUR_POWER[pw].sym(); x.restore();
+    x.restore();
   },
   abladen(){
     teilchen(240, TOUR_Y - 30, { n: 34, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], form: 'stern', tempo: 240, oben: 140, leben: [.8, 1.3] });
@@ -507,8 +539,10 @@ SPIELE.tour = {
       }
     }
     for (const d of this.dinge || []) {
-      if (d.y < -70 || d.y > H + 90 || d.art !== 'kiste' || d.weg) continue;
-      const px = TOUR_SPUR[d.s], hb = Math.sin(zeit * 5 + d.s) * 2;
+      if (d.y < -70 || d.y > H + 90 || d.weg) continue;
+      if (d.art === 'power') { this.powerBlase(TOUR_SPUR[d.s], d.y, d.pw, zeit); continue; }
+      if (d.art !== 'kiste') continue;
+      const px = TOUR_SPUR[d.s] + (d.mx || 0), hb = Math.sin(zeit * 5 + d.s) * 2;
       x.fillStyle = radial(px, d.y, 6, 38, [[0, `rgba(255,214,90,${.45 + Math.sin(zeit * 6) * .12})`], [1, 'rgba(255,214,90,0)']]); x.beginPath(); x.arc(px, d.y, 38, 0, 7); x.fill();
       bodenSchatten(px + 4, d.y + 16, 24, 7, .4);
       x.save(); x.translate(px, d.y + hb);
@@ -519,7 +553,7 @@ SPIELE.tour = {
     }
     // Baustellen und Autos
     for (const d of this.dinge || []) {
-      if (d.y < -80 || d.y > H + 120 || d.art === 'kiste' || d.art === 'pfuetze') continue;
+      if (d.y < -80 || d.y > H + 120 || d.art === 'kiste' || d.art === 'pfuetze' || d.art === 'power') continue;
       const px = TOUR_SPUR[d.s] + (d.dx || 0);
       x.save(); if (d.raus) x.globalAlpha = Math.max(0, 1 - d.raus.t * 1.2);
       x.translate(px, d.y); if (d.rot) x.rotate(d.rot);
@@ -540,6 +574,10 @@ SPIELE.tour = {
     if (blink) x.globalAlpha = .4;
     x.drawImage(b.wagen, -36, -62, 72, 124);
     x.restore();
+    if (this.schild > 0) { x.globalAlpha = Math.min(1, this.schild) * (.55 + .2 * Math.sin(zeit * 8)); x.strokeStyle = '#58B4FF'; x.lineWidth = 3; x.fillStyle = 'rgba(88,180,255,.12)'; x.beginPath(); x.ellipse(this.xs, TOUR_Y, 50, 74, 0, 0, 7); x.fill(); x.stroke(); x.globalAlpha = 1; }
+    if (this.magnet > 0) { x.strokeStyle = `rgba(224,69,46,${.35 + .2 * Math.sin(zeit * 10)})`; x.lineWidth = 2; x.setLineDash([5, 6]); x.beginPath(); x.arc(this.xs, TOUR_Y - 20, 90 + Math.sin(zeit * 6) * 6, 0, 7); x.stroke(); x.setLineDash([]); }
+    if (this.powerZeile) { x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif'; const pw = x.measureText(this.powerZeile).width + 22; rr(W / 2 - pw / 2, 52, pw, 22, 11); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill(); text(this.powerZeile, W / 2, 63.5, { gr: 12, farbe: '#FFE08A', schat: false }); }
+    kartenLeiste(TOUR_VERB, this.verb);
     // Fliegende Ware beim Abladen
     for (const f of this.fliegen) {
       if (f.t < 0) continue; const t = ease.aus(Math.min(1, f.t / .7)); const px = lerp(this.xs + 10, 318, t), py = lerp(TOUR_Y - 10, TOUR_Y - 8, t) - Math.sin(t * Math.PI) * 70;

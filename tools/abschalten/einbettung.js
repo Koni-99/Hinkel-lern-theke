@@ -3,6 +3,7 @@
 // Die App schickt leichte Quizfragen und den eigenen Rekord aus der Datenbank, die Seite meldet am Rundenende die Punkte zurück.
 const wunsch = () => { const k = (location.hash || '').slice(1); return SPIELE[k] ? k : 'lauf'; };
 function waehle(k){
+  kartenOffen = null;
   spiel = SPIELE[k]; laeuft = false; document.querySelectorAll('.frage').forEach((d) => d.remove()); frageOffen = false; FX.teile = []; FX.texte = [];
   spiel.start(); setHud([]); zeigeStart();
 }

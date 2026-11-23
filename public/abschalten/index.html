@@ -224,6 +224,63 @@ let FRAGEN = [
   ['Wo werden Mehl und Zutaten gelagert?', ['Trocken und verschlossen', 'Offen am Fenster', 'Neben dem Müll'], 0],
 ];
 let frageOffen = false;
+// ── Version 290: Powerup-Karten für alle Spiele (wie im Backstuben-Chaos) ──
+// karten(liste, titel, cb): liste = [{ k, n, z: [Zeile1, Zeile2], sym: () => malt Symbol um (0, 0), stufe }]. Das Spiel steht still, bis gewählt ist.
+let kartenOffen = null;
+function karten(liste, titel, cb){ if (!liste || !liste.length) return false; kartenOffen = { liste: liste.slice(0, 3), titel: titel || 'Powerup für die Runde', t: 0, gew: null, gt: 0, cb }; brumm(20); return true; }
+function kartenRect(j){ const n = kartenOffen.liste.length, w = 106, gap = 8, x0 = (W - (n * w + (n - 1) * gap)) / 2; return { x: x0 + j * (w + gap), y: 176, w, h: 168 }; }
+function kartenTippen(j){ const k = kartenOffen; if (!k || k.gew || k.t < .45 || !k.liste[j]) return; k.gew = k.liste[j]; k.gt = 0; brumm(25); const r = kartenRect(j); teilchen(r.x + r.w / 2, r.y + 60, { n: 26, form: 'stern', tempo: 200 }); }
+function kartenTick(dt){ const k = kartenOffen; if (!k) return; k.t += dt; if (k.gew) { k.gt += dt; if (k.gt > .8) { kartenOffen = null; k.cb && k.cb(k.gew.k); } } }
+/** Wählbare Karten aus einer Liste: nicht schon voll, gemischt, höchstens 3 */
+function kartenAuswahl(defs, verb, erlaubt = () => true){
+  const m = Object.keys(defs).filter((k) => (verb[k] || 0) < (defs[k].max || 1) && erlaubt(k));
+  for (let i = m.length - 1; i > 0; i--) { const j = ganz(0, i); [m[i], m[j]] = [m[j], m[i]]; }
+  return m.slice(0, 3).map((k) => ({ k, n: defs[k].n, z: defs[k].z, sym: defs[k].sym, stufe: (verb[k] || 0) + 1, max: defs[k].max || 1 }));
+}
+function kartenMalen(zeit){
+  const K = kartenOffen; if (!K) return;
+  const a = Math.min(1, K.t * 4);
+  x.save(); x.fillStyle = `rgba(30,15,5,${.6 * a})`; x.fillRect(0, 0, W, H);
+  x.globalAlpha = a; text(K.titel, W / 2, 128, { gr: 22, farbe: '#FFE08A', schrift: 'Fraunces' }); text('Wähle eine Karte, sie gilt bis zum Ende', W / 2, 152, { gr: 11.5, farbe: '#F5E6C8', art: '700' }); x.globalAlpha = 1;
+  K.liste.forEach((d, j) => {
+    const r = kartenRect(j), t = klemm((K.t - j * .12) * 3, 0, 1), s = ease.feder(t), gew = K.gew === d, weg = K.gew && !gew;
+    x.save(); x.translate(r.x + r.w / 2, r.y + r.h / 2 + (1 - t) * 60 - (gew ? Math.min(1, K.gt * 3) * 10 : 0)); x.scale(s * (gew ? 1.06 : 1), s * (gew ? 1.06 : 1)); x.globalAlpha = weg ? .35 : t;
+    bodenSchatten(0, r.h / 2 + 4, r.w * .5, 8, .5);
+    rr(-r.w / 2, -r.h / 2, r.w, r.h, 16); x.fillStyle = linear(0, -r.h / 2, 0, r.h / 2, [[0, '#FFFBF2'], [1, '#FFE7B8']]); x.fill();
+    x.strokeStyle = gew ? '#3DAA55' : '#E0B54A'; x.lineWidth = gew ? 4 : 2; x.stroke();
+    rr(-r.w / 2 + 8, -r.h / 2 + 8, r.w - 16, 66, 11); x.fillStyle = radial(0, -r.h / 2 + 38, 4, 50, [[0, '#6A4426'], [1, '#3A2010']]); x.fill();
+    const gl = .5 + .5 * Math.sin(zeit * 3 + j); x.fillStyle = `rgba(255,210,100,${.15 + gl * .15})`; x.beginPath(); x.arc(0, -r.h / 2 + 41, 26, 0, 7); x.fill();
+    if (d.sym) { x.save(); x.translate(0, -r.h / 2 + 41); x.lineCap = 'round'; x.lineJoin = 'round'; d.sym(); x.restore(); }
+    text(d.n, 0, -r.h / 2 + 92, { gr: d.n.length > 14 ? 11.5 : 13, farbe: F.braun, schat: false });
+    (d.z || []).forEach((z, i) => text(z, 0, -r.h / 2 + 116 + i * 15, { gr: 10.5, farbe: '#6B5640', art: '700', schat: false }));
+    if (d.max > 1) text(`Stufe ${d.stufe} von ${d.max}`, 0, r.h / 2 - 14, { gr: 9.5, farbe: '#A8740A', art: '700', schat: false });
+    if (gew) { x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(r.w / 2 - 12, -r.h / 2 + 12, 11, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(r.w / 2 - 17, -r.h / 2 + 12); x.lineTo(r.w / 2 - 13, -r.h / 2 + 16); x.lineTo(r.w / 2 - 7, -r.h / 2 + 8); x.stroke(); }
+    x.restore();
+  });
+  x.restore();
+}
+/** Kleine runde Symbole der gewählten Karten unten rechts (y: Mitte der Reihe) */
+function kartenLeiste(defs, verb, y = 463){
+  Object.keys(defs).filter((k) => verb && verb[k]).forEach((k, i) => { const bx = W - 22 - i * 28, by = y; x.save(); x.fillStyle = 'rgba(43,23,10,.78)'; x.beginPath(); x.arc(bx, by, 12, 0, 7); x.fill(); x.translate(bx, by); x.scale(.46, .46); x.lineCap = 'round'; x.lineJoin = 'round'; defs[k].sym && defs[k].sym(); x.restore(); if (verb[k] > 1) { x.fillStyle = '#FFC72C'; x.beginPath(); x.arc(bx + 9, by - 9, 6, 0, 7); x.fill(); text(String(verb[k]), bx + 9, by - 8.5, { gr: 8.5, farbe: F.braun, schat: false }); } });
+}
+/** Einfache Symbole für Karten (Mitte 0, 0, etwa 36 px) */
+const SYM = {
+  herz: () => { x.fillStyle = '#E0452E'; x.beginPath(); x.moveTo(0, 14); x.bezierCurveTo(-20, 0, -14, -16, 0, -6); x.bezierCurveTo(14, -16, 20, 0, 0, 14); x.fill(); x.fillStyle = 'rgba(255,255,255,.5)'; x.beginPath(); x.ellipse(-7, -6, 4, 2.4, -.6, 0, 7); x.fill(); },
+  stern: () => { x.fillStyle = '#FFC72C'; x.beginPath(); for (let k = 0; k < 10; k++) { const r = k % 2 ? 7 : 16; x.lineTo(Math.cos(k * Math.PI / 5 - Math.PI / 2) * r, Math.sin(k * Math.PI / 5 - Math.PI / 2) * r); } x.closePath(); x.fill(); x.strokeStyle = '#A8740A'; x.lineWidth = 1.5; x.stroke(); },
+  uhr: () => { x.fillStyle = '#FFF6E4'; x.beginPath(); x.arc(0, 0, 15, 0, 7); x.fill(); x.strokeStyle = '#BFE0F2'; x.lineWidth = 3; x.stroke(); x.strokeStyle = '#4B2A14'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -9); x.moveTo(0, 0); x.lineTo(7, 4); x.stroke(); },
+  magnet: () => { x.strokeStyle = '#E0452E'; x.lineWidth = 7; x.beginPath(); x.arc(0, -2, 10, Math.PI, 0); x.stroke(); x.fillStyle = '#E8EDF2'; x.fillRect(-13.5, -3, 7, 11); x.fillRect(6.5, -3, 7, 11); },
+  schild: () => { x.fillStyle = '#58B4FF'; x.beginPath(); x.moveTo(0, -16); x.lineTo(13, -10); x.lineTo(11, 6); x.lineTo(0, 16); x.lineTo(-11, 6); x.lineTo(-13, -10); x.closePath(); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2; x.stroke(); },
+  pfeil: () => { x.fillStyle = '#3DAA55'; x.beginPath(); x.moveTo(0, -16); x.lineTo(13, -2); x.lineTo(5, -2); x.lineTo(5, 14); x.lineTo(-5, 14); x.lineTo(-5, -2); x.lineTo(-13, -2); x.closePath(); x.fill(); },
+  plus: () => { x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(0, 0, 14, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 4; x.beginPath(); x.moveTo(0, -7); x.lineTo(0, 7); x.moveTo(-7, 0); x.lineTo(7, 0); x.stroke(); },
+  blitz: () => { x.fillStyle = '#FFC72C'; x.beginPath(); x.moveTo(4, -17); x.lineTo(-10, 2); x.lineTo(-1, 2); x.lineTo(-5, 17); x.lineTo(10, -4); x.lineTo(1, -4); x.closePath(); x.fill(); x.strokeStyle = '#A8740A'; x.lineWidth = 1.2; x.stroke(); },
+  ziel: () => { for (const [r, f] of [[15, '#E0452E'], [10, '#FFFFFF'], [5, '#E0452E']]) { x.fillStyle = f; x.beginPath(); x.arc(0, 0, r, 0, 7); x.fill(); } },
+  netz: () => { x.strokeStyle = '#E8DCC6'; x.lineWidth = 2; x.beginPath(); x.moveTo(-16, -6); x.quadraticCurveTo(0, 16, 16, -6); x.stroke(); for (let i = -2; i <= 2; i++) { x.beginPath(); x.moveTo(i * 6, -6); x.lineTo(i * 4, 6 - Math.abs(i) * 2); x.stroke(); } x.beginPath(); x.moveTo(-12, 0); x.quadraticCurveTo(0, 10, 12, 0); x.stroke(); },
+  kiste: () => { x.fillStyle = '#C27F36'; rr(-14, -8, 28, 20, 3); x.fill(); x.strokeStyle = '#7A4418'; x.lineWidth = 1.5; x.stroke(); x.fillStyle = '#F4D9A6'; x.beginPath(); x.ellipse(-5, -9, 7, 4, -.2, 0, 7); x.ellipse(6, -10, 6, 4, .3, 0, 7); x.fill(); },
+  wolke: () => { x.fillStyle = '#BFE0F2'; x.beginPath(); x.arc(-7, 2, 8, 0, 7); x.arc(3, -3, 10, 0, 7); x.arc(10, 4, 7, 0, 7); x.fill(); x.strokeStyle = '#E0452E'; x.lineWidth = 3.5; x.beginPath(); x.moveTo(-14, -12); x.lineTo(14, 14); x.stroke(); },
+  korn: () => { x.save(); x.rotate(.45); x.fillStyle = linear(-5, -9, 5, 9, [[0, '#F7C64A'], [1, '#B9800E']]); x.beginPath(); x.ellipse(0, 0, 7, 12, 0, 0, 7); x.fill(); x.restore(); },
+  welle: () => { x.strokeStyle = '#58B4FF'; x.lineWidth = 3; for (const yy of [-6, 4]) { x.beginPath(); x.moveTo(-15, yy); x.bezierCurveTo(-8, yy - 6, -2, yy + 6, 5, yy); x.bezierCurveTo(9, yy - 4, 13, yy - 3, 15, yy); x.stroke(); } },
+  breit: () => { x.fillStyle = '#E3AE68'; rr(-14, -5, 28, 12, 6); x.fill(); x.strokeStyle = '#3DAA55'; x.lineWidth = 2.6; x.beginPath(); x.moveTo(-16, -12); x.lineTo(-10, -12); x.moveTo(-16, -12); x.lineTo(-13, -15); x.moveTo(-16, -12); x.lineTo(-13, -9); x.moveTo(16, -12); x.lineTo(10, -12); x.moveTo(16, -12); x.lineTo(13, -15); x.moveTo(16, -12); x.lineTo(13, -9); x.stroke(); },
+};
 function frage(cb){
   frageOffen = true;
   const [q, opts, ok] = FRAGEN[Math.floor(Math.random() * FRAGEN.length)];
@@ -290,10 +347,11 @@ const SPIELE = {};
 let spiel = null, laeuft = false, last = 0, startZeit = 0, runde = 0, pausiert = false, spielZeit = 0;
 function schleife(t){
   const dt = Math.min(0.04, (t - last) / 1000 || 0); last = t;
-  if (laeuft && !frageOffen && !pausiert) { spielZeit += dt; spiel.tick(dt * sanftFaktor()); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
+  if (kartenOffen && !pausiert) kartenTick(dt);
+  if (laeuft && !frageOffen && !pausiert && !kartenOffen) { spielZeit += dt; spiel.tick(dt * sanftFaktor()); if (laeuft && spiel.aktuellePunkte) zielTick(spiel.aktuellePunkte()); }
   if (!frageOffen && !pausiert) fxTick(dt);
   x.save(); if (FX.wackel > 0 && !pausiert) x.translate(zufall(-FX.wackel, FX.wackel), zufall(-FX.wackel, FX.wackel));
-  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore();
+  spiel.malen(t / 1000); fxMalen(); zielMalen(); x.restore(); if (kartenOffen) kartenMalen(t / 1000);
   pauseKnopf.hidden = !laeuft || frageOffen || pausiert;
   requestAnimationFrame(schleife);
 }
@@ -344,7 +402,7 @@ function zeigeStart(){
   ueber.querySelector('.los').addEventListener('click', starten);
   aufgabeKnopf();
 }
-function starten(){ runde++; pausiert = false; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; nachAussen({ typ: 'lt-abschalten-start' }); startZeit = performance.now(); spielZeit = 0; if (rundeSanft) setTimeout(() => { if (laeuft) schwebText('Sanfter Start', W / 2, 150, '#2F7A3A', 20); }, 300); }
+function starten(){ runde++; pausiert = false; kartenOffen = null; rundeGemuetlich = GEMUETLICH; zielStand = { schon: new Set(), start: rekordLesen(spiel.key) }; ueber.hidden = true; FX.teile = []; FX.texte = []; rundeVorbereiten(); spiel.start(); laeuft = true; nachAussen({ typ: 'lt-abschalten-start' }); startZeit = performance.now(); spielZeit = 0; if (rundeSanft) setTimeout(() => { if (laeuft) schwebText('Sanfter Start', W / 2, 150, '#2F7A3A', 20); }, 300); }
 function ende(punkte, zeile){
   laeuft = false; pausiert = false; brumm(rundeGemuetlich ? 30 : 80); nachAussen({ typ: 'lt-abschalten-stopp' });
   sanftMerken(spielZeit);
@@ -371,7 +429,7 @@ function ende(punkte, zeile){
 // ── Eingabe ──
 let zeiger = null;
 const pos = (e) => { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
-c.addEventListener('pointerdown', (e) => { if (!laeuft || frageOffen || pausiert) return; e.preventDefault(); c.setPointerCapture?.(e.pointerId); zeiger = pos(e); spiel.runter?.(zeiger); });
+c.addEventListener('pointerdown', (e) => { if (kartenOffen && laeuft && !pausiert) { e.preventDefault(); const q = pos(e); kartenOffen.liste.forEach((_, j) => { const r = kartenRect(j); if (q.x > r.x - 4 && q.x < r.x + r.w + 4 && q.y > r.y - 4 && q.y < r.y + r.h + 4) kartenTippen(j); }); return; } if (!laeuft || frageOffen || pausiert) return; e.preventDefault(); c.setPointerCapture?.(e.pointerId); zeiger = pos(e); spiel.runter?.(zeiger); });
 c.addEventListener('pointermove', (e) => { if (!zeiger || !laeuft) return; spiel.zieh?.(pos(e)); });
 const loslassen = (e) => { if (!zeiger) return; const p = pos(e); const s = zeiger; zeiger = null; if (laeuft) spiel.hoch?.(p, s); };
 c.addEventListener('pointerup', loslassen); c.addEventListener('pointercancel', loslassen);
@@ -2229,6 +2287,17 @@ function tour_filialeBild(){
   });
 }
 
+// ── Version 290: Powerups (Karten nach jeder 2. Filiale, Blasen zum Einsammeln auf der Straße) ──
+const TOUR_VERB = {
+  herz: { n: 'Ersatzreifen', z: ['+1 Herz,', 'gleich voll'], max: 2, sym: () => SYM.herz() },
+  kombi: { n: 'Große Kombi', z: ['Kombi bis x8', 'statt x5'], max: 1, sym: () => SYM.stern() },
+  reifen: { n: 'Winterreifen', z: ['Pfützen machen', 'nicht rutschig'], max: 1, sym: () => SYM.welle() },
+  kisten: { n: 'Volle Kisten', z: ['+10 Punkte', 'pro Brot-Kiste'], max: 2, sym: () => SYM.kiste() },
+  glueck: { n: 'Glücksfahrt', z: ['Powerups kommen', 'öfter'], max: 2, sym: () => SYM.blitz() },
+  magnet: { n: 'Starker Magnet', z: ['Magnet hält', 'doppelt so lange'], max: 1, sym: () => SYM.magnet() },
+};
+const TOUR_POWER = { magnet: { k: 'Magnet', sym: () => SYM.magnet() }, schild: { k: 'Schutzschild', sym: () => SYM.schild() }, zeitlupe: { k: 'Zeitlupe', sym: () => SYM.uhr() } };
+
 SPIELE.tour = {
   key: 'tour', name: 'Lieferwagen-Tour', kurz: 'Fahren', medaillen: [800, 2000, 4000],
   anleitung: 'Tippe links oder rechts neben den Wagen, um die Spur zu wechseln. Weich Autos und Baustellen aus, sammle Brot-Kisten und bring die Ware zur nächsten Filiale.',
@@ -2247,6 +2316,7 @@ SPIELE.tour = {
     const mo = new Date().getMonth(); this.winter = mo >= 10 || mo <= 1;
     this.himmel = this.stimmungZiel(0); this.niederY = 0;
     this.goldPaket = null; this.goldZeit = zufall(15, 42); this.folge = 0; this.abschnittUnfall = false;
+    this.verb = {}; this.maxLeben = 3; this.magnet = 0; this.schild = 0; this.zeitlupe = 0;
   },
   aktuellePunkte(){ return this.punkte(); },
   /** eigener Regen oder Schnee: dann malt core keinen Saison-Schnee dazu */
@@ -2288,11 +2358,13 @@ SPIELE.tour = {
       else { const lang = Math.random() < .25; neu('auto', s, lang ? 1.25 : 1.4, { lang, bild: ganz(0, lang ? 2 : TOUR_AUTOFARBEN.length - 1) }); }
     }
     const nass = this.himmel.regen + this.himmel.schnee;
-    if (Math.random() < .42) neu('kiste', frei[ganz(0, frei.length - 1)], 1);
+    if (this.fahrzeit > 6 && Math.random() < .07 * (1 + .6 * (this.verb.glueck || 0))) { const arten = Object.keys(TOUR_POWER); neu('power', frei[ganz(0, frei.length - 1)], 1, { pw: arten[ganz(0, arten.length - 1)] }); }
+    else if (Math.random() < .42) neu('kiste', frei[ganz(0, frei.length - 1)], 1);
     else if ((this.fahrzeit > 14 || nass > .5) && Math.random() < .2 + nass * .28) neu('pfuetze', frei[ganz(0, frei.length - 1)], 1);
   },
   tick(dt){
-    this.zeit += dt; this.schutz -= dt; if (this.wetterHinweis) this.wetterHinweis.z -= dt;
+    this.zeit += dt; this.schutz -= dt; this.magnet = Math.max(0, this.magnet - dt); this.schild = Math.max(0, this.schild - dt); this.zeitlupe = Math.max(0, this.zeitlupe - dt);
+    const tz = this.zeitlupe > 0 && this.modus === 'fahrt' ? .62 : 1; if (this.wetterHinweis) this.wetterHinweis.z -= dt;
     // Tageszeit und Wetter gleiten weich zum Ziel des Abschnitts
     const sz = this.stimmungZiel(this.modus === 'abladen' && this.szene < 1.2 ? this.filialen - 1 : this.filialen);
     for (const k of ['morgen', 'dunkel', 'regen', 'schnee']) this.himmel[k] += klemm(sz[k] - this.himmel[k], -dt * .45, dt * .45);
@@ -2310,16 +2382,17 @@ SPIELE.tour = {
       if (this.szene > 2.1) {
         { const alt = this.stimmungName(); this.wetterHinweis = null; const neuN = (this.filialen % 5); const t = ['Guten Morgen!', 'Heller Tag', this.winter ? 'Es schneit! Vorsicht, glatt' : 'Es regnet! Vorsicht, Pfützen', 'Es wird Abend', this.winter ? 'Schnee am Abend' : 'Regen am Abend'][neuN]; if (t && neuN !== 0) this.wetterHinweis = { t, z: 2.6 }; void alt; }
         this.modus = 'fahrt'; this.strecke += 1600; this.abschnittStart = this.weg; this.ziel = this.weg + this.strecke; this.wellenUhr = 1.6; this.freiVorher = [0, 1, 2];
-        if (this.zeit - this.letzteFrage > 22) { this.letzteFrage = this.zeit; frage((ok) => { if (ok) { this.bonus += 100; schwebText('+100 Bonus', 180, 250, F.gruen, 24); teilchen(180, 250, { n: 26, form: 'stern', oben: 120 }); } }); }
+        if (this.filialen % 2 === 0 && !this.gemuetlich && karten(kartenAuswahl(TOUR_VERB, this.verb, (k) => k !== 'herz' || this.maxLeben < 5), 'Feierabend-Bonus', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'herz') { this.maxLeben++; this.leben = this.maxLeben; } })) { /* Karten statt Frage */ }
+        else if (this.zeit - this.letzteFrage > 22) { this.letzteFrage = this.zeit; frage((ok) => { if (ok) { this.bonus += 100; schwebText('+100 Bonus', 180, 250, F.gruen, 24); teilchen(180, 250, { n: 26, form: 'stern', oben: 120 }); } }); }
       }
     } else if (this.modus === 'aus') {
       this.aus += dt; this.tempo = Math.max(0, this.tempo - 500 * dt);
       if (this.aus > 1 && !this.endeGerufen) { this.endeGerufen = true; ende(this.punkte(), `${this.filialen} ${this.filialen === 1 ? 'Filiale' : 'Filialen'} beliefert und ${this.kisten} Brot-${this.kisten === 1 ? 'Kiste' : 'Kisten'} gesammelt.`); }
     }
-    this.weg += this.tempo * dt;
+    this.weg += this.tempo * dt * tz;
     // Wellen
     if (this.modus === 'fahrt' && this.tempo > this.zielTempo() * .5) {
-      this.wellenUhr -= dt;
+      this.wellenUhr -= dt * tz;
       const abstand = this.gemuetlich ? 1.45 : Math.max(.5, 1.0 - this.fahrzeit * .009 - this.filialen * .04);
       if (this.wellenUhr <= 0 && this.rest() > 560 / Math.max(this.tempo, 200) * this.tempo + 700) { this.welle(); this.wellenUhr = abstand * zufall(.92, 1.12); }
     }
@@ -2329,9 +2402,10 @@ SPIELE.tour = {
     this.wackelRot = this.rutsch > 0 ? Math.sin(this.zeit * 22) * .14 * (this.rutsch / 1) : 0;
     // Dinge bewegen, zusammenstoßen
     for (const d of this.dinge) {
-      d.y += this.tempo * dt * d.f + (d.art === 'auto' && this.modus === 'abladen' ? 0 : 0);
+      d.y += this.tempo * dt * tz * d.f;
       if (d.raus) { d.raus.t += dt; d.dx = (d.dx || 0) + d.raus.vx * dt; d.y += d.raus.vy * dt; d.rot = (d.rot || 0) + d.raus.vr * dt; continue; }
       if (d.weg) continue;
+      if (this.magnet > 0 && d.art === 'kiste' && d.y > TOUR_Y - 160 && d.y < TOUR_Y + 40) { d.mx = (d.mx || 0) + (this.xs - TOUR_SPUR[d.s] - (d.mx || 0)) * Math.min(1, dt * 6); if (Math.abs(TOUR_SPUR[d.s] + d.mx - this.xs) < 30 && Math.abs(d.y - TOUR_Y) < 60) { this.treffer(d); continue; } }
       const dx = Math.abs(TOUR_SPUR[d.s] - this.xs), dy = Math.abs(d.y - TOUR_Y);
       // Trefferflächen: Hindernisse etwas kleiner als gezeichnet (fair), Kisten etwas größer
       const grenzeX = d.art === 'auto' ? 32 : d.art === 'bau' ? 40 : d.art === 'pfuetze' ? 30 : 42;
@@ -2339,7 +2413,7 @@ SPIELE.tour = {
       if (dx < grenzeX && dy < grenzeY) this.treffer(d);
       else if (d.art === 'kiste' && d.y > TOUR_Y + 70 && !d.vorbei) { d.vorbei = true; this.kombi = 0; }
     }
-    this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && d.art === 'kiste'));
+    this.dinge = this.dinge.filter((d) => d.y < H + 120 && !(d.weg && (d.art === 'kiste' || d.art === 'power')));
     // Goldpaket: schwebt an einem Ballon langsam heran und wechselt ab und zu die Spur
     if (goldKommt() && this.modus === 'fahrt' && this.fahrzeit > this.goldZeit && this.tempo > 150) { this.goldPaket = { s: ganz(0, 2), x: 0, y: -40, wechsel: 1.4, weg: 0 }; this.goldPaket.x = TOUR_SPUR[this.goldPaket.s]; goldErschienen(); }
     const gp = this.goldPaket;
@@ -2354,25 +2428,33 @@ SPIELE.tour = {
       }
     }
     for (const f of this.fliegen) f.t += dt; this.fliegen = this.fliegen.filter((f) => f.t < 1);
-    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), 3)]);
+    setHud([{ icon: 'punkte', text: this.punkte().toLocaleString('de-DE') }, this.gemuetlich ? { text: 'Gemütlich' } : herzen(Math.max(0, this.leben), this.maxLeben || 3)]);
+    if (this.magnet > 0 || this.schild > 0 || this.zeitlupe > 0) this.powerZeile = [this.magnet > 0 ? `Magnet ${Math.ceil(this.magnet)}` : '', this.schild > 0 ? 'Schild' : '', this.zeitlupe > 0 ? `Zeitlupe ${Math.ceil(this.zeitlupe)}` : ''].filter(Boolean).join(' · '); else this.powerZeile = '';
   },
   treffer(d){
     const wx = this.xs, wy = TOUR_Y;
+    if (d.art === 'power') {
+      d.weg = true; brumm(30); blitz(.15, '255,240,200'); teilchen(wx, wy - 40, { n: 24, form: 'stern', tempo: 200, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'] });
+      if (d.pw === 'magnet') this.magnet = 8 * (this.verb.magnet ? 2 : 1); else if (d.pw === 'schild') this.schild = 6; else this.zeitlupe = 5;
+      schwebText(TOUR_POWER[d.pw].k + '!', wx, wy - 80, F.braun, 20); return;
+    }
     if (d.art === 'kiste') {
-      d.weg = true; this.kisten++; this.kombi = Math.min(5, this.kombi + 1);
-      const p = 15 * this.kombi; this.bonus += p; brumm(22);
+      d.weg = true; this.kisten++; this.kombi = Math.min(this.verb.kombi ? 8 : 5, this.kombi + 1);
+      const p = 15 * this.kombi + 10 * (this.verb.kisten || 0); this.bonus += p; brumm(22);
       teilchen(wx, wy - 40, { n: 18, form: 'stern', oben: 80, tempo: 180 }); teilchen(wx, wy - 40, { n: 8, farben: ['#C27F36', '#E3AE68', '#8A5223'], form: 'krume', tempo: 140 });
       schwebText(`+${p}`, wx, wy - 70, F.goldDunkel, 22);
       if (this.kombi >= 2) schwebText(`Kombi x${this.kombi}`, wx, wy - 100, F.braun, 15);
       return;
     }
     if (d.art === 'pfuetze') {
+      if (this.verb.reifen) { d.weg = true; return; }
       d.weg = true; this.rutsch = 1; this.vx += (Math.random() < .5 ? -1 : 1) * 90;
       teilchen(wx, wy - 10, { n: 22, farben: ['rgba(190,215,240,.95)', 'rgba(140,175,210,.9)', '#FFFFFF'], tempo: 200, schwer: 400, oben: 60 });
       schwebText('Rutschig!', wx, wy - 70, '#3E6FB5', 18);
       return;
     }
     if (this.schutz > 0 || this.modus !== 'fahrt') return;
+    if (this.schild > 0) { d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 220, vy: -120, vr: 6 }; this.schild = 0; this.schutz = .8; brumm(40); schwebText('Schild hält!', wx, wy - 80, '#3E6FB5', 18); teilchen(wx, wy - 40, { n: 20, farben: ['#58B4FF', '#BFE0F2', '#FFFFFF'], tempo: 200 }); return; }
     if (this.gemuetlich) { // gemütlich: nur kurz wackeln, kein Leben weg
       d.weg = true; d.raus = { t: 0, vx: (TOUR_SPUR[d.s] >= this.xs ? 1 : -1) * 140, vy: -60, vr: (Math.random() < .5 ? -1 : 1) * 5 }; this.abschnittUnfall = true;
       this.schutz = .8; this.kombi = 0; wackeln(5); brumm(40); mehlWolke(wx, wy - 40, 5); schwebText('Hoppla', wx, wy - 80, F.braun, 18); return;
@@ -2384,6 +2466,14 @@ SPIELE.tour = {
     mehlWolke(wx, wy - 40, 8);
     schwebText(d.art === 'bau' ? 'Baustelle!' : 'Rums!', wx, wy - 80, F.rot, 20);
     if (this.leben <= 0) { this.modus = 'aus'; this.aus = 0; this.endeGerufen = false; }
+  },
+  powerBlase(px, py, pw, zeit){
+    const pu = 1 + Math.sin(zeit * 5) * .06;
+    x.save(); x.translate(px, py); x.scale(pu, pu);
+    x.fillStyle = radial(0, 0, 6, 40, [[0, 'rgba(255,240,190,.45)'], [1, 'rgba(255,240,190,0)']]); x.beginPath(); x.arc(0, 0, 40, 0, 7); x.fill();
+    x.fillStyle = radial(0, 0, 2, 24, [[0, 'rgba(90,56,32,.95)'], [1, 'rgba(43,23,10,.95)']], -5, -6); x.beginPath(); x.arc(0, 0, 23, 0, 7); x.fill();
+    x.strokeStyle = '#FFC72C'; x.lineWidth = 2.5; x.stroke(); x.save(); x.scale(.8, .8); x.lineCap = 'round'; x.lineJoin = 'round'; TOUR_POWER[pw].sym(); x.restore();
+    x.restore();
   },
   abladen(){
     teilchen(240, TOUR_Y - 30, { n: 34, farben: ['#FFC72C', '#FFF1B8', '#E8534F', '#7DBE6E', '#FFFFFF'], form: 'stern', tempo: 240, oben: 140, leben: [.8, 1.3] });
@@ -2502,8 +2592,10 @@ SPIELE.tour = {
       }
     }
     for (const d of this.dinge || []) {
-      if (d.y < -70 || d.y > H + 90 || d.art !== 'kiste' || d.weg) continue;
-      const px = TOUR_SPUR[d.s], hb = Math.sin(zeit * 5 + d.s) * 2;
+      if (d.y < -70 || d.y > H + 90 || d.weg) continue;
+      if (d.art === 'power') { this.powerBlase(TOUR_SPUR[d.s], d.y, d.pw, zeit); continue; }
+      if (d.art !== 'kiste') continue;
+      const px = TOUR_SPUR[d.s] + (d.mx || 0), hb = Math.sin(zeit * 5 + d.s) * 2;
       x.fillStyle = radial(px, d.y, 6, 38, [[0, `rgba(255,214,90,${.45 + Math.sin(zeit * 6) * .12})`], [1, 'rgba(255,214,90,0)']]); x.beginPath(); x.arc(px, d.y, 38, 0, 7); x.fill();
       bodenSchatten(px + 4, d.y + 16, 24, 7, .4);
       x.save(); x.translate(px, d.y + hb);
@@ -2514,7 +2606,7 @@ SPIELE.tour = {
     }
     // Baustellen und Autos
     for (const d of this.dinge || []) {
-      if (d.y < -80 || d.y > H + 120 || d.art === 'kiste' || d.art === 'pfuetze') continue;
+      if (d.y < -80 || d.y > H + 120 || d.art === 'kiste' || d.art === 'pfuetze' || d.art === 'power') continue;
       const px = TOUR_SPUR[d.s] + (d.dx || 0);
       x.save(); if (d.raus) x.globalAlpha = Math.max(0, 1 - d.raus.t * 1.2);
       x.translate(px, d.y); if (d.rot) x.rotate(d.rot);
@@ -2535,6 +2627,10 @@ SPIELE.tour = {
     if (blink) x.globalAlpha = .4;
     x.drawImage(b.wagen, -36, -62, 72, 124);
     x.restore();
+    if (this.schild > 0) { x.globalAlpha = Math.min(1, this.schild) * (.55 + .2 * Math.sin(zeit * 8)); x.strokeStyle = '#58B4FF'; x.lineWidth = 3; x.fillStyle = 'rgba(88,180,255,.12)'; x.beginPath(); x.ellipse(this.xs, TOUR_Y, 50, 74, 0, 0, 7); x.fill(); x.stroke(); x.globalAlpha = 1; }
+    if (this.magnet > 0) { x.strokeStyle = `rgba(224,69,46,${.35 + .2 * Math.sin(zeit * 10)})`; x.lineWidth = 2; x.setLineDash([5, 6]); x.beginPath(); x.arc(this.xs, TOUR_Y - 20, 90 + Math.sin(zeit * 6) * 6, 0, 7); x.stroke(); x.setLineDash([]); }
+    if (this.powerZeile) { x.font = '800 12px "Plus Jakarta Sans", system-ui, sans-serif'; const pw = x.measureText(this.powerZeile).width + 22; rr(W / 2 - pw / 2, 52, pw, 22, 11); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill(); text(this.powerZeile, W / 2, 63.5, { gr: 12, farbe: '#FFE08A', schat: false }); }
+    kartenLeiste(TOUR_VERB, this.verb);
     // Fliegende Ware beim Abladen
     for (const f of this.fliegen) {
       if (f.t < 0) continue; const t = ease.aus(Math.min(1, f.t / .7)); const px = lerp(this.xs + 10, 318, t), py = lerp(TOUR_Y - 10, TOUR_Y - 8, t) - Math.sin(t * Math.PI) * 70;
@@ -4263,6 +4359,17 @@ function stap_stueck(s, cy, { glanz = 0 } = {}){
   }
 }
 
+// ── Version 290: Powerups (Karten bei 5, 15, 25 … Broten, besondere Brote zum Stapeln) ──
+const STAP_VERB = {
+  ruhig: { n: 'Ruhige Hand', z: ['Brot schwingt', '12 % langsamer'], max: 2, sym: () => SYM.uhr() },
+  genau: { n: 'Gutes Auge', z: ['Perfekt klappt', 'etwas leichter'], max: 2, sym: () => SYM.ziel() },
+  netz: { n: 'Auffangnetz', z: ['Einmal daneben', 'wird gerettet'], max: 2, sym: () => SYM.netz() },
+  bonus: { n: 'Goldene Kruste', z: ['+50 % Bonus', 'für Perfekt'], max: 2, sym: () => SYM.stern() },
+  hefe: { n: 'Mehr Hefe', z: ['Geht schon nach', '2× Perfekt auf'], max: 1, sym: () => SYM.breit() },
+  glueck: { n: 'Glückstüte', z: ['Besondere Brote', 'kommen öfter'], max: 2, sym: () => SYM.blitz() },
+};
+const STAP_POWER = { breit: { k: 'Hefeteig: macht breiter', sym: () => SYM.breit() }, langsam: { k: 'Zeitlupe: 3 Brote langsam', sym: () => SYM.uhr() }, guss: { k: 'Zuckerguss: klebt perfekt', sym: () => SYM.stern() } };
+
 SPIELE.stapler = {
   key: 'stapler', name: 'Brot-Stapler', kurz: 'Stapeln',
   anleitung: 'Das Brot schwingt oben hin und her. Tippe, damit es fällt. Was übersteht, bricht ab. Stuten liegt stabil, das Baguette ist lang, aber flink, die Brezel wackelt. Oben links siehst du, was als Nächstes kommt.',
@@ -4278,7 +4385,7 @@ SPIELE.stapler = {
     const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
     this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
     this.goldZeit = zufall(15, 40);
-    this.folge = []; this.naechste = null;
+    this.folge = []; this.naechste = null; this.verb = {}; this.netzRest = 0; this.langsamN = 0;
     this.neuesBrot(STAP_MAX);
   },
   /** Faire Reihenfolge: erst nur Laib und Stuten, nie zwei schwierige direkt hintereinander am Anfang */
@@ -4296,9 +4403,12 @@ SPIELE.stapler = {
     const T = STAP_TYP[typ], art = typ === 'laib' ? (Math.random() < .5 ? 'laib' : 'krusti') : typ;
     const bw = typ === 'baguette' ? Math.min(STAP_MAX + 24, w * T.breite + 6) : w;
     const links = n % 2 === 0;
-    const omega = (this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075)) * (this.gem ? 1 : T.schwung);
+    const omega = (this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075)) * (this.gem ? 1 : T.schwung) * (1 - .12 * ((this.verb && this.verb.ruhig) || 0)) * (this.langsamN > 0 ? .6 : 1);
+    if (this.langsamN > 0) this.langsamN--;
     this.akt = { typ, art, w: bw, h: T.h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega, zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
     this.akt.x = this.pendelX(this.akt);
+    // besonderes Brot (Powerup), nicht am Anfang
+    if (n >= 5 && Math.random() < .1 * (1 + .6 * ((this.verb && this.verb.glueck) || 0))) { const arten = Object.keys(STAP_POWER); this.akt.pw = arten[ganz(0, arten.length - 1)]; }
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
   hangY(){ return this.oben - 96 - this.akt.h / 2; },
@@ -4331,6 +4441,7 @@ SPIELE.stapler = {
     const al = a.x - a.w / 2, ar = a.x + a.w / 2;
     const tm = (t.l + t.r) / 2;
     let l = Math.max(al, t.l), r = Math.min(ar, t.r);
+    if (r - l < 4 && this.netzRest > 0) { this.netzRest--; a.x = tm; schwebText('Auffangnetz!', W / 2, cy + this.kamera - 60, '#3E6FB5', 22); return this.landen(); }
     if (r - l < 4) {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
@@ -4343,7 +4454,8 @@ SPIELE.stapler = {
     const neu = { typ: a.typ, art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0, wackel: a.typ === 'brezel' ? 1 : 0 };
     const dx = a.x - tm, T = STAP_TYP[a.typ] || STAP_TYP.laib;
     // Spielraum: Sorte selbst, dazu die Fläche darunter (Stuten eben, Brezel uneben)
-    const tol = Math.max(3, T.tol + (t.typ === 'stuten' ? 2 : t.typ === 'brezel' ? -2 : 0));
+    let tol = Math.max(3, T.tol + (t.typ === 'stuten' ? 2 : t.typ === 'brezel' ? -2 : 0)) + 2 * (this.verb.genau || 0);
+    if (a.pw === 'guss') tol = Math.max(tol, 20);
     if (Math.abs(dx) < tol) {
       // Perfekt: einrasten, nichts bricht ab
       this.perfekt++; if (typeof statMax === 'function') statMax('perfektFolge', this.perfekt);
@@ -4355,12 +4467,12 @@ SPIELE.stapler = {
         teilchen(neu.l, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] }); teilchen(neu.r, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] });
       }
       neu.glanz = 1;
-      const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
+      const bon = Math.round(Math.min(25, this.perfekt * 5) * (1 + .5 * (this.verb.bonus || 0))); this.bonus += bon;
       const sy = cy + this.kamera;
       blitz(.18, '255,225,140'); brumm(25);
       teilchen(tm, sy, { n: 22, form: 'stern', tempo: 190, groesse: [2.5, 5.5], leben: [.5, .9], schwer: 260 });
       schwebText(this.perfekt > 1 ? `Perfekt ×${this.perfekt}  +${10 + bon}` : `Perfekt! +${10 + bon}`, W / 2, sy - 56, '#B07A00', 22);
-      if (this.perfekt % 3 === 0) {
+      if (this.perfekt % (this.verb.hefe ? 2 : 3) === 0) {
         // Brot geht auf: wird breiter
         const nw = Math.min(STAP_MAX, a.w + 16);
         if (nw > a.w) { neu.fw = nw; neu.l = tm - nw / 2; neu.r = tm + nw / 2; neu.auf = 1; mehlWolke(tm, sy - 10, 12); setTimeout(() => { schwebText('Geht auf! Breiter', W / 2, sy - 92, F.braun, 20); brumm(30); }, 260); }
@@ -4381,12 +4493,16 @@ SPIELE.stapler = {
       if (typeof goldGefangen === 'function') goldGefangen(a.x, cy + this.kamera);
       schwebText('+50', a.x, cy + this.kamera - 70, '#B07A00', 20);
     }
+    if (a.pw === 'breit') { const m = (neu.l + neu.r) / 2, nw = Math.min(STAP_MAX, neu.r - neu.l + 26); neu.l = m - nw / 2; neu.r = m + nw / 2; neu.fx = m; neu.fw = Math.max(neu.fw, nw); neu.auf = 1; schwebText('Hefeteig: breiter!', W / 2, cy + this.kamera - 92, F.gruen, 18); }
+    if (a.pw === 'langsam') { this.langsamN = 3; schwebText('Zeitlupe für 3 Brote', W / 2, cy + this.kamera - 92, '#3E6FB5', 18); }
+    if (a.pw) { teilchen(a.x, cy + this.kamera, { n: 20, form: 'stern', tempo: 180, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'] }); brumm(25); }
     this.stapel.push(neu); this.anzahl++;
     this.landeZeiten.push(Math.round(this.zeit * 10));
     if (typeof statPlus === 'function') statPlus('brote', 1);
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
+    if (this.anzahl % 10 === 5 && !this.gem) setTimeout(() => { if (laeuft && spiel === this && this.tot < 0) karten(kartenAuswahl(STAP_VERB, this.verb), 'Powerup für den Stapel', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'netz') this.netzRest++; this.akt.sperre = .4; }); }, 500);
     this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
     // Goldlaib: ganz selten, nicht am Anfang
@@ -4560,6 +4676,7 @@ SPIELE.stapler = {
         x.globalAlpha = Math.min(1, a.ein * 2);
         stap_stueck(this.ganzesBrot(a), hy + Math.sin(t * 3) * 1.5);
         x.globalAlpha = 1; x.restore();
+        if (a.pw) { const py = hy - a.h / 2 - 24, txt = STAP_POWER[a.pw].k; x.font = '800 11px "Plus Jakarta Sans", system-ui, sans-serif'; const bw = x.measureText(txt).width + 34, lx = klemm(a.x, bw / 2 + 6, W - bw / 2 - 6); rr(lx - bw / 2, py - 12, bw, 24, 12); x.fillStyle = 'rgba(43,23,10,.85)'; x.fill(); x.strokeStyle = '#FFC72C'; x.lineWidth = 1.5; x.stroke(); x.save(); x.translate(lx - bw / 2 + 13, py); x.scale(.42, .42); STAP_POWER[a.pw].sym(); x.restore(); text(txt, lx + 8, py + .5, { gr: 11, farbe: '#FFE08A', schat: false }); }
         if (a.gold) {
           x.strokeStyle = 'rgba(43,23,10,.55)'; x.lineWidth = 5; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, 0, 7); x.stroke();
           x.strokeStyle = '#FFC72C'; x.lineWidth = 3.4; x.lineCap = 'round'; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(a.goldT / 5.5, 0, 1)); x.stroke();
@@ -4607,9 +4724,12 @@ SPIELE.stapler = {
       x.globalAlpha = al; rr(110, 392, 140, 32, 16); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill();
       text('Tippen = fallen lassen', 180, 408, { gr: 12.5, farbe: '#FFE7A0', schat: false }); x.globalAlpha = 1;
     }
+    this.leiste();
   },
 
   // Für das Prüfskript: tippen, wenn das Brot (fast) über dem Stapel ist; manchmal absichtlich ungenau
+  /** gewählte Karten unten rechts (wird von malen am Ende aufgerufen) */
+  leiste(){ kartenLeiste(STAP_VERB, this.verb); if (this.netzRest > 0) text(`Netz ×${this.netzRest}`, 40, 466, { gr: 11, farbe: '#FFE08A' }); },
   testZug(i){
     const weg = { x: 180, y: 530, warte: 6 };
     const a = this.akt;
@@ -4627,6 +4747,7 @@ SPIELE.stapler = {
 // Die App schickt leichte Quizfragen und den eigenen Rekord aus der Datenbank, die Seite meldet am Rundenende die Punkte zurück.
 const wunsch = () => { const k = (location.hash || '').slice(1); return SPIELE[k] ? k : 'lauf'; };
 function waehle(k){
+  kartenOffen = null;
   spiel = SPIELE[k]; laeuft = false; document.querySelectorAll('.frage').forEach((d) => d.remove()); frageOffen = false; FX.teile = []; FX.texte = [];
   spiel.start(); setHud([]); zeigeStart();
 }

@@ -136,6 +136,17 @@ function stap_stueck(s, cy, { glanz = 0 } = {}){
   }
 }
 
+// ── Version 290: Powerups (Karten bei 5, 15, 25 … Broten, besondere Brote zum Stapeln) ──
+const STAP_VERB = {
+  ruhig: { n: 'Ruhige Hand', z: ['Brot schwingt', '12 % langsamer'], max: 2, sym: () => SYM.uhr() },
+  genau: { n: 'Gutes Auge', z: ['Perfekt klappt', 'etwas leichter'], max: 2, sym: () => SYM.ziel() },
+  netz: { n: 'Auffangnetz', z: ['Einmal daneben', 'wird gerettet'], max: 2, sym: () => SYM.netz() },
+  bonus: { n: 'Goldene Kruste', z: ['+50 % Bonus', 'für Perfekt'], max: 2, sym: () => SYM.stern() },
+  hefe: { n: 'Mehr Hefe', z: ['Geht schon nach', '2× Perfekt auf'], max: 1, sym: () => SYM.breit() },
+  glueck: { n: 'Glückstüte', z: ['Besondere Brote', 'kommen öfter'], max: 2, sym: () => SYM.blitz() },
+};
+const STAP_POWER = { breit: { k: 'Hefeteig: macht breiter', sym: () => SYM.breit() }, langsam: { k: 'Zeitlupe: 3 Brote langsam', sym: () => SYM.uhr() }, guss: { k: 'Zuckerguss: klebt perfekt', sym: () => SYM.stern() } };
+
 SPIELE.stapler = {
   key: 'stapler', name: 'Brot-Stapler', kurz: 'Stapeln',
   anleitung: 'Das Brot schwingt oben hin und her. Tippe, damit es fällt. Was übersteht, bricht ab. Stuten liegt stabil, das Baguette ist lang, aber flink, die Brezel wackelt. Oben links siehst du, was als Nächstes kommt.',
@@ -151,7 +162,7 @@ SPIELE.stapler = {
     const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
     this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
     this.goldZeit = zufall(15, 40);
-    this.folge = []; this.naechste = null;
+    this.folge = []; this.naechste = null; this.verb = {}; this.netzRest = 0; this.langsamN = 0;
     this.neuesBrot(STAP_MAX);
   },
   /** Faire Reihenfolge: erst nur Laib und Stuten, nie zwei schwierige direkt hintereinander am Anfang */
@@ -169,9 +180,12 @@ SPIELE.stapler = {
     const T = STAP_TYP[typ], art = typ === 'laib' ? (Math.random() < .5 ? 'laib' : 'krusti') : typ;
     const bw = typ === 'baguette' ? Math.min(STAP_MAX + 24, w * T.breite + 6) : w;
     const links = n % 2 === 0;
-    const omega = (this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075)) * (this.gem ? 1 : T.schwung);
+    const omega = (this.gem ? 1.3 : Math.min(4.1, 1.85 + n * .075)) * (this.gem ? 1 : T.schwung) * (1 - .12 * ((this.verb && this.verb.ruhig) || 0)) * (this.langsamN > 0 ? .6 : 1);
+    if (this.langsamN > 0) this.langsamN--;
     this.akt = { typ, art, w: bw, h: T.h, ph: links ? -Math.PI / 2 : Math.PI / 2, omega, zustand: 'haengt', sperre: .32, ein: 0, y: 0, vy: 0, mohn: art === 'krusti' && Math.random() < .3 };
     this.akt.x = this.pendelX(this.akt);
+    // besonderes Brot (Powerup), nicht am Anfang
+    if (n >= 5 && Math.random() < .1 * (1 + .6 * ((this.verb && this.verb.glueck) || 0))) { const arten = Object.keys(STAP_POWER); this.akt.pw = arten[ganz(0, arten.length - 1)]; }
   },
   pendelX(a){ const amp = Math.max(40, W / 2 - a.w / 2 - 14); return W / 2 + Math.sin(a.ph) * amp; },
   hangY(){ return this.oben - 96 - this.akt.h / 2; },
@@ -204,6 +218,7 @@ SPIELE.stapler = {
     const al = a.x - a.w / 2, ar = a.x + a.w / 2;
     const tm = (t.l + t.r) / 2;
     let l = Math.max(al, t.l), r = Math.min(ar, t.r);
+    if (r - l < 4 && this.netzRest > 0) { this.netzRest--; a.x = tm; schwebText('Auffangnetz!', W / 2, cy + this.kamera - 60, '#3E6FB5', 22); return this.landen(); }
     if (r - l < 4) {
       // Daneben: Brot kippt herunter
       const kippt = a.x < tm ? -1 : 1;
@@ -216,7 +231,8 @@ SPIELE.stapler = {
     const neu = { typ: a.typ, art: a.art, h: a.h, mohn: a.mohn, y: cy, sq: 1, glanz: 0, wackel: a.typ === 'brezel' ? 1 : 0 };
     const dx = a.x - tm, T = STAP_TYP[a.typ] || STAP_TYP.laib;
     // Spielraum: Sorte selbst, dazu die Fläche darunter (Stuten eben, Brezel uneben)
-    const tol = Math.max(3, T.tol + (t.typ === 'stuten' ? 2 : t.typ === 'brezel' ? -2 : 0));
+    let tol = Math.max(3, T.tol + (t.typ === 'stuten' ? 2 : t.typ === 'brezel' ? -2 : 0)) + 2 * (this.verb.genau || 0);
+    if (a.pw === 'guss') tol = Math.max(tol, 20);
     if (Math.abs(dx) < tol) {
       // Perfekt: einrasten, nichts bricht ab
       this.perfekt++; if (typeof statMax === 'function') statMax('perfektFolge', this.perfekt);
@@ -228,12 +244,12 @@ SPIELE.stapler = {
         teilchen(neu.l, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] }); teilchen(neu.r, sy0, { n: 6, form: 'krume', farben: ['#F4D9A6', '#C27F36'], tempo: 100, schwer: 700, groesse: [2, 3.5] });
       }
       neu.glanz = 1;
-      const bon = Math.min(25, this.perfekt * 5); this.bonus += bon;
+      const bon = Math.round(Math.min(25, this.perfekt * 5) * (1 + .5 * (this.verb.bonus || 0))); this.bonus += bon;
       const sy = cy + this.kamera;
       blitz(.18, '255,225,140'); brumm(25);
       teilchen(tm, sy, { n: 22, form: 'stern', tempo: 190, groesse: [2.5, 5.5], leben: [.5, .9], schwer: 260 });
       schwebText(this.perfekt > 1 ? `Perfekt ×${this.perfekt}  +${10 + bon}` : `Perfekt! +${10 + bon}`, W / 2, sy - 56, '#B07A00', 22);
-      if (this.perfekt % 3 === 0) {
+      if (this.perfekt % (this.verb.hefe ? 2 : 3) === 0) {
         // Brot geht auf: wird breiter
         const nw = Math.min(STAP_MAX, a.w + 16);
         if (nw > a.w) { neu.fw = nw; neu.l = tm - nw / 2; neu.r = tm + nw / 2; neu.auf = 1; mehlWolke(tm, sy - 10, 12); setTimeout(() => { schwebText('Geht auf! Breiter', W / 2, sy - 92, F.braun, 20); brumm(30); }, 260); }
@@ -254,12 +270,16 @@ SPIELE.stapler = {
       if (typeof goldGefangen === 'function') goldGefangen(a.x, cy + this.kamera);
       schwebText('+50', a.x, cy + this.kamera - 70, '#B07A00', 20);
     }
+    if (a.pw === 'breit') { const m = (neu.l + neu.r) / 2, nw = Math.min(STAP_MAX, neu.r - neu.l + 26); neu.l = m - nw / 2; neu.r = m + nw / 2; neu.fx = m; neu.fw = Math.max(neu.fw, nw); neu.auf = 1; schwebText('Hefeteig: breiter!', W / 2, cy + this.kamera - 92, F.gruen, 18); }
+    if (a.pw === 'langsam') { this.langsamN = 3; schwebText('Zeitlupe für 3 Brote', W / 2, cy + this.kamera - 92, '#3E6FB5', 18); }
+    if (a.pw) { teilchen(a.x, cy + this.kamera, { n: 20, form: 'stern', tempo: 180, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'] }); brumm(25); }
     this.stapel.push(neu); this.anzahl++;
     this.landeZeiten.push(Math.round(this.zeit * 10));
     if (typeof statPlus === 'function') statPlus('brote', 1);
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
+    if (this.anzahl % 10 === 5 && !this.gem) setTimeout(() => { if (laeuft && spiel === this && this.tot < 0) karten(kartenAuswahl(STAP_VERB, this.verb), 'Powerup für den Stapel', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'netz') this.netzRest++; this.akt.sperre = .4; }); }, 500);
     this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
     // Goldlaib: ganz selten, nicht am Anfang
@@ -433,6 +453,7 @@ SPIELE.stapler = {
         x.globalAlpha = Math.min(1, a.ein * 2);
         stap_stueck(this.ganzesBrot(a), hy + Math.sin(t * 3) * 1.5);
         x.globalAlpha = 1; x.restore();
+        if (a.pw) { const py = hy - a.h / 2 - 24, txt = STAP_POWER[a.pw].k; x.font = '800 11px "Plus Jakarta Sans", system-ui, sans-serif'; const bw = x.measureText(txt).width + 34, lx = klemm(a.x, bw / 2 + 6, W - bw / 2 - 6); rr(lx - bw / 2, py - 12, bw, 24, 12); x.fillStyle = 'rgba(43,23,10,.85)'; x.fill(); x.strokeStyle = '#FFC72C'; x.lineWidth = 1.5; x.stroke(); x.save(); x.translate(lx - bw / 2 + 13, py); x.scale(.42, .42); STAP_POWER[a.pw].sym(); x.restore(); text(txt, lx + 8, py + .5, { gr: 11, farbe: '#FFE08A', schat: false }); }
         if (a.gold) {
           x.strokeStyle = 'rgba(43,23,10,.55)'; x.lineWidth = 5; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, 0, 7); x.stroke();
           x.strokeStyle = '#FFC72C'; x.lineWidth = 3.4; x.lineCap = 'round'; x.beginPath(); x.arc(a.x, hy - a.h / 2 - 22, 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(a.goldT / 5.5, 0, 1)); x.stroke();
@@ -480,9 +501,12 @@ SPIELE.stapler = {
       x.globalAlpha = al; rr(110, 392, 140, 32, 16); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill();
       text('Tippen = fallen lassen', 180, 408, { gr: 12.5, farbe: '#FFE7A0', schat: false }); x.globalAlpha = 1;
     }
+    this.leiste();
   },
 
   // Für das Prüfskript: tippen, wenn das Brot (fast) über dem Stapel ist; manchmal absichtlich ungenau
+  /** gewählte Karten unten rechts (wird von malen am Ende aufgerufen) */
+  leiste(){ kartenLeiste(STAP_VERB, this.verb); if (this.netzRest > 0) text(`Netz ×${this.netzRest}`, 40, 466, { gr: 11, farbe: '#FFE08A' }); },
   testZug(i){
     const weg = { x: 180, y: 530, warte: 6 };
     const a = this.akt;

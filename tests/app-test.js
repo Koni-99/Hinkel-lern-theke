@@ -1263,7 +1263,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
@@ -1344,6 +1344,41 @@ async function offlineTests() {
     ok('Teig-Schleuder: Powerup-Blase gibt Extra-Kugel', r.extra);
     ok('Teig-Schleuder: nach Level 3 drei Karten, Wahl gilt für die Runde', r.karten && r.gewaehlt && r.kugeln, JSON.stringify(r));
     ok('Version 289: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 290: Powerups in Lieferwagen-Tour und Brot-Stapler (gemeinsame Karten aus core.js)
+  teile.push(['Version 290: Powerups Tour und Stapler', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    await click(bereich.locator('button', { hasText: 'Lieferwagen' }).first()); await settle(d.page, 800);
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let los = 0;
+    for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
+    await rahmen.locator('.ueber .los').click();
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    const r = await fr.evaluate(() => {
+      const s = spiel, aus = {};
+      // Tour: Schild hält einen Zusammenstoß ab, Magnet läuft, Karte „Ersatzreifen“ gibt ein Herz mehr
+      s.modus = 'fahrt'; s.treffer({ art: 'power', pw: 'schild', s: 1 }); const l0 = s.leben; s.treffer({ art: 'auto', s: 1 }); aus.schild = s.leben === l0 && s.schild === 0;
+      s.treffer({ art: 'power', pw: 'magnet', s: 1 }); aus.magnet = s.magnet > 7;
+      aus.karte = karten([{ k: 'herz', n: 'Ersatzreifen', z: ['', ''], sym: SYM.herz, stufe: 1, max: 2 }], 'Test', (k) => { s.verb[k] = 1; s.maxLeben++; s.leben = s.maxLeben; }) && !!kartenOffen;
+      kartenOffen.t = 1; kartenTippen(0); for (let i = 0; i < 60; i++) kartenTick(1 / 60);
+      aus.herz = !kartenOffen && s.maxLeben === 4 && s.leben === 4;
+      // Stapler: Zuckerguss klebt perfekt, Auffangnetz rettet einmal
+      waehle('stapler'); starten(); const st = spiel;
+      st.akt.pw = 'guss'; st.akt.zustand = 'faellt'; st.akt.x = st.top().fx + 15; st.landen(); aus.guss = st.perfekt === 1;
+      st.netzRest = 1; st.akt.x = 10; st.akt.w = 40; st.landen(); aus.netz = st.tot < 0 && st.netzRest === 0 && st.anzahl === 2;
+      aus.auswahl = kartenAuswahl(STAP_VERB, { netz: 2 }).length === 3 && kartenAuswahl(STAP_VERB, { netz: 2 }).every((k) => k.k !== 'netz');
+      return aus;
+    });
+    ok('Tour: Schutzschild hält einen Zusammenstoß ab, Magnet läuft', r.schild && r.magnet, JSON.stringify(r));
+    ok('Tour: Karte „Ersatzreifen“ gibt +1 Herz', r.karte && r.herz);
+    ok('Stapler: Zuckerguss klebt perfekt, Auffangnetz rettet einmal', r.guss && r.netz, JSON.stringify(r));
+    ok('Karten: volle Powerups werden nicht mehr angeboten', r.auswahl);
+    ok('Version 290: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
