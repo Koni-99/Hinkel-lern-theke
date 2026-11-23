@@ -1263,7 +1263,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
@@ -1308,6 +1308,42 @@ async function offlineTests() {
     }
     ok('Kein Text läuft über den Rand (5 Seiten und 11 Spiele, 320 Punkte breit)', fehler.length === 0, fehler.slice(0, 6).join(' | '));
     ok('Version 288: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 289: Teig-Schleuder mit Powerups (Karten nach jedem 3. Level, Blasen im Level)
+  teile.push(['Version 289: Teig-Schleuder Powerups', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 390, height: 844 } });
+    await clearPopups(d.page);
+    await click(nav(d.page).nth(2)); await settle(d.page, 600);
+    const bereich = d.page.locator('.lt-spiele-abschalten');
+    for (let w = 0; w < 40 && !(await bereich.count()); w++) await sleep(100);
+    await click(bereich.locator('button', { hasText: 'Teig-Schleuder' }).first()); await settle(d.page, 800);
+    const rahmen = d.page.frameLocator('iframe.lt-abschalten-rahmen');
+    let los = 0;
+    for (let w = 0; w < 80 && !los; w++) { los = await rahmen.locator('.ueber .los').count().catch(() => 0); if (!los) await sleep(100); }
+    await rahmen.locator('.ueber .los').click();
+    const fr = d.page.frames().find((f) => /abschalten/.test(f.url()));
+    const r = await fr.evaluate(() => {
+      const s = spiel, aus = {};
+      // Dreifach-Kugel: der nächste Schuss teilt sich in 3
+      s.einflug = 1; s.laden = 1; s.naechsterSchuss = 'drei'; s.runter({ x: SCHL_A.x, y: SCHL_A.y }); s.zieh({ x: SCHL_A.x - 60, y: SCHL_A.y + 30 }); s.hoch({ x: SCHL_A.x - 60, y: SCHL_A.y + 30 });
+      aus.drei = s.extra.length === 2 && !!s.ball && s.naechsterSchuss === null;
+      for (let i = 0; i < 60 * 8 && s.fliegt(); i++) s.tick(1 / 60);
+      aus.dreiFertig = !s.fliegt();
+      // Powerup-Blase abschießen: Extra-Kugel
+      s.power = { art: 'extra', x: 200, y: 200, y0: 200, t: 0 }; const k0 = s.kugeln; s.powerFangen({}); aus.extra = s.kugeln === k0 + 1 && !s.power;
+      // Karten nach Level 3
+      s.level = 3; aus.karten = s.kartenStarten() && s.zustand === 'karten' && s.karten.length === 3;
+      s.kartenT = 1; const r0 = s.kartenRect(0), k = s.karten[0]; s.runter({ x: r0.x + 10, y: r0.y + 10 }); for (let i = 0; i < 60; i++) s.tick(1 / 60);
+      aus.gewaehlt = s.verb[k] === 1 && s.zustand === 'spiel' && s.level === 4;
+      s.verb.kugel = 2; aus.kugeln = s.kugelnProLevel() === 7;
+      return aus;
+    });
+    await fr.evaluate(() => { document.querySelectorAll('.frage').forEach((q) => q.remove()); frageOffen = false; });
+    ok('Teig-Schleuder: Dreifach-Kugel teilt sich in 3 und alle landen', r.drei && r.dreiFertig, JSON.stringify(r));
+    ok('Teig-Schleuder: Powerup-Blase gibt Extra-Kugel', r.extra);
+    ok('Teig-Schleuder: nach Level 3 drei Karten, Wahl gilt für die Runde', r.karten && r.gewaehlt && r.kugeln, JSON.stringify(r));
+    ok('Version 289: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern

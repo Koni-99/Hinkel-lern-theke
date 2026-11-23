@@ -148,16 +148,16 @@ function schl_dyn(lv, t){
 
 /** Ein Physik-Schritt für die Kugel. Rückgabe: getroffene Form oder null */
 function schl_schritt(b, rechtecke, formen, dt, lv){
-  if (lv && lv.luefter) for (const l of lv.luefter) if (l.s > .01) { const z = schl_wind(l); if (b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h) { const nah = z.ax < 0 ? (b.x - z.x) / z.w : z.ax > 0 ? 1 - (b.x - z.x) / z.w : (b.y - z.y) / z.h; const k = l.s * (.45 + .55 * nah); b.vx += z.ax * k * dt; b.vy += z.ay * k * dt; b.wind = 1; } }
+  if (lv && lv.luefter) for (const l of lv.luefter) if (l.s > .01) { const z = schl_wind(l); if (b.x > z.x && b.x < z.x + z.w && b.y > z.y && b.y < z.y + z.h) { const nah = z.ax < 0 ? (b.x - z.x) / z.w : z.ax > 0 ? 1 - (b.x - z.x) / z.w : (b.y - z.y) / z.h; const k = l.s * (.45 + .55 * nah); const wf = b.windF ?? 1; b.vx += z.ax * k * wf * dt; b.vy += z.ay * k * wf * dt; b.wind = 1; } }
   b.vy += SCHL_G * dt; const vorUnten = b.y + SCHL_R; b.x += b.vx * dt; b.y += b.vy * dt;
   for (const f of formen) {
     if (f.voll) continue;
     if (f.wippe) { // gedrehte Form: im eigenen Koordinatensystem prüfen
       const c = Math.cos(f.rot), sn = Math.sin(f.rot), dx = b.x - f.x, dy = b.y - f.y, ly = -sn * dx + c * dy, lx = c * dx + sn * dy, lvy = -sn * b.vx + c * b.vy;
-      if (lvy > 0 && ly - lvy * dt + SCHL_R <= 1 && ly + SCHL_R > 1 && Math.abs(lx) < f.w / 2 + 3) return f;
+      if (lvy > 0 && ly - lvy * dt + SCHL_R <= 1 && ly + SCHL_R > 1 && Math.abs(lx) < f.w / 2 + 3 + (b.rand || 0)) return f;
       continue;
     }
-    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3) return f;
+    if (b.vy > 0 && vorUnten <= f.y + 1 && b.y + SCHL_R > f.y + 1 && Math.abs(b.x - f.x) < f.w / 2 + 3 + (b.rand || 0)) return f;
   }
   b.kontakt = false;
   for (const r of rechtecke) schl_kiste(b, r.x, r.y, r.w, r.h, .5);
@@ -201,6 +201,31 @@ function schl_pruefe(lv, formen, t0, genug){
   return treffer;
 }
 
+// ── Version 289: Powerups (Nutzer wählte „beides“) ──
+// Karten nach jedem 3. Level (gelten für die ganze Runde, wie im Backstuben-Chaos) und Powerups im Level zum Abschießen.
+const SCHL_VERB = {
+  kugel: { n: 'Extra-Kugel', z: ['+1 Kugel', 'in jedem Level'], max: 3 },
+  ziel: { n: 'Zielhilfe', z: ['Die Flugbahn', 'wird länger'], max: 2 },
+  trichter: { n: 'Trichter', z: ['Formen fangen', 'auch am Rand'], max: 2 },
+  rueck: { n: 'Zweite Chance', z: ['Erster Fehlschuss', 'kommt zurück'], max: 2 },
+  wind: { n: 'Windschutz', z: ['Lüfter pusten', 'halb so stark'], max: 1 },
+  punkte: { n: 'Goldener Teig', z: ['+25 % Punkte', 'für jede Form'], max: 2 },
+};
+const SCHL_POWER = { drei: { n: 'Dreifach-Kugel', k: 'Dreifach' }, schwer: { n: 'Schwere Kugel', k: 'Schwer' }, extra: { n: 'Extra-Kugel', k: '+1' } };
+/** Symbol für Karte oder Powerup, Mitte (0, 0), etwa 36 px */
+function schl_symbol(k){
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  const kug = (px, py, r, f1 = '#FFF8E6', f2 = '#D9B373') => { x.fillStyle = radial(px, py, 1, r + 1, [[0, f1], [1, f2]], px - r * .35, py - r * .4); x.beginPath(); x.arc(px, py, r, 0, 7); x.fill(); };
+  if (k === 'kugel' || k === 'extra') { kug(-4, 3, 11); x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(10, -10, 8, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2.6; x.beginPath(); x.moveTo(10, -14.5); x.lineTo(10, -5.5); x.moveTo(5.5, -10); x.lineTo(14.5, -10); x.stroke(); }
+  else if (k === 'ziel') { x.fillStyle = '#FFF1C2'; for (let i = 0; i < 6; i++) { const t = i / 5; x.globalAlpha = 1 - t * .6; x.beginPath(); x.arc(-16 + t * 32, 10 - Math.sin(t * Math.PI) * 26, 3.4 - t * 1.4, 0, 7); x.fill(); } x.globalAlpha = 1; }
+  else if (k === 'trichter') { x.fillStyle = '#C9C2B4'; x.beginPath(); x.moveTo(-17, -12); x.lineTo(17, -12); x.lineTo(5, 4); x.lineTo(5, 14); x.lineTo(-5, 14); x.lineTo(-5, 4); x.closePath(); x.fill(); x.strokeStyle = '#7A7468'; x.lineWidth = 1.5; x.stroke(); x.fillStyle = 'rgba(255,255,255,.6)'; x.fillRect(-12, -10, 8, 2.5); }
+  else if (k === 'rueck') { x.strokeStyle = '#FFC72C'; x.lineWidth = 4; x.beginPath(); x.arc(0, 0, 13, -.4, Math.PI * 1.35); x.stroke(); x.fillStyle = '#FFC72C'; x.beginPath(); x.moveTo(13, -14); x.lineTo(18, 0); x.lineTo(5, -4); x.closePath(); x.fill(); kug(0, 0, 6); }
+  else if (k === 'wind') { x.strokeStyle = '#BFE0F2'; x.lineWidth = 3; for (const yy of [-8, 0, 8]) { x.beginPath(); x.moveTo(-16, yy); x.quadraticCurveTo(4, yy - 4, 14, yy); x.stroke(); } x.strokeStyle = '#E0452E'; x.lineWidth = 3.5; x.beginPath(); x.moveTo(-14, -14); x.lineTo(14, 14); x.stroke(); }
+  else if (k === 'punkte') { kug(0, 0, 13, '#FFF1B8', '#C98A00'); x.fillStyle = '#7A4E06'; x.font = '800 13px "Plus Jakarta Sans", system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('%', 0, 1); }
+  else if (k === 'drei') { kug(-9, 6, 7); kug(9, 6, 7); kug(0, -8, 7); }
+  else if (k === 'schwer') { kug(0, 0, 12, '#B98A55', '#5E3A1C'); x.strokeStyle = 'rgba(255,230,190,.7)'; x.lineWidth = 2; x.beginPath(); x.moveTo(-6, -2); x.lineTo(6, -2); x.moveTo(-4, 4); x.lineTo(4, 4); x.stroke(); }
+}
+
 SPIELE.schleuder = {
   key: 'schleuder', name: 'Teig-Schleuder', kurz: 'Zielen', medaillen: [500, 1300, 2600],
   anleitung: 'Zieh die Teigkugel nach hinten und lass los. Triff alle drei Backformen mit höchstens 5 Kugeln. Übrige Kugeln geben Bonus.',
@@ -210,10 +235,13 @@ SPIELE.schleuder = {
     this.einzel = this.nochmalEinzel || 0; this.nochmalEinzel = 0;
     this.level = this.einzel ? this.einzel - 1 : 0; this.punkteN = 0; this.sterne = 0; this.zeit = 0; this.ball = null; this.ziehen = null; this.zustand = 'spiel'; this.lauf = 0; this.naechstes = null; this.naechstesV = 0; this.endeGerufen = false;
     this.gold = null; this.goldZeit = zufall(15, 40); this.hinweisNeu = null;
+    this.verb = { kugel: 0, ziel: 0, trichter: 0, rueck: 0, wind: 0, punkte: 0 }; this.karten = null; this.power = null; this.naechsterSchuss = null; this.extra = [];
     this.neuesLevel();
   },
   aktuellePunkte(){ return this.punkteN || 0; },
-  kugelnProLevel(){ return this.gemuetlich ? 8 : 5; },
+  kugelnProLevel(){ return (this.gemuetlich ? 8 : 5) + (this.verb ? this.verb.kugel : 0); },
+  /** Fliegt noch irgendeine Kugel (Haupt- oder Dreifach-Kugel)? */
+  fliegt(){ return !!this.ball || !!(this.extra && this.extra.length); },
   /** Ein gewähltes Level als eigene kleine Runde spielen (n = 0: ganze Runde ab Level 1) */
   levelWaehlen(n){
     this.nochmalEinzel = n; this.start(); this.nochmalEinzel = n; // „Nochmal“ spielt dasselbe Level wieder
@@ -345,7 +373,9 @@ SPIELE.schleuder = {
     this.naechstesV = 0;
     for (let v = 0; v < 30 && !lv; v++) lv = this.baueLevel(1, 3, 100 + v);
     if (!lv) lv = { formen: [{ art: 'kasten', x: 180, x0: 180, y: 374, w: 60, h: 26, voll: false, fuell: 0 }, { art: 'korb', x: 256, x0: 256, y: 290, w: 64, h: 28, voll: false, fuell: 0 }, { art: 'kasten', x: 320, x0: 320, y: 220, w: 60, h: 26, voll: false, fuell: 0 }], plattformen: [{ art: 'wagen', x: 139, y: 400, w: 82 }, { art: 'regal', x: 213, y: 318, w: 86 }, { art: 'regal', x: 279, y: 246, w: 82 }], hindernisse: [] };
-    this.lv = lv; this.rechtecke = schl_rechtecke(lv); this.gold = null;
+    this.lv = lv; this.rechtecke = schl_rechtecke(lv); this.rechteckeLeicht = schl_rechtecke({ ...lv, hindernisse: [] }); this.gold = null;
+    this.extra = []; this.power = null; this.rueckRest = this.verb ? this.verb.rueck : 0;
+    this.powerZeit = this.level >= 3 && Math.random() < .6 ? this.zeit + zufall(2, 6) : Infinity;
     this.hinweisNeu = this.NEU_HINWEIS[this.level] ? { t: this.NEU_HINWEIS[this.level], z: 3.4 } : null;
   },
   formenBewegen(){ schl_dyn(this.lv, this.zeit); },
@@ -436,9 +466,10 @@ SPIELE.schleuder = {
   },
   runter(p){
     if (this.zustand === 'auswahl') { this.auswahlTipp(p); return; }
+    if (this.zustand === 'karten') { if (this.kartenT > .5 && !this.gewaehlt) (this.karten || []).forEach((k, j) => { const r = this.kartenRect(j); if (p.x > r.x - 4 && p.x < r.x + r.w + 4 && p.y > r.y - 4 && p.y < r.y + r.h + 4) this.waehleKarte(k); }); return; }
     const r = this.knopfRect;
-    if (p.x >= r.x - 4 && p.x <= r.x + r.w + 4 && p.y >= r.y - 4 && p.y <= r.y + r.h + 4 && !this.ball && (this.zustand === 'spiel')) { this.auswahlOeffnen(); return; }
-    if (this.ball || this.kugeln <= 0 || this.zustand !== 'spiel' || this.einflug < 1 || this.laden < 1) return;
+    if (p.x >= r.x - 4 && p.x <= r.x + r.w + 4 && p.y >= r.y - 4 && p.y <= r.y + r.h + 4 && !this.fliegt() && (this.zustand === 'spiel')) { this.auswahlOeffnen(); return; }
+    if (this.fliegt() || this.kugeln <= 0 || this.zustand !== 'spiel' || this.einflug < 1 || this.laden < 1) return;
     const nah = Math.hypot(p.x - SCHL_A.x, p.y - SCHL_A.y) < 62;
     this.ziehen = { start: { x: p.x, y: p.y }, nah, dx: 0, dy: 0 };
   },
@@ -451,41 +482,35 @@ SPIELE.schleuder = {
     const z = this.ziehen; if (!z) return; this.zieh(p); this.ziehen = null;
     if (Math.hypot(z.dx, z.dy) < 16) return;
     this.ball = { x: SCHL_A.x + z.dx, y: SCHL_A.y + z.dy, vx: -z.dx * SCHL_K, vy: -z.dy * SCHL_K, t: 0, ruhe: 0, stoss: 0, quetsch: 0, spur: 0 };
+    const b0 = this.ball; b0.rand = 8 * this.verb.trichter; b0.windF = this.verb.wind ? .5 : 1;
+    if (this.naechsterSchuss === 'schwer') b0.schwer = true;
+    if (this.naechsterSchuss === 'drei') for (const w of [-.1, .1]) { const c = Math.cos(w), sn = Math.sin(w); this.extra.push({ ...b0, vx: b0.vx * c - b0.vy * sn, vy: b0.vx * sn + b0.vy * c, teil: true }); }
+    this.naechsterSchuss = null;
     this.kugeln--; this.geschossen++; this.schnapp = 1;
     mehlWolke(SCHL_A.x, SCHL_A.y, 5);
   },
   taste(){},
   tick(dt){
     if (this.zustand === 'auswahl') { this.auswahlZeit = (this.auswahlZeit || 0) + dt; return; }
+    if (this.zustand === 'karten') {
+      this.kartenT += dt; if (this.gewaehlt) this.gewaehltT += dt;
+      if (this.gewaehlt && this.gewaehltT > .8) { this.karten = null; this.gewaehlt = null; this.neuesLevel(); frage((ok) => { if (ok) { this.punkteN += 80; schwebText('+80 Bonus', 180, 220, F.gruen, 24); teilchen(180, 220, { n: 26, form: 'stern', oben: 100 }); } }); }
+      return;
+    }
     this.zeit += dt; this.einflug = Math.min(1, this.einflug + dt * 1.8); this.laden = Math.min(1, this.laden + dt * 2.6); this.schnapp = Math.max(0, (this.schnapp || 0) - dt * 3);
     this.formenBewegen();
     for (const f of this.lv.formen) if (f.voll) f.fuell = Math.min(1, f.fuell + dt * 1.4);
     if (this.hinweisNeu) { this.hinweisNeu.z -= dt; if (this.hinweisNeu.z <= 0) this.hinweisNeu = null; }
     if (goldKommt() && this.zeit > this.goldZeit && this.zustand === 'spiel' && !this.ball && this.einflug >= 1 && this.lv.formen.filter((f) => !f.voll).length >= 2) this.goldSetzen();
     if (this.gold) { const g = this.gold; g.rest -= dt; g.y = g.y0 + Math.sin(this.zeit * 2.2) * 5; if (g.rest <= 0 && !(this.ball && g.rest > -1.5)) { mehlWolke(g.x, g.y, 6); this.gold = null; } }
-    const b = this.ball;
-    if (b) {
-      // feste Schrittweite wie in der Prüfung, damit jeder Schuss genau so fliegt wie berechnet
-      b.acc = (b.acc || 0) + dt;
-      while (b.acc >= 1 / 120 && this.ball) {
-        b.acc -= 1 / 120; b.px = b.x; b.py = b.y;
-        schl_dyn(this.lv, this.zeit - b.acc); const f = schl_schritt(b, this.rechtecke, this.lv.formen, 1 / 120, this.lv);
-        if (b.stoss > 0) { b.quetsch = Math.max(b.quetsch, b.stoss); b.qN = b.stossN; if (b.stoss > .3) mehlWolke(b.x, b.y, 3); b.stoss = 0; }
-        if (f) this.treffer(f, b);
-        // Goldform: reicht, sie im Flug zu treffen
-        else if (this.ball && this.gold && Math.hypot(b.x - this.gold.x, b.y - this.gold.y - this.gold.h / 2) < 32) this.treffer(this.gold, b);
-      }
-      if (this.ball) {
-        b.t += dt; b.quetsch = Math.max(0, b.quetsch - dt * 4);
-        b.spur += dt; if (b.spur > .05 && Math.hypot(b.vx, b.vy) > 200) { b.spur = 0; teilchen(b.x, b.y, { n: 1, farben: ['rgba(255,250,238,.8)'], tempo: 10, groesse: [2, 4], schwer: -20, leben: [.3, .5] }); }
-        const langsam = Math.hypot(b.vx, b.vy) < 30 && b.kontakt;
-        b.ruhe = langsam ? b.ruhe + dt : 0;
-        if (b.x > W + 30 || b.ruhe > .4 || b.t > 6) this.daneben(b);
-      }
-    }
+    if (this.zustand === 'spiel' && !this.power && this.zeit > this.powerZeit && !this.fliegt() && this.einflug >= 1) this.powerSetzen();
+    if (this.power) this.power.y = this.power.y0 + Math.sin(this.zeit * 2.6) * 6;
+    if (this.ball) this.fliege(this.ball, dt);
+    for (const e of [...(this.extra || [])]) this.fliege(e, dt);
+    this.extra = (this.extra || []).filter((e) => !e.weg);
     if (this.zustand === 'spiel') {
-      if (this.lv.formen.every((f) => f.voll) && !this.ball) this.geschafft();
-      else if (!this.ball && this.kugeln <= 0) { this.zustand = 'aus'; this.uhr = 0; brumm(70); }
+      if (this.lv.formen.every((f) => f.voll) && !this.fliegt()) this.geschafft();
+      else if (!this.fliegt() && this.kugeln <= 0) { this.zustand = 'aus'; this.uhr = 0; brumm(70); }
     } else if (this.zustand === 'fertig') {
       this.uhr += dt;
       // nächstes Level schon während der Feier bauen (ein Versuch pro Bild, damit nichts ruckelt)
@@ -495,6 +520,7 @@ SPIELE.schleuder = {
       if (this.uhr > 2.6 + (this.restGezaehlt || 0) * .22) {
         if (this.einzel) { if (!this.endeGerufen) { this.endeGerufen = true; this.zustand = 'ende'; ende(this.punkteN, `Level ${this.level} geschafft mit ${this.levelSterne} ${this.levelSterne === 1 ? 'Stern' : 'Sternen'}.`); } return; }
         const weiter = () => this.neuesLevel();
+        if (this.level % 3 === 0 && this.kartenStarten()) return;
         if (this.level % 3 === 0) { this.neuesLevel(); frage((ok) => { if (ok) { this.punkteN += 80; schwebText('+80 Bonus', 180, 220, F.gruen, 24); teilchen(180, 220, { n: 26, form: 'stern', oben: 100 }); } }); }
         else weiter();
       }
@@ -503,7 +529,105 @@ SPIELE.schleuder = {
       if (this.uhr > .9 && !this.endeGerufen) { this.endeGerufen = true; ende(this.punkteN, this.einzel ? `Level ${this.level} nicht geschafft. Versuch es gleich nochmal.` : `Level ${this.level} erreicht und ${this.sterne} ${this.sterne === 1 ? 'Stern' : 'Sterne'} gesammelt.`); }
     }
     const k = this.kugeln + (this.ball ? 1 : 0);
+    if (this.naechsterSchuss) { const nk = SCHL_POWER[this.naechsterSchuss].k; setHud([{ icon: 'punkte', text: this.punkteN.toLocaleString('de-DE') }, { icon: 'korn', text: `${k} ${k === 1 ? 'Kugel' : 'Kugeln'} · ${nk}` }]); return; }
     setHud([{ icon: 'punkte', text: this.punkteN.toLocaleString('de-DE') }, { icon: 'korn', text: `${k} ${k === 1 ? 'Kugel' : 'Kugeln'}` }]);
+  },
+  /** Eine Kugel einen Rahmen weiterfliegen lassen (feste Schrittweite wie in der Prüfung) */
+  fliege(b, dt){
+    const haupt = b === this.ball;
+    b.acc = (b.acc || 0) + dt;
+    while (b.acc >= 1 / 120 && !b.weg && (!haupt || this.ball === b)) {
+      b.acc -= 1 / 120; b.px = b.x; b.py = b.y;
+      if (haupt) schl_dyn(this.lv, this.zeit - b.acc);
+      const f = schl_schritt(b, b.schwer ? this.rechteckeLeicht : this.rechtecke, this.lv.formen, 1 / 120, this.lv);
+      if (b.stoss > 0) { b.quetsch = Math.max(b.quetsch, b.stoss); b.qN = b.stossN; if (b.stoss > .3) mehlWolke(b.x, b.y, 3); b.stoss = 0; }
+      if (f) { this.treffer(f, b); break; }
+      if (this.power && Math.hypot(b.x - this.power.x, b.y - this.power.y) < 24) this.powerFangen(b);
+      // Goldform: reicht, sie im Flug zu treffen
+      if (haupt && this.gold && Math.hypot(b.x - this.gold.x, b.y - this.gold.y - this.gold.h / 2) < 32) { this.treffer(this.gold, b); break; }
+    }
+    if (b.weg || (haupt && this.ball !== b)) return;
+    b.t += dt; b.quetsch = Math.max(0, b.quetsch - dt * 4);
+    b.spur += dt; if (b.spur > .05 && Math.hypot(b.vx, b.vy) > 200) { b.spur = 0; teilchen(b.x, b.y, { n: 1, farben: [b.schwer ? 'rgba(150,100,50,.7)' : 'rgba(255,250,238,.8)'], tempo: 10, groesse: [2, 4], schwer: -20, leben: [.3, .5] }); }
+    const langsam = Math.hypot(b.vx, b.vy) < 30 && b.kontakt;
+    b.ruhe = langsam ? b.ruhe + dt : 0;
+    if (b.x > W + 30 || b.ruhe > .4 || b.t > 6) this.daneben(b);
+  },
+  /** Powerup im Level: schwebende Blase an einer freien Stelle, bleibt bis zum Levelende */
+  powerSetzen(){
+    const arten = ['drei', 'extra', ...(this.lv.hindernisse.length ? ['schwer', 'schwer'] : []), 'drei'];
+    const art = arten[ganz(0, arten.length - 1)], kand = [];
+    for (let gx = 150; gx <= 320; gx += 28) for (let gy = 100; gy <= 300; gy += 28) kand.push([gx, gy]);
+    kand.sort(() => Math.random() - .5);
+    for (const [gx, gy] of kand) {
+      const r = { x: gx - 26, y: gy - 26, w: 52, h: 52 };
+      if (this.lv.formen.some((f) => Math.abs(f.x - gx) < 60 && Math.abs(f.y - gy) < 64) || (this.gold && Math.hypot(this.gold.x - gx, this.gold.y - gy) < 70) || this.rechtecke.some((q) => q.x < r.x + r.w && r.x < q.x + q.w && q.y < r.y + r.h && r.y < q.y + q.h)) continue;
+      this.power = { art, x: gx, y: gy, y0: gy, t: 0 }; return;
+    }
+    this.powerZeit = this.zeit + 3;
+  },
+  powerFangen(b){
+    const pw = this.power; this.power = null; this.powerZeit = Infinity; brumm(30); blitz(.15, '255,240,200');
+    teilchen(pw.x, pw.y, { n: 24, form: 'stern', tempo: 190, farben: ['#FFC72C', '#FFF1B8', '#FFFFFF'] });
+    if (pw.art === 'extra') { this.kugeln++; schwebText('+1 Kugel', pw.x, pw.y - 26, F.gruen, 20); }
+    else { this.naechsterSchuss = pw.art; schwebText(`Nächster Schuss: ${SCHL_POWER[pw.art].k}`, Math.min(260, Math.max(100, pw.x)), pw.y - 26, F.braun, 16); }
+    void b;
+  },
+  powerMalen(zeit){
+    const pw = this.power; if (!pw) return;
+    const pu = 1 + Math.sin(zeit * 4) * .05;
+    x.save(); x.translate(pw.x, pw.y); x.scale(pu, pu);
+    x.fillStyle = radial(0, 0, 4, 24, [[0, 'rgba(255,240,190,.35)'], [1, 'rgba(255,240,190,0)']]); x.beginPath(); x.arc(0, 0, 30, 0, 7); x.fill();
+    x.fillStyle = radial(0, 0, 2, 21, [[0, 'rgba(90,56,32,.92)'], [1, 'rgba(43,23,10,.92)']], -5, -6); x.beginPath(); x.arc(0, 0, 20, 0, 7); x.fill();
+    x.strokeStyle = '#FFC72C'; x.lineWidth = 2.5; x.stroke();
+    x.save(); x.scale(.72, .72); schl_symbol(pw.art); x.restore();
+    x.fillStyle = 'rgba(255,255,255,.5)'; x.beginPath(); x.ellipse(-8, -10, 5, 2.6, -.6, 0, 7); x.fill();
+    x.restore();
+    rr(pw.x - 32, pw.y + 22, 64, 15, 7.5); x.fillStyle = 'rgba(43,23,10,.78)'; x.fill(); text(SCHL_POWER[pw.art].k, pw.x, pw.y + 29.5, { gr: 10, farbe: '#FFE08A', schat: false });
+  },
+  /** Nach jedem 3. Level: 3 Karten zur Wahl (nicht beim Einzel-Level). false, wenn alles schon voll ist */
+  kartenStarten(){
+    if (this.einzel) return false;
+    const v = this.verb, moegl = Object.keys(SCHL_VERB).filter((k) => v[k] < SCHL_VERB[k].max && (k !== 'wind' || this.level >= 12) && (k !== 'rueck' || !this.gemuetlich));
+    for (let i = moegl.length - 1; i > 0; i--) { const j = ganz(0, i); [moegl[i], moegl[j]] = [moegl[j], moegl[i]]; }
+    if (!moegl.length) return false;
+    this.karten = moegl.slice(0, 3); this.zustand = 'karten'; this.kartenT = 0; this.gewaehlt = null; this.gewaehltT = 0; brumm(20);
+    return true;
+  },
+  kartenRect(j){ const n = this.karten.length, w = 106, gap = 8, x0 = (W - (n * w + (n - 1) * gap)) / 2; return { x: x0 + j * (w + gap), y: 176, w, h: 168 }; },
+  waehleKarte(k){
+    if (this.gewaehlt) return;
+    this.gewaehlt = k; this.gewaehltT = 0; this.verb[k]++; brumm(25);
+    const r = this.kartenRect(this.karten.indexOf(k)); teilchen(r.x + r.w / 2, r.y + 60, { n: 26, form: 'stern', tempo: 200 });
+  },
+  kartenMalen(zeit){
+    const a = Math.min(1, this.kartenT * 4);
+    x.fillStyle = `rgba(30,15,5,${.6 * a})`; x.fillRect(0, 0, W, H);
+    x.globalAlpha = a;
+    text('Powerup für die Runde', W / 2, 128, { gr: 22, farbe: '#FFE08A', schrift: 'Fraunces' });
+    text('Wähle eine Karte, sie gilt bis zum Ende', W / 2, 152, { gr: 11.5, farbe: '#F5E6C8', art: '700' });
+    x.globalAlpha = 1;
+    (this.karten || []).forEach((k, j) => {
+      const r = this.kartenRect(j), d = SCHL_VERB[k], t = klemm((this.kartenT - j * .12) * 3, 0, 1), s = ease.feder(t);
+      const gew = this.gewaehlt === k, weg = this.gewaehlt && !gew;
+      x.save(); x.translate(r.x + r.w / 2, r.y + r.h / 2 + (1 - t) * 60 - (gew ? Math.min(1, this.gewaehltT * 3) * 10 : 0)); x.scale(s * (gew ? 1.06 : 1), s * (gew ? 1.06 : 1)); x.globalAlpha = weg ? .35 : t;
+      bodenSchatten(0, r.h / 2 + 4, r.w * .5, 8, .5);
+      rr(-r.w / 2, -r.h / 2, r.w, r.h, 16); x.fillStyle = linear(0, -r.h / 2, 0, r.h / 2, [[0, '#FFFBF2'], [1, '#FFE7B8']]); x.fill();
+      x.strokeStyle = gew ? '#3DAA55' : '#E0B54A'; x.lineWidth = gew ? 4 : 2; x.stroke();
+      rr(-r.w / 2 + 8, -r.h / 2 + 8, r.w - 16, 66, 11); x.fillStyle = radial(0, -r.h / 2 + 38, 4, 50, [[0, '#6A4426'], [1, '#3A2010']]); x.fill();
+      const glanz = .5 + .5 * Math.sin(zeit * 3 + j); x.fillStyle = `rgba(255,210,100,${.15 + glanz * .15})`; x.beginPath(); x.arc(0, -r.h / 2 + 41, 26, 0, 7); x.fill();
+      x.save(); x.translate(0, -r.h / 2 + 41); schl_symbol(k); x.restore();
+      text(d.n, 0, -r.h / 2 + 92, { gr: 13, farbe: F.braun, schat: false });
+      d.z.forEach((z, i) => text(z, 0, -r.h / 2 + 116 + i * 15, { gr: 10.5, farbe: '#6B5640', art: '700', schat: false }));
+      if (d.max > 1) text(this.verb[k] ? `Stufe ${this.verb[k] + (gew ? 0 : 1)} von ${d.max}` : `bis ${d.max}× wählbar`, 0, r.h / 2 - 14, { gr: 9.5, farbe: '#A8740A', art: '700', schat: false });
+      if (gew) { x.fillStyle = '#3DAA55'; x.beginPath(); x.arc(r.w / 2 - 12, -r.h / 2 + 12, 11, 0, 7); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(r.w / 2 - 17, -r.h / 2 + 12); x.lineTo(r.w / 2 - 13, -r.h / 2 + 16); x.lineTo(r.w / 2 - 7, -r.h / 2 + 8); x.stroke(); }
+      x.restore();
+    });
+  },
+  /** Kleine Leiste unten rechts: gewählte Powerups */
+  verbMalen(){
+    const liste = Object.keys(SCHL_VERB).filter((k) => this.verb && this.verb[k]); if (!liste.length) return;
+    liste.forEach((k, i) => { const bx = W - 30 - i * 30, by = 463; x.fillStyle = 'rgba(43,23,10,.78)'; x.beginPath(); x.arc(bx, by, 13, 0, 7); x.fill(); x.save(); x.translate(bx, by); x.scale(.5, .5); schl_symbol(k); x.restore(); if (this.verb[k] > 1) { x.fillStyle = '#FFC72C'; x.beginPath(); x.arc(bx + 9, by - 9, 6, 0, 7); x.fill(); text(String(this.verb[k]), bx + 9, by - 8.5, { gr: 8.5, farbe: F.braun, schat: false }); } });
   },
   /** Goldform: schwebt an einer freien Stelle, bleibt 7 s; im Flug treffen genügt */
   goldSetzen(){
@@ -538,14 +662,15 @@ SPIELE.schleuder = {
   },
   treffer(f, b){
     if (f.gold) { // Goldform: Kugel kommt zurück, kleine Extra-Punkte
-      this.ball = null; this.gold = null; this.kugeln++; this.geschossen--; this.punkteN += 50;
+      if (b === this.ball) this.ball = null; else b.weg = true; this.gold = null; this.kugeln++; this.geschossen--; this.punkteN += 50;
       goldGefangen(f.x, f.y); schwebText('+50', f.x, f.y - 30, F.goldDunkel, 22); schwebText('Kugel zurück', f.x, f.y - 54, F.braun, 14); return;
     }
     statPlus('formen');
-    f.voll = true; f.fuell = 0; f.trefferZeit = this.zeit; this.ball = null; brumm(25);
+    f.voll = true; f.fuell = 0; f.trefferZeit = this.zeit; if (b === this.ball) this.ball = null; else b.weg = true; brumm(25);
     this.lauf++;
     let p = 50; const bande = (b.abprall || 0) > 0;
     if (bande) p += 25;
+    if (this.verb && this.verb.punkte) p = Math.round(p * (1 + .25 * this.verb.punkte));
     this.punkteN += p;
     teilchen(f.x, f.y - 4, { n: 22, form: 'stern', oben: 140, tempo: 170 }); mehlWolke(f.x, f.y, 8);
     schwebText(`+${p}`, f.x, f.y - 30, F.goldDunkel, 22);
@@ -554,7 +679,9 @@ SPIELE.schleuder = {
     blitz(.12, '255,240,200');
   },
   daneben(b){
+    if (b !== this.ball) { b.weg = true; mehlWolke(klemm(b.x, 10, W - 10), b.y, 4); return; }
     this.ball = null; this.lauf = 0;
+    if (this.rueckRest > 0 && this.zustand === 'spiel' && this.lv.formen.some((f) => !f.voll)) { this.rueckRest--; this.kugeln++; this.geschossen--; schwebText('Zweite Chance: Kugel zurück', 180, 200, F.gruen, 17); }
     mehlWolke(klemm(b.x, 10, W - 10), b.y, 6);
   },
   geschafft(){
@@ -564,7 +691,8 @@ SPIELE.schleuder = {
     for (let i = 0; i < 3; i++) setTimeout(() => { if (i < n && this.zustand === 'fertig') teilchen(180 + (i - 1) * 50, 200, { n: 14, form: 'stern', tempo: 160 }); }, 250 + i * 220);
   },
   testZug(){
-    if (this.zustand !== 'spiel' || this.ball || this.einflug < 1 || this.laden < 1) return { x: 20, y: 30, warte: 300 };
+    if (this.zustand === 'karten' && this.karten && !this.gewaehlt && this.kartenT > .6) { const r = this.kartenRect(0); return { x: r.x + r.w / 2, y: r.y + r.h / 2, warte: 400 }; }
+    if (this.zustand !== 'spiel' || this.fliegt() || this.einflug < 1 || this.laden < 1) return { x: 20, y: 30, warte: 300 };
     const formen = this.lv.formen;
     const t = schl_pruefe(this.lv, formen, this.zeit + .3); schl_dyn(this.lv, this.zeit);
     let wahl = null;
@@ -575,10 +703,10 @@ SPIELE.schleuder = {
   },
 
   // ── Zeichnen ──
-  kugel(px, py, { sx = 1, sy = 1, rot = 0, a = 1 } = {}){
+  kugel(px, py, { sx = 1, sy = 1, rot = 0, a = 1, schwer = false } = {}){
     x.save(); x.translate(px, py); x.rotate(rot); x.scale(sx, sy); x.globalAlpha = a;
     x.fillStyle = 'rgba(120,80,30,.25)'; x.beginPath(); x.arc(.8, 1.4, SCHL_R, 0, 7); x.fill();
-    x.fillStyle = radial(0, 0, 1, SCHL_R + 1, [[0, '#FFF8E6'], [.55, '#F6E1B2'], [1, '#D9B373']], -3.5, -4); x.beginPath(); x.arc(0, 0, SCHL_R, 0, 7); x.fill();
+    x.fillStyle = schwer ? radial(0, 0, 1, SCHL_R + 1, [[0, '#C69A66'], [.55, '#8A5A2C'], [1, '#4B2A14']], -3.5, -4) : radial(0, 0, 1, SCHL_R + 1, [[0, '#FFF8E6'], [.55, '#F6E1B2'], [1, '#D9B373']], -3.5, -4); x.beginPath(); x.arc(0, 0, SCHL_R, 0, 7); x.fill();
     x.fillStyle = 'rgba(255,255,255,.75)'; x.beginPath(); x.ellipse(-3.6, -4.4, 3.2, 2, -.6, 0, 7); x.fill();
     x.fillStyle = 'rgba(255,255,255,.55)'; for (const [a, c] of [[3, -2], [-1, 4], [5, 3], [-5, 1]]) { x.beginPath(); x.arc(a, c, .9, 0, 7); x.fill(); }
     x.restore();
@@ -807,6 +935,8 @@ SPIELE.schleuder = {
     for (const l of this.lv.luefter || []) this.wind(l, zeit);
     x.restore();
     if (this.gold) this.form(this.gold, zeit);
+    this.powerMalen(zeit);
+    for (const e of this.extra || []) this.kugel(e.x, e.y, { sx: .95, sy: .95 });
     // Schüssel mit den übrigen Kugeln
     const bx = 34, by = SCHL_BODEN;
     bodenSchatten(bx + 3, by, 30, 5, .35);
@@ -821,14 +951,14 @@ SPIELE.schleuder = {
     const z = this.ziehen;
     if (z) {
       const k = { x: SCHL_A.x + z.dx, y: SCHL_A.y + z.dy }, st = Math.hypot(z.dx, z.dy) / SCHL_MAX;
-      this.kugel(k.x, k.y, { sx: 1 + st * .12, sy: 1 - st * .1, rot: Math.atan2(z.dy, z.dx) });
+      this.kugel(k.x, k.y, { sx: 1 + st * .12, sy: 1 - st * .1, rot: Math.atan2(z.dy, z.dx), schwer: this.naechsterSchuss === 'schwer' });
       if (st > .19) {
         const b = { x: k.x, y: k.y, vx: -z.dx * SCHL_K, vy: -z.dy * SCHL_K };
-        const nP = this.gemuetlich ? 34 : 16; for (let i = 1; i <= nP; i++) { for (let s = 0; s < 4; s++) { b.vy += SCHL_G / 120; b.x += b.vx / 120; b.y += b.vy / 120; } if (i < 2) continue; const a = 1 - i / (nP + 1); x.fillStyle = `rgba(255,251,242,${.95 * a + .05})`; x.beginPath(); x.arc(b.x, b.y, Math.max(1.6, 4.4 - i * (2.6 / nP)), 0, 7); x.fill(); x.strokeStyle = `rgba(75,42,20,${.6 * a})`; x.lineWidth = 1.4; x.stroke(); }
+        const nP = (this.gemuetlich ? 34 : 16) + (this.verb ? this.verb.ziel * 9 : 0); for (let i = 1; i <= nP; i++) { for (let s = 0; s < 4; s++) { b.vy += SCHL_G / 120; b.x += b.vx / 120; b.y += b.vy / 120; } if (i < 2) continue; const a = 1 - i / (nP + 1); x.fillStyle = `rgba(255,251,242,${.95 * a + .05})`; x.beginPath(); x.arc(b.x, b.y, Math.max(1.6, 4.4 - i * (2.6 / nP)), 0, 7); x.fill(); x.strokeStyle = `rgba(75,42,20,${.6 * a})`; x.lineWidth = 1.4; x.stroke(); }
       }
     } else if (!this.ball && (this.kugeln || 0) > 0 && this.zustand === 'spiel') {
       const l = ease.feder(this.laden ?? 1), atem = Math.sin(zeit * 3) * .03;
-      this.kugel(SCHL_A.x, SCHL_A.y + (1 - l) * 18, { sx: (1 + atem) * l, sy: (1 - atem) * l });
+      this.kugel(SCHL_A.x, SCHL_A.y + (1 - l) * 18, { sx: (1 + atem) * l, sy: (1 - atem) * l, schwer: this.naechsterSchuss === 'schwer' });
     }
     this.schleuder('vorne');
     const b = this.ball;
@@ -836,7 +966,7 @@ SPIELE.schleuder = {
       const v = Math.hypot(b.vx, b.vy), st = Math.min(.28, v / 2400);
       let sx = 1 + st, sy = 1 - st * .8, rot = Math.atan2(b.vy, b.vx);
       if (b.quetsch > 0 && b.qN) { const q = b.quetsch * .35; rot = Math.atan2(b.qN[1], b.qN[0]); sx = 1 - q; sy = 1 + q * .8; }
-      const a = klemm((b.acc || 0) * 120, 0, 1); this.kugel(lerp(b.px ?? b.x, b.x, a), lerp(b.py ?? b.y, b.y, a), { sx, sy, rot });
+      const a = klemm((b.acc || 0) * 120, 0, 1); this.kugel(lerp(b.px ?? b.x, b.x, a), lerp(b.py ?? b.y, b.y, a), { sx, sy, rot, schwer: b.schwer });
     }
     // Anleitung beim ersten Schuss
     if (this.level === 1 && this.geschossen === 0 && !z && this.zustand === 'spiel') {
@@ -878,6 +1008,8 @@ SPIELE.schleuder = {
       text(this.restBonus + (this.restGezaehlt || 0) > 0 ? `Übrige Kugeln: +${((this.restGezaehlt || 0) + this.restBonus) * 30}` : 'Keine Kugel übrig', 0, 42, { gr: 13, farbe: F.goldDunkel, schat: false });
       x.restore();
     }
+    if (this.zustand !== 'auswahl') this.verbMalen();
+    if (this.zustand === 'karten') this.kartenMalen(zeit);
     if (this.zustand === 'auswahl') this.malAuswahl(zeit);
   }
 };
