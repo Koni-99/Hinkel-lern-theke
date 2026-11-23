@@ -91,6 +91,8 @@ export const PERSONAS: Persona[] = [
 ];
 
 /** Tageszeit-Gruß passend zur echten Uhrzeit */
+/** Version 292: jetzige Uhrzeit als „20:55“ (steht im Theken-Simulator, damit man den passenden Gruß weiß) */
+export const uhrzeitJetzt = () => new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 export function timeGreeting() {
   const h = new Date().getHours();
   if (h < 11) return { std: 'Guten Morgen', wrong: 'Guten Abend', customer: ['Guten Morgen!', 'Morgen!', 'Guten Morgen zusammen!', 'Tach!'] };

@@ -3,7 +3,7 @@
 import { korrigiereSchritt, themaAus } from '../../hilfen/spielKorrektur';
 import { shuffleArray } from '../../hilfen/allgemein';
 import { euro } from '../Kassenblitz';
-import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, Core, opts } from './basis';
+import { SimOpt, SimStep, Persona, Conversation, pick, sample, rnd, parseCents, ROLLS, SLICE, TYPE_LABEL, PERSONAS, timeGreeting, uhrzeitJetzt, Core, opts } from './basis';
 import { scPrice } from './szenarienVerkauf';
 import { SCENARIOS } from './szenarienAlltag';
 import { SLICE_EXCLUDE } from '../SchneideProfi';
@@ -91,7 +91,7 @@ export function buildConversation(focus?: string, skip: string[] = [], lang = fa
       const phrase = pick(['Was darf’s sein?', 'Was bekommen Sie?', 'Was hätten Sie gern?', 'Was darf ich Ihnen geben?', 'Was kann ich für Sie tun?']);
       const greet = isRegular ? `${g.std}, ${persona.title}!` : `${g.std}!`;
       const wrongPool: SimOpt[] = [
-        { text: `${g.wrong}! ${phrase}`, correct: false, why: `Achte auf die Tageszeit, jetzt passt „${g.std}“.` },
+        { text: `${g.wrong}! ${phrase}`, correct: false, why: `Es ist ${uhrzeitJetzt()} Uhr, da passt „${g.std}“ (bis 11 Uhr „Guten Morgen“, bis 18 Uhr „Guten Tag“, danach „Guten Abend“).` },
         { text: pick(['Ja, hallo, einen Moment, ich muss erst noch die Brötchen auffüllen.', 'Gleich, ich räume nur noch kurz das Blech hier weg, ja?', 'Moment, ich muss eben noch die Kasse zählen.']), correct: false, why: 'Der Kunde geht immer vor, erst begrüßen und bedienen.' },
         { text: pick(['Hallo! Na, was willst du denn heute haben? Sag einfach.', 'Hi! Was brauchst du? Sag einfach Bescheid, ich mach dir das.']), correct: false, why: 'Kunden siezen wir, freundlich mit Tagesgruß begrüßen.' },
         { text: '(Ohne aufzuschauen:) Ja bitte?', correct: false, why: 'Blickkontakt, Lächeln und ein freundlicher Tagesgruß gehören dazu.' },

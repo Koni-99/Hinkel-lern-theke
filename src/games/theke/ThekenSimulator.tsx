@@ -9,7 +9,7 @@ import { ReportLink, ReportContext } from '../../ui/melden';
 import { scrollToPlay } from '../../ui/belohnungen';
 import { OnLearn, LearnHint, SpeakButton, canSpeak, sprichKunde, sprichSimulator, stopSpeaking, KnownMap, OnKnown, useOnlyNew, OnlyNewToggle, learnedText } from '../spielBasis';
 import { euro } from '../Kassenblitz';
-import { SimOpt, Conversation, ChatMsg, pick } from './basis';
+import { SimOpt, Conversation, ChatMsg, pick, uhrzeitJetzt } from './basis';
 import { LtIcon, ICON } from '../../basis/symbole';
 
 /** Was der Kunde laut sagt: Regieanweisungen in Klammern weglassen */
@@ -318,11 +318,15 @@ export function ThekenSimulatorView({ pruefungStart, onPruefungGestartet, onSave
               <span>
                 <span style={{ display: 'block', fontWeight: 700, fontSize: '18px' }}>{conv.persona.name}</span>
                 <span style={{ display: 'block', fontSize: '15px', color: TH.muted }}>{conv.persona.who}{focus ? ` · Übung: ${focus}` : ''}</span>
+                <span className="lt-theke-uhr" style={{ display: 'inline-block', marginTop: '4px', padding: '2px 10px', borderRadius: '999px', backgroundColor: TH.tintYellow, fontSize: '14px', fontWeight: 700 }}>Jetzt {uhrzeitJetzt()} Uhr</span>
               </span>
             </div>
+            {/* Version 292: Zähler als eigene Gruppe, rutscht am Handy unter die Kunden-Karte statt sie zusammenzuquetschen */}
+            <div className="lt-theke-zaehler" style={{ flex: '1 1 200px', display: 'flex', gap: '10px' }}>
             {pruefung ? <StatChip label="Prüfung" value="läuft" tone="yellow" /> : <StatChip label="Richtig" value={`${correct} / ${total}`} tone="yellow" />}
             <StatChip label="Bedient" value={served} />
             {tipTotal > 0 && <StatChip label="Trinkgeld" value={euro(tipTotal)} />}
+            </div>
           </div>
 
           <div style={{ ...cardStyle, padding: '18px', display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: TH.cream, position: 'relative' }}>

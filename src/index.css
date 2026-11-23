@@ -6,7 +6,8 @@ html {
   -webkit-hyphens: auto;
   hyphens: auto;
   hyphenate-limit-chars: 10 4 4;
-  overflow-wrap: anywhere;
+  /* break-word statt anywhere (Version 292): sonst schrumpfen schmale Kästchen auf einen Buchstaben Breite */
+  overflow-wrap: break-word;
 }
 
 body {

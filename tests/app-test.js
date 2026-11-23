@@ -1263,7 +1263,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && /Dreifachsprung/.test(hilfe) && /Kornspeicher/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && /Dreifachsprung/.test(hilfe) && /Kornspeicher/.test(hilfe) && /bis 18 Uhr/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
@@ -1291,6 +1291,9 @@ async function offlineTests() {
         let a = e.parentElement; while (a && a !== document.body && (!istRahmen(a) || a.getBoundingClientRect().width < 2)) a = a.parentElement;
         const ar = a && a !== document.body ? a.getBoundingClientRect() : { left: 0, right: vw };
         if (tr.right > Math.min(ar.right, vw) + 1.5 || tr.left < Math.max(ar.left, 0) - 1.5) out.push(`„${e.textContent.trim().slice(0, 40)}“`);
+        // Version 292: zu schmal gequetscht (Buchstaben untereinander, z. B. „Richtig“ im Theken-Simulator)
+        const zeilen = new Set([...r.getClientRects()].map((q) => Math.round(q.top))).size, txt = e.textContent.trim();
+        if (zeilen >= 3 && txt.replace(/\s/g, '').length / zeilen < 2.5) out.push(`„${txt.slice(0, 40)}“ zu schmal`);
       }
       if (document.documentElement.scrollWidth > vw + 1) out.push('Seite breiter als der Bildschirm');
       return [...new Set(out)];
@@ -1306,7 +1309,7 @@ async function offlineTests() {
       if (tab === 'preisduell') await d.page.evaluate(() => { const n = [...document.querySelectorAll('main div')].find((e) => e.children.length === 0 && /\S/.test(e.textContent) && getComputedStyle(e).fontWeight === '700' && getComputedStyle(e).fontSize === '19px'); if (!n) throw new Error('Preis-Duell: Produktname nicht gefunden'); if (n) { n.textContent = 'Sonnenblumenkern-Schwarzbrot (Kasten)'; n.style.fontSize = '23px'; } });
       (await d.page.evaluate(SCAN)).forEach((t) => fehler.push(`${tab}: ${t}`));
     }
-    ok('Kein Text läuft über den Rand (5 Seiten und 11 Spiele, 320 Punkte breit)', fehler.length === 0, fehler.slice(0, 6).join(' | '));
+    ok('Kein Text läuft über den Rand oder ist zu schmal gequetscht (5 Seiten und 11 Spiele, 320 Punkte breit)', fehler.length === 0, fehler.slice(0, 6).join(' | '));
     ok('Version 288: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
@@ -1388,6 +1391,20 @@ async function offlineTests() {
     ok('Schädlinge: Großeinkauf macht Fallen billiger, Karten nach Welle 3', r.rabatt && r.szKarten, JSON.stringify(r));
     ok('Teig-Schleuder: Magnet-Kugel', r.magnetKugel);
     ok('Version 290: keine Fehler', d.errors.length === 0, d.errors[0]);
+    await d.ctx.close();
+  }]);
+  // Version 292: Theken-Simulator zeigt die Uhrzeit (für den passenden Gruß)
+  teile.push(['Version 292: Uhrzeit im Theken-Simulator', async () => {
+    const d = await device({ user: 'Anna', viewport: { width: 360, height: 760 }, vorher: async (ctx) => ctx.addInitScript(() => { if (sessionStorage.getItem('__v292')) return; sessionStorage.setItem('__v292', '1'); sessionStorage.setItem('lt_seite', 'theke'); }) });
+    await clearPopups(d.page);
+    const st = d.page.getByRole('button', { name: 'Ersten Kunden bedienen' });
+    for (let w = 0; w < 40 && !(await st.count()); w++) await sleep(100);
+    await click(st); await settle(d.page, 800);
+    const uhr = await d.page.locator('.lt-theke-uhr').innerText().catch(() => '');
+    ok('Theken-Simulator: Uhrzeit steht bei der Kundin („Jetzt 12:34 Uhr“)', /^Jetzt \d\d:\d\d Uhr$/.test(uhr), uhr);
+    const breit = await d.page.locator('.lt-statchip').evaluateAll((el) => el.map((e) => e.getBoundingClientRect().width));
+    ok('Theken-Simulator: Zähler „Richtig“ und „Bedient“ nicht gequetscht', breit.length >= 2 && breit.every((w) => w > 70), JSON.stringify(breit));
+    ok('Version 292: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
