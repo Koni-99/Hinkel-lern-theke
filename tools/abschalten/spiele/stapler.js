@@ -162,7 +162,7 @@ SPIELE.stapler = {
     const gd = !this.gem && typeof geistLesen === 'function' ? geistLesen('stapler') : null;
     this.geist = gd && Array.isArray(gd.t) && gd.t.length > 1 ? { t: gd.t, e: gd.e || gd.t[gd.t.length - 1] + 20, aus: false } : null;
     this.goldZeit = zufall(15, 40);
-    this.folge = []; this.naechste = null; this.verb = {}; this.netzRest = 0; this.langsamN = 0;
+    this.folge = []; this.naechste = null; this.verb = {}; this.netzRest = 0; this.langsamN = 0; this.kartenIn = 0;
     this.neuesBrot(STAP_MAX);
   },
   /** Faire Reihenfolge: erst nur Laib und Stuten, nie zwei schwierige direkt hintereinander am Anfang */
@@ -279,7 +279,7 @@ SPIELE.stapler = {
     this.oben = cy - a.h / 2;
     if (this.rekordH && this.anzahl === this.rekordH + 1 && !this.rekordGezeigt) { this.rekordGezeigt = true; setTimeout(() => schwebText('Neue Bestmarke!', W / 2, 150, '#B07A00', 22), 400); }
     if (this.anzahl % 10 === 0) this.frageIn = .55;
-    if (this.anzahl % 10 === 5 && !this.gem) setTimeout(() => { if (laeuft && spiel === this && this.tot < 0) karten(kartenAuswahl(STAP_VERB, this.verb), 'Powerup für den Stapel', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'netz') this.netzRest++; this.akt.sperre = .4; }); }, 500);
+    if (this.anzahl % 10 === 5 && !this.gem) this.kartenIn = .5;
     this.zielSchaetzen();
     this.neuesBrot(neu.r - neu.l);
     // Goldlaib: ganz selten, nicht am Anfang
@@ -300,6 +300,7 @@ SPIELE.stapler = {
     for (const p of this.stuecke) { p.vy += 1500 * dt; p.px += p.vx * dt; p.py += p.vy * dt; p.rot += p.vr * dt; }
     this.stuecke = this.stuecke.filter((p) => p.py + this.kamera < H + 120);
     this.seilWeg = Math.max(0, (this.seilWeg || 0) - dt * 3);
+    if (this.kartenIn > 0 && this.tot < 0) { this.kartenIn -= dt; if (this.kartenIn <= 0) karten(kartenAuswahl(STAP_VERB, this.verb), 'Powerup für den Stapel', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'netz') this.netzRest++; this.akt.sperre = .4; }); }
 
     if (this.tot >= 0) {
       this.tot += dt;

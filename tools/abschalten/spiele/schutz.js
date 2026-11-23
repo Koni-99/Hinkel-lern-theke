@@ -261,12 +261,21 @@ function sz_statisch(){
   rr(tx + 18, ty - 20, 56, 16, 8); x.fillStyle = linear(0, ty - 20, 0, ty - 4, [[0, '#FFD95A'], [1, '#E6A800']]); x.fill(); x.strokeStyle = '#8A5A10'; x.lineWidth = 1; x.stroke();
 }
 
+// Version 291: Karten nach jeder 3. Welle (gelten für die ganze Runde)
+const SZ_VERB = {
+  koerner: { n: 'Kornspeicher', z: ['+25 % Körner', 'pro Schädling'], max: 2, sym: () => SYM.korn() },
+  lager: { n: 'Dicke Tür', z: ['+2 Herzen', 'fürs Lager'], max: 2, sym: () => SYM.herz() },
+  rabatt: { n: 'Großeinkauf', z: ['Fallen 15 %', 'billiger'], max: 2, sym: () => SYM.kiste() },
+  reich: { n: 'Weitblick', z: ['Alle Fallen', '+10 % Reichweite'], max: 2, sym: () => SYM.ziel() },
+  tempo: { n: 'Flinke Fallen', z: ['Fallen treffen', '12 % schneller'], max: 2, sym: () => SYM.blitz() },
+};
+
 SPIELE.schutz = {
   medaillen: [800, 2400, 5000],
   key: 'schutz', name: 'Schädlinge abwehren', kurz: 'Verteidigen',
   anleitung: 'Mäuse, Motten und Käfer wollen ins Mehllager. Tippe einen Platz und wähle eine Falle: Mausefalle gegen Mäuse, Leuchte gegen Motten, Minz-Duft bremst alle. Später kommen Klebefalle und Katze dazu. Nochmal tippen verbessert sie (bis Stufe 5). Alle 5 Wellen zieht ihr in ein neues Lager.',
   start(){
-    SZ_K = SZ_KARTEN[0]; sz_bg = null;
+    SZ_K = SZ_KARTEN[0]; sz_bg = null; this.verb = {};
     this.gem = !!GEMUETLICH; this.geld = this.gem ? 150 : 75; this.lager = this.gem ? 10 : 5; this.lagerMax = this.lager; this.welle = 0; this.tiere = []; this.fallen = []; this.schuesse = []; this.koerner = [];
     this.pause = 6; this.spawnT = 0; this.warteschlange = null; this.punkte = 0; this.menu = null; this.zeit = 0; this.banner = 0; this.bannerText = ''; this.bannerSub = '';
     this.vorbei = 0; this.besiegt = 0; this.reichZeig = null; this.lagerWackel = 0; this.gold = null; this.goldZeit = zufall(15, 45); this.neuHinweis = null;
@@ -274,13 +283,15 @@ SPIELE.schutz = {
   aktuellePunkte(){ return (this.punkte || 0) + (this.welle || 0) * 25; },
   falleAuf(i){ return this.fallen.find((f) => f.platz === i); },
   /** Welche Fallen man schon bauen kann (in der Pause zählt schon die nächste Welle) */
+  preis(p){ return Math.round(p * (1 - .15 * ((this.verb && this.verb.rabatt) || 0))); },
+  reichF(){ return 1 + .1 * ((this.verb && this.verb.reich) || 0); },
   frei(art){ return this.gem || this.welle + (this.pause > 0 ? 1 : 0) >= SZ_ARTEN[art].ab; },
   menuKnoepfe(){
     const m = this.menu; if (!m) return [];
     const [px, py] = SZ_K.plaetze[m.platz], f = this.falleAuf(m.platz);
     let k;
-    if (!f) k = SZ_REIHE.filter((art) => this.frei(art)).map((art) => ({ art, typ: 'bau', preis: SZ_ARTEN[art].preis }));
-    else { k = []; if (f.st < SZ_MAX) k.push({ typ: 'up', art: f.art, preis: sz_upPreis(f.art, f.st) }); k.push({ typ: 'weg', art: f.art, preis: -Math.round(f.wert * .6) }); }
+    if (!f) k = SZ_REIHE.filter((art) => this.frei(art)).map((art) => ({ art, typ: 'bau', preis: this.preis(SZ_ARTEN[art].preis) }));
+    else { k = []; if (f.st < SZ_MAX) k.push({ typ: 'up', art: f.art, preis: this.preis(sz_upPreis(f.art, f.st)) }); k.push({ typ: 'weg', art: f.art, preis: -Math.round(f.wert * .6) }); }
     // Leiste mit großen Knöpfen: unten, oder oben, wenn der Platz selbst unten liegt (nichts klebt am Rand)
     const n = k.length, bw = n > 2 ? Math.min(64, (W - 24 - (n - 1) * 6) / n) : 104, bh = 70, ges = n * bw + (n - 1) * 6, oben = py > 300;
     const y0 = oben ? 96 : H - bh - 8;
@@ -344,9 +355,9 @@ SPIELE.schutz = {
     if (t.hp > 0) return;
     t.weg = true; this.besiegt++; statPlus('gefangen', 1);
     const d = SZ_TIERE[t.art], zx = t.p.x, zy = t.p.y - (t.art === 'motte' ? 10 : 0);
-    this.geld += d.geld; this.punkte += d.pkt;
+    const g = Math.round(d.geld * (1 + .25 * ((this.verb && this.verb.koerner) || 0))); this.geld += g; this.punkte += d.pkt;
     mehlWolke(zx, zy, t.art === 'boss' ? 24 : 10); teilchen(zx, zy, { n: t.art === 'boss' ? 30 : 8, farben: ['#E3A928', '#F7C64A', '#FFF1B8'], form: 'krume', tempo: 110 });
-    schwebText('+' + d.geld, zx, zy - 14, '#B9800E', t.art === 'boss' ? 22 : 16);
+    schwebText('+' + g, zx, zy - 14, '#B9800E', t.art === 'boss' ? 22 : 16);
     if (t.art === 'boss') { brumm(80); wackeln(5); schwebText('Riesenratte vertrieben!', W / 2, 200, '#B8860B', 20); }
     this.koerner.push({ x0: zx, y0: zy, t: 0 });
   },
@@ -375,12 +386,13 @@ SPIELE.schutz = {
       this.banner = 2; this.bannerText = 'Welle geschafft'; brumm(25); statMax('wellen', this.welle); this.bannerSub = `+${bonus} Körner`;
       if (this.welle % 5 === 0 && this.welle < 11) { this.bannerSub = `+${bonus} Körner. Gleich: neues Lager`; }
       this.pause = 4.5; this.warteschlange = null;
-      if (this.welle % 2 === 0) setTimeout(() => { if (laeuft && !this.vorbei) frage((ok) => { if (ok) { this.geld += 30; schwebText('+30 Körner', W / 2, 240, '#C98A00', 22); teilchen(W / 2, 240, { n: 20, form: 'stern' }); } }); }, 900);
+      const mitKarten = this.welle % 3 === 0 && !this.gem && karten(kartenAuswahl(SZ_VERB, this.verb), 'Powerup fürs Lager', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'lager') { this.lager += 2; this.lagerMax += 2; } });
+      if (this.welle % 2 === 0 && !mitKarten) setTimeout(() => { if (laeuft && !this.vorbei) frage((ok) => { if (ok) { this.geld += 30; schwebText('+30 Körner', W / 2, 240, '#C98A00', 22); teilchen(W / 2, 240, { n: 20, form: 'stern' }); } }); }, 900);
     }
     // Tiere bewegen
     for (const t of this.tiere) {
       let bremse = 0;
-      for (const f of this.fallen) if (f.art === 'minz' && t.p && Math.hypot(t.p.x - f.x, t.p.y - f.y) < SZ_ARTEN.minz.reich[f.st - 1]) bremse = Math.max(bremse, SZ_ARTEN.minz.bremse[f.st - 1]);
+      for (const f of this.fallen) if (f.art === 'minz' && t.p && Math.hypot(t.p.x - f.x, t.p.y - f.y) < SZ_ARTEN.minz.reich[f.st - 1] * this.reichF()) bremse = Math.max(bremse, SZ_ARTEN.minz.bremse[f.st - 1]);
       t.gebremst = bremse; t.klebt = Math.max(0, t.klebt - dt);
       if (!(t.klebt > 0)) t.d += t.v * (1 - bremse) * (this.gem ? .7 : 1) * dt;
       t.p = sz_punktAuf(t.d, t.wi);
@@ -392,14 +404,14 @@ SPIELE.schutz = {
     for (const f of this.fallen) {
       f.ein = Math.min(1, f.ein + dt * 3); f.schnapp = Math.max(0, f.schnapp - dt * 3); f.cd -= dt;
       if (f.art === 'minz' || f.cd > 0) continue;
-      const a = SZ_ARTEN[f.art], s = f.st - 1, reich = a.reich[s];
+      const a = SZ_ARTEN[f.art], s = f.st - 1, reich = a.reich[s] * this.reichF();
       const passt = (t, r = reich, px = f.x, py = f.y) => t.p && !t.weg && t.p.y > 80 && (a.ziel === 'alle' || (a.ziel === 'boden') === sz_boden(t)) && Math.hypot(t.p.x - px, t.p.y - py) < r;
       let kand = this.tiere.filter((t) => passt(t));
       if (f.art === 'kleber') kand = kand.filter((t) => !(t.klebt > .2));
       if (!kand.length) continue;
       kand.sort((u, v) => fortschritt(v) - fortschritt(u));
       const ziele = kand.slice(0, f.st === SZ_MAX && (f.art === 'falle' || f.art === 'licht') ? 2 : 1);
-      f.cd = a.cd[s];
+      f.cd = a.cd[s] * (1 - .12 * ((this.verb && this.verb.tempo) || 0));
       for (const ziel of ziele) {
         const zx = ziel.p.x, zy = ziel.p.y - (ziel.art === 'motte' ? 10 : 0);
         this.schuesse.push({ art: f.art, x1: f.x, y1: f.y - (f.art === 'licht' ? 10 : 0), x2: zx, y2: zy, t: 0 });
@@ -427,9 +439,9 @@ SPIELE.schutz = {
     text('LAGER', 180, 426, { gr: 10, farbe: F.braun, schat: false });
     // Reichweite
     const zeigR = this.menu ? this.menu.platz : this.reichZeig ? this.reichZeig.platz : null;
-    if (zeigR !== null) { const f = this.falleAuf(zeigR); if (f) { const r = SZ_ARTEN[f.art].reich[f.st - 1], a = this.menu ? 1 : Math.min(1, this.reichZeig.t); const fa = { falle: '201,138,0', licht: '255,200,40', kleber: '230,170,0', katze: '220,110,40' }[f.art] || '60,170,110'; x.fillStyle = `rgba(${fa},${.12 * a})`; x.beginPath(); x.arc(f.x, f.y, r, 0, 7); x.fill(); x.strokeStyle = `rgba(${fa},${.7 * a})`; x.lineWidth = 2; x.setLineDash([6, 5]); x.stroke(); x.setLineDash([]); } }
+    if (zeigR !== null) { const f = this.falleAuf(zeigR); if (f) { const r = SZ_ARTEN[f.art].reich[f.st - 1] * this.reichF(), a = this.menu ? 1 : Math.min(1, this.reichZeig.t); const fa = { falle: '201,138,0', licht: '255,200,40', kleber: '230,170,0', katze: '220,110,40' }[f.art] || '60,170,110'; x.fillStyle = `rgba(${fa},${.12 * a})`; x.beginPath(); x.arc(f.x, f.y, r, 0, 7); x.fill(); x.strokeStyle = `rgba(${fa},${.7 * a})`; x.lineWidth = 2; x.setLineDash([6, 5]); x.stroke(); x.setLineDash([]); } }
     // Minz-Wolken
-    for (const f of this.fallen || []) if (f.art === 'minz') { const r = SZ_ARTEN.minz.reich[f.st - 1]; x.fillStyle = radial(f.x, f.y, r * .2, r, [[0, 'rgba(110,210,160,.16)'], [1, 'rgba(110,210,160,0)']]); x.beginPath(); x.arc(f.x, f.y, r, 0, 7); x.fill(); }
+    for (const f of this.fallen || []) if (f.art === 'minz') { const r = SZ_ARTEN.minz.reich[f.st - 1] * this.reichF(); x.fillStyle = radial(f.x, f.y, r * .2, r, [[0, 'rgba(110,210,160,.16)'], [1, 'rgba(110,210,160,0)']]); x.beginPath(); x.arc(f.x, f.y, r, 0, 7); x.fill(); }
     // Fallen
     for (const f of this.fallen || []) sz_falleMalen(f, zeit, this.menu && this.menu.platz === f.platz);
     // Tiere (Mäuse und Käfer unten, Motten oben)
@@ -451,6 +463,7 @@ SPIELE.schutz = {
     if (this.gem && laeuft) text('Gemütlich', 16, 472, { gr: 10, farbe: 'rgba(255,240,215,.75)', ausr: 'left', schat: false });
     if (this.gold && !this.gold.weg) { const g = this.gold, aus = Math.max(0, Math.min(1, (g.dauer - g.t) / .6)); x.globalAlpha = aus; bodenSchatten(g.x, g.y + 26, 14, 4, .3); goldGlanz(g.x, g.y, 20, zeit); x.save(); x.translate(g.x, g.y); x.rotate(Math.sin(zeit * 3) * .18); x.scale(1.05, 1.05); sz_goldAehre(); x.restore(); x.globalAlpha = 1; }
     // Menü
+    kartenLeiste(SZ_VERB, this.verb, 62);
     if (this.menu) this.menuMalen(zeit);
     // Hinweis am Anfang
     if (laeuft && !this.fallen.length && !this.menu && !this.vorbei) { const b = Math.abs(Math.sin(zeit * 4)) * 6; const [hx, hy] = SZ_K.plaetze[5]; x.save(); x.translate(hx, hy - 30 - b); x.fillStyle = '#FFC72C'; x.strokeStyle = '#4B2A14'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(0, 14); x.lineTo(-11, 1); x.lineTo(-4.5, 1); x.lineTo(-4.5, -12); x.lineTo(4.5, -12); x.lineTo(4.5, 1); x.lineTo(11, 1); x.closePath(); x.stroke(); x.fill(); x.restore(); this.zettel('Tippe einen Platz und baue eine Falle', 404); }

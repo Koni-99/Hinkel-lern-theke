@@ -24,10 +24,14 @@ const CH_VERB = {
   ofen4: { n: 'Vierter Ofen', k: '4 Öfen', z: ['Ein Ofen mehr', 'in der Backstube'] },
   auslage: { n: 'Größere Auslage', k: 'Vitrine', z: ['6 statt 4 Plätze', 'in der Vitrine'] },
   leben: { n: 'Extra-Herz', k: 'Herz', z: ['Ein Herz mehr,', 'gleich aufgefüllt'] },
+  trinkgeld: { n: 'Trinkgeld', k: 'Trinkg.', z: ['Kunden zahlen', '25 % mehr Punkte'] },
+  ruhig: { n: 'Ruhige Zeit', k: 'Ruhig', z: ['Kunden kommen', 'etwas seltener'] },
 };
 /** Kleines Symbol je Verbesserung, Mitte bei (0, 0), etwa 40 px */
 function ch_verbIcon(k){
   x.lineCap = 'round'; x.lineJoin = 'round';
+  if (k === 'trinkgeld') { x.save(); x.scale(1.15, 1.15); SYM.korn(); x.restore(); return; }
+  if (k === 'ruhig') { x.save(); x.scale(1.15, 1.15); SYM.uhr(); x.restore(); return; }
   if (k === 'schnell') { x.fillStyle = linear(0, -18, 0, 18, [[0, '#FFE27A'], [.5, '#FF9A2E'], [1, '#E0452E']]); x.beginPath(); x.moveTo(0, -20); x.bezierCurveTo(14, -6, 16, 6, 10, 14); x.quadraticCurveTo(0, 22, -10, 14); x.bezierCurveTo(-16, 4, -8, -4, -4, -8); x.quadraticCurveTo(-2, 0, 2, 2); x.quadraticCurveTo(4, -10, 0, -20); x.fill(); x.fillStyle = '#FFF4C8'; x.beginPath(); x.ellipse(1, 10, 4, 6, 0, 0, 7); x.fill(); }
   else if (k === 'fenster') { rr(-20, -6, 40, 12, 6); x.fillStyle = '#F2C66B'; x.fill(); x.fillStyle = '#3DBA5A'; rr(-12, -6, 24, 12, 3); x.fill(); x.strokeStyle = '#FFFFFF'; x.lineWidth = 2; x.beginPath(); x.moveTo(-16, -12); x.lineTo(-20, -12); x.moveTo(16, -12); x.lineTo(20, -12); x.stroke(); x.fillStyle = '#FFFFFF'; x.beginPath(); x.moveTo(0, -4); x.lineTo(-6, -14); x.lineTo(6, -14); x.closePath(); x.fill(); x.strokeStyle = '#FFE08A'; x.beginPath(); x.moveTo(-10, 12); x.lineTo(-18, 12); x.moveTo(10, 12); x.lineTo(18, 12); x.stroke(); }
   else if (k === 'geduld') { x.fillStyle = '#F6D3B6'; x.beginPath(); x.arc(0, 0, 16, 0, 7); x.fill(); x.fillStyle = '#2B170A'; x.strokeStyle = '#2B170A'; x.lineWidth = 2.2; x.beginPath(); x.arc(-6, -2, 3.5, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(6, -2, 3.5, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.beginPath(); x.arc(0, 4, 6, .2, Math.PI - .2); x.stroke(); x.strokeStyle = '#3DAA55'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 19, -Math.PI / 2, Math.PI * 1.3); x.stroke(); }
@@ -230,7 +234,7 @@ SPIELE.chaos = {
     this.punkte = 0; this.leben = 3; this.zeit = 0; this.naechst = 1.2; this.tag = 1; this.tagDauer = 50; this.tagZeit = 50;
     this.serviert = 0; this.tagServiert = 0; this.perfekt = 0; this.tagPerfekt = 0; this.combo = 0; this.letzte = -99;
     this.phase = 'spiel'; this.phaseT = 0; this.banner = 1.8; this.ersteKunden = 0; this.lernSchritte = 0; this.vorbei = 0; this.rauch = 0; this.ofenWackel = [0, 0, 0, 0]; this.kisteHuepf = [0, 0, 0];
-    this.gem = !!GEMUETLICH; this.maxLeben = 3; this.verb = { schnell: 0, geduld: 0, fenster: 0, ofen4: 0, auslage: 0, leben: 0 }; this.karten = null; this.frageGestellt = false; ch_anz = 3; ch_ablN = 4; this.gold = null; this.goldZeit = zufall(15, 45);
+    this.gem = !!GEMUETLICH; this.maxLeben = 3; this.verb = { schnell: 0, geduld: 0, fenster: 0, ofen4: 0, auslage: 0, leben: 0, trinkgeld: 0, ruhig: 0 }; this.karten = null; this.frageGestellt = false; ch_anz = 3; ch_ablN = 4; this.gold = null; this.goldZeit = zufall(15, 45);
   },
   aktuellePunkte(){ return this.punkte || 0; },
   fenster(s){ const d = CH_SORTEN[s], extra = this.tag === 1 ? .8 : 0, eng = Math.max(.62, 1 - (this.tag - 1) * .08); const mitte = (d.g0 + d.g1) / 2, halb = ((d.g1 - d.g0) / 2 * eng + extra) * (1 + .25 * (this.verb ? this.verb.fenster : 0)); return [mitte - halb, mitte + halb]; },
@@ -271,7 +275,7 @@ SPIELE.chaos = {
     k.zust = 'froh'; k.wegT = 0;
     const geduld = 1 - k.t / k.max;
     this.combo = this.zeit - this.letzte < 6 ? Math.min(6, this.combo + 1) : 1; this.letzte = this.zeit;
-    const p = (10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5; this.punkte += p; this.serviert++; this.tagServiert++; brumm(20); statPlus('verkauft', k.n);
+    const p = Math.round(((10 + Math.round(geduld * 10)) * k.n + (this.combo - 1) * 5) * (1 + .25 * (this.verb.trinkgeld || 0))); this.punkte += p; this.serviert++; this.tagServiert++; brumm(20); statPlus('verkauft', k.n);
     const kx = ch_slotX(k.slot);
     schwebText('+' + p, kx, 70, F.gruen, 22);
     if (this.combo > 1) schwebText('Combo ×' + this.combo, kx, 100, '#C98A00', 16);
@@ -317,7 +321,7 @@ SPIELE.chaos = {
         if (o.t > o.f[1]) { this.rauch -= dt; if (this.rauch <= 0) { this.rauch = .12; const r = this.ofenRect(i); teilchen(r.x + zufall(30, 78), r.y + 34, { n: 1, farben: ['rgba(80,75,70,.55)', 'rgba(130,125,120,.45)'], tempo: 18, groesse: [6, 11], schwer: -70, leben: [.9, 1.5] }); } } }
       this.tagZeit -= dt; this.naechst -= dt;
       if (!this.gold && goldKommt() && this.zeit > this.goldZeit && this.tagZeit > 7) { const dir = Math.random() < .5 ? 1 : -1; this.gold = { t: 0, dauer: 4.8, dir, x: dir > 0 ? -30 : W + 30, y: 128, weg: false }; goldErschienen(); }
-      if (this.naechst <= 0) { this.neuerKunde(); const basis = this.tag === 1 ? 4.6 : Math.max(.9, 5.2 - (this.tag - 2) * .42); this.naechst = zufall(basis, basis + 2.2) * (this.gem ? 1.4 : 1); if (this.kunden.filter((k) => !k.zust).length === 0) this.naechst = 1; }
+      if (this.naechst <= 0) { this.neuerKunde(); const basis = this.tag === 1 ? 4.6 : Math.max(.9, 5.2 - (this.tag - 2) * .42); this.naechst = zufall(basis, basis + 2.2) * (this.gem ? 1.4 : 1) * (1 + .15 * (this.verb.ruhig || 0)); if (this.kunden.filter((k) => !k.zust).length === 0) this.naechst = 1; }
       if (this.leben <= 0) { this.vorbei = .01; return; }
       if (this.tagZeit <= 0) { statMax('tage', this.tag); this.phase = 'abschluss'; this.phaseT = 0; this.tagBonus = this.tagServiert * 5; this.punkte += this.tagBonus;
         for (const k of this.kunden) if (!k.zust) { k.zust = 'froh'; k.wegT = .4; }
@@ -336,7 +340,7 @@ SPIELE.chaos = {
   kartenZiehen(){
     const v = this.verb, moegl = [];
     if (v.schnell < 2) moegl.push('schnell'); if (v.geduld < 2 && !this.gem) moegl.push('geduld'); if (v.fenster < 2) moegl.push('fenster');
-    if (!v.ofen4) moegl.push('ofen4'); if (!v.auslage) moegl.push('auslage'); if (this.maxLeben < 5 && !this.gem) moegl.push('leben');
+    if (!v.ofen4) moegl.push('ofen4'); if (!v.auslage) moegl.push('auslage'); if (this.maxLeben < 5 && !this.gem) moegl.push('leben'); if (v.trinkgeld < 2) moegl.push('trinkgeld'); if (!v.ruhig && !this.gem) moegl.push('ruhig');
     if (this.tag === 1) { const i = moegl.indexOf('ofen4'); if (i >= 0) moegl.splice(i, 1); }
     for (let i = moegl.length - 1; i > 0; i--) { const j = ganz(0, i); [moegl[i], moegl[j]] = [moegl[j], moegl[i]]; }
     return moegl.slice(0, 3);

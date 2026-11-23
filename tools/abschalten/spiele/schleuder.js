@@ -210,8 +210,10 @@ const SCHL_VERB = {
   rueck: { n: 'Zweite Chance', z: ['Erster Fehlschuss', 'kommt zurück'], max: 2 },
   wind: { n: 'Windschutz', z: ['Lüfter pusten', 'halb so stark'], max: 1 },
   punkte: { n: 'Goldener Teig', z: ['+25 % Punkte', 'für jede Form'], max: 2 },
+  rest: { n: 'Sparsam', z: ['Übrige Kugeln', 'geben +50 % mehr'], max: 2 },
+  stern: { n: 'Sternenregen', z: ['3 Sterne auch', 'mit 4 Kugeln'], max: 1 },
 };
-const SCHL_POWER = { drei: { n: 'Dreifach-Kugel', k: 'Dreifach' }, schwer: { n: 'Schwere Kugel', k: 'Schwer' }, extra: { n: 'Extra-Kugel', k: '+1' } };
+const SCHL_POWER = { magnet: { n: 'Magnet-Kugel', k: 'Magnet' }, drei: { n: 'Dreifach-Kugel', k: 'Dreifach' }, schwer: { n: 'Schwere Kugel', k: 'Schwer' }, extra: { n: 'Extra-Kugel', k: '+1' } };
 /** Symbol für Karte oder Powerup, Mitte (0, 0), etwa 36 px */
 function schl_symbol(k){
   x.lineCap = 'round'; x.lineJoin = 'round';
@@ -222,6 +224,9 @@ function schl_symbol(k){
   else if (k === 'rueck') { x.strokeStyle = '#FFC72C'; x.lineWidth = 4; x.beginPath(); x.arc(0, 0, 13, -.4, Math.PI * 1.35); x.stroke(); x.fillStyle = '#FFC72C'; x.beginPath(); x.moveTo(13, -14); x.lineTo(18, 0); x.lineTo(5, -4); x.closePath(); x.fill(); kug(0, 0, 6); }
   else if (k === 'wind') { x.strokeStyle = '#BFE0F2'; x.lineWidth = 3; for (const yy of [-8, 0, 8]) { x.beginPath(); x.moveTo(-16, yy); x.quadraticCurveTo(4, yy - 4, 14, yy); x.stroke(); } x.strokeStyle = '#E0452E'; x.lineWidth = 3.5; x.beginPath(); x.moveTo(-14, -14); x.lineTo(14, 14); x.stroke(); }
   else if (k === 'punkte') { kug(0, 0, 13, '#FFF1B8', '#C98A00'); x.fillStyle = '#7A4E06'; x.font = '800 13px "Plus Jakarta Sans", system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('%', 0, 1); }
+  else if (k === 'rest') { kug(-8, 4, 8); kug(8, 4, 8); x.fillStyle = '#FFC72C'; x.beginPath(); x.arc(0, -10, 7, 0, 7); x.fill(); x.fillStyle = '#7A4E06'; x.font = '800 10px "Plus Jakarta Sans", system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('+', 0, -9.5); }
+  else if (k === 'stern') { SYM.stern(); }
+  else if (k === 'magnet') { SYM.magnet(); }
   else if (k === 'drei') { kug(-9, 6, 7); kug(9, 6, 7); kug(0, -8, 7); }
   else if (k === 'schwer') { kug(0, 0, 12, '#B98A55', '#5E3A1C'); x.strokeStyle = 'rgba(255,230,190,.7)'; x.lineWidth = 2; x.beginPath(); x.moveTo(-6, -2); x.lineTo(6, -2); x.moveTo(-4, 4); x.lineTo(4, 4); x.stroke(); }
 }
@@ -235,7 +240,7 @@ SPIELE.schleuder = {
     this.einzel = this.nochmalEinzel || 0; this.nochmalEinzel = 0;
     this.level = this.einzel ? this.einzel - 1 : 0; this.punkteN = 0; this.sterne = 0; this.zeit = 0; this.ball = null; this.ziehen = null; this.zustand = 'spiel'; this.lauf = 0; this.naechstes = null; this.naechstesV = 0; this.endeGerufen = false;
     this.gold = null; this.goldZeit = zufall(15, 40); this.hinweisNeu = null;
-    this.verb = { kugel: 0, ziel: 0, trichter: 0, rueck: 0, wind: 0, punkte: 0 }; this.karten = null; this.power = null; this.naechsterSchuss = null; this.extra = [];
+    this.verb = { kugel: 0, ziel: 0, trichter: 0, rueck: 0, wind: 0, punkte: 0, rest: 0, stern: 0 }; this.karten = null; this.power = null; this.naechsterSchuss = null; this.extra = [];
     this.neuesLevel();
   },
   aktuellePunkte(){ return this.punkteN || 0; },
@@ -484,6 +489,7 @@ SPIELE.schleuder = {
     this.ball = { x: SCHL_A.x + z.dx, y: SCHL_A.y + z.dy, vx: -z.dx * SCHL_K, vy: -z.dy * SCHL_K, t: 0, ruhe: 0, stoss: 0, quetsch: 0, spur: 0 };
     const b0 = this.ball; b0.rand = 8 * this.verb.trichter; b0.windF = this.verb.wind ? .5 : 1;
     if (this.naechsterSchuss === 'schwer') b0.schwer = true;
+    if (this.naechsterSchuss === 'magnet') b0.magnet = true;
     if (this.naechsterSchuss === 'drei') for (const w of [-.1, .1]) { const c = Math.cos(w), sn = Math.sin(w); this.extra.push({ ...b0, vx: b0.vx * c - b0.vy * sn, vy: b0.vx * sn + b0.vy * c, teil: true }); }
     this.naechsterSchuss = null;
     this.kugeln--; this.geschossen++; this.schnapp = 1;
@@ -516,7 +522,7 @@ SPIELE.schleuder = {
       // nächstes Level schon während der Feier bauen (ein Versuch pro Bild, damit nichts ruckelt)
       if (!this.naechstes && !this.einzel) this.naechstes = { nr: this.level + 1, v: 0, lv: null };
       if (this.naechstes && !this.naechstes.lv && this.naechstes.v < 60) { const v = this.naechstes.v++; this.naechstes.lv = this.baueLevel(this.level + 1, Math.floor(v / 15), v); }
-      if (this.restBonus > 0 && this.uhr > .9 + (this.restGezaehlt || 0) * .22) { this.restGezaehlt = (this.restGezaehlt || 0) + 1; this.restBonus--; this.punkteN += 30; schwebText('+30', 300 - this.restGezaehlt * 18, 300, F.goldDunkel, 18); teilchen(300 - this.restGezaehlt * 18, 300, { n: 8, form: 'stern' }); }
+      if (this.restBonus > 0 && this.uhr > .9 + (this.restGezaehlt || 0) * .22) { this.restGezaehlt = (this.restGezaehlt || 0) + 1; this.restBonus--; const rp = Math.round(30 * (1 + .5 * ((this.verb && this.verb.rest) || 0))); this.punkteN += rp; schwebText('+' + rp, 300 - this.restGezaehlt * 18, 300, F.goldDunkel, 18); teilchen(300 - this.restGezaehlt * 18, 300, { n: 8, form: 'stern' }); }
       if (this.uhr > 2.6 + (this.restGezaehlt || 0) * .22) {
         if (this.einzel) { if (!this.endeGerufen) { this.endeGerufen = true; this.zustand = 'ende'; ende(this.punkteN, `Level ${this.level} geschafft mit ${this.levelSterne} ${this.levelSterne === 1 ? 'Stern' : 'Sternen'}.`); } return; }
         const weiter = () => this.neuesLevel();
@@ -542,6 +548,7 @@ SPIELE.schleuder = {
       const f = schl_schritt(b, b.schwer ? this.rechteckeLeicht : this.rechtecke, this.lv.formen, 1 / 120, this.lv);
       if (b.stoss > 0) { b.quetsch = Math.max(b.quetsch, b.stoss); b.qN = b.stossN; if (b.stoss > .3) mehlWolke(b.x, b.y, 3); b.stoss = 0; }
       if (f) { this.treffer(f, b); break; }
+      if (b.magnet && b.vy > 0) { const z = this.lv.formen.filter((q) => !q.voll).map((q) => ({ q, d: Math.hypot(q.x - b.x, q.y - 14 - b.y) })).sort((u, v) => u.d - v.d)[0]; if (z && z.d < 90) { b.vx += (z.q.x - b.x) * 9 / 120; b.vy += 0; } }
       if (this.power && Math.hypot(b.x - this.power.x, b.y - this.power.y) < 24) this.powerFangen(b);
       // Goldform: reicht, sie im Flug zu treffen
       if (haupt && this.gold && Math.hypot(b.x - this.gold.x, b.y - this.gold.y - this.gold.h / 2) < 32) { this.treffer(this.gold, b); break; }
@@ -555,7 +562,7 @@ SPIELE.schleuder = {
   },
   /** Powerup im Level: schwebende Blase an einer freien Stelle, bleibt bis zum Levelende */
   powerSetzen(){
-    const arten = ['drei', 'extra', ...(this.lv.hindernisse.length ? ['schwer', 'schwer'] : []), 'drei'];
+    const arten = ['drei', 'extra', 'magnet', ...(this.lv.hindernisse.length ? ['schwer', 'schwer'] : []), 'drei'];
     const art = arten[ganz(0, arten.length - 1)], kand = [];
     for (let gx = 150; gx <= 320; gx += 28) for (let gy = 100; gy <= 300; gy += 28) kand.push([gx, gy]);
     kand.sort(() => Math.random() - .5);
@@ -686,7 +693,7 @@ SPIELE.schleuder = {
   },
   geschafft(){
     this.zustand = 'fertig'; this.uhr = 0; this.restGezaehlt = 0; this.restBonus = this.kugeln;
-    const n = this.geschossen <= 3 ? 3 : this.geschossen === 4 ? 2 : 1; this.levelSterne = n; this.sterne += n;
+    const n = this.geschossen <= (this.verb && this.verb.stern ? 4 : 3) ? 3 : this.geschossen <= (this.verb && this.verb.stern ? 5 : 4) ? 2 : 1; this.levelSterne = n; this.sterne += n;
     schl_sterneSetzen(this.level, this.gemuetlich ? 1 : n); brumm(30); statPlus('sterne', n);
     for (let i = 0; i < 3; i++) setTimeout(() => { if (i < n && this.zustand === 'fertig') teilchen(180 + (i - 1) * 50, 200, { n: 14, form: 'stern', tempo: 160 }); }, 250 + i * 220);
   },

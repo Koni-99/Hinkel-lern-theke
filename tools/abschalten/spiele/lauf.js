@@ -573,14 +573,16 @@ function lauf_extra(e, t){
   const by = e.y + Math.sin(t * 3 + e.x * .02) * 4;
   x.fillStyle = radial(e.x, by, 0, 34, [[0, e.art === 'schild' ? 'rgba(255,220,100,.5)' : 'rgba(255,170,150,.45)'], [1, 'rgba(255,220,100,0)']]); x.fillRect(e.x - 34, by - 34, 68, 68);
   lauf_blase(e.x, by, 19, t, e.art === 'schild');
-  if (e.art === 'schild') lauf_schildBild(e.x, by + 1, 1); else lauf_magnetBild(e.x, by + 1, .95);
+  if (e.art === 'doppel' || e.art === 'zeitlupe') { x.save(); x.translate(e.x, by + 1); x.scale(.72, .72); x.lineCap = 'round'; x.lineJoin = 'round'; (e.art === 'doppel' ? SYM.korn : SYM.uhr)(); x.restore(); }
+  else if (e.art === 'schild') lauf_schildBild(e.x, by + 1, 1); else lauf_magnetBild(e.x, by + 1, .95);
 }
 /** Kleine Uhr über Teigi: wie lange das Extra noch hält */
 function lauf_restUhr(bx, by, anteil, art){
   x.fillStyle = 'rgba(43,23,10,.7)'; x.beginPath(); x.arc(bx, by, 13, 0, 7); x.fill();
   x.strokeStyle = art === 'schild' ? '#FFC72C' : '#FF8A6A'; x.lineWidth = 3; x.lineCap = 'round';
   x.beginPath(); x.arc(bx, by, 13, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * klemm(anteil, 0, 1)); x.stroke();
-  if (art === 'schild') lauf_schildBild(bx, by, .62); else lauf_magnetBild(bx, by, .55);
+  if (art === 'doppel' || art === 'zeitlupe') { x.save(); x.translate(bx, by); x.scale(.45, .45); (art === 'doppel' ? SYM.korn : SYM.uhr)(); x.restore(); }
+  else if (art === 'schild') lauf_schildBild(bx, by, .62); else lauf_magnetBild(bx, by, .55);
 }
 /** Zielfahne für den nächsten Kollegen-Rekord */
 function lauf_zielFahne(fx, t, name){
@@ -645,6 +647,16 @@ const LAUF_MASSE = { korb: [58, 40], sack: [46, 52], wagen: [74, 72], stapel: [4
 const lauf_statPlus = (n, v) => { if (typeof statPlus === 'function') statPlus(n, v); };
 const lauf_statMax = (n, v) => { if (typeof statMax === 'function') statMax(n, v); };
 
+// ── Version 291: Powerups (Karten bei jedem neuen Ort, neue Extras Doppelte Körner und Zeitlupe) ──
+const LAUF_VERB = {
+  herz: { n: 'Extra-Herz', z: ['+1 Herz', 'für diese Runde'], max: 2, sym: () => SYM.herz() },
+  dreifach: { n: 'Dreifachsprung', z: ['In der Luft', '2× nachspringen'], max: 1, sym: () => SYM.pfeil() },
+  magnet: { n: 'Starker Magnet', z: ['Magnet hält', 'doppelt so lange'], max: 1, sym: () => SYM.magnet() },
+  korn: { n: 'Goldene Körner', z: ['+2 Punkte', 'pro Korn'], max: 2, sym: () => SYM.korn() },
+  glueck: { n: 'Glückspilz', z: ['Extras kommen', 'öfter'], max: 2, sym: () => SYM.blitz() },
+  ruhig: { n: 'Ruhiger Lauf', z: ['Wird nicht so', 'schnell schneller'], max: 2, sym: () => SYM.uhr() },
+};
+
 SPIELE.lauf = {
   key: 'lauf', name: 'Teigi-Lauf', kurz: 'Springen',
   anleitung: 'Tippen zum Springen, in der Luft nochmal tippen für einen Doppelsprung. Spring über Mehlsäcke, Blechwagen und Brotkörbe und sammle goldene Körner. Am Ofen wartet eine Bonus-Frage.',
@@ -655,7 +667,7 @@ SPIELE.lauf = {
     this.naechstAb = 620; this.korbGruppe = 0; this.gruppen = {};
     this.k = 0; this.extra = 0; this.ofenIn = 22; this.brezelIn = 16; this.marke = 100; this.schutz = 0; this.tot = -1; this.trefferArt = '';
     this.gem = typeof rundeGemuetlich !== 'undefined' ? rundeGemuetlich : (typeof GEMUETLICH !== 'undefined' && GEMUETLICH);
-    this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null;
+    this.herz = this.gem ? 3 : 1; this.magnet = 0; this.schild = 0; this.extras = []; this.extraIn = zufall(12, 18); this.extraArt = Math.random() < .5 ? 'magnet' : 'schild'; this.flagge = null; this.verb = {}; this.doppel = 0; this.zeitlupe = 0; this.kartenIn = 0;
     // Goldkorn (Version 282: Geister-Lauf entfernt, Wunsch des Nutzers)
     this.goldZeit = zufall(15, 40); this.gold = null; this.ortIdx = 0; this.ortBanner = null;
     this.staub = Array.from({ length: 22 }, () => ({ x: zufall(0, W), y: zufall(60, 380), r: zufall(.8, 2.2), v: zufall(.15, .5), p: zufall(0, 6) }));
@@ -669,8 +681,8 @@ SPIELE.lauf = {
     if (this.amBoden || this.kojote > 0) {
       this.vy = -770; this.amBoden = false; this.kojote = 0; this.spr = 1; this.sx = .78; this.sy = 1.24;
       mehlWolke(LAUF_TX, LAUF_BODEN - 2, 7);
-    } else if (this.spr < 2) {
-      this.vy = -650; this.spr = 2; this.dreh = 0.0001; this.sx = .85; this.sy = 1.16;
+    } else if (this.spr < (this.verb && this.verb.dreifach ? 3 : 2)) {
+      this.vy = -650; this.spr++; this.dreh = 0.0001; this.sx = .85; this.sy = 1.16;
       teilchen(LAUF_TX, LAUF_BODEN + this.y - 10, { n: 12, tempo: 120, farben: ['#FFF6E4', '#FFE7A0', '#FFFFFF'], groesse: [2, 4], schwer: 200, leben: [.3, .6] });
     } else this.puffer = .14;
   },
@@ -728,7 +740,7 @@ SPIELE.lauf = {
     }
     this.zeit += dt;
     // Version 283: wird immer schneller (vorher ab 55 s gleich schnell), höchstens 760
-    this.tempo = this.gem ? 180 + Math.min(30, this.zeit * .5) : Math.min(760, 215 + Math.min(230, this.zeit * 4.2) + Math.max(0, this.zeit - 55) * 2.4);
+    this.tempo = this.gem ? 180 + Math.min(30, this.zeit * .5) : Math.min(760, 215 + (Math.min(230, this.zeit * 4.2) + Math.max(0, this.zeit - 55) * 2.4) * (1 - .15 * ((this.verb && this.verb.ruhig) || 0))) * (this.zeitlupe > 0 ? .65 : 1);
     if (!this.gem && this.zeit >= (this.schnellerBei || 60)) { this.schnellerBei = (this.schnellerBei || 60) + 30; if (this.tempo < 760) { schwebText('Schneller!', 200, 150, '#C0392B', 24); brumm(25); } }
     const v = this.tempo * dt; this.weg += v;
     this.schutz = Math.max(0, this.schutz - dt);
@@ -759,7 +771,7 @@ SPIELE.lauf = {
 
     // Neuer Ort: kurz einblenden
     const oiJetzt = lauf_ortIndex(this.weg);
-    if (oiJetzt !== this.ortIdx) { this.ortIdx = oiJetzt; this.ortBanner = { name: LAUF_ORT_NAME[LAUF_ORTE[oiJetzt % 3]], t: 0 }; teilchen(180, 118, { n: 16, form: 'stern', tempo: 150, groesse: [2, 4] }); brumm(20); }
+    if (oiJetzt !== this.ortIdx) { if (!this.gem && this.tot < 0 && this.meter() > 150) this.kartenIn = 1.8; this.ortIdx = oiJetzt; this.ortBanner = { name: LAUF_ORT_NAME[LAUF_ORTE[oiJetzt % 3]], t: 0 }; teilchen(180, 118, { n: 16, form: 'stern', tempo: 150, groesse: [2, 4] }); brumm(20); }
     if (this.ortBanner) { this.ortBanner.t += dt; if (this.ortBanner.t > 2.4) this.ortBanner = null; }
     lauf_statMax('meter', this.meter());
     // Goldkorn: schwebt langsam heran, auf und ab, nach ein paar Sekunden ist es weg
@@ -792,20 +804,23 @@ SPIELE.lauf = {
 
     // Einsammeln
     const ty = LAUF_BODEN + this.y, mitte = ty - 32;
-    this.magnet = Math.max(0, this.magnet - dt); this.schild = Math.max(0, this.schild - dt);
+    if (this.kartenIn > 0) { this.kartenIn -= dt; if (this.kartenIn <= 0 && this.tot < 0) karten(kartenAuswahl(LAUF_VERB, this.verb), 'Powerup für den Lauf', (k) => { this.verb[k] = (this.verb[k] || 0) + 1; if (k === 'herz') this.herz++; }); }
+    this.magnet = Math.max(0, this.magnet - dt); this.schild = Math.max(0, this.schild - dt); this.doppel = Math.max(0, this.doppel - dt); this.zeitlupe = Math.max(0, this.zeitlupe - dt);
     if (this.magnet > 0) for (const k of this.koerner) { const dx = k.x - LAUF_TX; if (dx < 230 && dx > -30) { const f = Math.min(1, dt * (dx < 120 ? 9 : 4)); k.x += (LAUF_TX - k.x) * f; k.y += (mitte - k.y) * f; } }
     // Extras: auftauchen, mitlaufen, einsammeln
     this.extraIn -= dt;
-    if (this.extraIn <= 0 && this.magnet <= 0 && this.schild <= 0 && !this.extras.length) {
+    if (this.extraIn <= 0 && this.magnet <= 0 && this.schild <= 0 && this.doppel <= 0 && this.zeitlupe <= 0 && !this.extras.length) {
       const frei = this.hind.every((h) => h.x + h.w < W - 40 || h.x > W + 160);
-      if (frei) { this.extras.push({ art: this.extraArt, x: W + 40, y: LAUF_BODEN - 92 }); this.extraArt = this.extraArt === 'magnet' ? 'schild' : 'magnet'; this.extraIn = zufall(22, 32); }
+      if (frei) { this.extras.push({ art: this.extraArt, x: W + 40, y: LAUF_BODEN - 92 }); const reihe = ['magnet', 'schild', 'doppel', 'zeitlupe'].filter((a) => a !== this.extraArt); this.extraArt = reihe[ganz(0, reihe.length - 1)]; this.extraIn = zufall(22, 32) * (1 - .25 * (this.verb.glueck || 0)); }
     }
     for (const e of this.extras) {
       e.x -= v;
       if (!e.weg && Math.abs(e.x - LAUF_TX) < 36 && Math.abs(e.y - mitte) < 50) {
         e.weg = true; brumm(25); blitz(.18, '255,230,160');
         teilchen(e.x, e.y, { n: 20, form: 'stern', tempo: 170, groesse: [2.5, 5], leben: [.4, .8] });
-        if (e.art === 'magnet') { this.magnet = 8; schwebText('Körner-Magnet!', 190, 200, '#C0392B', 20); }
+        if (e.art === 'magnet') { this.magnet = 8 * (this.verb.magnet ? 2 : 1); schwebText('Körner-Magnet!', 190, 200, '#C0392B', 20); }
+        else if (e.art === 'doppel') { this.doppel = 10; schwebText('Doppelte Körner!', 190, 200, '#B07A00', 20); }
+        else if (e.art === 'zeitlupe') { this.zeitlupe = 6; schwebText('Zeitlupe!', 190, 200, '#3E6FB5', 20); }
         else { this.schild = 20; schwebText('Schutzschild!', 190, 200, '#B07A00', 20); }
       }
     }
@@ -818,7 +833,7 @@ SPIELE.lauf = {
       this.flagge = { name: ziel.name, weg: this.weg + Math.max(5, (ziel.punkte - this.punkte()) / rate) * 32 };
     }
     for (const k of this.koerner) if (!k.weg && Math.abs(k.x - LAUF_TX) < 26 && Math.abs(k.y - mitte) < 38) {
-      k.weg = true; this.k++; lauf_statPlus('koerner', 1);
+      k.weg = true; this.k++; lauf_statPlus('koerner', 1); this.extra += 2 * (this.verb.korn || 0) + (this.doppel > 0 ? 5 + 2 * (this.verb.korn || 0) : 0);
       teilchen(k.x, k.y, { n: 6, tempo: 90, groesse: [1.5, 3], leben: [.25, .45], schwer: 0 });
       if (--this.gruppen[k.g] === 0) { this.extra += 10; brumm(25); schwebText('Alle! +10', k.x + 10, k.y - 22, '#B07A00', 18); }
     }
@@ -878,7 +893,7 @@ SPIELE.lauf = {
     // nur zwei Pillen: in der Mitte sitzt der Pause-Knopf
     const links = { icon: 'flagge', text: `${this.meter()} m<i style="margin-left:8px">${ICON.korn}</i>${this.k}` };
     const p = this.punkte().toLocaleString('de-DE');
-    setHud([links, this.gem ? { text: `${herzen(this.herz, 3).text}<i style="margin-left:6px">${ICON.punkte}</i>${p}` } : { icon: 'punkte', text: p }]);
+    setHud([links, this.gem || this.herz > 1 ? { text: `${herzen(this.herz, Math.max(3, this.herz)).text}<i style="margin-left:6px">${ICON.punkte}</i>${p}` } : { icon: 'punkte', text: p }]);
   },
 
   malen(t){
@@ -945,7 +960,10 @@ SPIELE.lauf = {
     }
     let uhrX = LAUF_TX - (this.magnet > 0 && this.schild > 0 ? 15 : 0);
     if (this.magnet > 0) { lauf_restUhr(uhrX, fy - 66, this.magnet / 8, 'magnet'); uhrX += 30; }
-    if (this.schild > 0) lauf_restUhr(uhrX, fy - 66, this.schild / 20, 'schild');
+    if (this.schild > 0) { lauf_restUhr(uhrX, fy - 66, this.schild / 20, 'schild'); uhrX += 30; }
+    if (this.doppel > 0) { lauf_restUhr(uhrX, fy - 66, this.doppel / 10, 'doppel'); uhrX += 30; }
+    if (this.zeitlupe > 0) lauf_restUhr(uhrX, fy - 66, this.zeitlupe / 6, 'zeitlupe');
+    kartenLeiste(LAUF_VERB, this.verb, 466);
 
     // Vordergrund: Licht und Vignette
     x.fillStyle = linear(0, 0, W, 0, [[0, 'rgba(255,240,200,.10)'], [.5, 'rgba(255,240,200,0)'], [1, 'rgba(60,30,10,.12)']]); x.fillRect(0, 0, W, H);

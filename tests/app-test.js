@@ -1263,7 +1263,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && /Dreifachsprung/.test(hilfe) && /Kornspeicher/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
@@ -1371,6 +1371,12 @@ async function offlineTests() {
       waehle('stapler'); starten(); const st = spiel;
       st.akt.pw = 'guss'; st.akt.zustand = 'faellt'; st.akt.x = st.top().fx + 15; st.landen(); aus.guss = st.perfekt === 1;
       st.netzRest = 1; st.akt.x = 10; st.akt.w = 40; st.landen(); aus.netz = st.tot < 0 && st.netzRest === 0 && st.anzahl === 2;
+      // Version 291: Lauf (Dreifachsprung, Doppelte Körner), Schädlinge (Karten nach Welle 3, Rabatt), Schleuder (Magnet-Kugel)
+      waehle('lauf'); starten(); const la = spiel; la.verb.dreifach = 1; la.amBoden = false; la.spr = 1; la.springen(); la.springen(); aus.dreifach = la.spr === 3;
+      la.doppel = 5; const e0 = la.extra; la.koerner.push({ x: LAUF_TX, y: LAUF_BODEN - 40, g: 0, p: 0 }); la.gruppen[0] = 9; la.tick(1 / 60); aus.doppel = la.extra >= e0 + 5;
+      waehle('schutz'); starten(); const sz = spiel; sz.verb.rabatt = 2; sz.welle = 6; sz.pause = 1; sz.menu = { platz: 0, t: 1 }; aus.rabatt = sz.menuKnoepfe()[0].preis === Math.round(30 * .7);
+      sz.menu = null; sz.pause = 0; sz.warteschlange = []; sz.tiere = []; sz.welle = 3; sz.tick(1 / 60); aus.szKarten = !!kartenOffen; kartenOffen = null;
+      waehle('schleuder'); starten(); const sl = spiel; sl.einflug = 1; sl.laden = 1; sl.naechsterSchuss = 'magnet'; sl.runter({ x: SCHL_A.x, y: SCHL_A.y }); sl.zieh({ x: SCHL_A.x - 60, y: SCHL_A.y + 30 }); sl.hoch({ x: SCHL_A.x - 60, y: SCHL_A.y + 30 }); aus.magnetKugel = !!(sl.ball && sl.ball.magnet);
       aus.auswahl = kartenAuswahl(STAP_VERB, { netz: 2 }).length === 3 && kartenAuswahl(STAP_VERB, { netz: 2 }).every((k) => k.k !== 'netz');
       return aus;
     });
@@ -1378,6 +1384,9 @@ async function offlineTests() {
     ok('Tour: Karte „Ersatzreifen“ gibt +1 Herz', r.karte && r.herz);
     ok('Stapler: Zuckerguss klebt perfekt, Auffangnetz rettet einmal', r.guss && r.netz, JSON.stringify(r));
     ok('Karten: volle Powerups werden nicht mehr angeboten', r.auswahl);
+    ok('Teigi-Lauf: Dreifachsprung und Doppelte Körner', r.dreifach && r.doppel, JSON.stringify(r));
+    ok('Schädlinge: Großeinkauf macht Fallen billiger, Karten nach Welle 3', r.rabatt && r.szKarten, JSON.stringify(r));
+    ok('Teig-Schleuder: Magnet-Kugel', r.magnetKugel);
     ok('Version 290: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
   }]);
