@@ -2375,6 +2375,27 @@ async function cloudTests() {
     ok('Anmeldung: keine Fehler', !A.errors.length && !B.errors.length, A.errors[0] || B.errors[0]);
     await A.ctx.close(); await B.ctx.close();
   }]);
+  // Version 289: Wochenrückblick kommt montags als Pop-up (wer letzte Woche gelernt hat, andere Pop-ups vorher wegklicken)
+  teile.push(['Wochenrückblick am Montag', async () => {
+    const tag = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const mo = new Date(); mo.setHours(12, 0, 0, 0); mo.setDate(mo.getDate() - ((mo.getDay() + 6) % 7));
+    const vorwoche = [3, 5].map((n) => { const d = new Date(mo); d.setDate(d.getDate() - n); return tag(d); });
+    const altMo = new Date(mo); altMo.setDate(altMo.getDate() - 7);
+    await db('PATCH', '/progress', { mara: { _displayName: 'Mara', _role: 'verkauf', _intro: true, _levelSeen: 9, _days: vorwoche, _weekSeen: tag(altMo) } });
+    const M = await device({ cloud: true, user: 'Mara' });
+    let gesehen = false;
+    for (let k = 0; k < 16 && !gesehen; k++) {
+      await sleep(700);
+      if (/Dein Wochenrückblick/i.test(await M.page.locator('body').innerText().catch(() => ''))) { gesehen = true; break; }
+      const pinFelder = M.page.locator('input[placeholder="4 bis 6 Ziffern"]:visible');
+      if ((await pinFelder.count()) === 2) { await pinFelder.nth(0).fill('4711'); await pinFelder.nth(1).fill('4711'); await M.page.getByText('PIN speichern').click().catch(() => {}); continue; }
+      const o = M.page.locator('.lt-overlay:visible button:visible, [role=dialog][aria-modal=true]:visible button:visible');
+      if (await o.count()) await o.last().click({ timeout: 2000 }).catch(() => {});
+    }
+    ok('Wochenrückblick: kommt als Pop-up, wenn man letzte Woche gelernt hat', gesehen, await M.page.locator('body').innerText().then((t) => t.replace(/\s+/g, ' ').slice(0, 400)).catch(() => ''));
+    ok('Wochenrückblick: keine Fehler', M.errors.length === 0, M.errors[0]);
+    await M.ctx.close();
+  }]);
   // Stufen-Feier: Kollegin mit genug Punkten für Stufe 3 sieht die Feier (andere Pop-ups vorher wegklicken)
   teile.push(['Stufen-Feier: Kollegin mit genug Punkten für Stufe 3 sieht die Feier (andere Pop-ups vorher wegklicken)', async () => {
     await db('PATCH', '/progress', { lena: { _displayName: 'Lena', _role: 'verkauf', _intro: true, _levelSeen: 1 } });
