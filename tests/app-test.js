@@ -1263,7 +1263,7 @@ async function offlineTests() {
     await click(h.page.getByRole('button', { name: 'Menü' }).first());
     await click(h.page.getByRole('menuitem', { name: 'So funktioniert die Lern-Theke' }).first()); await settle(h.page);
     const hilfe = await h.page.locator('main').evaluate((m) => m.textContent || '').catch(() => '');
-    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && /Dreifachsprung/.test(hilfe) && /Kornspeicher/.test(hilfe) && /bis 18 Uhr/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
+    ok('Hilfe erklärt Klebefalle, Katze, neue Lager und großes Spielfeld', /Klebefalle/.test(hilfe) && /Bäckerei-Katze/.test(hilfe) && /neues Lager/.test(hilfe) && /groß und mittig/.test(hilfe) && /immer schneller/.test(hilfe) && /Dreifach-Kugel/.test(hilfe) && /Auffangnetz/.test(hilfe) && /Winterreifen/.test(hilfe) && /Dreifachsprung/.test(hilfe) && /Kornspeicher/.test(hilfe) && /bis 18 Uhr/.test(hilfe) && /die neuesten oben/.test(hilfe) && !/Geister-Lauf/.test(hilfe));
     await h.ctx.close();
   }]);
   // Version 287: Kacheln unter „Mehr nachschlagen“ wie die Karten der Lernen-Seite
@@ -1406,6 +1406,27 @@ async function offlineTests() {
     ok('Theken-Simulator: Zähler „Richtig“ und „Bedient“ nicht gequetscht', breit.length >= 2 && breit.every((w) => w > 70), JSON.stringify(breit));
     ok('Version 292: keine Fehler', d.errors.length === 0, d.errors[0]);
     await d.ctx.close();
+  }]);
+  // Version 293: Ausbilder sieht die Punkte-Einträge eines Mitarbeiters nach Datum (neueste zuerst)
+  teile.push(['Version 293: Punkte-Einträge nach Datum', async () => {
+    const probe = JSON.parse(JSON.stringify(SAMPLE));
+    probe.scores = [
+      { id: 'p1', username: 'Anna', score: 500, date: '02.11.26, 09:00', category: 'Alt-Groß' },
+      { id: 'p2', username: 'Anna', score: 20, date: '20.11.26, 18:30', category: 'Neu-Spät' },
+      { id: 'p3', username: 'Anna', score: 90, date: '20.11.26, 08:15', category: 'Neu-Früh' },
+      { id: 'p4', username: 'Anna', score: 300, date: '10.11.26, 12:00', category: 'Mitte' },
+    ];
+    const a = await device({ admin: true, backup: probe });
+    await click(a.page.locator('[aria-label="Ausbilder"]:visible, [title="Ausbilder"]:visible').last()); await settle(a.page);
+    await click(a.page.getByRole('tab', { name: /Mitarbeiter/ }).first()); await settle(a.page, 500);
+    const anna = a.page.locator('button[aria-expanded]', { hasText: 'Anna' }).first();
+    for (let w = 0; w < 30 && !(await anna.count()); w++) { const team = a.page.locator('button[aria-expanded="false"]').first(); if (await team.count()) await click(team); await sleep(200); }
+    await click(anna); await settle(a.page, 500);
+    const liste = await a.page.locator('.lt-punkte-liste strong').allInnerTexts();
+    const kat = liste.filter((t) => !/Pkt\./.test(t));
+    ok('Punkte-Einträge: neueste zuerst (nach Datum und Uhrzeit)', kat.join(',') === 'Neu-Spät,Neu-Früh,Mitte,Alt-Groß', kat.join(','));
+    ok('Version 293: keine Fehler', a.errors.length === 0, a.errors[0]);
+    await a.ctx.close();
   }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
   teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {

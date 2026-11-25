@@ -16,6 +16,7 @@ import { urlaubHeute } from '../hilfen/urlaub';
 import { FalschGewaehlt } from './FalschGewaehlt';
 import { startStand } from '../hilfen/teamStart';
 import type { ScoreEntry } from '../types';
+import { parseBonDate } from '../basis/serie';
 
 export type TeamTabProps = {
   cloudData: CloudPayload;
@@ -207,7 +208,9 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
             { label: 'Zwischenprüfungen', done: doneOf(['Zwischenprüfungen_easy', 'Zwischenprüfungen_hard']), total: zpTotal },
             { label: 'Abschlussprüfungen', done: doneOf(['Abschlussprüfungen_easy', 'Abschlussprüfungen_hard']), total: apTotal },
           ];
-          const sortedScores = [...matchingScores].sort((a, b) => Number(b.score) - Number(a.score));
+          // Version 293: neueste Einträge zuerst (vorher nach Punkten, wirkte durcheinander). Ohne Datum: Zeit aus der Kennung, sonst ganz unten
+          const zeitVon = (sc: ScoreEntry) => { const d = parseBonDate(sc.date); if (d) { const u = String(sc.date || '').match(/(\d{1,2}):(\d{2})/); return d.getTime() + (u ? (Number(u[1]) * 60 + Number(u[2])) * 60000 : 0); } const m = String(sc.id || '').match(/(\d{12,})/); return m ? Number(m[1]) : -Infinity; };
+          const sortedScores = [...matchingScores].sort((a, b) => zeitVon(b) - zeitVon(a));
     
           return (
             <div key={userKey} style={{ ...cardStyle, padding: 0, overflow: 'hidden' }}>
@@ -323,7 +326,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                     {sortedScores.length === 0 ? (
                       <div style={{ fontSize: '16px', color: TH.muted }}>Noch keine Punkte.</div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
+                      <div className="lt-punkte-liste" style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
                         {sortedScores.map((sc, i) => (
                           <div key={(sc.id || '') + i} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', padding: '8px 12px', borderRadius: '12px', backgroundColor: TH.white }}>
                             <span style={{ flex: '1 1 180px', fontSize: '16px' }}>
