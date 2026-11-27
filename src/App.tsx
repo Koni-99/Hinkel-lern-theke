@@ -6,7 +6,7 @@ import { CATS, questions as rawQuestions, examQuestions } from './daten/question
 import { SHOP_PRODUCTS } from './daten/shopProducts';
 import { merkeFalsch, gewaehlterText } from './hilfen/falscheAntworten';
 // Versionsnummer, unten in der App sichtbar. So sieht man sofort, ob alle Dateien neu eingefügt wurden.
-const APP_VERSION: number = 293;
+const APP_VERSION: number = 294;
 /** Version 271: Seiten, auf denen Teigi mitkommt (dort reagiert er auf Antworten oder spricht beim Vorlesen mit) */
 const TEIGI_SEITEN = ['theke', 'telefon', 'ofen', 'rechnen', 'kassenblitz', 'tueten', 'ansturm', 'preisduell', 'bilderquiz', 'schneiden', 'allergene', 'alternativen', 'battle', 'advent', 'hoeren'];
 // Diese Bereiche werden erst geladen, wenn man sie öffnet (schnellerer Start)
@@ -27,7 +27,7 @@ import { NachrichtenSeite, EinzelNachrichtPopup } from './screens/NachrichtenSei
 import { TeigiBegleiter } from './ui/teigiBegleiter';
 import { lernkastenVon, karteBewerten } from './hilfen/lernkasten';
 import { geschenkeSchicken, anzahlVon, geschenkeHeute, offeneGeschenke, geschenkAnnehmen, jokerVon, schutzNoetig, schutzEinsetzen } from './hilfen/geschenke';
-import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon, sonderPunkte } from './hilfen/wertungen';
+import { alleRanglisten, abNeustart, ausgabenInWertung, neustartVon, sonderPunkte, serieSchutzTage } from './hilfen/wertungen';
 import { zaehleSeite, offeneNutzung, hatOffeneNutzung, leereNutzung, addiereNutzung } from './hilfen/nutzung';
 import { neuerMonatSnap } from './hilfen/meinMonat';
 import { zurueckVerbraucht } from './hilfen/zurueck';
@@ -2259,7 +2259,7 @@ export default function App() {
   };
   const myDays: string[] = Array.isArray((cloudProgress[userKeyLower] || {})._days) ? (cloudProgress[userKeyLower] || {})._days : [];
   const myUrlaubTage = urlaubsTage(cloudProgress[userKeyLower] || {}, dayKey(new Date())); // Version 251: Urlaub zählt wie geschützt
-  const streak = computeStreak(myDays, [...((cloudProgress[userKeyLower] || {})._schutzTage || []), ...myUrlaubTage]);
+  const streak = computeStreak(myDays, [...((cloudProgress[userKeyLower] || {})._schutzTage || []), ...myUrlaubTage, ...serieSchutzTage(userKeyLower)]);
   const weekDots = (() => {
     const now = new Date();
     const monday = new Date(now);
@@ -2363,7 +2363,7 @@ export default function App() {
     const cnt: Record<string, number> = {};
     sc.forEach(x => { const c = String((x as any).category || ''); if (GAME_EMOJI[c] !== undefined && c !== 'Rubbellos' && c !== 'Glücksrad') cnt[c] = (cnt[c] || 0) + (Number(x.n) || 1); });
     const fav = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
-    const st = computeStreak(Array.isArray(pr._days) ? pr._days : [], [...(pr._schutzTage || []), ...urlaubsTage(pr, dayKey(new Date()))]);
+    const st = computeStreak(Array.isArray(pr._days) ? pr._days : [], [...(pr._schutzTage || []), ...urlaubsTage(pr, dayKey(new Date())), ...serieSchutzTage(k)]);
     const bt = { w: 0, l: 0, d: 0 };
     Object.values(cloudBattles || {}).forEach((b: any) => {
       if (!b || (b.challengerKey !== k && b.opponentKey !== k)) return;

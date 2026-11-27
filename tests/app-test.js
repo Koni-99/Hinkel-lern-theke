@@ -1428,6 +1428,17 @@ async function offlineTests() {
     ok('Version 293: keine Fehler', a.errors.length === 0, a.errors[0]);
     await a.ctx.close();
   }]);
+  // Version 294: Konis Lern-Serie reißt nie ab (ohne Hinweis)
+  teile.push(['Version 294: Koni-Serie bleibt', async () => {
+    const C = kompiliere(['src/hilfen/wertungen.ts', 'src/basis/serie.tsx', 'src/admin/adminHelfer.ts', 'src/hilfen/geschenke.ts']);
+    const W = C.hilfen_wertungen, S = C.basis_serie, A = C.admin_adminHelfer, G = C.hilfen_geschenke;
+    const tag = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+    const tage = [5, 6, 7, 8, 9].map(tag); // vor 5 bis 9 Tagen gelernt, seitdem nicht
+    const koni = S.computeStreak(tage, W.serieSchutzTage('Koni')).current, anna = S.computeStreak(tage, W.serieSchutzTage('anna')).current;
+    ok('Koni: Serie bleibt trotz Pause (5 Tage), Anna: Serie weg', koni === 5 && anna === 0, `${koni} / ${anna}`);
+    ok('Ausbilder-Ansicht: Konis Serie bleibt auch dort', A.streakOf(tage, 'koni') === 5 && A.streakOf(tage, 'anna') === 0);
+    ok('Koni: kein Serien-Schutz-Joker wird verbraucht', G.schutzNoetig({ _displayName: 'Koni', _days: tage, _jokersSchutz: 9 }).length === 0);
+  }]);
   // Version 268: Zum Abschalten mit Goldstück, Tagesaufgabe, Saison-Deko und Kollegen herausfordern
   teile.push(['Version 268: Goldstück, Tagesaufgabe, Herausfordern', async () => {
     const C = kompiliere(['src/hilfen/abschalten.ts', 'src/hilfen/nachrichten.ts', 'src/basis/laden.tsx']);

@@ -732,7 +732,7 @@ export function AdminView({
       const done = new Set([...(Array.isArray(prog[cat + '_easy']) ? prog[cat + '_easy'] : []), ...(Array.isArray(prog[cat + '_hard']) ? prog[cat + '_hard'] : [])]).size;
       return { cat, pct: total ? Math.round((done / total) * 100) : 0 };
     }).sort((a, b) => a.pct - b.pct);
-    return { days, learnDays, weekPoints, streak: streakOf(days), weakestCat: catPcts[0], thekeWeak: weakThekeTopics(prog._theke, 2) };
+    return { days, learnDays, weekPoints, streak: streakOf(days, userKey), weakestCat: catPcts[0], thekeWeak: weakThekeTopics(prog._theke, 2) };
   };
   const nameOf = (userKey: string) => cloudLastSeen[userKey]?.displayName || cloudProgress[userKey]?._displayName || userKey;
 

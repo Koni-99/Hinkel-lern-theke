@@ -75,3 +75,13 @@ export function alleRanglisten(scores: Score[], progress: Record<string, any> = 
 /** Version 284 (Wunsch des Nutzers): Koni bekommt immer doppelte Punkte, ohne Hinweis in der App */
 export const PUNKTE_SONDERFAKTOR: Record<string, number> = { koni: 2 };
 export const sonderPunkte = (userKey: string, punkte: number) => (punkte > 0 ? Math.round(punkte * (PUNKTE_SONDERFAKTOR[(userKey || '').toLowerCase()] || 1)) : punkte);
+
+/** Version 294: Konis Lern-Serie reißt nie ab (Wunsch des Nutzers 27.11.2026, ohne Hinweis in der App).
+ *  Liefert alle Tage der letzten gut 2 Jahre als „geschützt“: sie unterbrechen die Serie nicht, zählen aber nicht mit. */
+export const SERIE_BLEIBT: Record<string, boolean> = { koni: true };
+export function serieSchutzTage(userKey: string, heute = new Date()): string[] {
+  if (!SERIE_BLEIBT[(userKey || '').toLowerCase()]) return [];
+  const d = new Date(heute); const out: string[] = [];
+  for (let i = 0; i < 800; i++) { out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`); d.setDate(d.getDate() - 1); }
+  return out;
+}

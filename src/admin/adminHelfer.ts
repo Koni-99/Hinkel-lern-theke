@@ -1,4 +1,5 @@
 // ═══ Ausbilder-Bereich: gemeinsame Helfer ═══
+import { serieSchutzTage } from '../hilfen/wertungen';
 // Vorher oben in components/AdminView.tsx. Inhalt unverändert übernommen.
 
 // ── Hilfen für die Wochenübersicht ──
@@ -12,12 +13,12 @@ export const parseScoreDate = (txt?: string): Date | null => {
   const y = Number(m[3]) < 100 ? 2000 + Number(m[3]) : Number(m[3]);
   return new Date(y, Number(m[2]) - 1, Number(m[1]));
 };
-export const streakOf = (days: string[]) => {
-  const set = new Set(days);
+export const streakOf = (days: string[], userKey = '') => {
+  const set = new Set(days), frei = new Set(serieSchutzTage(userKey));
   const d = new Date();
   if (!set.has(dayKeyA(d))) d.setDate(d.getDate() - 1);
   let n = 0;
-  while (set.has(dayKeyA(d))) { n++; d.setDate(d.getDate() - 1); }
+  while (set.has(dayKeyA(d)) || frei.has(dayKeyA(d))) { if (set.has(dayKeyA(d))) n++; d.setDate(d.getDate() - 1); }
   return n;
 };
 

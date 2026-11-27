@@ -221,7 +221,7 @@ export function TeamTab({ cloudData, allKnownUserKeys, questions, examQuestions,
                 </span>
                 <span style={{ flex: '1 1 200px' }}>
                   <span style={{ display: 'block', fontSize: '20px', fontWeight: 700 }}>{displayName}</span>
-                  <span style={{ display: 'block', fontSize: '16px', color: TH.muted }}>{uRank.title} · {masteryPct} % · Serie {streakOf(Array.isArray(userProgObj._days) ? userProgObj._days : [])} · aktiv {lastSeenTime}</span>
+                  <span style={{ display: 'block', fontSize: '16px', color: TH.muted }}>{uRank.title} · {masteryPct} % · Serie {streakOf(Array.isArray(userProgObj._days) ? userProgObj._days : [], userKey)} · aktiv {lastSeenTime}</span>
                   {(() => { const li = learnInfo(userKey); return <span style={{ display: 'block', fontSize: '15px', color: TH.muted, marginTop: '2px' }}>Einarbeitung {li.ob.done}/{li.ob.total} · {li.badges.filter(b => b.ok).length} Abzeichen</span>; })()}
                 </span>
                 <span style={{ padding: '8px 14px', borderRadius: '12px', backgroundColor: TH.tintYellow, fontWeight: 700, fontSize: '17px', whiteSpace: 'nowrap' }}>{totalUserPoints.toLocaleString('de-DE')} Pkt.</span>
